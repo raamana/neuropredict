@@ -39,6 +39,9 @@ def parse_args():
                              "file) containing a file called features.txt with one number per line. All the subjects "
                              "must have the number of features (#lines in file)")
 
+    # TODO perhaps I can have two arguments: one to specify feature type (which determines the reader), and another
+    # to obtain the folder path to read from.
+
     parser.add_argument("-o", "--outdir", action="store", dest="outdir",
                         default=None,
                         help="Output folder to store features and results.")
@@ -161,16 +164,17 @@ def run():
     subjects, classes = getmetadata(metadatafile)
 
     # let's start with one method/feature set for now
-    chosenmethod = fsvolumes
     if not_unspecified(userdir):
-        chosenmethod = lambda dir, sub: userdefinedget(dir, sub)
+        path_to_features = userdir
+        chosenmethod = userdefinedget
     else:
-        chosenmethod = lambda dir, sub: fsvolumes(dir, sub)
+        path_to_features = fsdir
+        chosenmethod = fsvolumes
 
     # # this could be a list of methods when RHsT is able to handle it.
     # chosenmethod = [ fsvolumes, fsthickness, userdefinedget ]
 
-    dataset = getfeatures(subjects, classes, getmethod = chosenmethod)
+    dataset = getfeatures(subjects, classes, path_to_features, getmethod = chosenmethod)
 
     run_rhst(dataset, outdir)
 
