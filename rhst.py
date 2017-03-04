@@ -2,27 +2,63 @@
 import os
 import numpy as np
 import random
+import pickle
 import sklearn
+from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
+
+file_name_results = "rhst_results.pkl"
 
 from pyradigm import MLDataset
 
-def clf_tuner(train_fs, test_fs):
+
+def eval_optimized_clsfr_on_testset(train_fs, test_fs):
     "Method to optimize the classifier on the training set and returns predictions on test set. "
 
-    pass
+    #
+    pred_prob = pred_labels = conf_mat = best_minleafsize = best_num_predictors = feat_importance = None
+
+    max_dim = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
+
+    clf = RandomForestClassifier(n_estimators=10, max_features = max_dim, max_depth=None,
+                                 min_samples_split=2, random_state=0)
+
+    scores = cross_val_score(clf, train_fs.data, train_fs.target)
+
+    return pred_prob, pred_labels, conf_mat, feat_importance, best_minleafsize, best_num_predictors
 
 
-def calc_balanced_accuracy(confmat):
+def max_dimensionality_to_avoid_curseofdimensionality(num_samples, perc_prob_error_allowed = 0.05):
+    """
+    Computes the largest dimensionality that can be used to train a predictive model
+        avoiding curse of dimensionality for a 5% probability of error.
+    Optional argument can specify the amount of error that the user wants to allow (deafult : 5% prob of error ).
+
+    Citation: Michael Fitzpatrick and Milan Sonka, Handbook of Medical Imaging, 2000
+
+    :param num_samples:
+    :param perc_prob_error_allowed:
+    :return:
+    """
+
+    if num_samples < 1/(2*perc_prob_error_allowed):
+        max_red_dim = 1
+    else:
+        max_red_dim = np.floor(num_samples * (2*perc_prob_error_allowed))
+
+    return max_red_dim
+
+
+def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
     # IMPLEMENT TODO
 
+    pass
 
-
-def run(dataset_paths, out_results_dir, train_perc = 0.8, num_repetitions = 200):
+def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 200):
     """
 
-    :param dataset_paths: path to file containing list of paths (each containing a valid MLDataset).
+    :param dataset_path_file: path to file containing list of paths (each containing a valid MLDataset).
     :param out_results_dir: path to save the results to (in various forms)
     :param train_perc: percetange of subjects to train the classifier on. The percentage is applied to the size of
     the smallest class to estimate the numner of subjects from each class to be reserved for training. The smallest
@@ -43,13 +79,21 @@ def run(dataset_paths, out_results_dir, train_perc = 0.8, num_repetitions = 200)
     #   keep tab on misclassifications
     # save results (comprehensive and reloadable manner)
 
-    # loading datasets
-    assert os.path.exists(dataset_paths), "File containing dataset paths does not exist."
-    with open(dataset_paths,'r') as dpf:
-        paths = dpf.read().splitlines()
 
+    assert os.path.exists(dataset_path_file), "File containing dataset paths does not exist."
+    with open(dataset_path_file, 'r') as dpf:
+        dataset_paths = dpf.read().splitlines()
+
+    try:
+        out_results_dir = os.path.abspath(out_results_dir)
+        if os.path.exists(out_results_dir):
+            os.mkdir(out_results_dir)
+    except:
+        raise IOError('Error in checking or creating output directiory. Ensure write permissions!')
+
+    # loading datasets
     datasets = list()
-    for fp in paths:
+    for fp in dataset_paths:
         assert os.path.exists(fp), "Dataset @ {} does not exist.".format(fp)
 
         try:
@@ -146,11 +190,12 @@ def run(dataset_paths, out_results_dir, train_perc = 0.8, num_repetitions = 200)
             train_labels.extend([ common_ds.labels[sid] for sid in train_set ])
             test_labels.extend( [ common_ds.labels[sid] for sid in test_set  ])
 
+        # test/train sets are common across different featsets being tested
         test_labels_per_rep[rep, :] = test_labels
 
         # evaluating each feature/dataset
         for dd in range(num_datasets):
-            print(" Rep {:3d}, feature {:3d}".format(rep, dd))
+            print(" Rep {:3d}, feature {:3d}:".format(rep, dd))
 
             train_fs = datasets[dd].get_subset(train_set)
             test_fs  = datasets[dd].get_subset(test_set)
@@ -158,20 +203,32 @@ def run(dataset_paths, out_results_dir, train_perc = 0.8, num_repetitions = 200)
             pred_prob_per_class[rep, dd, :, :], pred_labels_per_rep_fs[rep, dd, :, :], \
                 confmat, feature_importances_rf[rep, :], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
-                clf_tuner(train_fs, test_fs)
+                eval_optimized_clsfr_on_testset(train_fs, test_fs)
 
-            accuracy_balanced[rep,dd] = calc_balanced_accuracy(confmat)
+            accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat
 
+            # TODO tabulating misclassifications
+            # misclfd_sample_ids = test_set
+
+
+
+    # TODO generate visualizations for each feature set as well as a comparative summary!
+    # TODO generate a CSV of different metrics for each dataset, as well as a reloadable
+
+    # save results
+    var_list_to_save = [dataset_paths, train_perc, num_repetitions, num_classes,
+                        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
+                        best_min_leaf_size, best_num_predictors, feature_importances_rf,
+                        misclf_sample_ids, misclf_sample_classes, num_times_misclfd, num_times_tested,
+                        confusion_matrix, accuracy_balanced ]
+
+    out_results_path = os.path.join(out_results_dir, file_name_results)
+    with open(out_results_path, 'wb') as cfg:
+        pickle.dump(var_list_to_save, cfg)
 
     return
 
 
-def ignore():
-    "Empty method to ignore."
-
-    pass
-
-
 if __name__ == '__main__':
-    ignore()
+    pass
