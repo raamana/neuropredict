@@ -1,10 +1,13 @@
 
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+import itertools
 import random
 import pickle
 import sklearn
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 
 file_name_results = "rhst_results.pkl"
@@ -15,17 +18,76 @@ from pyradigm import MLDataset
 def eval_optimized_clsfr_on_testset(train_fs, test_fs):
     "Method to optimize the classifier on the training set and returns predictions on test set. "
 
-    #
-    pred_prob = pred_labels = conf_mat = best_minleafsize = best_num_predictors = feat_importance = None
+    MAX_DIM_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
 
-    max_dim = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
+    NUM_TREES = 50
+    MAX_MIN_LEAFSIZE = 20
+    SEED_RANDOM = 652
 
-    clf = RandomForestClassifier(n_estimators=10, max_features = max_dim, max_depth=None,
-                                 min_samples_split=2, random_state=0)
+    range_min_leafsize   = range(1, MAX_MIN_LEAFSIZE, 5)
+    range_num_predictors = range(1, MAX_DIM_TRAINING, 2)
+    oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
 
-    scores = cross_val_score(clf, train_fs.data, train_fs.target)
+    for idx_ls, minls in enumerate(range_min_leafsize):
+        for idx_np, num_pred in enumerate(range_num_predictors):
+            rf = RandomForestClassifier(n_estimators=NUM_TREES, max_depth=None,
+                                        max_features=num_pred , min_samples_leaf = minls,
+                                        random_state=SEED_RANDOM)
+            rf.fit(train_fs.data, train_fs.target)
+            oob_error_train[idx_ls, idx_np] = rf.oob_score_
+
+    # identifying the best parameters
+    best_idx_ls, best_idx_numpred = np.unravel_index(oob_error_train.argmin(), oob_error_train.shape)
+    best_minleafsize    = range_min_leafsize[best_idx_ls]
+    best_num_predictors = range_num_predictors[best_idx_numpred]
+
+    # training the RF using the best parameters
+    best_rf = RandomForestClassifier( max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
+                                      n_estimators=NUM_TREES, random_state=SEED_RANDOM)
+
+    # making predictions on the test set and assessing their performance
+    pred_labels = best_rf.predict(test_fs.data)
+    feat_importance = best_rf.feature_importances_
+
+    #TODO test if the gathering of prob data is consistent across multiple calls to this method
+    #   perhaps by controlling the class order in input
+    # The order of the classes corresponds to that in the attribute best_rf.classes_.
+    pred_prob = best_rf.predict_proba
+
+    conf_mat = confusion_matrix(test_fs.target, pred_labels)
 
     return pred_prob, pred_labels, conf_mat, feat_importance, best_minleafsize, best_num_predictors
+
+
+def display_confusion_matrix(cfmat, class_labels,
+                             title='Confusion matrix',
+                             display_perc=False,
+                             cmap=plt.cm.Blues):
+    """
+    Display routine for the confusion matrix.
+    Entries in confusin matrix can be turned into percentages with `display_perc=True`.
+    """
+
+    plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(class_labels))
+    plt.xticks(tick_marks, class_labels, rotation=45)
+    plt.yticks(tick_marks, class_labels)
+
+    if display_perc:
+        cfmat = cfmat.astype('float') / cfmat.sum(axis=1)[:, np.newaxis]
+
+    # trick from sklearn
+    thresh = cfmat.max() / 2.
+    for i, j in itertools.product(range(cfmat.shape[0]), range(cfmat.shape[1])):
+        plt.text(j, i, cfmat[i, j],
+                 horizontalalignment="center",
+                 color="white" if cfmat[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True class')
+    plt.xlabel('Predicted class')
 
 
 def max_dimensionality_to_avoid_curseofdimensionality(num_samples, perc_prob_error_allowed = 0.05):
