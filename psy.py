@@ -5,7 +5,9 @@ import os
 import nibabel
 import sklearn
 import argparse
+import pickle
 from pyradigm import MLDataset
+import rhst
 
 def not_unspecified( var ):
     """ Checks for null values of a give variable! """
@@ -176,8 +178,12 @@ def run():
 
     dataset = getfeatures(subjects, classes, path_to_features, getmethod = chosenmethod)
 
-    run_rhst(dataset, outdir)
+    results_file_path = run_rhst(dataset, outdir)
 
+    dataset_paths, train_perc, num_repetitions, num_classes, pred_prob_per_class, pred_labels_per_rep_fs, \
+    test_labels_per_rep, best_min_leaf_size, best_num_predictors, feature_importances_rf, misclf_sample_ids, \
+    misclf_sample_classes, num_times_misclfd, num_times_tested, confusion_matrix, accuracy_balanced = \
+        rhst.load_results(results_file_path)
 
 
 if __name__ == '__main__':
