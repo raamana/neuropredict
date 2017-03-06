@@ -2,14 +2,14 @@
 
 Automatic estimation of predictive power of commonly used structural imaging features as well as user-defined features.
 
-The aim of this python module would be to automatically assess the predictive power of commonly used structural imaging features (such as subcortical volumes, cortical thickness features) from Freesurfer, and present a comprehensive report on a given dataset. It is mainly aimed (to lower or remove the barriers) at clinical users who would like to understand what features and brain regions are discriminative in their shiny new dataset before diving into the deep grey sea of feature extraction and optimization.
+The aim of this python module would be to automatically assess the predictive power of commonly used neuroimaging features (such as resting-state connectibity, fractional anisotropy, subcortical volumes and cortical thickness features) automatically read from the processing of popular tools such as FSL, DTIstudio, AFNI and Freesurfer, and present a comprehensive report on a given dataset. It is mainly aimed (to lower or remove the barriers) at clinical users who would like to understand what features and brain regions are discriminative in their shiny new dataset before diving into the deep grey sea of feature extraction and optimization.
 
-PS: It sounds similar to nilearn on the surface, however it is aimed to lower the barriers even further, or remove them altogether! All the user would need to provide are commonly used features (such as a Freesurfer output directory) and they get a easy to read/publish report on the predictive power of the features they are interested in.
+PS: It sounds similar (on the surface) to other software available, however it is aimed to lower the barriers even further, or remove them altogether! All the user would need to provide are commonly used features (such as a Freesurfer output directory) and obtain an easy to read report, along with well-packaged export of performance metrics (for sharing and posthoc comparison) on the predictive power of the features they are interested in.
 
 ## usage:
 
 ```
-usage: psy [-h] -m METADATAFILE [-f FSDIR] [-u USERDIR] [-o OUTDIR]
+usage: neuropredict [-h] -m METADATAFILE [-f FSDIR] [-u USERDIR] [-o OUTDIR]
 
 optional arguments:
   -h, --help            show this help message and exit

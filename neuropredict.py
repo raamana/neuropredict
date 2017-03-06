@@ -6,8 +6,19 @@ import nibabel
 import sklearn
 import argparse
 import pickle
+from time import localtime, strftime
+
+from freesurfer import fsvolumes, fsthickness
 from pyradigm import MLDataset
 import rhst
+
+
+def make_time_stamp():
+    # # with the minute
+    # return  strftime('%Y%m%d-T%H%M',localtime())
+
+    # just by the hour
+    return strftime('%Y%m%d-T%H', localtime())
 
 def not_unspecified( var ):
     """ Checks for null values of a give variable! """
@@ -18,7 +29,7 @@ def not_unspecified( var ):
 def parse_args():
     """Parser/validator for the cmd line args."""
 
-    parser = argparse.ArgumentParser(prog="psy")
+    parser = argparse.ArgumentParser(prog="neuropredict")
 
     parser.add_argument("-m", "--metadatafile", action="store", dest="metadatafile",
                         default=None, required=True,
@@ -33,6 +44,10 @@ def parse_args():
     parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
                         default=None,
                         help="Abs. path of SUBJECTS_DIR containing the finished runs of Freesurfer parcellation")
+
+    parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
+                        default="fsaverage",
+                        help="Name of the atlas to use for visualization. Default: fsaverage, if available.")
 
     parser.add_argument("-u", "--userdir", action="store", dest="userdir",
                         default=None,
@@ -59,6 +74,7 @@ def parse_args():
     except:
         parser.exit(1)
 
+    # noinspection PyUnboundLocalVariable
     metadatafile = os.path.abspath(options.metadatafile)
     assert os.path.exists(metadatafile), "Given metadata file doesn't exist."
 
@@ -69,7 +85,7 @@ def parse_args():
     elif not_unspecified(options.userdir):
         fsdir = None
         userdir = os.path.abspath(options.userdir)
-        assert os.path.exists(userdir), "Given user-defined directory for features doesn't exist."
+        assert os.path.exists(userdir), "Suppiled input directory for features doesn't exist."
     else:
         raise IOError('One of Freesurfer or user-defined directory must be specified.')
 
@@ -85,19 +101,6 @@ def parse_args():
 
 def getmetadata(path):
     """Populates the dataset dictionary with subject ids and classes"""
-
-
-def fsvolumes(path, subjid):
-    """Returns a feature set of volumes found in aparc+aseg.stats"""
-
-
-def fsthickness(path, subjid, fwhm=10):
-    """
-    Returns thickness feature set at a given fwhm.
-
-    Assumes freesurfer was run with -qcache flag!
-
-    """
 
 
 def userdefinedget(featdir, subjid):
@@ -167,18 +170,27 @@ def run():
 
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
-        path_to_features = userdir
+        feature_dir = userdir
         chosenmethod = userdefinedget
     else:
-        path_to_features = fsdir
+        feature_dir = fsdir
         chosenmethod = fsvolumes
 
     # # this could be a list of methods when RHsT is able to handle it.
     # chosenmethod = [ fsvolumes, fsthickness, userdefinedget ]
 
-    dataset = getfeatures(subjects, classes, path_to_features, getmethod = chosenmethod)
+    # noinspection PyTypeChecker
+    dataset = getfeatures(subjects, classes, feature_dir, getmethod = chosenmethod)
 
-    results_file_path = run_rhst(dataset, outdir)
+    out_name = 'consolidated_{}_{}.MLDataset'.format(chosenmethod.__name__, make_time_stamp())
+    ds_out_path = os.path.join(feature_dir, out_name)
+    dataset.save(ds_out_path)
+
+    dataset_paths_file = os.path.join(feature_dir, out_name+ '.list.txt')
+    with open(dataset_paths_file, 'w') as dpf:
+        dpf.writelines([dataset_paths_file])
+
+    results_file_path = run_rhst(dataset_paths_file, outdir)
 
     dataset_paths, train_perc, num_repetitions, num_classes, pred_prob_per_class, pred_labels_per_rep_fs, \
     test_labels_per_rep, best_min_leaf_size, best_num_predictors, feature_importances_rf, misclf_sample_ids, \
