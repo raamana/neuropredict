@@ -11,6 +11,7 @@ from time import localtime, strftime
 from freesurfer import fsvolumes, fsthickness
 from pyradigm import MLDataset
 import rhst
+import posthoc
 
 
 def make_time_stamp():
@@ -99,7 +100,7 @@ def parse_args():
     return metadatafile, outdir, userdir, fsdir
 
 
-def getmetadata(path):
+def get_metadata(path):
     """
     Populates the dataset dictionary with subject ids and classes
 
@@ -184,7 +185,11 @@ def run():
 
     metadatafile, outdir, userdir, fsdir = parse_args()
 
-    subjects, classes = getmetadata(metadatafile)
+    subjects, classes = get_metadata(metadatafile)
+    num_classes_in_metadata = len(set(classes.values()))
+    assert num_classes_in_metadata > 1, \
+        "Atleast two classes are required for predictive analysis!" \
+        "Only one given ({})".format(set(classes.values()))
 
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
@@ -194,29 +199,41 @@ def run():
         feature_dir = fsdir
         chosenmethod = fsvolumes
 
-    method_list = [ fsvolumes ] # [ fsvolumes, fsthickness, userdefinedget ]
+    # TODO test [ fsvolumes, fsthickness, userdefinedget ]
+    # method_list = [ fsvolumes, fsvolumes, fsvolumes ]
+    method_list = [fsvolumes ]
+    method_names = list()
     outpath_list = list()
     combined_name = ''
-    for chosenmethod in method_list:
+    for mm, chosenmethod in enumerate(method_list):
         # noinspection PyTypeChecker
+        method_names.append('{}_{}'.format(chosenmethod.__name__,mm)) # adding an index for an even better contrast
         combined_name = combined_name + chosenmethod.__name__
         out_name = 'consolidated_{}_{}.MLDataset.pkl'.format(chosenmethod.__name__, make_time_stamp())
 
+        # TODO need to devise a way to avoid re-reading all the features from scratch every time.
         outpath_dataset = getfeatures(subjects, classes, feature_dir, outdir, out_name, getmethod = chosenmethod)
         outpath_list.append(outpath_dataset)
 
     dataset_paths_file = os.path.join(outdir, combined_name+ '.list.txt')
     with open(dataset_paths_file, 'w') as dpf:
-        dpf.writelines(outpath_list)
+        dpf.writelines('\n'.join(outpath_list))
 
-    results_file_path = rhst.run(dataset_paths_file, outdir, train_perc=0.5, num_repetitions=5)
+    results_file_path = rhst.run(dataset_paths_file, outdir, num_repetitions=20)
 
     dataset_paths, train_perc, num_repetitions, num_classes, \
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
     best_min_leaf_size, best_num_predictors, feature_importances_rf, \
     num_times_misclfd, num_times_tested, \
-    confusion_matrix, accuracy_balanced = \
+    confusion_matrix, class_order, accuracy_balanced = \
         rhst.load_results(results_file_path)
+
+    balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
+    posthoc.visualize_metrics(accuracy_balanced, method_names, balacc_fig_path,
+                              num_classes, "Balanced Accuracy")
+
+    confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
+    posthoc.display_confusion_matrix(confusion_matrix, class_order, method_names, confmat_fig_path)
 
 if __name__ == '__main__':
     run()

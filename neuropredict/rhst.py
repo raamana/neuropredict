@@ -18,7 +18,7 @@ file_name_results = "rhst_results.pkl"
 from pyradigm import MLDataset
 
 
-def eval_optimized_clsfr_on_testset(train_fs, test_fs):
+def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     "Method to optimize the classifier on the training set and return predictions on test set. "
 
     MAX_DIM_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
@@ -39,7 +39,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs):
     oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
 
     train_data_mat, train_labels, _               = train_fs.data_and_labels()
-    test_data_mat , test_labels , test_sample_ids = test_fs.data_and_labels()
+    test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
     for idx_ls, minls in enumerate(range_min_leafsize):
         for idx_np, num_pred in enumerate(range_num_predictors):
@@ -62,19 +62,19 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs):
     best_rf.fit(train_data_mat, train_labels)
 
     # making predictions on the test set and assessing their performance
-    pred_labels = best_rf.predict(test_data_mat)
-    feat_importance = best_rf.feature_importances_
+    pred_test_labels = best_rf.predict(test_data_mat)
+    feat_importance  = best_rf.feature_importances_
 
     #TODO test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
     # The order of the classes corresponds to that in the attribute best_rf.classes_.
     pred_prob = best_rf.predict_proba(test_data_mat)
 
-    conf_mat = confusion_matrix(test_labels, pred_labels)
+    conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_CM)
 
-    misclsfd_samples = test_sample_ids[test_labels != pred_labels]
+    misclsfd_samples = test_sample_ids[true_test_labels != pred_test_labels]
 
-    return pred_prob, pred_labels,\
+    return pred_prob, pred_test_labels,\
            conf_mat, misclsfd_samples, \
            feat_importance, best_minleafsize, best_num_predictors
 
@@ -102,7 +102,6 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples, perc_prob_err
 
 def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
-    # IMPLEMENT TODO
 
     num_classes = confmat.shape[0]
     assert num_classes==confmat.shape[1], "CM is not square!"
@@ -143,7 +142,7 @@ def load_results(fpath):
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             best_min_leaf_size, best_num_predictors, feature_importances_rf, \
             num_times_misclfd, num_times_tested, \
-            confusion_matrix, accuracy_balanced = \
+            confusion_matrix, class_set, accuracy_balanced = \
                 pickle.load(rf)
 
     except:
@@ -153,7 +152,7 @@ def load_results(fpath):
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
            best_min_leaf_size, best_num_predictors, feature_importances_rf, \
            num_times_misclfd, num_times_tested, \
-           confusion_matrix, accuracy_balanced
+           confusion_matrix, class_set, accuracy_balanced
 
 
 def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 200):
@@ -222,9 +221,9 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
     for idx in range(1, num_datasets):
         this_ds = datasets[idx]
         assert num_samples==this_ds.num_samples, "Number of samples in different datasets differ!"
-        assert class_set==set(this_ds.classes.values()), \
+        assert set(class_set)==set(this_ds.classes.values()), \
             "Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                class_set, set(this_ds.classes.values()))
+                set(class_set), set(this_ds.classes.values()))
 
     # re-map the labels (from 1 to n) to ensure numeric labels do not differ
     remapped_class_labels = dict()
@@ -310,7 +309,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
                 pred_labels_per_rep_fs[rep, dd, :], \
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
-                eval_optimized_clsfr_on_testset(train_fs, test_fs)
+                eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM=label_set)
 
             accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat
@@ -328,7 +327,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
                         best_min_leaf_size, best_num_predictors, feature_importances_rf,
                         num_times_misclfd, num_times_tested,
-                        confusion_matrix, accuracy_balanced ]
+                        confusion_matrix, class_set, accuracy_balanced ]
 
     out_results_path = save_results(out_results_dir, var_list_to_save)
 
