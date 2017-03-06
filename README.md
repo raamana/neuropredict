@@ -1,4 +1,4 @@
-# psy
+# neuropredict
 
 Automatic estimation of predictive power of commonly used structural imaging features as well as user-defined features.
 
