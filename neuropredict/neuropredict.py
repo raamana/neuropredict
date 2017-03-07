@@ -5,6 +5,7 @@ import os
 import nibabel
 import sklearn
 import argparse
+import warnings
 import pickle
 from time import localtime, strftime
 
@@ -154,13 +155,28 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
     for idx, cls in enumerate(class_set):
         class_labels[cls] = idx
 
+    ids_excluded = list()
+
     ds = MLDataset()
     for subjid in subjects:
-        data = getmethod(featdir, subjid)
-        ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid])
+        try:
+            data = getmethod(featdir, subjid)
+            ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid])
+        except:
+            ids_excluded.append(subjid)
+            warnings.warn("Features for {} via {} method could not be read. Excluding it.".format(subjid, getmethod.__name__))
+
+    # warning for large number of fails for feature extraction
+    if len(ids_excluded) > 0.1*len(subjects):
+        warnings.warn('Features for over {}% of subjects could not read. ')
+        user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
+        if user_confirmation.lower() not in ['y', 'yes', 'ye']:
+            raise IOError('Stopping. \n Rerun after completing the feature extraction for all subjects '
+                          'or exclude failed subjects..')
+        else:
+            print(' Yes. Proceeding with only {} subjects.'.format(ds.num_samples))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
-    # outname = 'features_{}.MLDataset'.format(getmethod.__name__)
     savepath = os.path.join(outdir, outname)
     ds.save(savepath)
 
@@ -199,26 +215,23 @@ def run():
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
         feature_dir = userdir
-        chosenmethod = userdefinedget
     else:
         feature_dir = fsdir
-        chosenmethod = fsvolumes
 
     method_names = list()
     outpath_list = list()
-    combined_name = ''
     for mm, chosenmethod in enumerate(method_list):
-        # noinspection PyTypeChecker
         method_names.append('{}_{}'.format(chosenmethod.__name__,mm)) # adding an index for an even better contrast
-        combined_name = combined_name + chosenmethod.__name__
         out_name = 'consolidated_{}_{}.MLDataset.pkl'.format(chosenmethod.__name__, make_time_stamp())
 
         # TODO need to devise a way to avoid re-reading all the features from scratch every time.
         outpath_dataset = os.path.join(outdir, out_name)
         if (not os.path.exists(outpath_dataset)) or (os.path.getsize(outpath_dataset) <= 0):
+            # noinspection PyTypeChecker
             outpath_dataset = getfeatures(subjects, classes, feature_dir, outdir, out_name, getmethod = chosenmethod)
         outpath_list.append(outpath_dataset)
 
+    combined_name = '_'.join(method_names)
     dataset_paths_file = os.path.join(outdir, combined_name+ '.list.txt')
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
@@ -241,6 +254,9 @@ def run():
 
     featimp_fig_path = os.path.join(outdir, 'feature_importance')
     posthoc.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
+
+    misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
+    posthoc.summarize_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
 
 if __name__ == '__main__':
     run()
