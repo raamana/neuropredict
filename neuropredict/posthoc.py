@@ -10,8 +10,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 import itertools
 from collections import Counter
 
-common_fig_size = [9, 9]
+import config_neuropredict as cfg
 
+common_fig_size = cfg.COMMON_FIG_SIZE
 
 def feature_importance_map(feat_imp, method_labels, base_output_path,
                            show_distr = False,
@@ -166,9 +167,9 @@ def summarize_misclassifications(num_times_misclfd, num_times_tested, method_lab
 
     """
 
-    # TODO capture all the constants in various methods to a single cfg file
-    num_bins = 20
-    count_thresh = 0.6
+    num_bins = cfg.MISCLF_HIST_NUM_BINS
+    count_thresh = cfg.MISCLF_PERC_THRESH
+
     highlight_thresh50 = 0.5
     highlight_thresh75 = 0.75
 

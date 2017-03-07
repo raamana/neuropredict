@@ -2,7 +2,7 @@
 import os
 import numpy as np
 
-def fsvolumes(fspath, subjid):
+def aseg_stats_whole_brain(fspath, subjid):
     """
 
     Returns a feature set of volumes found in Freesurfer output: subid/stats/aseg.stats
@@ -45,18 +45,29 @@ def fsvolumes(fspath, subjid):
     return np.array(sel_volumes) # sel_names not returned to follow return-a-single-vector convention
 
 
-def subcortical_aseg_stats(path, subjid):
+def aseg_stats_subcortical(fspath, subjid):
     """
     Returns all the subcortical volumes found in stats/aseg.stats.
 
     Equivalent of load_fs_segstats.m
 
     """
-    # TODO reader for subcortical volumes: equivalent of load_fs_segstats.m
 
-    subctx_volumes = None
+    ignore_seg_names = ['WM-hypointensities', 'Left-WM-hypointensities', 'Right-WM-hypointensities',
+                        'non-WM-hypointensities', 'Left-non-WM-hypointensities', 'Right-non-WM-hypointensities',
+                        'Optic-Chiasm']
 
-    return np.array(subctx_volumes)
+    segstatsfile = os.path.join(fspath, subjid, 'stats', 'aseg.stats')
+
+    # ColHeaders  Index SegId NVoxels Volume_mm3 StructName normMean normStdDev normMin normMax normRange
+    stats = np.loadtxt(segstatsfile, dtype="i1,i1,i4,f4,S32,f4,f4,f4,f4,f4")
+
+    filtered_stats = [ (seg[1], seg[3], seg[4]) for seg in stats if seg[4] not in ignore_seg_names ]
+
+    seg_ids, volumes, names = zip(*filtered_stats)
+
+    return np.array(volumes) # , np.array(seg_ids), list(names)
+
 
 def fsthickness(path, subjid, fwhm=10):
     """

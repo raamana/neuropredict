@@ -13,7 +13,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 
-file_name_results = "rhst_results.pkl"
+import config_neuropredict as cfg
 
 from pyradigm import MLDataset
 
@@ -21,20 +21,16 @@ from pyradigm import MLDataset
 def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     "Method to optimize the classifier on the training set and return predictions on test set. "
 
-    MAX_DIM_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
+    MAX_DIM_FOR_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
 
-    NUM_TREES = 100
-    MAX_MIN_LEAFSIZE = 20
-    # SEED_RANDOM = 652
-
-    range_min_leafsize   = range(1, MAX_MIN_LEAFSIZE, 5)
-    range_num_predictors = range(1, MAX_DIM_TRAINING, 2)
+    range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
+    range_num_predictors = range(1, MAX_DIM_FOR_TRAINING, cfg.NUM_PREDICTORS_STEP)
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
         range_min_leafsize = [ 1 ]
     if len(range_num_predictors) < 1:
-        range_num_predictors = [MAX_DIM_TRAINING]
+        range_num_predictors = [MAX_DIM_FOR_TRAINING]
 
     oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
 
@@ -44,7 +40,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     for idx_ls, minls in enumerate(range_min_leafsize):
         for idx_np, num_pred in enumerate(range_num_predictors):
             rf = RandomForestClassifier(max_features=num_pred , min_samples_leaf = minls,
-                                        n_estimators=NUM_TREES, max_depth=None,
+                                        n_estimators=cfg.NUM_TREES, max_depth=None,
                                         oob_score = True) # , random_state=SEED_RANDOM)
             rf.fit(train_data_mat, train_labels)
             oob_error_train[idx_ls, idx_np] = rf.oob_score_
@@ -57,7 +53,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     # training the RF using the best parameters
     best_rf = RandomForestClassifier( max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
                                       oob_score=True,
-                                      n_estimators=NUM_TREES) # , random_state=SEED_RANDOM)
+                                      n_estimators=cfg.NUM_TREES) # , random_state=SEED_RANDOM)
     best_rf.fit(train_data_mat, train_labels)
 
     # making predictions on the test set and assessing their performance
@@ -78,7 +74,8 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
            feat_importance, best_minleafsize, best_num_predictors
 
 
-def max_dimensionality_to_avoid_curseofdimensionality(num_samples, perc_prob_error_allowed = 0.05):
+def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
+                                                      perc_prob_error_allowed = cfg.PERC_PROB_ERROR_ALLOWED):
     """
     Computes the largest dimensionality that can be used to train a predictive model
         avoiding curse of dimensionality for a 5% probability of error.
@@ -121,9 +118,9 @@ def save_results(out_dir, var_list_to_save):
 
     # LATER choose a more universal serialization method (that could be loaded from a web app)
     try:
-        out_results_path = os.path.join(out_dir, file_name_results)
-        with open(out_results_path, 'wb') as cfg:
-            pickle.dump(var_list_to_save, cfg)
+        out_results_path = os.path.join(out_dir, cfg.file_name_results)
+        with open(out_results_path, 'wb') as resfid:
+            pickle.dump(var_list_to_save, resfid)
     except:
         raise IOError('Error saving the results to disk!')
 
@@ -320,7 +317,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
 
             print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep,dd]))
 
-    # TODO generate a CSV of different metrics for each dataset, as well as a reloadable
+    # TODO NOW generate a CSV of different metrics for each dataset, as well as a reloadable
 
     # save results
     var_list_to_save = [dataset_paths, train_perc, num_repetitions, num_classes,

@@ -9,11 +9,12 @@ import warnings
 import pickle
 from time import localtime, strftime
 
-from freesurfer import fsvolumes, fsthickness
+from freesurfer import *
 from pyradigm import MLDataset
 import rhst
 import posthoc
 
+import config_neuropredict as cfg
 
 def make_time_stamp():
     # # with the minute
@@ -200,9 +201,8 @@ def run():
     """Main entry point."""
 
     NUM_REP = 10
-    # TODO test [ fsvolumes, fsthickness, userdefinedget ]
-    method_list = [fsvolumes, fsvolumes, fsvolumes]
-    # method_list = [fsvolumes ]
+    # TODO test [ aseg_stats_whole_brain, fsthickness, aseg_stats_subcortical ]
+    method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
     metadatafile, outdir, userdir, fsdir = parse_args()
 
