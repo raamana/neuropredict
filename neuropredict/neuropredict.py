@@ -59,9 +59,6 @@ def parse_args():
                              "file) containing a file called features.txt with one number per line. All the subjects "
                              "must have the number of features (#lines in file)")
 
-    # TODO perhaps I can have two arguments: one to specify feature type (which determines the reader), and another
-    # to obtain the folder path to read from.
-
     parser.add_argument("-o", "--outdir", action="store", dest="outdir",
                         required=True,
                         help="Output folder to store features and results.")
@@ -201,7 +198,6 @@ def run():
     """Main entry point."""
 
     NUM_REP = 10
-    # TODO test [ aseg_stats_whole_brain, fsthickness, aseg_stats_subcortical ]
     method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
     metadatafile, outdir, userdir, fsdir = parse_args()

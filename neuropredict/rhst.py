@@ -34,7 +34,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
 
     oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
 
-    train_data_mat, train_labels, _               = train_fs.data_and_labels()
+    train_data_mat, train_labels, _                    = train_fs.data_and_labels()
     test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
     for idx_ls, minls in enumerate(range_min_leafsize):
@@ -100,7 +100,7 @@ def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
 
     num_classes = confmat.shape[0]
-    assert num_classes==confmat.shape[1], "CM is not square!"
+    assert num_classes==confmat.shape[1], "given confusion matrix is not square!"
 
     confmat = confmat.astype(np.float64)
 
@@ -269,9 +269,6 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
             num_times_tested[dd][subid] = 0
             num_times_misclfd[dd][subid]= 0
 
-    # num_times_tested  = np.zeros([num_samples, num_datasets])
-    # num_times_misclfd = np.zeros([num_samples, num_datasets])
-
     confusion_matrix  = np.full([num_classes, num_classes, num_repetitions, num_datasets], np.nan)
     accuracy_balanced = np.full([num_repetitions, num_datasets], np.nan)
 
@@ -291,7 +288,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
         print(" CV trial {:3d} ".format(rep))
 
         train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
-        # _ , test_labels_per_rep[rep, :] = test_set
+        test_labels_per_rep[rep, :] = [ common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
 
         # evaluating each feature/dataset
         # try set test_labels_per_rep outside dd loop as its the same across all dd

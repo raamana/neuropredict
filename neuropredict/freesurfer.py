@@ -1,6 +1,7 @@
 
 import os
 import numpy as np
+import config_neuropredict as cfg
 
 def aseg_stats_whole_brain(fspath, subjid):
     """
@@ -11,13 +12,7 @@ def aseg_stats_whole_brain(fspath, subjid):
     """
 
     # 'eTIV' is not included as it is used to norm subcortical volumes
-    seg_names_sel = [ 'BrainSegVol', 'BrainSegVolNotVent',
-        'lhCortexVol', 'rhCortexVol', 
-        'lhCorticalWhiteMatterVol', 'rhCorticalWhiteMatterVol', 
-        'SubCortGrayVol', 'TotalGrayVol', 
-        'SupraTentorialVol', 'SupraTentorialVolNotVent', 
-        'MaskVol', 'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV', 
-        'lhSurfaceHoles', 'rhSurfaceHoles' ]
+    seg_names_sel = cfg.freesurfer_whole_brain_stats_to_select
 
     wb_seg_volumes_selected = np.full([len(seg_names_sel), 1], np.nan)
 
@@ -53,9 +48,7 @@ def aseg_stats_subcortical(fspath, subjid):
 
     """
 
-    ignore_seg_names = ['WM-hypointensities', 'Left-WM-hypointensities', 'Right-WM-hypointensities',
-                        'non-WM-hypointensities', 'Left-non-WM-hypointensities', 'Right-non-WM-hypointensities',
-                        'Optic-Chiasm']
+    ignore_seg_names = cfg.freesurfer_subcortical_seg_names_to_ignore
 
     segstatsfile = os.path.join(fspath, subjid, 'stats', 'aseg.stats')
 
