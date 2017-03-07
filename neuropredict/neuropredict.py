@@ -212,7 +212,9 @@ def run():
         out_name = 'consolidated_{}_{}.MLDataset.pkl'.format(chosenmethod.__name__, make_time_stamp())
 
         # TODO need to devise a way to avoid re-reading all the features from scratch every time.
-        outpath_dataset = getfeatures(subjects, classes, feature_dir, outdir, out_name, getmethod = chosenmethod)
+        outpath_dataset = os.path.join(outdir, out_name)
+        if (not os.path.exists(outpath_dataset)) or (os.path.getsize(outpath_dataset) <= 0):
+            outpath_dataset = getfeatures(subjects, classes, feature_dir, outdir, out_name, getmethod = chosenmethod)
         outpath_list.append(outpath_dataset)
 
     dataset_paths_file = os.path.join(outdir, combined_name+ '.list.txt')

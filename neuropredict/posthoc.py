@@ -15,8 +15,7 @@ common_fig_size=[9, 9]
 def display_confusion_matrix(cfmat_array, class_labels,
                              method_names, base_output_path,
                              title='Confusion matrix',
-                             display_perc=False,
-                             cmap=plt.cm.Blues):
+                             cmap=plt.cm.Greens):
     """
     Display routine for the confusion matrix.
     Entries in confusin matrix can be turned into percentages with `display_perc=True`.
@@ -27,33 +26,40 @@ def display_confusion_matrix(cfmat_array, class_labels,
     """
 
     num_datasets = cfmat_array.shape[3]
-    assert cfmat_array.shape[0]==cfmat_array.shape[1], \
+    num_classes  = cfmat_array.shape[0]
+    assert num_classes==cfmat_array.shape[1], \
         "Invalid dimensions of confusion matrix. " \
         "Need [num_classes, num_classes, num_repetitions, num_datasets]"
 
+    np.set_printoptions(2)
     for dd in range(num_datasets):
         output_path = base_output_path + '_' + method_names[dd]
         output_path.replace(' ', '_')
 
-        cfmat = np.mean(cfmat_array[:, :, :, dd], 2)
+        # mean confusion over CV trials
+        avg_cfmat = np.mean(cfmat_array[:, :, :, dd], 2)
+
+        # percentage confusion relative to class size
+        clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
+        cfmat = np.divide(avg_cfmat, clsiz_elemwise)
+        # human readable in 0-100%, 3 deciamls
+        cfmat = 100*np.around(cfmat, decimals=3)
+
         fig, ax = plt.subplots(figsize=common_fig_size)
 
-        plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
+        im = plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
         plt.title(title)
-        plt.colorbar()
+        plt.colorbar(im, fraction=0.046, pad=0.04)
         tick_marks = np.arange(len(class_labels))
         plt.xticks(tick_marks, class_labels, rotation=45)
         plt.yticks(tick_marks, class_labels)
 
-        if display_perc:
-            cfmat = cfmat.astype('float') / cfmat.sum(axis=1)[:, np.newaxis]
-
         # trick from sklearn
-        thresh = cfmat.max() / 2.
-        for i, j in itertools.product(range(cfmat.shape[0]), range(cfmat.shape[1])):
-            plt.text(j, i, cfmat[i, j],
-                     horizontalalignment="center",
-                     color="white" if cfmat[i, j] > thresh else "black")
+        thresh = 100.0 / num_classes # cfmat.max() / 2.
+        for i, j in itertools.product(range(num_classes), range(num_classes)):
+            plt.text(j, i, "{}%".format(cfmat[i, j]),
+                     horizontalalignment="center", fontsize = 14,
+                     color="tomato" if cfmat[i, j] > thresh else "teal")
 
         plt.tight_layout()
         plt.ylabel('True class')
