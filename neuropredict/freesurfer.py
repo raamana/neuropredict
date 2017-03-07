@@ -9,7 +9,6 @@ def fsvolumes(fspath, subjid):
 
 
     """
-    # TODO need to include subcortical volumes
 
     # 'eTIV' is not included as it is used to norm subcortical volumes
     seg_names_sel = [ 'BrainSegVol', 'BrainSegVolNotVent',

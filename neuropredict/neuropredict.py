@@ -183,6 +183,11 @@ def run_rhst(datasets, outdir):
 def run():
     """Main entry point."""
 
+    NUM_REP = 10
+    # TODO test [ fsvolumes, fsthickness, userdefinedget ]
+    method_list = [fsvolumes, fsvolumes, fsvolumes]
+    # method_list = [fsvolumes ]
+
     metadatafile, outdir, userdir, fsdir = parse_args()
 
     subjects, classes = get_metadata(metadatafile)
@@ -199,9 +204,6 @@ def run():
         feature_dir = fsdir
         chosenmethod = fsvolumes
 
-    # TODO test [ fsvolumes, fsthickness, userdefinedget ]
-    # method_list = [ fsvolumes, fsvolumes, fsvolumes ]
-    method_list = [fsvolumes ]
     method_names = list()
     outpath_list = list()
     combined_name = ''
@@ -221,14 +223,14 @@ def run():
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
-    results_file_path = rhst.run(dataset_paths_file, outdir, num_repetitions=20)
+    results_file_path = rhst.run(dataset_paths_file, outdir, num_repetitions=NUM_REP)
 
     dataset_paths, train_perc, num_repetitions, num_classes, \
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_min_leaf_size, best_num_predictors, feature_importances_rf, \
-    num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, accuracy_balanced = \
-        rhst.load_results(results_file_path)
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+        num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_order, accuracy_balanced = \
+            rhst.load_results(results_file_path)
 
     balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
     posthoc.visualize_metrics(accuracy_balanced, method_names, balacc_fig_path,
@@ -236,6 +238,9 @@ def run():
 
     confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
     posthoc.display_confusion_matrix(confusion_matrix, class_order, method_names, confmat_fig_path)
+
+    featimp_fig_path = os.path.join(outdir, 'feature_importance')
+    posthoc.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
 
 if __name__ == '__main__':
     run()

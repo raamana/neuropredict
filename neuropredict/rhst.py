@@ -23,9 +23,9 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
 
     MAX_DIM_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
 
-    NUM_TREES = 50
+    NUM_TREES = 100
     MAX_MIN_LEAFSIZE = 20
-    SEED_RANDOM = 652
+    # SEED_RANDOM = 652
 
     range_min_leafsize   = range(1, MAX_MIN_LEAFSIZE, 5)
     range_num_predictors = range(1, MAX_DIM_TRAINING, 2)
@@ -45,8 +45,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
         for idx_np, num_pred in enumerate(range_num_predictors):
             rf = RandomForestClassifier(max_features=num_pred , min_samples_leaf = minls,
                                         n_estimators=NUM_TREES, max_depth=None,
-                                        oob_score = True,
-                                        random_state=SEED_RANDOM)
+                                        oob_score = True) # , random_state=SEED_RANDOM)
             rf.fit(train_data_mat, train_labels)
             oob_error_train[idx_ls, idx_np] = rf.oob_score_
 
@@ -58,14 +57,14 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     # training the RF using the best parameters
     best_rf = RandomForestClassifier( max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
                                       oob_score=True,
-                                      n_estimators=NUM_TREES, random_state=SEED_RANDOM)
+                                      n_estimators=NUM_TREES) # , random_state=SEED_RANDOM)
     best_rf.fit(train_data_mat, train_labels)
 
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_rf.predict(test_data_mat)
     feat_importance  = best_rf.feature_importances_
 
-    #TODO test if the gathering of prob data is consistent across multiple calls to this method
+    #TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
     # The order of the classes corresponds to that in the attribute best_rf.classes_.
     pred_prob = best_rf.predict_proba(test_data_mat)
@@ -284,7 +283,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
         feature_importances_rf[idx] = np.full([num_repetitions,num_features[idx]], np.nan)
 
     # repeated-hold out CV begins here
-    # TODO implement a multi-process version as differnt rep's are embarrasingly parallel
+    # TODO LATER implement a multi-process version as differnt rep's are embarrasingly parallel
     # use the following one statement processing that can be forked to parallel threads
     # pred_prob_per_class[rep, dd, :, :], pred_labels_per_rep_fs[rep, dd, :], \
     # confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep, :], \
@@ -314,12 +313,13 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
             accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat
 
+            # TODO for binary experiments, compute AUC, sensitivity, specificity (optional precision, recall)
+
             num_times_misclfd[dd].update(misclsfd_ids_this_run)
             num_times_tested[dd].update(test_fs.sample_ids)
 
             print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep,dd]))
 
-    # TODO generate visualizations for each feature set as well as a comparative summary!
     # TODO generate a CSV of different metrics for each dataset, as well as a reloadable
 
     # save results
@@ -338,41 +338,41 @@ if __name__ == '__main__':
     pass
 
 
-def holdout_evaluation(datasets, train_size_common, total_test_samples):
-    "Performs one repetition of the train/test and returns the relevant evaluation metrics."
-
-    num_datasets= len(datasets)
-    num_classes = datasets[0].num_classes
-
-    pred_prob_per_class    = np.full([total_test_samples, num_classes], np.nan)
-    pred_labels_per_rep_fs = np.full([total_test_samples], np.nan)
-    test_labels_per_rep    = np.full([total_test_samples], np.nan)
-
-    best_min_leaf_size  = np.full([num_datasets], np.nan)
-    best_num_predictors = np.full([num_datasets], np.nan)
-
-    confusion_matrix  = np.full([num_classes, num_classes, num_datasets], np.nan)
-    accuracy_balanced = np.full([num_datasets], np.nan)
-
-    train_set, test_set = datasets[0].train_test_split_ids(count_per_class=train_size_common)
-
-    # evaluating each feature/datasets
-    for dd in range(num_datasets):
-        print(" feature {:3d}: ".format(dd), end='')
-
-        train_fs = datasets[dd].get_subset(train_set)
-        test_fs = datasets[dd].get_subset(test_set)
-
-        pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], \
-        confmat, misclsfd_ids_this_run, feature_importances_rf[dd], \
-        best_min_leaf_size[dd], best_num_predictors[dd] = \
-            eval_optimized_clsfr_on_testset(train_fs, test_fs)
-
-        accuracy_balanced[dd] = balanced_accuracy(confmat)
-        confusion_matrix[:, :, dd] = confmat
-
-        print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep, dd]))
-
-    return pred_prob_per_class, pred_labels_per_rep_fs, \
-        confmat, misclsfd_ids_this_run, feature_importances_rf, \
-        best_min_leaf_size, best_num_predictors
+# def holdout_evaluation(datasets, train_size_common, total_test_samples):
+#     "Performs one repetition of the train/test and returns the relevant evaluation metrics."
+#
+#     num_datasets= len(datasets)
+#     num_classes = datasets[0].num_classes
+#
+#     pred_prob_per_class    = np.full([total_test_samples, num_classes], np.nan)
+#     pred_labels_per_rep_fs = np.full([total_test_samples], np.nan)
+#     test_labels_per_rep    = np.full([total_test_samples], np.nan)
+#
+#     best_min_leaf_size  = np.full([num_datasets], np.nan)
+#     best_num_predictors = np.full([num_datasets], np.nan)
+#
+#     confusion_matrix  = np.full([num_classes, num_classes, num_datasets], np.nan)
+#     accuracy_balanced = np.full([num_datasets], np.nan)
+#
+#     train_set, test_set = datasets[0].train_test_split_ids(count_per_class=train_size_common)
+#
+#     # evaluating each feature/datasets
+#     for dd in range(num_datasets):
+#         print(" feature {:3d}: ".format(dd), end='')
+#
+#         train_fs = datasets[dd].get_subset(train_set)
+#         test_fs = datasets[dd].get_subset(test_set)
+#
+#         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], \
+#         confmat, misclsfd_ids_this_run, feature_importances_rf[dd], \
+#         best_min_leaf_size[dd], best_num_predictors[dd] = \
+#             eval_optimized_clsfr_on_testset(train_fs, test_fs)
+#
+#         accuracy_balanced[dd] = balanced_accuracy(confmat)
+#         confusion_matrix[:, :, dd] = confmat
+#
+#         print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep, dd]))
+#
+#     return pred_prob_per_class, pred_labels_per_rep_fs, \
+#         confmat, misclsfd_ids_this_run, feature_importances_rf, \
+#         best_min_leaf_size, best_num_predictors
