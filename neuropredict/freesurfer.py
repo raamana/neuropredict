@@ -3,10 +3,34 @@ import os
 import numpy as np
 import config_neuropredict as cfg
 
+def aseg_stats_whole_brain_via_regex(fspath, subjid):
+    """
+    Returns a feature set of whole brain volumes found in Freesurfer output: subid/stats/aseg.stats
+
+    :return:
+    """
+
+    seg_names_sel = cfg.freesurfer_whole_brain_stats_to_select
+    segstatsfile = os.path.join(fspath, subjid, 'stats', 'aseg.stats')
+
+    rexpattern = r'# Measure ([\w/+_\- ]+), ([\w/+_\- ]+), ([\w/+_\- ]+), ([\d\.]+), ([\w/+_\-^]+)'
+    datatypes = np.dtype('U100,U100,U100,f8,U10')
+    stats = np.fromregex(segstatsfile, rexpattern, dtype=datatypes)
+
+    # # this wont have the same order as seg_names_sel
+    # selected_names_volumes = [ (seg[3], seg[1]) for seg in stats if seg[1] in seg_names_sel]
+    # sel_volumes, sel_names = zip(*selected_names_volumes)
+
+    volume_by_name = { seg[1]: seg[3] for seg in stats }
+    sel_volumes = [ volume_by_name[name] for name in seg_names_sel ]
+
+    return np.array(sel_volumes)
+
+
 def aseg_stats_whole_brain(fspath, subjid):
     """
 
-    Returns a feature set of volumes found in Freesurfer output: subid/stats/aseg.stats
+    Returns a feature set of whole brain volumes found in Freesurfer output: subid/stats/aseg.stats
 
 
     """
@@ -53,7 +77,8 @@ def aseg_stats_subcortical(fspath, subjid):
     segstatsfile = os.path.join(fspath, subjid, 'stats', 'aseg.stats')
 
     # ColHeaders  Index SegId NVoxels Volume_mm3 StructName normMean normStdDev normMin normMax normRange
-    stats = np.loadtxt(segstatsfile, dtype="i1,i1,i4,f4,S32,f4,f4,f4,f4,f4")
+    # TODO this can fail if missing values were encouteterd. Change to genfromtxt later
+    stats = np.loadtxt(segstatsfile, dtype="i1,i1,i4,f4,S50,f4,f4,f4,f4,f4")
 
     filtered_stats = [ (seg[1], seg[3], seg[4]) for seg in stats if seg[4] not in ignore_seg_names ]
 

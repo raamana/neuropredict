@@ -166,7 +166,7 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
 
     # warning for large number of fails for feature extraction
     if len(ids_excluded) > 0.1*len(subjects):
-        warnings.warn('Features for over {}% of subjects could not read. ')
+        warnings.warn('Features for {} subjects could not read. '.format(len(ids_excluded)))
         user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
             raise IOError('Stopping. \n Rerun after completing the feature extraction for all subjects '

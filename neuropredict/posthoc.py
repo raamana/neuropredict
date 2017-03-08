@@ -278,7 +278,7 @@ def visualize_metrics(metric, labels, output_path, num_classes=2, metric_label='
 def stat_comparison(clf_results):
     "Non-parametric statistical comparison of different feature sets"
 
-    # TODO implement
+    # TODO later: as the implementation will need significant testing!
 
     pass
 
