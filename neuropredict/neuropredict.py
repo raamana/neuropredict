@@ -44,6 +44,12 @@ def parse_args():
                              "sub003,disease\n"
                              "sub004,disease\n")
 
+    parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
+                        default=None,
+                        help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
+                             "to be used in calculation of area under the ROC curve. "
+                             "Default: class appearning second in order specified in metadata file.")
+
     parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
                         default=None,
                         help="Abs. path of SUBJECTS_DIR containing the finished runs of Freesurfer parcellation")
@@ -96,7 +102,7 @@ def parse_args():
         except:
             raise
 
-    return metadatafile, outdir, userdir, fsdir
+    return metadatafile, outdir, userdir, fsdir, options.positiveclass
 
 
 def get_metadata(path):
@@ -162,14 +168,16 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
             ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid])
         except:
             ids_excluded.append(subjid)
-            warnings.warn("Features for {} via {} method could not be read. Excluding it.".format(subjid, getmethod.__name__))
+            warnings.warn("Features for {} via {} method could not be read. "
+                          "Excluding it.".format(subjid, getmethod.__name__))
 
     # warning for large number of fails for feature extraction
     if len(ids_excluded) > 0.1*len(subjects):
         warnings.warn('Features for {} subjects could not read. '.format(len(ids_excluded)))
         user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
-            raise IOError('Stopping. \n Rerun after completing the feature extraction for all subjects '
+            raise IOError('Stopping. \n'
+                          'Rerun after completing the feature extraction for all subjects '
                           'or exclude failed subjects..')
         else:
             print(' Yes. Proceeding with only {} subjects.'.format(ds.num_samples))
@@ -200,13 +208,26 @@ def run():
     NUM_REP = 10
     method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
-    metadatafile, outdir, userdir, fsdir = parse_args()
+    metadatafile, outdir, userdir, fsdir, positiveclass = parse_args()
 
     subjects, classes = get_metadata(metadatafile)
-    num_classes_in_metadata = len(set(classes.values()))
+    # the following loop is required to preserve original order
+    # this does not: class_set_in_meta = list(set(classes.values()))
+    class_set_in_meta = list()
+    for x in classes.values():
+        if x not in class_set_in_meta:
+            class_set_in_meta.append(x)
+
+    num_classes_in_metadata = len(class_set_in_meta)
     assert num_classes_in_metadata > 1, \
         "Atleast two classes are required for predictive analysis!" \
         "Only one given ({})".format(set(classes.values()))
+
+    if not_unspecified(positiveclass):
+        print('Positive class specified for AUC calculation: {}'.format(positiveclass))
+    else:
+        positiveclass = class_set_in_meta[-1]
+        print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
 
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
@@ -232,13 +253,15 @@ def run():
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
-    results_file_path = rhst.run(dataset_paths_file, outdir, num_repetitions=NUM_REP)
+    results_file_path = rhst.run(dataset_paths_file, outdir,
+                                 num_repetitions=NUM_REP,
+                                 pos_class = positiveclass)
 
     dataset_paths, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
         best_min_leaf_size, best_num_predictors, feature_importances_rf, \
         num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced = \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
             rhst.load_results(results_file_path)
 
     balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')

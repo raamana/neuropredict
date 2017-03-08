@@ -26,6 +26,13 @@ freesurfer_whole_brain_stats_to_select = [ 'BrainSegVol', 'BrainSegVolNotVent',
         'MaskVol', 'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV',
         'lhSurfaceHoles', 'rhSurfaceHoles', 'eTIV' ]
 
+freesurfer_whole_brain_stats_to_ignore = [ 'SurfaceHoles',
+                                           'CortexVol',
+                                           'SupraTentorialVolNotVentVox',
+                                           'CorticalWhiteMatterVol',
+                                           'BrainSegVolNotVentSurf']
+
+
 freesurfer_subcortical_seg_names_to_ignore = ['WM-hypointensities', 'Left-WM-hypointensities', 'Right-WM-hypointensities',
                     'non-WM-hypointensities', 'Left-non-WM-hypointensities', 'Right-non-WM-hypointensities',
                     'Optic-Chiasm']

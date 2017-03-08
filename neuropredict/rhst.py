@@ -10,7 +10,7 @@ import random
 import pickle
 import sklearn
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score
 from sklearn.ensemble import RandomForestClassifier
 
 import config_neuropredict as cfg
@@ -69,7 +69,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
 
     misclsfd_samples = test_sample_ids[true_test_labels != pred_test_labels]
 
-    return pred_prob, pred_test_labels,\
+    return pred_prob, pred_test_labels, true_test_labels, \
            conf_mat, misclsfd_samples, \
            feat_importance, best_minleafsize, best_num_predictors
 
@@ -138,7 +138,7 @@ def load_results(fpath):
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             best_min_leaf_size, best_num_predictors, feature_importances_rf, \
             num_times_misclfd, num_times_tested, \
-            confusion_matrix, class_set, accuracy_balanced = \
+            confusion_matrix, class_set, accuracy_balanced, auc_weighted = \
                 pickle.load(rf)
 
     except:
@@ -148,10 +148,12 @@ def load_results(fpath):
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
            best_min_leaf_size, best_num_predictors, feature_importances_rf, \
            num_times_misclfd, num_times_tested, \
-           confusion_matrix, class_set, accuracy_balanced
+           confusion_matrix, class_set, accuracy_balanced, auc_weighted
 
 
-def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 200):
+def run(dataset_path_file, out_results_dir,
+        train_perc = 0.8, num_repetitions = 200,
+        pos_class = None):
     """
 
     :param dataset_path_file: path to file containing list of paths (each containing a valid MLDataset).
@@ -160,6 +162,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
     the smallest class to estimate the numner of subjects from each class to be reserved for training. The smallest
     class is chosen to avoid class-imbalance in the training set. Default: 0.8 (80%).
     :param num_repetitions: number of repetitions of cross-validation estimation. Default: 200.
+    :pos_class: name of the class to be treated as positive in calculation of AUC
     :return:
     """
 
@@ -226,6 +229,10 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
     for idx, cls in enumerate(class_set):
         remapped_class_labels[cls] = idx
 
+    # finding the numeric label for positive class
+    # label will also be in the index into the arrays over classes due to construction above
+    pos_class_index = remapped_class_labels[pos_class]
+
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
         labels_with_correspondence[subid] = remapped_class_labels[common_ds.classes[subid]]
@@ -269,8 +276,19 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
             num_times_tested[dd][subid] = 0
             num_times_misclfd[dd][subid]= 0
 
+    # multi-class metrics
     confusion_matrix  = np.full([num_classes, num_classes, num_repetitions, num_datasets], np.nan)
     accuracy_balanced = np.full([num_repetitions, num_datasets], np.nan)
+    auc_weighted = np.full([num_repetitions, num_datasets], np.nan)
+
+    # # specificity & sensitivity are ill-defined in the general case as they require us to know which class is positive
+    # # hence would refer them from now on simply correct classification rates (ccr)
+    # moreover this can be easily computed from the confusion matrix anyway.
+    # ccr_perclass = np.full([num_repetitions, num_datasets, num_classes], np.nan)
+    # binary metrics
+    # TODO later when are the uses of precision and recall appropriate?
+    # precision    = np.full([num_repetitions, num_datasets], np.nan)
+    # recall       = np.full([num_repetitions, num_datasets], np.nan)
 
     feature_importances_rf = [None]*num_datasets
     for idx in range(num_datasets):
@@ -299,20 +317,23 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
             test_fs  = datasets[dd].get_subset(test_set)
 
             pred_prob_per_class[rep, dd, :, :], \
-                pred_labels_per_rep_fs[rep, dd, :], \
+                pred_labels_per_rep_fs[rep, dd, :], true_test_labels, \
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
                 eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM=label_set)
 
             accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat
+            print('balanced accuracy: {:.4f} '.format(accuracy_balanced[rep, dd]), end='')
 
-            # TODO for binary experiments, compute AUC, sensitivity, specificity (optional precision, recall)
+            if num_classes == 2:
+                auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
+                                                       pred_prob_per_class[rep, dd, :, pos_class_index],
+                                                       average='weighted')
+                print('weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]))
 
             num_times_misclfd[dd].update(misclsfd_ids_this_run)
             num_times_tested[dd].update(test_fs.sample_ids)
-
-            print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep,dd]))
 
     # TODO NOW generate a CSV of different metrics for each dataset, as well as a reloadable
 
@@ -321,7 +342,8 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
                         best_min_leaf_size, best_num_predictors, feature_importances_rf,
                         num_times_misclfd, num_times_tested,
-                        confusion_matrix, class_set, accuracy_balanced ]
+                        confusion_matrix, class_set,
+                        accuracy_balanced, auc_weighted ]
 
     out_results_path = save_results(out_results_dir, var_list_to_save)
 
