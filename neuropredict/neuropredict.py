@@ -118,10 +118,11 @@ def get_metadata(path):
     classes = dict()
     with open(path) as mf:
         for line in mf:
-            parts = line.strip().split(',')
-            sid = parts[0]
-            sample_ids.append(sid)
-            classes[sid] = parts[1]
+            if not line.startswith('#'):
+                parts = line.strip().split(',')
+                sid = parts[0]
+                sample_ids.append(sid)
+                classes[sid] = parts[1]
 
     return sample_ids, classes
 
