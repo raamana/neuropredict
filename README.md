@@ -51,13 +51,13 @@ Imagine you have just acquired a wonderful new dataset with certain number of di
 ```
 
 
-and `neuropredict` will produce the figures (and numbers in a CSV files) included in the docs folder.
+and `neuropredict` will produce the figures (and numbers in a CSV files) as shown here:
 
-Accuracy distribtutions:
-![alt tag](docs/balanced_accuracy.pdf)
+[composite](docs/composite_flyer.001.png)
 
+which are included as PDFs in the [docs](docs) folder:
 
-
+I hope that would help you get started on the predictive analysis you've been wanting to do for a while.
 
 ## Usage:
 
