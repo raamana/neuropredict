@@ -161,6 +161,89 @@ def display_confusion_matrix(cfmat_array, class_labels,
     return
 
 
+def compare_misclf_pairwise(cfmat_array, class_labels,
+                                       method_labels, out_path):
+    """
+    Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
+    classifications.
+
+
+    :return:
+    """
+
+    num_datasets = cfmat_array.shape[3]
+    num_classes  = cfmat_array.shape[0]
+    assert num_classes == cfmat_array.shape[1], \
+        "Invalid dimensions of confusion matrix. " \
+        "Required dims: [num_classes, num_classes, num_repetitions, num_datasets]"
+
+    num_misclf_axes = num_classes*(num_classes-1)
+
+    out_path.replace(' ', '_')
+
+    avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
+    misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
+    for dd in range(num_datasets):
+        # mean confusion over CV trials
+        avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 2)
+        # percentage confusion relative to class size
+        clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
+        avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
+        # making it human readable : 0-100%
+        avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=3)
+
+        count = 0
+        for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+            if ii != jj:
+                misclf_rate[dd,count] = avg_cfmat[dd, ii, jj]
+                count = count + 1
+
+    misclf_ax_labels = list()
+    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+        if ii != jj:
+            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+
+    theta = 2 * np.pi * np.linspace(0, 1 -1.0/num_misclf_axes, num_misclf_axes)
+
+    fig = plt.figure(figsize=[9, 9])
+    cmap = cm.get_cmap('Paired', num_datasets)
+
+    ax = fig.add_subplot(1, 1, 1, projection='polar')
+    # clock-wise
+    ax.set_theta_direction(-1)
+    # starting at top
+    ax.set_theta_offset(np.pi / 2.0)
+
+    lw_polar = 2.5
+    for dd in range(num_datasets):
+        ax.plot(theta, misclf_rate[dd,:], color= cmap(dd), linewidth=lw_polar)
+        # connecting the last axis to the first to close the loop
+        ax.plot([theta[-1], theta[0]],
+                [misclf_rate[dd, -1], misclf_rate[dd, 0]],
+                color=cmap(dd), linewidth=lw_polar)
+
+    ax.set_thetagrids(theta * 360/(2*np.pi),
+                      labels=misclf_ax_labels,
+                      va = 'top',
+                      ha = 'center')
+
+    tick_perc = [ '{:.2f}%'.format(tt) for tt in ax.get_yticks() ]
+    ax.set_yticklabels(tick_perc)
+    # ax.set_yticks(np.arange(100 / num_classes, 100, 10))
+    leg = ax.legend(method_labels, loc=2)
+    # setting colors manually as plot has been through arbitray jumps
+    for ix, lh in enumerate(leg.legendHandles):
+        lh.set_color(cmap(ix))
+
+    fig.tight_layout()
+
+    pp1 = PdfPages(out_path + '.pdf')
+    pp1.savefig()
+    pp1.close()
+
+    return
+
+
 def summarize_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath):
     """
     Summary of most/least frequently mislcassified subjects for further analysis

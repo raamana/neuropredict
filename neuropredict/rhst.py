@@ -231,7 +231,8 @@ def run(dataset_path_file, out_results_dir,
 
     # finding the numeric label for positive class
     # label will also be in the index into the arrays over classes due to construction above
-    pos_class_index = remapped_class_labels[pos_class]
+    if num_classes == 2:
+        pos_class_index = remapped_class_labels[pos_class]
 
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
@@ -303,7 +304,7 @@ def run(dataset_path_file, out_results_dir,
     #     = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
     for rep in range(num_repetitions):
-        print(" CV trial {:3d} ".format(rep))
+        print("\n CV trial {:3d} ".format(rep))
 
         train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
         test_labels_per_rep[rep, :] = [ common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
@@ -327,6 +328,7 @@ def run(dataset_path_file, out_results_dir,
             print('balanced accuracy: {:.4f} '.format(accuracy_balanced[rep, dd]), end='')
 
             if num_classes == 2:
+                # TODO FIX auc calculation flipped
                 auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
                                                        pred_prob_per_class[rep, dd, :, pos_class_index],
                                                        average='weighted')
@@ -334,6 +336,8 @@ def run(dataset_path_file, out_results_dir,
 
             num_times_misclfd[dd].update(misclsfd_ids_this_run)
             num_times_tested[dd].update(test_fs.sample_ids)
+
+            print('')
 
     # TODO NOW generate a CSV of different metrics for each dataset, as well as a reloadable
 

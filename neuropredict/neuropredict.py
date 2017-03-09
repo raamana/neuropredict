@@ -69,6 +69,18 @@ def parse_args():
                         required=True,
                         help="Output folder to store features and results.")
 
+    parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
+                        default=0.5,
+                        help="Percentage of the smallest class to be reserved for training. "
+                             "Must be in the interval [0.01 0.99]."
+                             "If sample size is sufficiently big, we recommend 0.5."
+                             "If sample size is small, or class imbalance is high, choose 0.8.")
+
+    parser.add_argument("-r", "--num_rep_cv", action="store", dest="num_rep_cv",
+                        default=200,
+                        help="Number of repetitions of the repeated-holdout cross-validation. "
+                             "The larger the number, the better the estimates will be.")
+
     if len(sys.argv) < 2:
         print('Too few arguments!')
         parser.print_help()
@@ -102,7 +114,16 @@ def parse_args():
         except:
             raise
 
-    return metadatafile, outdir, userdir, fsdir, options.positiveclass
+    train_perc = np.float32(options.train_perc)
+    assert (train_perc >= 0.01 and train_perc <= 0.99), \
+        "Training percentage {} out of bounds - must be > 0.01 and < 0.99".format(train_perc)
+
+    num_rep_cv = np.int64(options.num_rep_cv)
+    assert num_rep_cv >= 10, \
+        "Atleast 10 repitions of CV is recommened.".format(train_perc)
+
+    return metadatafile, outdir, userdir, fsdir, \
+           train_perc, num_rep_cv, options.positiveclass
 
 
 def get_metadata(path):
@@ -189,6 +210,31 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
     return savepath
 
 
+def saved_dataset_matches(ds_path, subjects, classes):
+    """
+    Returns True only if the path to dataset
+        exists, is not empy,
+        contains the same number of samples,
+        same sample ids and classes as in meta data!
+
+    :returns bool.
+    """
+
+    num_samples = len(subjects)
+    num_classes = len(classes)
+    if (not os.path.exists(ds_path)) or (os.path.getsize(ds_path) <= 0):
+        return False
+    else:
+        ds = MLDataset(ds_path)
+        if ds.num_classes != num_classes or \
+                        ds.num_samples != num_samples or \
+                        set(ds.class_set) != set(classes) or \
+                        set(ds.sample_ids) != set(subjects):
+            return False
+        else:
+            return True
+
+
 def run_rhst(datasets, outdir):
     """
 
@@ -205,10 +251,11 @@ def run_rhst(datasets, outdir):
 def run():
     """Main entry point."""
 
-    NUM_REP = 10
     method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
-    metadatafile, outdir, userdir, fsdir, positiveclass = parse_args()
+    metadatafile, outdir, userdir, fsdir, \
+        train_perc, num_rep_cv, \
+        positiveclass = parse_args()
 
     subjects, classes = get_metadata(metadatafile)
     # the following loop is required to preserve original order
@@ -218,16 +265,18 @@ def run():
         if x not in class_set_in_meta:
             class_set_in_meta.append(x)
 
-    num_classes_in_metadata = len(class_set_in_meta)
-    assert num_classes_in_metadata > 1, \
+    num_samples = len(subjects)
+    num_classes = len(class_set_in_meta)
+    assert num_classes > 1, \
         "Atleast two classes are required for predictive analysis!" \
         "Only one given ({})".format(set(classes.values()))
 
-    if not_unspecified(positiveclass):
-        print('Positive class specified for AUC calculation: {}'.format(positiveclass))
-    else:
-        positiveclass = class_set_in_meta[-1]
-        print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
+    if num_classes == 2:
+        if not_unspecified(positiveclass):
+            print('Positive class specified for AUC calculation: {}'.format(positiveclass))
+        else:
+            positiveclass = class_set_in_meta[-1]
+            print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
 
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
@@ -241,11 +290,14 @@ def run():
         method_names.append('{}_{}'.format(chosenmethod.__name__,mm)) # adding an index for an even better contrast
         out_name = 'consolidated_{}_{}.MLDataset.pkl'.format(chosenmethod.__name__, make_time_stamp())
 
-        # TODO need to devise a way to avoid re-reading all the features from scratch every time.
         outpath_dataset = os.path.join(outdir, out_name)
-        if (not os.path.exists(outpath_dataset)) or (os.path.getsize(outpath_dataset) <= 0):
+        if not saved_dataset_matches(outpath_dataset, subjects, classes):
             # noinspection PyTypeChecker
-            outpath_dataset = getfeatures(subjects, classes, feature_dir, outdir, out_name, getmethod = chosenmethod)
+            outpath_dataset = getfeatures(subjects, classes,
+                                          feature_dir,
+                                          outdir, out_name,
+                                          getmethod = chosenmethod)
+
         outpath_list.append(outpath_dataset)
 
     combined_name = '_'.join(method_names)
@@ -254,7 +306,8 @@ def run():
         dpf.writelines('\n'.join(outpath_list))
 
     results_file_path = rhst.run(dataset_paths_file, outdir,
-                                 num_repetitions=NUM_REP,
+                                 train_perc=train_perc,
+                                 num_repetitions=num_rep_cv,
                                  pos_class = positiveclass)
 
     dataset_paths, train_perc, num_repetitions, num_classes, \
@@ -270,6 +323,10 @@ def run():
 
     confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
     posthoc.display_confusion_matrix(confusion_matrix, class_order, method_names, confmat_fig_path)
+
+    if num_classes > 2:
+        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
+        posthoc.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
     featimp_fig_path = os.path.join(outdir, 'feature_importance')
     posthoc.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
