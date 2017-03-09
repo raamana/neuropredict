@@ -51,8 +51,10 @@ Imagine you have just acquired a wonderful new dataset with certain number of di
 ```
 
 
-and `neuropredict` will produce the following figures (and numbers in a CSV files)
+and `neuropredict` will produce the figures (and numbers in a CSV files) included in the docs folder.
 
+Accuracy distribtutions:
+![alt tag](docs/balanced_accuracy.pdf)
 
 
 
