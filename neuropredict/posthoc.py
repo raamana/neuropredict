@@ -62,7 +62,7 @@ def feature_importance_map(feat_imp, method_labels, base_output_path,
             line_coll = ax[dd].violinplot(feat_imp[dd], widths=0.8, bw_method=0.2,
                                       showmedians=True, showextrema=False,
                                       positions=feat_ticks)
-            jet = cm.get_cmap('hsv', num_features)
+            jet = cm.get_cmap(cfg.CMAP_FEAT_IMP, num_features)
             for cc, ln in enumerate(line_coll['bodies']):
                 ln.set_facecolor(jet(cc))
                 #ln.set_label(feat_labels[cc])
@@ -102,7 +102,7 @@ def feature_importance_map(feat_imp, method_labels, base_output_path,
 def display_confusion_matrix(cfmat_array, class_labels,
                              method_names, base_output_path,
                              title='Confusion matrix',
-                             cmap=plt.cm.Greens):
+                             cmap=cfg.CMAP_CONFMATX):
     """
     Display routine for the confusion matrix.
     Entries in confusin matrix can be turned into percentages with `display_perc=True`.
@@ -206,7 +206,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
     theta = 2 * np.pi * np.linspace(0, 1 -1.0/num_misclf_axes, num_misclf_axes)
 
     fig = plt.figure(figsize=[9, 9])
-    cmap = cm.get_cmap('Paired', num_datasets)
+    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     ax = fig.add_subplot(1, 1, 1, projection='polar')
     # clock-wise
@@ -325,9 +325,9 @@ def visualize_metrics(metric, labels, output_path, num_classes=2, metric_label='
                               showmedians=True, showextrema=False,
                               positions=method_ticks)
 
-    jet = cm.get_cmap('hsv', num_datasets)
+    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
     for cc, ln in enumerate(line_coll['bodies']):
-        ln.set_facecolor(jet(cc))
+        ln.set_facecolor(cmap(cc))
         ln.set_label(labels[cc])
 
     plt.legend(loc=2, ncol=num_datasets)

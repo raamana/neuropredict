@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 
 NUM_TREES = 100
 NUM_PREDICTORS_STEP = 2
@@ -14,6 +15,10 @@ MISCLF_HIST_NUM_BINS = 20
 MISCLF_PERC_THRESH = 0.6
 
 COMMON_FIG_SIZE = [9, 9]
+CMAP_DATASETS = 'Paired'
+CMAP_CONFMATX = plt.cm.Greens
+CMAP_FEAT_IMP = 'hsv'
+
 file_name_results = "rhst_results.pkl"
 
 # TODO decide to where to include eTIV
