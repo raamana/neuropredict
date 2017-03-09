@@ -44,6 +44,10 @@ def parse_args():
                              "sub003,disease\n"
                              "sub004,disease\n")
 
+    parser.add_argument("-o", "--outdir", action="store", dest="outdir",
+                        required=True,
+                        help="Output folder to store features and results.")
+
     parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
                         default=None,
                         help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
@@ -64,10 +68,6 @@ def parse_args():
                              "This contains a separate folder for each subject (named after its ID in the metadata "
                              "file) containing a file called features.txt with one number per line. All the subjects "
                              "must have the number of features (#lines in file)")
-
-    parser.add_argument("-o", "--outdir", action="store", dest="outdir",
-                        required=True,
-                        help="Output folder to store features and results.")
 
     parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
                         default=0.5,
