@@ -10,15 +10,15 @@ PS: It sounds similar (on the surface) to other software available, however it i
 
 ### Context
 
-Imagine you have just acquired a wonderful new dataset with certain number of diseased patients and healthy controls. In the case of T1 mri analysis, you typically start by preprocessing it their favourite software (such as Freesurfer), which produces a ton of segmentations and statistics within them (such as their volumes and cortical thickness). Typical scenario would be to examine their group differences (e.g. between controls and disease_one or between controls and other_disease), find the most discriminative variables and/or their brain regions and report how they relate to know cognitive or neuropsychological measures. This analysis and the resulting insights is necessary and informs us better of the dataset. However, that's not the fullest extent of the analysis one could perform, as association studies do not inform us of the predictive utility of the aforementioned discriminative variables or regions, which needs to independently investigated.
+Imagine you have just acquired a wonderful new dataset with certain number of diseased patients and healthy controls. In the case of T1 mri analysis, you typically start by preprocessing it wih your favourite software (such as Freesurfer), which produces a ton of segmentations and statistics within them (such as their volumes and cortical thickness). Typical scenario would be to examine group differences (e.g. between controls and disease_one or between controls and other_disease), find the most discriminative variables and/or their brain regions and report how they relate to know cognitive or neuropsychological measures. This analysis and the resulting insights is necessary and informs us better of the dataset. However, that's not the fullest extent of the analysis one could perform, as association studies do not inform us of the predictive utility of the aforementioned discriminative variables or regions, which needs to independently investigated.
 
 ### Predictive analysis
- Conducting a machine learning study (to assess the predictive utility of different features or methods) is not trivial. In the simplest case, it requires one to understand standard techniques, learn one or two toolboxes and do the programming necessary to interface their data with ML toolbox (even with the help of well-written packages like nilearn that are meant ofr neuroimaging analysis). In addition, in order to properly evaluate the performance, the user needs to have a good grasp of the best practices in machine learning. Even if the user could produce certain numbers out of a black-box toolboxes, some more programming/spreadsheeting is necessary to make sense of the results and procude necessary plots for publications.
+ Conducting a machine learning study (to assess the predictive utility of different regions, features or methods) is not trivial. In the simplest case, it requires one to understand standard techniques, learn one or two toolboxes and do the complex programming necessary to interface their data with ML toolbox (even with the help of well-written packages like nilearn that are meant for neuroimaging analysis). In addition, in order to properly evaluate the performance, the user needs to have a good grasp of the best practices in machine learning. Even if the user could produce certain numbers out of a black-box toolboxes, some more programming is necessary to make sense of the results and procude necessary plots for publications.
 
 ### Report
  Neuropredict is here to remove those barriers and make your life easier!
 
- All you need to do is take care of preprocessing and produce quality controlled through popular software, and neuropredict will produce a comprehensive report (see figures below) of distribtions of cross-validated performance, confusion matrices, analysis into misclassification and an intuitive comparison across multiple features.
+ All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below) of distribtions of cross-validated performance, confusion matrices, analysis into misclassification and an intuitive comparison across multiple features.
 
   For example, if you have a dataset with 7 controls, 8 disease_one and 9 other_disease, all you need to do is produce a meta data file as shown below (noting a class label for each subject):
 
@@ -106,4 +106,6 @@ optional arguments:
                         estimates will be.
 ```
 
-
+# Dependencies
+ * numpy
+ * scikit-learn
