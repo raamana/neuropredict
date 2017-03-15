@@ -53,13 +53,27 @@ Imagine you have just acquired a wonderful new dataset with certain number of di
 
 and `neuropredict` will produce the figures (and numbers in a CSV files) as shown here:
 
-[composite](docs/composite_flyer.001.png)
+![composite](docs/composite_flyer.001.png)
 
-which are included as PDFs in the [docs](docs) folder:
+The higher resoluation PDFs are included in the [docs](docs) folder.
 
-I hope that would help you get started on the predictive analysis you've been wanting to do for a while.
+I hope this user-friendly tool would help you get started on the predictive analysis you've been wanting to do for a while.
+
+## Features currently supported
+ * Freesurfer
+  * Subcortical volumes
+  * Wholebrain Aseg stats
+  
+## Feature in development
+ * Freesurfer
+  * cortical thickness
+  * gray matter density
+  * structural covariance
+ * Any nibabel-readable data
 
 ## Usage:
+
+### command line options:
 
 ```
 usage: neuropredict [-h] -m METADATAFILE -o OUTDIR [-p POSITIVECLASS]
