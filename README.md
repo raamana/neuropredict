@@ -60,16 +60,16 @@ The higher resoluation PDFs are included in the [docs](docs) folder.
 I hope this user-friendly tool would help you get started on the predictive analysis you've been wanting to do for a while.
 
 ## Features currently supported
- * Freesurfer
+* Freesurfer
   * Subcortical volumes
   * Wholebrain Aseg stats
   
 ## Feature in development
- * Freesurfer
+* Freesurfer
   * cortical thickness
   * gray matter density
   * structural covariance
- * Any nibabel-readable data
+* Any nibabel-readable data
 
 ## Usage:
 
