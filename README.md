@@ -4,7 +4,9 @@ Automatic estimation of predictive power of commonly used neuroimaging features 
 
 The aim of this python module would be to automatically assess the predictive power of commonly used neuroimaging features (such as resting-state connectivity, fractional anisotropy, subcortical volumes and cortical thickness features) automatically read from the processing of popular tools such as FSL, DTIstudio, AFNI and Freesurfer, and present a comprehensive report on a given dataset. It is mainly aimed (to lower or remove the barriers) at clinical users who would like to understand what features and brain regions are discriminative in their shiny new dataset before diving into the deep grey sea of feature extraction and optimization.
 
-PS: It sounds similar (on the surface) to other software available, however it is aimed to lower the barriers even further, or remove them altogether! All the user would need to provide are commonly used features (such as a Freesurfer output directory) and obtain an easy to read report, along with well-packaged export of performance metrics (for sharing and posthoc comparison) on the predictive power of the features they are interested in.
+PS: It sounds similar (on the surface) to other software available, however it is aimed to lower the barriers even further, or remove them altogether! All the user would need to provide are commonly used features (such as a Freesurfer output directory) and obtain an easy to read report (see below), along with well-packaged export of performance metrics (for sharing and posthoc comparison) on the predictive power of the features they are interested in.
+
+![composite](docs/composite_flyer.001.png)
 
 ## Example application
 
@@ -20,7 +22,7 @@ Imagine you have just acquired a wonderful new dataset with certain number of di
 
  All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below) of distribtions of cross-validated performance, confusion matrices, analysis into misclassification and an intuitive comparison across multiple features.
 
-  For example, if you have a dataset with 7 controls, 8 disease_one and 9 other_disease, all you need to do is produce a meta data file as shown below (noting a class label for each subject):
+  For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):
 
 ```
 3071,controls
@@ -28,14 +30,9 @@ Imagine you have just acquired a wonderful new dataset with certain number of di
 3064,controls
 3063,controls
 3057,controls
-3055,controls
-3053,controls
 5004,disease_one
 5074,disease_one
 5077,disease_one
-5093,disease_one
-5095,disease_one
-5000,disease_one
 5001,disease_one
 5002,disease_one
 5003,disease_one
@@ -55,7 +52,7 @@ and `neuropredict` will produce the figures (and numbers in a CSV files) as show
 
 ![composite](docs/composite_flyer.001.png)
 
-The higher resoluation PDFs are included in the [docs](docs) folder.
+The higher resolution PDFs are included in the [docs](docs) folder.
 
 I hope this user-friendly tool would help you get started on the predictive analysis you've been wanting to do for a while.
 
@@ -64,12 +61,14 @@ I hope this user-friendly tool would help you get started on the predictive anal
   * Subcortical volumes
   * Wholebrain Aseg stats
   
-## Feature in development
+## Feature in development (stay tuned)
 * Freesurfer
   * cortical thickness
   * gray matter density
   * structural covariance
 * Any nibabel-readable data
+* DT-MRI features
+* task-free fMRI features
 
 ## Usage:
 
