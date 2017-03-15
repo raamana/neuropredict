@@ -8,6 +8,21 @@ PS: It sounds similar (on the surface) to other software available, however it i
 
 ![composite](docs/composite_flyer.001.png)
 
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [neuropredict](#)
+	- [Example application](#)
+		- [Context](#)
+		- [Predictive analysis](#)
+		- [Report](#)
+- [Input Features](#)
+	- [Arbitray feature input](#)
+	- [Automatic readers currently supported](#)
+	- [Automatic readers in development (stay tuned)](#)
+	- [Usage:](#)
+		- [command line options:](#)
+- [Dependencies](#)
+
 ## Example application
 
 ### Context
