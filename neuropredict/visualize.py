@@ -12,8 +12,6 @@ from collections import Counter
 
 import config_neuropredict as cfg
 
-common_fig_size = cfg.COMMON_FIG_SIZE
-
 def feature_importance_map(feat_imp, method_labels, base_output_path,
                            show_distr = False,
                            plot_title = 'feature importance',
@@ -99,10 +97,10 @@ def feature_importance_map(feat_imp, method_labels, base_output_path,
     return
 
 
-def display_confusion_matrix(cfmat_array, class_labels,
-                             method_names, base_output_path,
-                             title='Confusion matrix',
-                             cmap=cfg.CMAP_CONFMATX):
+def confusion_matrices(cfmat_array, class_labels,
+                       method_names, base_output_path,
+                       title='Confusion matrix',
+                       cmap=cfg.CMAP_CONFMATX):
     """
     Display routine for the confusion matrix.
     Entries in confusin matrix can be turned into percentages with `display_perc=True`.
@@ -132,7 +130,7 @@ def display_confusion_matrix(cfmat_array, class_labels,
         # human readable in 0-100%, 3 deciamls
         cfmat = 100 * np.around(cfmat, decimals=3)
 
-        fig, ax = plt.subplots(figsize=common_fig_size)
+        fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
         im = plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
         plt.title(title)
@@ -244,7 +242,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
     return
 
 
-def summarize_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath):
+def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath):
     """
     Summary of most/least frequently mislcassified subjects for further analysis
 
@@ -306,7 +304,7 @@ def summarize_misclassifications(num_times_misclfd, num_times_tested, method_lab
     return
 
 
-def visualize_metrics(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):
+def metric_distribution(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):
     """
 
     Distribution plots of various metrics such as balanced accuracy!
@@ -320,7 +318,7 @@ def visualize_metrics(metric, labels, output_path, num_classes=2, metric_label='
     assert len(labels) == num_datasets, "Differing number of features and labels!"
     method_ticks = 1.0 + np.arange(num_datasets)
 
-    fig, ax = plt.subplots(figsize=common_fig_size)
+    fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
     line_coll = ax.violinplot(metric, widths=0.8, bw_method=0.2,
                               showmedians=True, showextrema=False,
                               positions=method_ticks)

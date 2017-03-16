@@ -12,7 +12,7 @@ from time import localtime, strftime
 from freesurfer import *
 from pyradigm import MLDataset
 import rhst
-import posthoc
+import visualize
 
 import config_neuropredict as cfg
 
@@ -320,21 +320,21 @@ def run():
             rhst.load_results(results_file_path)
 
     balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
-    posthoc.visualize_metrics(accuracy_balanced, method_names, balacc_fig_path,
-                              num_classes, "Balanced Accuracy")
+    visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
+                                  num_classes, "Balanced Accuracy")
 
     confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
-    posthoc.display_confusion_matrix(confusion_matrix, class_order, method_names, confmat_fig_path)
+    visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
 
     if num_classes > 2:
         cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
-        posthoc.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+        visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
     featimp_fig_path = os.path.join(outdir, 'feature_importance')
-    posthoc.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
+    visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
 
     misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
-    posthoc.summarize_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
+    visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
 
 if __name__ == '__main__':
     run()
