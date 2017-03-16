@@ -96,6 +96,28 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
     return np.int64(max_red_dim)
 
 
+def chance_accuracy(class_sizes):
+    """
+    Computes the chance accuracy for a given set of classes with varying sizes.
+
+    :param class_sizes:
+    :return:
+    """
+
+    num_classes = len(class_sizes)
+    num_samples = sum(class_sizes)
+    # # the following is wrong if imbalance is present
+    # chance_acc = 1.0 / num_classes
+
+    # TODO find a reference to choose this and back this up
+    # chance_acc = np.sum( np.array(class_sizes/num_samples)^2 )
+
+    # zero rule: fraction of largest class
+    chance_acc = np.max(class_sizes) / num_samples
+
+    return chance_acc
+
+
 def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
 
@@ -163,7 +185,7 @@ def run(dataset_path_file, out_results_dir,
     class is chosen to avoid class-imbalance in the training set. Default: 0.8 (80%).
     :param num_repetitions: number of repetitions of cross-validation estimation. Default: 200.
     :pos_class: name of the class to be treated as positive in calculation of AUC
-    :return:
+    :return: path to pickle file containing full set of results
     """
 
     # load datasets
@@ -232,6 +254,8 @@ def run(dataset_path_file, out_results_dir,
     # finding the numeric label for positive class
     # label will also be in the index into the arrays over classes due to construction above
     if num_classes == 2:
+        if pos_class is None:
+            pos_class = class_set[-1]
         pos_class_index = remapped_class_labels[pos_class]
 
     labels_with_correspondence = dict()
@@ -332,7 +356,7 @@ def run(dataset_path_file, out_results_dir,
                 auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
                                                        pred_prob_per_class[rep, dd, :, pos_class_index],
                                                        average='weighted')
-                print('\t weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]))
+                print('\t weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]), end='')
 
             num_times_misclfd[dd].update(misclsfd_ids_this_run)
             num_times_tested[dd].update(test_fs.sample_ids)
