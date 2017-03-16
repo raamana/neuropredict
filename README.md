@@ -187,13 +187,13 @@ optional arguments:
                         features.txt with one number per line. All the
                         subjects must have the number of features (#lines in
                         file)
-  -t TRAIN_PERC, --train_perc TRAIN_PERC
+  -t TRAIN_PERC, --trainperc TRAIN_PERC
                         Percentage of the smallest class to be reserved for
                         training. Must be in the interval [0.01 0.99].If
                         sample size is sufficiently big, we recommend 0.5.If
                         sample size is small, or class imbalance is high,
                         choose 0.8.
-  -r NUM_REP_CV, --num_rep_cv NUM_REP_CV
+  -n NUM_REP_CV, --numrep NUM_REP_CV
                         Number of repetitions of the repeated-holdout cross-
                         validation. The larger the number, the better the
                         estimates will be.
