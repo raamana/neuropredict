@@ -304,7 +304,7 @@ def run(dataset_path_file, out_results_dir,
     #     = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
     for rep in range(num_repetitions):
-        print("\n CV trial {:3d} ".format(rep))
+        print("\n CV repetition {:3d} ".format(rep))
 
         train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
         test_labels_per_rep[rep, :] = [ common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
@@ -332,7 +332,7 @@ def run(dataset_path_file, out_results_dir,
                 auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
                                                        pred_prob_per_class[rep, dd, :, pos_class_index],
                                                        average='weighted')
-                print('weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]))
+                print('\t weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]))
 
             num_times_misclfd[dd].update(misclsfd_ids_this_run)
             num_times_tested[dd].update(test_fs.sample_ids)

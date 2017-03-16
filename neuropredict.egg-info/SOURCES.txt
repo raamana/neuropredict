@@ -1,12 +1,15 @@
 setup.py
 neuropredict/__init__.py
+neuropredict/config.py
+neuropredict/config_neuropredict.py
 neuropredict/freesurfer.py
 neuropredict/neuropredict.py
 neuropredict/posthoc.py
 neuropredict/rhst.py
-neuropredict/test_rhst.py
+neuropredict/test_fsvolumes.py
 neuropredict.egg-info/PKG-INFO
 neuropredict.egg-info/SOURCES.txt
 neuropredict.egg-info/dependency_links.txt
+neuropredict.egg-info/entry_points.txt
 neuropredict.egg-info/requires.txt
 neuropredict.egg-info/top_level.txt

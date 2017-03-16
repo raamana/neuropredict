@@ -69,14 +69,14 @@ def parse_args():
                              "file) containing a file called features.txt with one number per line. All the subjects "
                              "must have the number of features (#lines in file)")
 
-    parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
+    parser.add_argument("-t", "--trainperc", action="store", dest="train_perc",
                         default=0.5,
                         help="Percentage of the smallest class to be reserved for training. "
                              "Must be in the interval [0.01 0.99]."
                              "If sample size is sufficiently big, we recommend 0.5."
                              "If sample size is small, or class imbalance is high, choose 0.8.")
 
-    parser.add_argument("-r", "--num_rep_cv", action="store", dest="num_rep_cv",
+    parser.add_argument("-n", "--numrep", action="store", dest="num_rep_cv",
                         default=200,
                         help="Number of repetitions of the repeated-holdout cross-validation. "
                              "The larger the number, the better the estimates will be.")
@@ -252,7 +252,6 @@ def run_rhst(datasets, outdir):
 def run():
     """Main entry point."""
 
-    method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
     metadatafile, outdir, userdir, fsdir, \
         train_perc, num_rep_cv, \
@@ -282,8 +281,10 @@ def run():
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
         feature_dir = userdir
+        method_list = [ userdefinedget ]
     else:
         feature_dir = fsdir
+        method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
     method_names = list()
     outpath_list = list()

@@ -5,13 +5,16 @@ import os
 import nibabel
 import sklearn
 import argparse
+import warnings
 import pickle
 from time import localtime, strftime
 
-from freesurfer import fsvolumes, fsthickness
+from freesurfer import *
 from pyradigm import MLDataset
 import rhst
+import posthoc
 
+import config_neuropredict as cfg
 
 def make_time_stamp():
     # # with the minute
@@ -41,6 +44,16 @@ def parse_args():
                              "sub003,disease\n"
                              "sub004,disease\n")
 
+    parser.add_argument("-o", "--outdir", action="store", dest="outdir",
+                        required=True,
+                        help="Output folder to store features and results.")
+
+    parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
+                        default=None,
+                        help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
+                             "to be used in calculation of area under the ROC curve. "
+                             "Default: class appearning second in order specified in metadata file.")
+
     parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
                         default=None,
                         help="Abs. path of SUBJECTS_DIR containing the finished runs of Freesurfer parcellation")
@@ -56,12 +69,17 @@ def parse_args():
                              "file) containing a file called features.txt with one number per line. All the subjects "
                              "must have the number of features (#lines in file)")
 
-    # TODO perhaps I can have two arguments: one to specify feature type (which determines the reader), and another
-    # to obtain the folder path to read from.
+    parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
+                        default=0.5,
+                        help="Percentage of the smallest class to be reserved for training. "
+                             "Must be in the interval [0.01 0.99]."
+                             "If sample size is sufficiently big, we recommend 0.5."
+                             "If sample size is small, or class imbalance is high, choose 0.8.")
 
-    parser.add_argument("-o", "--outdir", action="store", dest="outdir",
-                        default=None,
-                        help="Output folder to store features and results.")
+    parser.add_argument("-r", "--num_rep_cv", action="store", dest="num_rep_cv",
+                        default=200,
+                        help="Number of repetitions of the repeated-holdout cross-validation. "
+                             "The larger the number, the better the estimates will be.")
 
     if len(sys.argv) < 2:
         print('Too few arguments!')
@@ -96,11 +114,38 @@ def parse_args():
         except:
             raise
 
-    return metadatafile, outdir, userdir, fsdir
+    train_perc = np.float32(options.train_perc)
+    assert (train_perc >= 0.01 and train_perc <= 0.99), \
+        "Training percentage {} out of bounds - must be > 0.01 and < 0.99".format(train_perc)
+
+    num_rep_cv = np.int64(options.num_rep_cv)
+    assert num_rep_cv >= 10, \
+        "Atleast 10 repitions of CV is recommened.".format(train_perc)
+
+    return metadatafile, outdir, userdir, fsdir, \
+           train_perc, num_rep_cv, options.positiveclass
 
 
-def getmetadata(path):
-    """Populates the dataset dictionary with subject ids and classes"""
+def get_metadata(path):
+    """
+    Populates the dataset dictionary with subject ids and classes
+
+    Currently supports the following per line: subjectid,class
+    Future plans to include demographics data: subjectid,class,age,sex,education
+
+    """
+
+    sample_ids = list()
+    classes = dict()
+    with open(path) as mf:
+        for line in mf:
+            if not line.startswith('#'):
+                parts = line.strip().split(',')
+                sid = parts[0]
+                sample_ids.append(sid)
+                classes[sid] = parts[1]
+
+    return sample_ids, classes
 
 
 def userdefinedget(featdir, subjid):
@@ -119,7 +164,7 @@ def userdefinedget(featdir, subjid):
     return data
 
 
-def getfeatures(subjects, classes, featdir, getmethod = None):
+def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
     """Populates the pyradigm data structure with features from a given method.
 
     getmethod: takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes).
@@ -132,20 +177,63 @@ def getfeatures(subjects, classes, featdir, getmethod = None):
 
     # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
-    class_labels = list()
+    class_labels = dict()
     for idx, cls in enumerate(class_set):
         class_labels[cls] = idx
 
+    ids_excluded = list()
+
     ds = MLDataset()
     for subjid in subjects:
-        data = getmethod(featdir, subjid)
-        ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid])
+        try:
+            data = getmethod(featdir, subjid)
+            ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid])
+        except:
+            ids_excluded.append(subjid)
+            warnings.warn("Features for {} via {} method could not be read. "
+                          "Excluding it.".format(subjid, getmethod.__name__))
+
+    # warning for large number of fails for feature extraction
+    if len(ids_excluded) > 0.1*len(subjects):
+        warnings.warn('Features for {} subjects could not read. '.format(len(ids_excluded)))
+        user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
+        if user_confirmation.lower() not in ['y', 'yes', 'ye']:
+            raise IOError('Stopping. \n'
+                          'Rerun after completing the feature extraction for all subjects '
+                          'or exclude failed subjects..')
+        else:
+            print(' Yes. Proceeding with only {} subjects.'.format(ds.num_samples))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
-    savepath = os.path.join(featdir, 'features_{}.MLDataset'.format(getmethod.__name__))
+    savepath = os.path.join(outdir, outname)
     ds.save(savepath)
 
-    return ds
+    return savepath
+
+
+def saved_dataset_matches(ds_path, subjects, classes):
+    """
+    Returns True only if the path to dataset
+        exists, is not empy,
+        contains the same number of samples,
+        same sample ids and classes as in meta data!
+
+    :returns bool.
+    """
+
+    num_samples = len(subjects)
+    num_classes = len(classes)
+    if (not os.path.exists(ds_path)) or (os.path.getsize(ds_path) <= 0):
+        return False
+    else:
+        ds = MLDataset(ds_path)
+        if ds.num_classes != num_classes or \
+                        ds.num_samples != num_samples or \
+                        set(ds.class_set) != set(classes) or \
+                        set(ds.sample_ids) != set(subjects):
+            return False
+        else:
+            return True
 
 
 def run_rhst(datasets, outdir):
@@ -164,39 +252,88 @@ def run_rhst(datasets, outdir):
 def run():
     """Main entry point."""
 
-    metadatafile, outdir, userdir, fsdir = parse_args()
+    method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
-    subjects, classes = getmetadata(metadatafile)
+    metadatafile, outdir, userdir, fsdir, \
+        train_perc, num_rep_cv, \
+        positiveclass = parse_args()
+
+    subjects, classes = get_metadata(metadatafile)
+    # the following loop is required to preserve original order
+    # this does not: class_set_in_meta = list(set(classes.values()))
+    class_set_in_meta = list()
+    for x in classes.values():
+        if x not in class_set_in_meta:
+            class_set_in_meta.append(x)
+
+    num_samples = len(subjects)
+    num_classes = len(class_set_in_meta)
+    assert num_classes > 1, \
+        "Atleast two classes are required for predictive analysis!" \
+        "Only one given ({})".format(set(classes.values()))
+
+    if num_classes == 2:
+        if not_unspecified(positiveclass):
+            print('Positive class specified for AUC calculation: {}'.format(positiveclass))
+        else:
+            positiveclass = class_set_in_meta[-1]
+            print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
 
     # let's start with one method/feature set for now
     if not_unspecified(userdir):
         feature_dir = userdir
-        chosenmethod = userdefinedget
     else:
         feature_dir = fsdir
-        chosenmethod = fsvolumes
 
-    # # this could be a list of methods when RHsT is able to handle it.
-    # chosenmethod = [ fsvolumes, fsthickness, userdefinedget ]
+    method_names = list()
+    outpath_list = list()
+    for mm, chosenmethod in enumerate(method_list):
+        method_names.append('{}_{}'.format(chosenmethod.__name__,mm)) # adding an index for an even better contrast
+        out_name = 'consolidated_{}_{}.MLDataset.pkl'.format(chosenmethod.__name__, make_time_stamp())
 
-    # noinspection PyTypeChecker
-    dataset = getfeatures(subjects, classes, feature_dir, getmethod = chosenmethod)
+        outpath_dataset = os.path.join(outdir, out_name)
+        if not saved_dataset_matches(outpath_dataset, subjects, classes):
+            # noinspection PyTypeChecker
+            outpath_dataset = getfeatures(subjects, classes,
+                                          feature_dir,
+                                          outdir, out_name,
+                                          getmethod = chosenmethod)
 
-    out_name = 'consolidated_{}_{}.MLDataset'.format(chosenmethod.__name__, make_time_stamp())
-    ds_out_path = os.path.join(feature_dir, out_name)
-    dataset.save(ds_out_path)
+        outpath_list.append(outpath_dataset)
 
-    dataset_paths_file = os.path.join(feature_dir, out_name+ '.list.txt')
+    combined_name = '_'.join(method_names)
+    dataset_paths_file = os.path.join(outdir, combined_name+ '.list.txt')
     with open(dataset_paths_file, 'w') as dpf:
-        dpf.writelines([dataset_paths_file])
+        dpf.writelines('\n'.join(outpath_list))
 
-    results_file_path = run_rhst(dataset_paths_file, outdir)
+    results_file_path = rhst.run(dataset_paths_file, outdir,
+                                 train_perc=train_perc,
+                                 num_repetitions=num_rep_cv,
+                                 pos_class = positiveclass)
 
-    dataset_paths, train_perc, num_repetitions, num_classes, pred_prob_per_class, pred_labels_per_rep_fs, \
-    test_labels_per_rep, best_min_leaf_size, best_num_predictors, feature_importances_rf, misclf_sample_ids, \
-    misclf_sample_classes, num_times_misclfd, num_times_tested, confusion_matrix, accuracy_balanced = \
-        rhst.load_results(results_file_path)
+    dataset_paths, train_perc, num_repetitions, num_classes, \
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+        num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
+            rhst.load_results(results_file_path)
 
+    balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
+    posthoc.visualize_metrics(accuracy_balanced, method_names, balacc_fig_path,
+                              num_classes, "Balanced Accuracy")
+
+    confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
+    posthoc.display_confusion_matrix(confusion_matrix, class_order, method_names, confmat_fig_path)
+
+    if num_classes > 2:
+        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
+        posthoc.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+
+    featimp_fig_path = os.path.join(outdir, 'feature_importance')
+    posthoc.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
+
+    misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
+    posthoc.summarize_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
 
 if __name__ == '__main__':
     run()

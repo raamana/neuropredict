@@ -1,2 +1,2 @@
 
-all = ['neuropredict']
+all = ['neuropredict', 'rhst', 'posthoc', 'freesurfer']

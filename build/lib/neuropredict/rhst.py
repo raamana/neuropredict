@@ -10,43 +10,38 @@ import random
 import pickle
 import sklearn
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score
 from sklearn.ensemble import RandomForestClassifier
 
-file_name_results = "rhst_results.pkl"
+import config_neuropredict as cfg
 
 from pyradigm import MLDataset
 
 
-def eval_optimized_clsfr_on_testset(train_fs, test_fs):
+def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     "Method to optimize the classifier on the training set and return predictions on test set. "
 
-    MAX_DIM_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
+    MAX_DIM_FOR_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
 
-    NUM_TREES = 50
-    MAX_MIN_LEAFSIZE = 20
-    SEED_RANDOM = 652
-
-    range_min_leafsize   = range(1, MAX_MIN_LEAFSIZE, 5)
-    range_num_predictors = range(1, MAX_DIM_TRAINING, 2)
+    range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
+    range_num_predictors = range(1, MAX_DIM_FOR_TRAINING, cfg.NUM_PREDICTORS_STEP)
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
         range_min_leafsize = [ 1 ]
     if len(range_num_predictors) < 1:
-        range_num_predictors = [MAX_DIM_TRAINING]
+        range_num_predictors = [MAX_DIM_FOR_TRAINING]
 
     oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
 
-    train_data_mat, train_labels, _               = train_fs.data_and_labels()
-    test_data_mat , test_labels , test_sample_ids = test_fs.data_and_labels()
+    train_data_mat, train_labels, _                    = train_fs.data_and_labels()
+    test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
     for idx_ls, minls in enumerate(range_min_leafsize):
         for idx_np, num_pred in enumerate(range_num_predictors):
             rf = RandomForestClassifier(max_features=num_pred , min_samples_leaf = minls,
-                                        n_estimators=NUM_TREES, max_depth=None,
-                                        oob_score = True,
-                                        random_state=SEED_RANDOM)
+                                        n_estimators=cfg.NUM_TREES, max_depth=None,
+                                        oob_score = True) # , random_state=SEED_RANDOM)
             rf.fit(train_data_mat, train_labels)
             oob_error_train[idx_ls, idx_np] = rf.oob_score_
 
@@ -58,59 +53,29 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs):
     # training the RF using the best parameters
     best_rf = RandomForestClassifier( max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
                                       oob_score=True,
-                                      n_estimators=NUM_TREES, random_state=SEED_RANDOM)
+                                      n_estimators=cfg.NUM_TREES) # , random_state=SEED_RANDOM)
     best_rf.fit(train_data_mat, train_labels)
 
     # making predictions on the test set and assessing their performance
-    pred_labels = best_rf.predict(test_data_mat)
-    feat_importance = best_rf.feature_importances_
+    pred_test_labels = best_rf.predict(test_data_mat)
+    feat_importance  = best_rf.feature_importances_
 
-    #TODO test if the gathering of prob data is consistent across multiple calls to this method
+    #TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
     # The order of the classes corresponds to that in the attribute best_rf.classes_.
     pred_prob = best_rf.predict_proba(test_data_mat)
 
-    conf_mat = confusion_matrix(test_labels, pred_labels)
+    conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_CM)
 
-    misclsfd_samples = test_sample_ids[test_labels != pred_labels]
+    misclsfd_samples = test_sample_ids[true_test_labels != pred_test_labels]
 
-    return pred_prob, pred_labels,\
+    return pred_prob, pred_test_labels, true_test_labels, \
            conf_mat, misclsfd_samples, \
            feat_importance, best_minleafsize, best_num_predictors
 
 
-def display_confusion_matrix(cfmat, class_labels,
-                             title='Confusion matrix',
-                             display_perc=False,
-                             cmap=plt.cm.Blues):
-    """
-    Display routine for the confusion matrix.
-    Entries in confusin matrix can be turned into percentages with `display_perc=True`.
-    """
-
-    plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(class_labels))
-    plt.xticks(tick_marks, class_labels, rotation=45)
-    plt.yticks(tick_marks, class_labels)
-
-    if display_perc:
-        cfmat = cfmat.astype('float') / cfmat.sum(axis=1)[:, np.newaxis]
-
-    # trick from sklearn
-    thresh = cfmat.max() / 2.
-    for i, j in itertools.product(range(cfmat.shape[0]), range(cfmat.shape[1])):
-        plt.text(j, i, cfmat[i, j],
-                 horizontalalignment="center",
-                 color="white" if cfmat[i, j] > thresh else "black")
-
-    plt.tight_layout()
-    plt.ylabel('True class')
-    plt.xlabel('Predicted class')
-
-
-def max_dimensionality_to_avoid_curseofdimensionality(num_samples, perc_prob_error_allowed = 0.05):
+def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
+                                                      perc_prob_error_allowed = cfg.PERC_PROB_ERROR_ALLOWED):
     """
     Computes the largest dimensionality that can be used to train a predictive model
         avoiding curse of dimensionality for a 5% probability of error.
@@ -133,10 +98,9 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples, perc_prob_err
 
 def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
-    # IMPLEMENT TODO
 
     num_classes = confmat.shape[0]
-    assert num_classes==confmat.shape[1], "CM is not square!"
+    assert num_classes==confmat.shape[1], "given confusion matrix is not square!"
 
     confmat = confmat.astype(np.float64)
 
@@ -154,77 +118,42 @@ def save_results(out_dir, var_list_to_save):
 
     # LATER choose a more universal serialization method (that could be loaded from a web app)
     try:
-        out_results_path = os.path.join(out_dir, file_name_results)
-        with open(out_results_path, 'wb') as cfg:
-            pickle.dump(var_list_to_save, cfg)
+        out_results_path = os.path.join(out_dir, cfg.file_name_results)
+        with open(out_results_path, 'wb') as resfid:
+            pickle.dump(var_list_to_save, resfid)
     except:
         raise IOError('Error saving the results to disk!')
 
-    return
+    return out_results_path
 
 
 def load_results(fpath):
     "Loads the results serialized by RHsT."
     # TODO need to standardize what needs to saved/read back
 
+    assert os.path.exists(fpath), "Results file to be loaded doesn't exist!"
     try:
         with open(fpath) as rf:
-            dataset_paths, train_perc, num_repetitions, num_classes, pred_prob_per_class, pred_labels_per_rep_fs, \
-            test_labels_per_rep, best_min_leaf_size, best_num_predictors, feature_importances_rf, misclf_sample_ids, \
-            misclf_sample_classes, num_times_misclfd, num_times_tested, confusion_matrix, accuracy_balanced = \
+            dataset_paths, train_perc, num_repetitions, num_classes, \
+            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+            best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+            num_times_misclfd, num_times_tested, \
+            confusion_matrix, class_set, accuracy_balanced, auc_weighted = \
                 pickle.load(rf)
 
-        return dataset_paths, train_perc, num_repetitions, num_classes, pred_prob_per_class, pred_labels_per_rep_fs, \
-            test_labels_per_rep, best_min_leaf_size, best_num_predictors, feature_importances_rf, misclf_sample_ids, \
-            misclf_sample_classes, num_times_misclfd, num_times_tested, confusion_matrix, accuracy_balanced
     except:
-        raise IOError("Error reading the results from disk!")
+        raise IOError("Error loading/unpacking the results!")
 
-    return
-
-
-def holdout_evaluation(datasets, train_size_common, total_test_samples):
-    "Performs one repetition of the train/test and returns the relevant evaluation metrics."
-
-    num_datasets= len(datasets)
-    num_classes = datasets[0].num_classes
-
-    pred_prob_per_class    = np.full([total_test_samples, num_classes], np.nan)
-    pred_labels_per_rep_fs = np.full([total_test_samples], np.nan)
-    test_labels_per_rep    = np.full([total_test_samples], np.nan)
-
-    best_min_leaf_size  = np.full([num_datasets], np.nan)
-    best_num_predictors = np.full([num_datasets], np.nan)
-
-    confusion_matrix  = np.full([num_classes, num_classes, num_datasets], np.nan)
-    accuracy_balanced = np.full([num_datasets], np.nan)
-
-    train_set, test_set = datasets[0].train_test_split_ids(count_per_class=train_size_common)
-
-    # evaluating each feature/datasets
-    for dd in range(num_datasets):
-        print(" feature {:3d}: ".format(dd), end='')
-
-        train_fs = datasets[dd].get_subset(train_set)
-        test_fs = datasets[dd].get_subset(test_set)
-
-        pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], \
-        confmat, misclsfd_ids_this_run, feature_importances_rf[dd], \
-        best_min_leaf_size[dd], best_num_predictors[dd] = \
-            eval_optimized_clsfr_on_testset(train_fs, test_fs)
-
-        accuracy_balanced[dd] = balanced_accuracy(confmat)
-        confusion_matrix[:, :, dd] = confmat
-
-        print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep, dd]))
-
-    return pred_prob_per_class, pred_labels_per_rep_fs, \
-        confmat, misclsfd_ids_this_run, feature_importances_rf, \
-        best_min_leaf_size, best_num_predictors
+    return dataset_paths, train_perc, num_repetitions, num_classes, \
+           pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+           best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+           num_times_misclfd, num_times_tested, \
+           confusion_matrix, class_set, accuracy_balanced, auc_weighted
 
 
-
-def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 200):
+def run(dataset_path_file, out_results_dir,
+        train_perc = 0.8, num_repetitions = 200,
+        pos_class = None):
     """
 
     :param dataset_path_file: path to file containing list of paths (each containing a valid MLDataset).
@@ -233,6 +162,7 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
     the smallest class to estimate the numner of subjects from each class to be reserved for training. The smallest
     class is chosen to avoid class-imbalance in the training set. Default: 0.8 (80%).
     :param num_repetitions: number of repetitions of cross-validation estimation. Default: 200.
+    :pos_class: name of the class to be treated as positive in calculation of AUC
     :return:
     """
 
@@ -290,14 +220,19 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
     for idx in range(1, num_datasets):
         this_ds = datasets[idx]
         assert num_samples==this_ds.num_samples, "Number of samples in different datasets differ!"
-        assert class_set==set(this_ds.classes.values()), \
+        assert set(class_set)==set(this_ds.classes.values()), \
             "Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                class_set, set(this_ds.classes.values()))
+                set(class_set), set(this_ds.classes.values()))
 
     # re-map the labels (from 1 to n) to ensure numeric labels do not differ
     remapped_class_labels = dict()
     for idx, cls in enumerate(class_set):
         remapped_class_labels[cls] = idx
+
+    # finding the numeric label for positive class
+    # label will also be in the index into the arrays over classes due to construction above
+    if num_classes == 2:
+        pos_class_index = remapped_class_labels[pos_class]
 
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
@@ -342,18 +277,26 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
             num_times_tested[dd][subid] = 0
             num_times_misclfd[dd][subid]= 0
 
-    # num_times_tested  = np.zeros([num_samples, num_datasets])
-    # num_times_misclfd = np.zeros([num_samples, num_datasets])
-
+    # multi-class metrics
     confusion_matrix  = np.full([num_classes, num_classes, num_repetitions, num_datasets], np.nan)
     accuracy_balanced = np.full([num_repetitions, num_datasets], np.nan)
+    auc_weighted = np.full([num_repetitions, num_datasets], np.nan)
+
+    # # specificity & sensitivity are ill-defined in the general case as they require us to know which class is positive
+    # # hence would refer them from now on simply correct classification rates (ccr)
+    # moreover this can be easily computed from the confusion matrix anyway.
+    # ccr_perclass = np.full([num_repetitions, num_datasets, num_classes], np.nan)
+    # binary metrics
+    # TODO later when are the uses of precision and recall appropriate?
+    # precision    = np.full([num_repetitions, num_datasets], np.nan)
+    # recall       = np.full([num_repetitions, num_datasets], np.nan)
 
     feature_importances_rf = [None]*num_datasets
     for idx in range(num_datasets):
         feature_importances_rf[idx] = np.full([num_repetitions,num_features[idx]], np.nan)
 
     # repeated-hold out CV begins here
-    # TODO implement a multi-process version as differnt rep's are embarrasingly parallel
+    # TODO LATER implement a multi-process version as differnt rep's are embarrasingly parallel
     # use the following one statement processing that can be forked to parallel threads
     # pred_prob_per_class[rep, dd, :, :], pred_labels_per_rep_fs[rep, dd, :], \
     # confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep, :], \
@@ -361,10 +304,10 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
     #     = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
     for rep in range(num_repetitions):
-        print(" CV trial {:3d} ".format(rep))
+        print("\n CV trial {:3d} ".format(rep))
 
         train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
-        _ , test_labels_per_rep[rep, :] = test_fs.data_and_labels
+        test_labels_per_rep[rep, :] = [ common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
 
         # evaluating each feature/dataset
         # try set test_labels_per_rep outside dd loop as its the same across all dd
@@ -375,33 +318,81 @@ def run(dataset_path_file, out_results_dir, train_perc = 0.8, num_repetitions = 
             test_fs  = datasets[dd].get_subset(test_set)
 
             pred_prob_per_class[rep, dd, :, :], \
-                pred_labels_per_rep_fs[rep, dd, :], \
+                pred_labels_per_rep_fs[rep, dd, :], true_test_labels, \
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
-                eval_optimized_clsfr_on_testset(train_fs, test_fs)
+                eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM=label_set)
 
             accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat
+            print('balanced accuracy: {:.4f} '.format(accuracy_balanced[rep, dd]), end='')
+
+            if num_classes == 2:
+                # TODO FIX auc calculation flipped
+                auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
+                                                       pred_prob_per_class[rep, dd, :, pos_class_index],
+                                                       average='weighted')
+                print('weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]))
 
             num_times_misclfd[dd].update(misclsfd_ids_this_run)
             num_times_tested[dd].update(test_fs.sample_ids)
 
-            print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep,dd]))
+            print('')
 
-    # TODO generate visualizations for each feature set as well as a comparative summary!
-    # TODO generate a CSV of different metrics for each dataset, as well as a reloadable
+    # TODO NOW generate a CSV of different metrics for each dataset, as well as a reloadable
 
     # save results
     var_list_to_save = [dataset_paths, train_perc, num_repetitions, num_classes,
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
                         best_min_leaf_size, best_num_predictors, feature_importances_rf,
                         num_times_misclfd, num_times_tested,
-                        confusion_matrix, accuracy_balanced ]
+                        confusion_matrix, class_set,
+                        accuracy_balanced, auc_weighted ]
 
-    save_results(out_results_dir, var_list_to_save)
+    out_results_path = save_results(out_results_dir, var_list_to_save)
 
-    return
+    return out_results_path
 
 
 if __name__ == '__main__':
     pass
+
+
+# def holdout_evaluation(datasets, train_size_common, total_test_samples):
+#     "Performs one repetition of the train/test and returns the relevant evaluation metrics."
+#
+#     num_datasets= len(datasets)
+#     num_classes = datasets[0].num_classes
+#
+#     pred_prob_per_class    = np.full([total_test_samples, num_classes], np.nan)
+#     pred_labels_per_rep_fs = np.full([total_test_samples], np.nan)
+#     test_labels_per_rep    = np.full([total_test_samples], np.nan)
+#
+#     best_min_leaf_size  = np.full([num_datasets], np.nan)
+#     best_num_predictors = np.full([num_datasets], np.nan)
+#
+#     confusion_matrix  = np.full([num_classes, num_classes, num_datasets], np.nan)
+#     accuracy_balanced = np.full([num_datasets], np.nan)
+#
+#     train_set, test_set = datasets[0].train_test_split_ids(count_per_class=train_size_common)
+#
+#     # evaluating each feature/datasets
+#     for dd in range(num_datasets):
+#         print(" feature {:3d}: ".format(dd), end='')
+#
+#         train_fs = datasets[dd].get_subset(train_set)
+#         test_fs = datasets[dd].get_subset(test_set)
+#
+#         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], \
+#         confmat, misclsfd_ids_this_run, feature_importances_rf[dd], \
+#         best_min_leaf_size[dd], best_num_predictors[dd] = \
+#             eval_optimized_clsfr_on_testset(train_fs, test_fs)
+#
+#         accuracy_balanced[dd] = balanced_accuracy(confmat)
+#         confusion_matrix[:, :, dd] = confmat
+#
+#         print('balanced accuracy: {:.4f}'.format(accuracy_balanced[rep, dd]))
+#
+#     return pred_prob_per_class, pred_labels_per_rep_fs, \
+#         confmat, misclsfd_ids_this_run, feature_importances_rf, \
+#         best_min_leaf_size, best_num_predictors
