@@ -1,8 +1,9 @@
-from __future__ import print_function
+from __future__ import print_function, division
 import os
 import sys
 import warnings
 import numpy as np
+from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib.colors as mcolors
@@ -242,7 +243,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
     return
 
 
-def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath):
+def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath,
+                                 separate_plots = False):
     """
     Summary of most/least frequently mislcassified subjects for further analysis
 
@@ -251,9 +253,24 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     num_bins = cfg.MISCLF_HIST_NUM_BINS
     count_thresh = cfg.MISCLF_PERC_THRESH
 
-    highlight_thresh50 = 0.5
-    highlight_thresh75 = 0.75
+    def annnotate_plots(ax_h):
+        "Adds axes labels and helpful highlights"
 
+        highlight_thresh50 = 0.5
+        highlight_thresh75 = 0.75
+
+        cur_ylim = ax_h.get_ylim()
+        line50, = ax_h.plot([highlight_thresh50, highlight_thresh50],
+                            cur_ylim, 'k', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
+        line75, = ax_h.plot([highlight_thresh75, highlight_thresh75],
+                            cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
+        ax_h.set_ylim(cur_ylim)
+        ax_h.set_ylabel('number of subjects')
+        ax_h.set_xlabel('percentage of misclassification')
+
+
+    # computing the percentage of misclassification per subject
+    num_samples = len(num_times_tested[0].keys())
     num_datasets = len(num_times_tested)
     perc_misclsfd = [None]*num_datasets
     for dd in range(num_datasets):
@@ -262,36 +279,46 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
             if num_times_misclfd[dd][sid] > 0 and num_times_tested[dd][sid] > 0:
                 perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) / np.float64(num_times_tested[dd][sid])
 
-    # plot histograms per dataset
-    if num_datasets > 1:
+    # plot frequency histogram per dataset
+    if num_datasets > 1 and separate_plots:
         fig, ax = plt.subplots(int(np.ceil(num_datasets/2.0)), 2,
                                sharey=True,
                                figsize=[12, 9])
         ax = ax.flatten()
     else:
         fig, ax_h = plt.subplots(figsize=[12, 9])
-        ax = [ax_h] # to support indexing
 
     for dd in range(num_datasets):
-        plt.sca(ax[dd])
-        ax[dd].hist(perc_misclsfd[dd].values(), num_bins)
+        # calculating percentage of most frequently misclassified subjects in each dataset
+        most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh]
+        perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / num_samples
+        method_labels[dd] = "{} - {:.1f}% ".format(method_labels[dd], perc_most_freq_misclsfd)
+        if dd == 0:
+            method_labels[dd] = method_labels[dd] + 'most frequently misclassfied'
 
-        cur_ylim = ax[dd].get_ylim()
-        line50, = ax[dd].plot([highlight_thresh50, highlight_thresh50],
-                              cur_ylim, 'b')
-        line75, = ax[dd].plot([highlight_thresh75, highlight_thresh75],
-                              cur_ylim, 'r--')
-        ax[dd].set_ylim(cur_ylim)
-        ax[dd].set_title(method_labels[dd])
-        ax[dd].set_ylabel('number of subjects')
-        ax[dd].set_xlabel('percentage of misclassification')
+        if num_datasets > 1 and separate_plots:
+            ax_h = ax[dd]
+            plt.sca(ax_h)
+            ax_h.hist(perc_misclsfd[dd].values(), num_bins)  # label = method_labels[dd]
+        else:
+            # TODO smoother kde plots?
+            ax_h.hist(perc_misclsfd[dd].values(), num_bins,
+                      histtype = 'stepfilled', alpha = cfg.MISCLF_HIST_ALPHA,
+                      label = method_labels[dd])
 
-        most_freq_misclfd = [ sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh ]
+        if num_datasets > 1 and separate_plots:
+            ax_h.set_title(method_labels[dd])
+            annnotate_plots(ax_h)
+        else:
+            if dd == num_datasets-1:
+                ax_h.legend(loc=2)
+                annnotate_plots(ax_h)
+
         txt_path = '_'.join([outpath, method_labels[dd], 'ids_most_frequent.txt'])
         with open(txt_path, 'w') as mfm:
             mfm.writelines('\n'.join(most_freq_misclfd))
 
-    if num_datasets < len(ax):
+    if separate_plots and num_datasets < len(ax):
         fig.delaxes(ax[-1])
 
     fig.tight_layout()
