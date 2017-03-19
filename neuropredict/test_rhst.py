@@ -1,6 +1,11 @@
 
 import numpy as np
-import os
+import os, sys
+
+sys.dont_write_bytecode = True
+
+sys.path.extend(['/Users/Reddy/opensource/pyradigm/pyradigm'])
+
 from pyradigm import MLDataset
 
 import neuropredict
@@ -27,6 +32,7 @@ def make_random_MLdataset(max_num_classes = 20,
         class_sizes = np.repeat(np.random.randint(10, max_class_size), num_classes)
 
     num_features = np.random.randint(1, max_dim, 1)[0]
+    feat_names = [ str(x) for x in range(num_features)]
 
     class_ids = list()
     labels = list()
@@ -38,8 +44,7 @@ def make_random_MLdataset(max_num_classes = 20,
     for cc, class_ in enumerate(class_ids):
         subids = [ 'sub{:3}-class{:3}'.format(ix,cc) for ix in range(class_sizes[cc]) ]
         for sid in subids:
-            ds.add_sample(sid, feat_generator(num_features), int(cc), class_)
-
+            ds.add_sample(sid, feat_generator(num_features), int(cc), class_, feat_names)
 
     return ds
 
@@ -58,7 +63,8 @@ res_path = rhst.run(out_list, out_dir, num_repetitions=20)
 
 dataset_paths, train_perc, num_repetitions, num_classes, \
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-           best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+           best_min_leaf_size, best_num_predictors, \
+           feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
            confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
 

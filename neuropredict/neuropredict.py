@@ -161,19 +161,20 @@ def userdefinedget(featdir, subjid):
     with open(featfile,'r') as fid:
         data = fid.read().splitlines()
 
-    return data
+    return data, None # TODO no names are associated with user-defined yet!
 
 
 def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
     """Populates the pyradigm data structure with features from a given method.
 
-    getmethod: takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes).
+    getmethod: takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
+        with an optional array of names for each feature.
     classes: dict of class labels keyed in by subject id
 
     """
 
     assert callable(getmethod), "Supplied getmethod is not callable!" \
-                                "It must take in a path and return a vectorized feature set."
+                                "It must take in a path and return a vectorized feature set and labels."
 
     # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
@@ -186,8 +187,8 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
     ds = MLDataset()
     for subjid in subjects:
         try:
-            data = getmethod(featdir, subjid)
-            ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid])
+            data, feat_names = getmethod(featdir, subjid)
+            ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
         except:
             ids_excluded.append(subjid)
             warnings.warn("Features for {} via {} method could not be read. "
@@ -198,9 +199,10 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
         warnings.warn('Features for {} subjects could not read. '.format(len(ids_excluded)))
         user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
-            raise IOError('Stopping. \n'
+            print ('Stopping. \n'
                           'Rerun after completing the feature extraction for all subjects '
                           'or exclude failed subjects..')
+            sys.exit(1)
         else:
             print(' Yes. Proceeding with only {} subjects.'.format(ds.num_samples))
 
@@ -314,7 +316,8 @@ def run():
 
     dataset_paths, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+        best_min_leaf_size, best_num_predictors, \
+        feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
         confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
             rhst.load_results(results_file_path)
@@ -331,7 +334,7 @@ def run():
         visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
     featimp_fig_path = os.path.join(outdir, 'feature_importance')
-    visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path)
+    visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
 
     misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
     visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)

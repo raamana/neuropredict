@@ -13,21 +13,21 @@ from collections import Counter
 
 import config_neuropredict as cfg
 
-def feature_importance_map(feat_imp, method_labels, base_output_path,
+def feature_importance_map(feat_imp,
+                           method_labels,
+                           base_output_path,
+                           feature_names = None,
                            show_distr = False,
-                           plot_title = 'feature importance',
-                           feat_labels_given=None):
+                           plot_title = 'feature importance'):
     """
-
     Generates a map/barplot of feature importance.
-
 
     feat_imp must be a list of length num_datasets,
         each an ndarray of size [num_repetitions,num_features[idx]]
         where num_features[idx] refers to the dimensionality of n-th dataset.
 
-    metho_names must be a list of titles of the same length as feat_imp.
-    feat_labels must be a list of same size as feat_imp,
+    metho_names must be a list of strings of the same length as feat_imp.
+    feature_names must be a list (of ndarrays of strings) same size as feat_imp,
         each element being another list of labels corresponding to num_features[idx].
 
     show_distr, if True, plots the distribution (over different trials of cross-validation)
@@ -38,55 +38,59 @@ def feature_importance_map(feat_imp, method_labels, base_output_path,
     num_datasets = len(feat_imp)
 
     if num_datasets > 1:
-        fig, ax = plt.subplots(int(np.ceil(num_datasets/2.0)), 2,
-                               sharey=True,
-                               figsize=[12, 9])
+        fig, ax = plt.subplots(num_datasets, 1,
+                               sharex=True,
+                               figsize=[9, 12])
         ax = ax.flatten()
     else:
-        fig, ax_h = plt.subplots(figsize=[12, 9])
+        fig, ax_h = plt.subplots(figsize=[9, 12])
         ax = [ax_h] # to support indexing
 
     for dd in range(num_datasets):
 
         num_features = feat_imp[dd].shape[1]
         feat_ticks = range(num_features)
-        if feat_labels_given is None:
+        if feature_names is None:
             feat_labels = [ "f{}".format(ix) for ix in feat_ticks]
         else:
-            feat_labels = feat_labels_given[dd]
+            feat_labels = feature_names[dd]
             assert len(feat_labels)==num_features
 
         plt.sca(ax[dd])
+        # violin distribution or stick bar plot?
         if show_distr:
-            line_coll = ax[dd].violinplot(feat_imp[dd], widths=0.8, bw_method=0.2,
-                                      showmedians=True, showextrema=False,
-                                      positions=feat_ticks)
-            jet = cm.get_cmap(cfg.CMAP_FEAT_IMP, num_features)
+            line_coll = ax[dd].violinplot(feat_imp[dd],
+                                          positions=feat_ticks,
+                                          widths=0.8, bw_method=0.2,
+                                          vert=False,
+                                          showmedians=True, showextrema=False)
+            cmap = cm.get_cmap(cfg.CMAP_FEAT_IMP, num_features)
             for cc, ln in enumerate(line_coll['bodies']):
-                ln.set_facecolor(jet(cc))
+                ln.set_facecolor(cmap(cc))
                 #ln.set_label(feat_labels[cc])
         else:
             median_feat_imp = np.median(feat_imp[dd], axis=0)
             stdev_feat_imp  = np.nanstd(feat_imp[dd], axis=0)
             barwidth = 8.0 / num_features
-            rects = ax[dd].bar(range(num_features), median_feat_imp, width=barwidth, yerr=stdev_feat_imp)
+            rects = ax[dd].barh(feat_ticks, median_feat_imp,
+                               height=barwidth, xerr=stdev_feat_imp)
 
         #plt.legend(loc=2, ncol=num_datasets)
 
-        ax[dd].tick_params(axis='both', which='major', labelsize=15)
-        ax[dd].grid(axis='y', which='major')
+        ax[dd].tick_params(axis='both', which='major', labelsize=10)
+        ax[dd].grid(axis='x', which='major')
 
-        ax[dd].set_xticks(feat_ticks)
-        ax[dd].set_xlim(np.min(feat_ticks) - 1, np.max(feat_ticks) + 1)
-        ax[dd].set_xticklabels(feat_labels, rotation=45)  # 'vertical'
+        ax[dd].set_yticks(feat_ticks)
+        ax[dd].set_ylim(np.min(feat_ticks) - 1, np.max(feat_ticks) + 1)
+        ax[dd].set_yticklabels(feat_labels) #, rotation=45)  # 'vertical'
         ax[dd].set_title(method_labels[dd])
 
 
     if num_datasets < len(ax):
         fig.delaxes(ax[-1])
 
-    # plt.xlabel(xlabel, fontsize=16)
-    plt.suptitle(plot_title, fontsize=16)
+    plt.xlabel('feature importance', fontsize=14)
+    # plt.suptitle(plot_title, fontsize=16)
     fig.tight_layout()
 
     base_output_path.replace(' ', '_')
@@ -292,9 +296,9 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         # calculating percentage of most frequently misclassified subjects in each dataset
         most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh]
         perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / num_samples
-        method_labels[dd] = "{} - {:.1f}% ".format(method_labels[dd], perc_most_freq_misclsfd)
+        this_method_label = "{} - {:.1f}% ".format(method_labels[dd], perc_most_freq_misclsfd)
         if dd == 0:
-            method_labels[dd] = method_labels[dd] + 'most frequently misclassfied'
+            this_method_label = this_method_label + 'most frequently misclassfied'
 
         if num_datasets > 1 and separate_plots:
             ax_h = ax[dd]
@@ -304,10 +308,10 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
             # TODO smoother kde plots?
             ax_h.hist(perc_misclsfd[dd].values(), num_bins,
                       histtype = 'stepfilled', alpha = cfg.MISCLF_HIST_ALPHA,
-                      label = method_labels[dd])
+                      label = this_method_label)
 
         if num_datasets > 1 and separate_plots:
-            ax_h.set_title(method_labels[dd])
+            ax_h.set_title(this_method_label)
             annnotate_plots(ax_h)
         else:
             if dd == num_datasets-1:

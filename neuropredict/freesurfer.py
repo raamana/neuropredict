@@ -22,9 +22,10 @@ def aseg_stats_whole_brain_via_regex(fspath, subjid):
     # sel_volumes, sel_names = zip(*selected_names_volumes)
 
     volume_by_name = { seg[1]: seg[3] for seg in stats }
-    sel_volumes = [ volume_by_name[name] for name in seg_names_sel ]
+    selected_names_volumes = [ (volume_by_name[name], name) for name in seg_names_sel ]
+    sel_volumes, sel_names = zip(*selected_names_volumes)
 
-    return np.array(sel_volumes)
+    return np.array(sel_volumes), np.array(sel_names)
 
 
 def aseg_stats_whole_brain(fspath, subjid):
@@ -61,7 +62,7 @@ def aseg_stats_whole_brain(fspath, subjid):
     selected_names_volumes = [ (vol[0], name) for (vol, name) in zip(seg_volumes, seg_names) if name in seg_names_sel]
     sel_volumes, sel_names = zip(*selected_names_volumes)
 
-    return np.array(sel_volumes) # sel_names not returned to follow return-a-single-vector convention
+    return np.array(sel_volumes), np.array(sel_names) # sel_names not returned to follow return-a-single-vector convention
 
 
 def aseg_stats_subcortical(fspath, subjid):
@@ -84,7 +85,7 @@ def aseg_stats_subcortical(fspath, subjid):
 
     seg_ids, volumes, names = zip(*filtered_stats)
 
-    return np.array(volumes) # , np.array(seg_ids), list(names)
+    return np.array(volumes), np.array(names) # , np.array(seg_ids), list(names)
 
 
 def fsthickness(path, subjid, fwhm=10):

@@ -158,7 +158,8 @@ def load_results(fpath):
         with open(fpath) as rf:
             dataset_paths, train_perc, num_repetitions, num_classes, \
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-            best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+            best_min_leaf_size, best_num_predictors, \
+            feature_importances_rf, feature_names, \
             num_times_misclfd, num_times_tested, \
             confusion_matrix, class_set, accuracy_balanced, auc_weighted = \
                 pickle.load(rf)
@@ -166,9 +167,11 @@ def load_results(fpath):
     except:
         raise IOError("Error loading/unpacking the results!")
 
+    # TODO need a consolidated way to deal with what variable are saved and in what order
     return dataset_paths, train_perc, num_repetitions, num_classes, \
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-           best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+           best_min_leaf_size, best_num_predictors, \
+           feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
            confusion_matrix, class_set, accuracy_balanced, auc_weighted
 
@@ -315,9 +318,11 @@ def run(dataset_path_file, out_results_dir,
     # precision    = np.full([num_repetitions, num_datasets], np.nan)
     # recall       = np.full([num_repetitions, num_datasets], np.nan)
 
+    feature_names = [None]*num_datasets
     feature_importances_rf = [None]*num_datasets
     for idx in range(num_datasets):
         feature_importances_rf[idx] = np.full([num_repetitions,num_features[idx]], np.nan)
+        feature_names[idx] = datasets[idx].feature_names
 
     # repeated-hold out CV begins here
     # TODO LATER implement a multi-process version as differnt rep's are embarrasingly parallel
@@ -366,9 +371,11 @@ def run(dataset_path_file, out_results_dir,
     # TODO NOW generate a CSV of different metrics for each dataset, as well as a reloadable
 
     # save results
+    # TODO if feature names are implemented, save them too
     var_list_to_save = [dataset_paths, train_perc, num_repetitions, num_classes,
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
-                        best_min_leaf_size, best_num_predictors, feature_importances_rf,
+                        best_min_leaf_size, best_num_predictors,
+                        feature_importances_rf, feature_names,
                         num_times_misclfd, num_times_tested,
                         confusion_matrix, class_set,
                         accuracy_balanced, auc_weighted ]
