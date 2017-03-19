@@ -156,7 +156,7 @@ def load_results(fpath):
     assert os.path.exists(fpath), "Results file to be loaded doesn't exist!"
     try:
         with open(fpath) as rf:
-            dataset_paths, train_perc, num_repetitions, num_classes, \
+            dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             best_min_leaf_size, best_num_predictors, \
             feature_importances_rf, feature_names, \
@@ -168,7 +168,7 @@ def load_results(fpath):
         raise IOError("Error loading/unpacking the results!")
 
     # TODO need a consolidated way to deal with what variable are saved and in what order
-    return dataset_paths, train_perc, num_repetitions, num_classes, \
+    return dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
            best_min_leaf_size, best_num_predictors, \
            feature_importances_rf, feature_names, \
@@ -176,7 +176,7 @@ def load_results(fpath):
            confusion_matrix, class_set, accuracy_balanced, auc_weighted
 
 
-def run(dataset_path_file, out_results_dir,
+def run(dataset_path_file, method_names, out_results_dir,
         train_perc = 0.8, num_repetitions = 200,
         pos_class = None):
     """
@@ -372,7 +372,7 @@ def run(dataset_path_file, out_results_dir,
 
     # save results
     # TODO if feature names are implemented, save them too
-    var_list_to_save = [dataset_paths, train_perc, num_repetitions, num_classes,
+    var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
                         best_min_leaf_size, best_num_predictors,
                         feature_importances_rf, feature_names,

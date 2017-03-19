@@ -164,6 +164,32 @@ def confusion_matrices(cfmat_array, class_labels,
     return
 
 
+def compute_pairwise_misclf(cfmat_array):
+
+    num_datasets = cfmat_array.shape[3]
+    num_classes  = cfmat_array.shape[0]
+    num_misclf_axes = num_classes * (num_classes - 1)
+
+    avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
+    misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
+    for dd in range(num_datasets):
+        # mean confusion over CV trials
+        avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 2)
+        # percentage confusion relative to class size
+        clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
+        avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
+        # making it human readable : 0-100%
+        avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=3)
+
+        count = 0
+        for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+            if ii != jj:
+                misclf_rate[dd,count] = avg_cfmat[dd, ii, jj]
+                count = count + 1
+
+    return avg_cfmat, misclf_rate
+
+
 def compare_misclf_pairwise(cfmat_array, class_labels,
                                        method_labels, out_path):
     """
@@ -184,22 +210,24 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
 
     out_path.replace(' ', '_')
 
-    avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
-    misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
-    for dd in range(num_datasets):
-        # mean confusion over CV trials
-        avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 2)
-        # percentage confusion relative to class size
-        clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
-        avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
-        # making it human readable : 0-100%
-        avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=3)
+    # avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
+    # misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
+    # for dd in range(num_datasets):
+    #     # mean confusion over CV trials
+    #     avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 2)
+    #     # percentage confusion relative to class size
+    #     clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
+    #     avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
+    #     # making it human readable : 0-100%
+    #     avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=3)
+    #
+    #     count = 0
+    #     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+    #         if ii != jj:
+    #             misclf_rate[dd,count] = avg_cfmat[dd, ii, jj]
+    #             count = count + 1
 
-        count = 0
-        for ii, jj in itertools.product(range(num_classes), range(num_classes)):
-            if ii != jj:
-                misclf_rate[dd,count] = avg_cfmat[dd, ii, jj]
-                count = count + 1
+    avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
 
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
@@ -274,6 +302,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
 
 
     # computing the percentage of misclassification per subject
+    # TODO separate this calculation for use in exporting of results
     num_samples = len(num_times_tested[0].keys())
     num_datasets = len(num_times_tested)
     perc_misclsfd = [None]*num_datasets

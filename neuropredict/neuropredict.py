@@ -238,6 +238,105 @@ def saved_dataset_matches(ds_path, subjects, classes):
             return True
 
 
+def visualize_results(results_file_path, outdir, method_names):
+    """
+    Produces the performance visualizations/comparisons from the cross-validation results!
+
+    :param results_file_path:
+    :param outdir:
+    :param method_names:
+    :return:
+    """""
+
+    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_min_leaf_size, best_num_predictors, \
+        feature_importances_rf, feature_names, \
+        num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
+            rhst.load_results(results_file_path)
+
+    num_classes = len(method_names)
+
+    balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
+    visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
+                                  num_classes, "Balanced Accuracy")
+
+    confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
+    visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
+
+    if num_classes > 2:
+        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
+        visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+
+    featimp_fig_path = os.path.join(outdir, 'feature_importance')
+    visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
+
+    misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
+    visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
+
+
+def export_results(results_file_path, outdir, method_names):
+    """
+    Exports the results to simpler CSV format for use in other packages!
+
+    :param results_file_path:
+    :param outdir:
+    :param method_names:
+    :return:
+    """
+
+    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+    best_min_leaf_size, best_num_predictors, \
+    feature_importances_rf, feature_names, \
+    num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
+        rhst.load_results(results_file_path)
+
+    num_classes = confusion_matrix.shape[0]
+    num_rep_cv = confusion_matrix.shape[2]
+    num_datasets = confusion_matrix.shape[3]
+
+    # separating CSVs from the PDFs
+    exp_dir = os.path.join(outdir, cfg.EXPORT_DIR_NAME)
+    if not os.path.exists(exp_dir):
+        os.mkdir(exp_dir)
+
+    balacc_path = os.path.join(exp_dir, 'balanced_accuracy.csv')
+    np.savetxt(balacc_path, accuracy_balanced,
+               delimiter=cfg.DELIMITER,
+               fmt = cfg.EXPORT_FORMAT,
+               header=','.join(method_names))
+
+    cfmat_reshaped = np.reshape(confusion_matrix, [num_classes*num_classes, num_rep_cv, num_datasets] )
+    for mm in range(num_datasets):
+        confmat_path = os.path.join(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
+        np.savetxt(confmat_path,
+                   cfmat_reshaped[:,:,mm],
+                   delimiter=cfg.DELIMITER,
+                   comments= 'shape of confusion matrix: num_classes^2 x num_repetitions')
+
+    avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
+    num_datasets = misclf_rate.shape[0]
+    for mm in range(num_datasets):
+        cmp_misclf_path = os.path.join(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
+        np.savetxt(cmp_misclf_path,
+                   misclf_rate[mm,:],
+                   fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
+
+    for mm in range(num_datasets):
+        featimp_path = os.path.join(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
+        np.savetxt(featimp_path,
+                   feature_importances_rf[mm],
+                   fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
+                   header=','.join(feature_names[mm]))
+
+    # TODO should I export subject-wise misclassification rate as well?
+
+
+    return
+
 def run_rhst(datasets, outdir):
     """
 
@@ -281,6 +380,7 @@ def run():
             print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
 
     # let's start with one method/feature set for now
+    # TODO allow the user to specify arbitray combination of predefined and custom methods as well.
     if not_unspecified(userdir):
         feature_dir = userdir
         method_list = [ userdefinedget ]
@@ -288,6 +388,8 @@ def run():
         feature_dir = fsdir
         method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
 
+    # TODO turn the following into a metho of the form
+    # method_names, dataset_paths_file = consolidate_features(method_list, outdir, subjects, classes, feature_dir)
     method_names = list()
     outpath_list = list()
     for mm, chosenmethod in enumerate(method_list):
@@ -305,39 +407,18 @@ def run():
         outpath_list.append(outpath_dataset)
 
     combined_name = '_'.join(method_names)
-    dataset_paths_file = os.path.join(outdir, combined_name+ '.list.txt')
+    dataset_paths_file = os.path.join(outdir, 'datasetlist.' + combined_name+ '.txt')
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
-    results_file_path = rhst.run(dataset_paths_file, outdir,
+    results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
                                  train_perc=train_perc,
                                  num_repetitions=num_rep_cv,
                                  pos_class = positiveclass)
 
-    dataset_paths, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_min_leaf_size, best_num_predictors, \
-        feature_importances_rf, feature_names, \
-        num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
-            rhst.load_results(results_file_path)
+    visualize_results(results_file_path, outdir, method_names)
 
-    balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
-    visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
-                                  num_classes, "Balanced Accuracy")
-
-    confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
-    visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
-
-    if num_classes > 2:
-        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
-        visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
-
-    featimp_fig_path = os.path.join(outdir, 'feature_importance')
-    visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
-
-    misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
-    visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
+    export_results(results_file_path, outdir, method_names)
 
 if __name__ == '__main__':
     run()

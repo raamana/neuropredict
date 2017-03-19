@@ -21,7 +21,10 @@ CMAP_DATASETS = 'Paired'
 CMAP_CONFMATX = plt.cm.Blues
 CMAP_FEAT_IMP = 'hsv'
 
-file_name_results = "rhst_results.pkl"
+file_name_results = 'rhst_results.pkl'
+EXPORT_DIR_NAME = 'exported_results'
+DELIMITER = ','
+EXPORT_FORMAT = '%10.5f'
 
 # TODO decide to where to include eTIV
 # 'eTIV' is not included as it is used to norm subcortical volumes

@@ -12,6 +12,11 @@ import neuropredict
 import rhst
 import freesurfer
 
+out_dir = '/Users/Reddy/opensource/neuropredict/test_ppmi/'
+res_path = os.path.join(out_dir, 'rhst_results.pkl')
+neuropredict.export_results(res_path, out_dir, ['aseg_stats_subcortical', 'aseg_stats_whole_brain'])
+
+
 feat_generator = np.random.randn
 
 out_dir = os.path.abspath('../tests')
@@ -59,9 +64,8 @@ out_list = os.path.join(out_dir, 'list_datasets.txt')
 with open(out_list, 'w') as lf:
     lf.writelines('\n'.join([out_path, ]))
 
-res_path = rhst.run(out_list, out_dir, num_repetitions=20)
-
-dataset_paths, train_perc, num_repetitions, num_classes, \
+# res_path = rhst.run(out_list, out_dir, num_repetitions=20)
+dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
            best_min_leaf_size, best_num_predictors, \
            feature_importances_rf, feature_names, \
