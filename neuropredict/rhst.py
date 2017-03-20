@@ -181,16 +181,33 @@ def run(dataset_path_file, method_names, out_results_dir,
         pos_class = None):
     """
 
-    :param dataset_path_file: path to file containing list of paths (each containing a valid MLDataset).
-    :param out_results_dir: path to save the results to (in various forms)
-    :param train_perc: percetange of subjects to train the classifier on. The percentage is applied to the size of
-    the smallest class to estimate the numner of subjects from each class to be reserved for training. The smallest
-    class is chosen to avoid class-imbalance in the training set. Default: 0.8 (80%).
-    :param num_repetitions: number of repetitions of cross-validation estimation. Default: 200.
-    :pos_class: name of the class to be treated as positive in calculation of AUC
-    :return: path to pickle file containing full set of results
+    Parameters
+    ----------
+    dataset_path_file : str
+        path to file containing list of paths (each containing a valid MLDataset).
+    method_names : list
+        A list of names to denote the different feature extraction methods
+    out_results_dir : str
+        Path to output directory to save the cross validation results to.
+    train_perc : float, optional
+        Percetange of subjects to train the classifier on.
+        The percentage is applied to the size of the smallest class to estimate
+        the number of subjects from each class to be reserved for training.
+        The smallest class is chosen to avoid class-imbalance in the training set.
+        Default: 0.8 (80%).
+    num_repetitions : int, optional
+        Number of repetitions of cross-validation estimation. Default: 200.
+    pos_class : str
+        Name of the class to be treated as positive in calculation of AUC
+
+    Returns
+    -------
+    results_path : str
+        Path to pickle file containing full set of CV results.
+
     """
 
+    # structure of this function
     # load datasets
     # validate each dataset
     # ensure same number of subjects across all datasets

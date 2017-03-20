@@ -17,8 +17,7 @@ import visualize
 import config_neuropredict as cfg
 
 def make_time_stamp():
-    # # with the minute
-    # return  strftime('%Y%m%d-T%H%M',localtime())
+    "Returns a timestamp string."
 
     # just by the hour
     return strftime('%Y%m%d-T%H', localtime())
@@ -313,9 +312,9 @@ def export_results(results_file_path, outdir, method_names):
     for mm in range(num_datasets):
         confmat_path = os.path.join(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
         np.savetxt(confmat_path,
-                   cfmat_reshaped[:,:,mm],
-                   delimiter=cfg.DELIMITER,
-                   comments= 'shape of confusion matrix: num_classes^2 x num_repetitions')
+                   cfmat_reshaped[:,:,mm].T, # NOTICE the transpose
+                   delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
+                   comments= 'shape of confusion matrix: num_repetitions x num_classes^2')
 
     avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
     num_datasets = misclf_rate.shape[0]
