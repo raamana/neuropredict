@@ -11,19 +11,23 @@ PS: It sounds similar (on the surface) to other software available, however it i
 **Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
 
 - [neuropredict](#)
-	- [Example application](#)
-		- [Context](#)
-		- [Predictive analysis](#)
-		- [Report](#)
-- [Input Features](#)
-	- [Arbitray feature input](#)
+	- [Example application](#example-application)
+		- [Context](#context)
+		- [Predictive analysis](#predictive-analysis)
+		- [Report](#report)
+- [Input Features](#input-features)
+	- [Arbitray feature input](#arbitray-feature-input)
 	- [Automatic readers currently supported](#)
 	- [Automatic readers in development (stay tuned)](#)
-	- [Usage:](#)
+	- [Usage:](#usage)
 		- [command line options:](#)
-- [Dependencies](#)
+- [Dependencies](#dependencies)
 
-## Example application
+## FAQ
+
+Refer to ![FAQ](FAQ.md)
+
+## Why
 
 ### Context
 
@@ -37,6 +41,7 @@ Imagine you have just acquired a wonderful new dataset with certain number of di
 
  All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below) of distribtions of cross-validated performance, confusion matrices, analysis into misclassification and an intuitive comparison across multiple features.
 
+## Example 
   For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):
 
 ```
