@@ -4,6 +4,7 @@ import os, sys
 
 sys.dont_write_bytecode = True
 
+sys.path.remove('/Users/Reddy/anaconda/lib/python2.7/site-packages/pyradigm')
 sys.path.extend(['/Users/Reddy/opensource/pyradigm/pyradigm'])
 
 from pyradigm import MLDataset
@@ -14,7 +15,7 @@ import freesurfer
 
 out_dir = '/Users/Reddy/opensource/neuropredict/test_ppmi/'
 res_path = os.path.join(out_dir, 'rhst_results.pkl')
-neuropredict.export_results(res_path, out_dir, ['aseg_stats_subcortical', 'aseg_stats_whole_brain'])
+# neuropredict.export_results(res_path, out_dir, ['aseg_stats_subcortical', 'aseg_stats_whole_brain'])
 
 
 feat_generator = np.random.randn
@@ -47,12 +48,30 @@ def make_random_MLdataset(max_num_classes = 20,
 
     ds = MLDataset()
     for cc, class_ in enumerate(class_ids):
-        subids = [ 'sub{:3}-class{:3}'.format(ix,cc) for ix in range(class_sizes[cc]) ]
+        subids = [ 'sub{:03}-class{:03}'.format(ix,cc) for ix in range(class_sizes[cc]) ]
         for sid in subids:
             ds.add_sample(sid, feat_generator(num_features), int(cc), class_, feat_names)
 
     return ds
 
+
+def test_chance_classifier_binary():
+
+    rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True)
+
+    clset = rand_ds.class_set
+    class_one = rand_ds.get_class(clset[0])
+    class_two = rand_ds.get_class(clset[1])
+    same_data_two_classes = rand_ds.get_class(clset[0])
+
+    ids_class1 = class_one.sample_ids
+    for idx, id in enumerate(class_two.sample_ids):
+        # id from class 2, but data from class 1
+        same_data_two_classes.add_sample(id, class_one.data[ids_class1[idx]], class_two.labels[id], class_two.classes[id])
+
+    print same_data_two_classes
+
+test_chance_classifier_binary()
 
 random_dataset = make_random_MLdataset( max_num_classes = 3)
 class_set, label_set, class_sizes = random_dataset.summarize_classes()

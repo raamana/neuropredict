@@ -302,6 +302,10 @@ def export_results(results_file_path, outdir, method_names):
     if not os.path.exists(exp_dir):
         os.mkdir(exp_dir)
 
+    # TODO think about how to export predictive probability per class per CV rep
+    # pred_prob_per_class
+
+
     balacc_path = os.path.join(exp_dir, 'balanced_accuracy.csv')
     np.savetxt(balacc_path, accuracy_balanced,
                delimiter=cfg.DELIMITER,
