@@ -4,7 +4,7 @@ import os, sys
 
 sys.dont_write_bytecode = True
 
-sys.path.remove('/Users/Reddy/anaconda/lib/python2.7/site-packages/pyradigm')
+# sys.path.remove('/Users/Reddy/anaconda/lib/python2.7/site-packages/pyradigm')
 sys.path.extend(['/Users/Reddy/opensource/pyradigm/pyradigm'])
 
 from pyradigm import MLDataset
@@ -13,8 +13,8 @@ import neuropredict
 import rhst
 import freesurfer
 
-out_dir = '/Users/Reddy/opensource/neuropredict/test_ppmi/'
-res_path = os.path.join(out_dir, 'rhst_results.pkl')
+# out_dir = '/Users/Reddy/opensource/neuropredict/test_ppmi/'
+# res_path = os.path.join(out_dir, 'rhst_results.pkl')
 # neuropredict.export_results(res_path, out_dir, ['aseg_stats_subcortical', 'aseg_stats_whole_brain'])
 
 
@@ -33,11 +33,15 @@ def make_random_MLdataset(max_num_classes = 20,
 
     num_classes = np.random.randint(2, max_num_classes, 1)
     if not stratified:
-        class_sizes = np.random.random_integers(10, max_class_size, size=[num_classes, 1])
+        class_sizes = np.random.random_integers(min(50, max_class_size),
+                                                max(50, max_class_size),
+                                                size=[num_classes, 1])
     else:
-        class_sizes = np.repeat(np.random.randint(10, max_class_size), num_classes)
+        class_sizes = np.repeat(np.random.randint(min(50, max_class_size),
+                                                  max(50, max_class_size)),
+                                                  num_classes)
 
-    num_features = np.random.randint(1, max_dim, 1)[0]
+    num_features = np.random.randint(min(3, max_dim), max(3, max_dim), 1)[0]
     feat_names = [ str(x) for x in range(num_features)]
 
     class_ids = list()
@@ -55,44 +59,71 @@ def make_random_MLdataset(max_num_classes = 20,
     return ds
 
 
+# # code to generate two classes with the same features
+# clset = rand_ds.class_set
+# class_one = rand_ds.get_class(clset[0])
+# class_two = rand_ds.get_class(clset[1])
+# same_data_two_classes = rand_ds.get_class(clset[0])
+#
+# ids_class1 = class_one.sample_ids
+# for idx, id in enumerate(class_two.sample_ids):
+#     # id from class 2, but data from class 1
+#     same_data_two_classes.add_sample(id, class_one.data[ids_class1[idx]], class_two.labels[id], class_two.classes[id])
+#
+# out_path = os.path.join(out_dir, 'same_data_two_classes.pkl')
+# # same_data_two_classes.save(out_path)
+
 def test_chance_classifier_binary():
 
-    rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True)
+    rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True,
+        max_class_size = 100, max_dim = 100)
 
-    clset = rand_ds.class_set
-    class_one = rand_ds.get_class(clset[0])
-    class_two = rand_ds.get_class(clset[1])
-    same_data_two_classes = rand_ds.get_class(clset[0])
+    out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
+    rand_two_class = rand_ds.get_class(rand_ds.class_set[0:2])
+    rand_two_class.save(out_path)
 
-    ids_class1 = class_one.sample_ids
-    for idx, id in enumerate(class_two.sample_ids):
-        # id from class 2, but data from class 1
-        same_data_two_classes.add_sample(id, class_one.data[ids_class1[idx]], class_two.labels[id], class_two.classes[id])
+    out_list = os.path.join(out_dir, 'same_data_two_classes_list_datasets.txt')
+    with open(out_list, 'w') as lf:
+        lf.writelines('\n'.join([out_path, ]))
 
-    print same_data_two_classes
+    res_path = rhst.run(out_list, ['random'], out_dir,
+                        train_perc=0.5, num_repetitions=50)
 
-test_chance_classifier_binary()
+    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_min_leaf_size, best_num_predictors, \
+        feature_importances_rf, feature_names, \
+        num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
 
-random_dataset = make_random_MLdataset( max_num_classes = 3)
-class_set, label_set, class_sizes = random_dataset.summarize_classes()
+    # TODO replace hard coded chance accuracy calculation with programmatic based on class sample sizes
+    # assert np.median(accuracy_balanced) == np.median(rhst.chance_accuracy(class_sizes))
+    if abs(np.median(accuracy_balanced)-0.5) > 0.05:
+        raise ValueError('Accuracy to discriminate between two inseparable classes significantly differs from 0.5')
 
-out_path = os.path.join(out_dir, 'random_dataset.pkl')
-random_dataset.save(out_path)
+    if abs(np.median(auc_weighted)-0.5) > 0.05:
+        raise ValueError('AUC to discriminate between two inseparable classes significantly differs from 0.5')
 
-out_list = os.path.join(out_dir, 'list_datasets.txt')
-with open(out_list, 'w') as lf:
-    lf.writelines('\n'.join([out_path, ]))
+    print accuracy_balanced
 
-# res_path = rhst.run(out_list, out_dir, num_repetitions=20)
-dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-           pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-           best_min_leaf_size, best_num_predictors, \
-           feature_importances_rf, feature_names, \
-           num_times_misclfd, num_times_tested, \
-           confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
+# test_chance_classifier_binary()
+#
+# random_dataset = make_random_MLdataset( max_num_classes = 3)
+# class_set, label_set, class_sizes = random_dataset.summarize_classes()
+#
+# out_path = os.path.join(out_dir, 'random_dataset.pkl')
+# random_dataset.save(out_path)
+#
+# out_list = os.path.join(out_dir, 'list_datasets.txt')
+# with open(out_list, 'w') as lf:
+#     lf.writelines('\n'.join([out_path, ]))
+#
+# # res_path = rhst.run(out_list, out_dir, num_repetitions=20)
+# dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+#            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+#            best_min_leaf_size, best_num_predictors, \
+#            feature_importances_rf, feature_names, \
+#            num_times_misclfd, num_times_tested, \
+#            confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
+# print ''
 
-print ''
-
-
-# TODO accuracy and AUC on random binary datasets must be chance!
-# assert np.median(accuracy_balanced) == np.median(rhst.chance_accuracy(class_sizes))
