@@ -340,28 +340,10 @@ def export_results(results_file_path, outdir, method_names):
 
     return
 
-def run_rhst(datasets, outdir):
-    """
 
+def validate_class_set(classes, positiveclass=None):
+    ""
 
-
-    :param datasets: dictionary of MLdataset features
-    :param outdir: output folder to save the results.
-    :return:
-
-    """
-
-
-
-def run():
-    """Main entry point."""
-
-
-    metadatafile, outdir, userdir, fsdir, \
-        train_perc, num_rep_cv, \
-        positiveclass = parse_args()
-
-    subjects, classes = get_metadata(metadatafile)
     # the following loop is required to preserve original order
     # this does not: class_set_in_meta = list(set(classes.values()))
     class_set_in_meta = list()
@@ -369,35 +351,60 @@ def run():
         if x not in class_set_in_meta:
             class_set_in_meta.append(x)
 
-    num_samples = len(subjects)
     num_classes = len(class_set_in_meta)
-    assert num_classes > 1, \
-        "Atleast two classes are required for predictive analysis!" \
-        "Only one given ({})".format(set(classes.values()))
+    if num_classes < 2:
+        raise ValueError("Atleast two classes are required for predictive analysis! "
+                         "Only one given ({})".format(set(classes.values())))
 
     if num_classes == 2:
         if not_unspecified(positiveclass):
+            if positiveclass not in class_set_in_meta:
+                raise ValueError('Positive class specified does not exist in meta data.\n'
+                                 'Choose one of {}'.format(class_set_in_meta))
             print('Positive class specified for AUC calculation: {}'.format(positiveclass))
         else:
             positiveclass = class_set_in_meta[-1]
             print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
 
-    # let's start with one method/feature set for now
-    # TODO allow the user to specify arbitray combination of predefined and custom methods as well.
-    if not_unspecified(userdir):
-        feature_dir = userdir
-        method_list = [ userdefinedget ]
-    else:
-        feature_dir = fsdir
-        method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
+    return positiveclass
 
-    # TODO turn the following into a metho of the form
-    # method_names, dataset_paths_file = consolidate_features(method_list, outdir, subjects, classes, feature_dir)
+
+def make_dataset_filename(method_name):
+    "File name constructor."
+
+    file_name = 'consolidated_{}_{}.MLDataset.pkl'.format(method_name, make_time_stamp())
+
+    return file_name
+
+
+def import_features(method_list, outdir, subjects, classes, feature_dir):
+    """
+
+    Parameters
+    ----------
+    method_list : list of callables
+        Set of predefined methods returning a vector of features for a given sample id and location
+    outdir : str
+        Path to the output folder
+
+    subjects : list of str
+        List of sample ids
+    classes
+    feature_dir
+
+    Returns
+    -------
+    method_names
+    dataset_paths_file
+
+    """
+
     method_names = list()
     outpath_list = list()
     for mm, chosenmethod in enumerate(method_list):
-        method_names.append('{}_{}'.format(chosenmethod.__name__,mm)) # adding an index for an even better contrast
-        out_name = 'consolidated_{}_{}.MLDataset.pkl'.format(chosenmethod.__name__, make_time_stamp())
+        # adding an index for an even more unique identification
+        method_names.append('{}_{}'.format(chosenmethod.__name__,mm))
+        out_name = make_dataset_filename(chosenmethod.__name__)
 
         outpath_dataset = os.path.join(outdir, out_name)
         if not saved_dataset_matches(outpath_dataset, subjects, classes):
@@ -413,6 +420,33 @@ def run():
     dataset_paths_file = os.path.join(outdir, 'datasetlist.' + combined_name+ '.txt')
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
+
+    return method_names, dataset_paths_file
+
+
+def run():
+    """Main entry point."""
+
+
+    metadatafile, outdir, userdir, fsdir, \
+        train_perc, num_rep_cv, \
+        positiveclass = parse_args()
+
+    subjects, classes = get_metadata(metadatafile)
+
+    positiveclass = validate_class_set(classes, positiveclass)
+
+    # let's start with one method/feature set for now
+    # TODO allow the user to specify arbitray combination of predefined and custom methods as well.
+    if not_unspecified(userdir):
+        feature_dir = userdir
+        method_list = [ userdefinedget ]
+    else:
+        feature_dir = fsdir
+        method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
+
+    # TODO turn the following into a metho of the form
+    method_names, dataset_paths_file =  import_features(method_list, outdir, subjects, classes, feature_dir)
 
     results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
                                  train_perc=train_perc,
