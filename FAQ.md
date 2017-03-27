@@ -5,12 +5,10 @@
 1. What is the overarching goal for neuropredict?
   * To offer a comprehensive report on predictive analysis effortlessly!
   * Aiming to interface directly with the outputs of various neuroimaging tools
-   - although the user could input arbitrary set of features (neuroimaging, or otherwise).
+    * although the user could input arbitrary set of features (neuroimaging, or otherwise).
 2. What is your classification system?
   * Predictive analysis is performed with Random Forest classifier (using scikit-learn's implementation) 
-  * Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation
-  * No feature selection is performed currently, as the random forest has an internal mechanism of discarding uninformative features! 
-    * However this feature may be supported depending on the user's demand.
+  * Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.
 3. Why random forests?
   * Because they have consistently demonstrated top performance across multiple domains:
     * Fernández-Delgado, M., Cernadas, E., Barro, S., & Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181.
@@ -21,6 +19,6 @@
     * to enable novice predictive modeling users to get started easily and quickly,
     * provide a thorough estimate of *baseline* performance of their feature sets, instead of trying to find an arbitrary combination of predictive modeling tools to drive the numerical performance as high as possible.
   * Also because Random forest are supposed to automatically discard features without any useful signal.
-  * That said, this is not a permanent choice. `neuropredict` is designed such that another classifier or combination of classifiers could easily be plugged in. This will be offered after few initial releases and user testing/feedback.
+  * That said, this is not a permanent choice. `neuropredict` is designed such that another classifier or combination of classifiers could easily be plugged in. Based on user's demand, this might be offered after few initial releases and user testing/feedback.
   
    
