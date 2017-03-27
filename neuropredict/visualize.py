@@ -278,7 +278,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
 def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath,
                                  separate_plots = False):
     """
-    Summary of most/least frequently mislcassified subjects for further analysis
+    Summary of most/least frequently misclassified subjects for further analysis
 
     """
 

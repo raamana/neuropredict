@@ -239,13 +239,15 @@ def saved_dataset_matches(ds_path, subjects, classes):
 
 def visualize_results(results_file_path, outdir, method_names):
     """
-    Produces the performance visualizations/comparisons from the cross-validation results!
+    Produces the performance visualizations/comparisons from the cross-validation results.
+    
+    Parameters
+    ----------
+    results_file_path
+    outdir
+    method_names
 
-    :param results_file_path:
-    :param outdir:
-    :param method_names:
-    :return:
-    """""
+    """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
@@ -278,20 +280,25 @@ def visualize_results(results_file_path, outdir, method_names):
 def export_results(results_file_path, outdir, method_names):
     """
     Exports the results to simpler CSV format for use in other packages!
+    
+    Parameters
+    ----------
+    results_file_path
+    outdir
+    method_names
 
-    :param results_file_path:
-    :param outdir:
-    :param method_names:
-    :return:
+    Returns
+    -------
+
     """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_min_leaf_size, best_num_predictors, \
-    feature_importances_rf, feature_names, \
-    num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
-        rhst.load_results(results_file_path)
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_min_leaf_size, best_num_predictors, \
+        feature_importances_rf, feature_names, \
+        num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
+            rhst.load_results(results_file_path)
 
     num_classes = confusion_matrix.shape[0]
     num_rep_cv = confusion_matrix.shape[2]
@@ -379,9 +386,11 @@ def make_dataset_filename(method_name):
 
 def import_features(method_list, outdir, subjects, classes, feature_dir):
     """
-
+    Imports the specified features and organizes them into datasets.
+     
     Parameters
     ----------
+    
     method_list : list of callables
         Set of predefined methods returning a vector of features for a given sample id and location
     outdir : str
@@ -389,14 +398,18 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
 
     subjects : list of str
         List of sample ids
-    classes
-    feature_dir
-
+    classes : dict
+        Dict identifying the class for each sample id in the dataset.
+    feature_dir : str
+        Path to the root directory containing the features (pre- or user-defined).
+        
     Returns
-    -------
-    method_names
-    dataset_paths_file
-
+    -------    
+    method_names : list of str
+        List of method names used for annotation.
+    dataset_paths_file : str
+        Path to the file containing paths to imported feature sets.
+    
     """
 
     method_names = list()
@@ -425,7 +438,10 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
 
 
 def run():
-    """Main entry point."""
+    """
+    Main entry point.
+    
+    """
 
 
     metadatafile, outdir, userdir, fsdir, \

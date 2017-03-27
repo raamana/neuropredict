@@ -5,7 +5,7 @@ import os, sys
 sys.dont_write_bytecode = True
 
 # sys.path.remove('/Users/Reddy/anaconda/lib/python2.7/site-packages/pyradigm')
-sys.path.extend(['/Users/Reddy/opensource/pyradigm/pyradigm'])
+# sys.path.extend(['/Users/Reddy/opensource/pyradigm/pyradigm'])
 
 from pyradigm import MLDataset
 
@@ -104,7 +104,7 @@ def test_chance_classifier_binary():
     if abs(np.median(auc_weighted)-0.5) > 0.05:
         raise ValueError('AUC to discriminate between two inseparable classes significantly differs from 0.5')
 
-    print accuracy_balanced
+
 
 # test_chance_classifier_binary()
 #

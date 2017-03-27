@@ -385,10 +385,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
             print('')
 
-    # TODO NOW generate a CSV of different metrics for each dataset, as well as a reloadable
-
     # save results
-    # TODO if feature names are implemented, save them too
     var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
                         best_min_leaf_size, best_num_predictors,
