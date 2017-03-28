@@ -37,6 +37,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     train_data_mat, train_labels, _                    = train_fs.data_and_labels()
     test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
+    # TODO try parallelizing this. Think about how it interacts with parallel processing at CV rep level
     for idx_ls, minls in enumerate(range_min_leafsize):
         for idx_np, num_pred in enumerate(range_num_predictors):
             rf = RandomForestClassifier(max_features=num_pred , min_samples_leaf = minls,
@@ -251,7 +252,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         # add the valid dataset to list
         datasets.append(ds)
 
-    # ensure same number of subjects across all datasets
+    # ensure same set of subjects across all datasets
     num_datasets = int(len(datasets))
     # looking into the first dataset
     common_ds = datasets[0]
@@ -259,12 +260,13 @@ def run(dataset_path_file, method_names, out_results_dir,
     num_samples = common_ds.num_samples
     num_classes = len(class_set)
 
-    for idx in range(1, num_datasets):
-        this_ds = datasets[idx]
-        assert num_samples==this_ds.num_samples, "Number of samples in different datasets differ!"
-        assert set(class_set)==set(this_ds.classes.values()), \
-            "Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                set(class_set), set(this_ds.classes.values()))
+    if num_datasets > 1:
+        for idx in range(1, num_datasets):
+            this_ds = datasets[idx]
+            assert num_samples==this_ds.num_samples, "Number of samples in different datasets differ!"
+            assert set(class_set)==set(this_ds.classes.values()), \
+                "Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
+                    set(class_set), set(this_ds.classes.values()))
 
     # re-map the labels (from 1 to n) to ensure numeric labels do not differ
     remapped_class_labels = dict()
@@ -276,7 +278,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     if num_classes == 2:
         if pos_class is None:
             pos_class = class_set[-1]
-        pos_class_index = remapped_class_labels[pos_class]
+        # List.index(item) returns the first index of a match
+        pos_class_index = class_set.index(pos_class) # remapped_class_labels[pos_class]
 
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
@@ -324,6 +327,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     # multi-class metrics
     confusion_matrix  = np.full([num_classes, num_classes, num_repetitions, num_datasets], np.nan)
     accuracy_balanced = np.full([num_repetitions, num_datasets], np.nan)
+
+    # binary metrics
     auc_weighted = np.full([num_repetitions, num_datasets], np.nan)
 
     # # specificity & sensitivity are ill-defined in the general case as they require us to know which class is positive
