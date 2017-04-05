@@ -151,16 +151,29 @@ def userdefinedget(featdir, subjid):
     """
     Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a
     separate folder for each subject with a file called features.txt with one number per line.
+    
+    Parameters
+    ----------
+    featdir : str
+        Path to in the input directory
+    subjid : str
+        Subject id (name of the subfolder in the featdir identifying the subject)
 
-    :param featdir:
-    :return: vector of numbers.
+    Returns
+    -------
+    data : ndarray 
+        vector of features for the given subject
+    feat_names : list of str
+        names of each feature
+        Currently None.
     """
 
-    featfile = os.path.join(featdir, subjid, 'features.txt')
-    with open(featfile,'r') as fid:
-        data = fid.read().splitlines()
+    feat_names = None
 
-    return data, None # TODO no names are associated with user-defined yet!
+    featfile = os.path.join(featdir, subjid, 'features.txt')
+    data = np.genfromtxt(featfile)
+
+    return data, feat_names
 
 
 def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
@@ -222,16 +235,11 @@ def saved_dataset_matches(ds_path, subjects, classes):
     :returns bool.
     """
 
-    num_samples = len(subjects)
-    num_classes = len(classes)
     if (not os.path.exists(ds_path)) or (os.path.getsize(ds_path) <= 0):
         return False
     else:
         ds = MLDataset(ds_path)
-        if ds.num_classes != num_classes or \
-                        ds.num_samples != num_samples or \
-                        set(ds.class_set) != set(classes) or \
-                        set(ds.sample_ids) != set(subjects):
+        if set(ds.class_set) != set(classes) or set(ds.sample_ids) != set(subjects):
             return False
         else:
             return True
@@ -254,7 +262,7 @@ def visualize_results(results_file_path, outdir, method_names):
         best_min_leaf_size, best_num_predictors, \
         feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
             rhst.load_results(results_file_path)
 
     num_classes = len(method_names)
@@ -297,7 +305,7 @@ def export_results(results_file_path, outdir, method_names):
         best_min_leaf_size, best_num_predictors, \
         feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced, auc_weighted = \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
             rhst.load_results(results_file_path)
 
     num_classes = confusion_matrix.shape[0]
@@ -414,10 +422,15 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
 
     method_names = list()
     outpath_list = list()
-    for mm, chosenmethod in enumerate(method_list):
-        # adding an index for an even more unique identification
-        method_names.append('{}_{}'.format(chosenmethod.__name__,mm))
-        out_name = make_dataset_filename(chosenmethod.__name__)
+    for mm, cur_method in enumerate(method_list):
+        if cur_method == userdefinedget:
+            method_name = os.path.basename(feature_dir)
+        else:
+            # adding an index for an even more unique identification
+            method_name = '{}_{}'.format(cur_method.__name__,mm)
+
+        method_names.append(method_name)
+        out_name = make_dataset_filename(method_name)
 
         outpath_dataset = os.path.join(outdir, out_name)
         if not saved_dataset_matches(outpath_dataset, subjects, classes):
@@ -425,7 +438,7 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
             outpath_dataset = getfeatures(subjects, classes,
                                           feature_dir,
                                           outdir, out_name,
-                                          getmethod = chosenmethod)
+                                          getmethod = cur_method)
 
         outpath_list.append(outpath_dataset)
 
@@ -443,6 +456,7 @@ def run():
     
     """
 
+    # TODO design an API interface for advanced access as an importable package
 
     metadatafile, outdir, userdir, fsdir, \
         train_perc, num_rep_cv, \
@@ -459,15 +473,14 @@ def run():
         method_list = [ userdefinedget ]
     else:
         feature_dir = fsdir
-        method_list = [aseg_stats_whole_brain, aseg_stats_subcortical]
+        method_list = [aseg_stats_subcortical, aseg_stats_whole_brain]
 
-    # TODO turn the following into a metho of the form
     method_names, dataset_paths_file =  import_features(method_list, outdir, subjects, classes, feature_dir)
 
     results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
                                  train_perc=train_perc,
                                  num_repetitions=num_rep_cv,
-                                 pos_class = positiveclass)
+                                 positive_class= positiveclass)
 
     visualize_results(results_file_path, outdir, method_names)
 

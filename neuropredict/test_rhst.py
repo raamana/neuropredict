@@ -94,7 +94,7 @@ def test_chance_classifier_binary():
         best_min_leaf_size, best_num_predictors, \
         feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
+        confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class = rhst.load_results(res_path)
 
     # TODO replace hard coded chance accuracy calculation with programmatic based on class sample sizes
     # assert np.median(accuracy_balanced) == np.median(rhst.chance_accuracy(class_sizes))

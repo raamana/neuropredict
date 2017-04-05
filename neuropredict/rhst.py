@@ -37,7 +37,6 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     train_data_mat, train_labels, _                    = train_fs.data_and_labels()
     test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
-    # TODO try parallelizing this. Think about how it interacts with parallel processing at CV rep level
     for idx_ls, minls in enumerate(range_min_leafsize):
         for idx_np, num_pred in enumerate(range_num_predictors):
             rf = RandomForestClassifier(max_features=num_pred , min_samples_leaf = minls,
@@ -162,7 +161,7 @@ def load_results(fpath):
             best_min_leaf_size, best_num_predictors, \
             feature_importances_rf, feature_names, \
             num_times_misclfd, num_times_tested, \
-            confusion_matrix, class_set, accuracy_balanced, auc_weighted = \
+            confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class = \
                 pickle.load(rf)
 
     except:
@@ -174,12 +173,12 @@ def load_results(fpath):
            best_min_leaf_size, best_num_predictors, \
            feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
-           confusion_matrix, class_set, accuracy_balanced, auc_weighted
+           confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class
 
 
 def run(dataset_path_file, method_names, out_results_dir,
         train_perc = 0.8, num_repetitions = 200,
-        pos_class = None):
+        positive_class = None):
     """
 
     Parameters
@@ -198,7 +197,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         Default: 0.8 (80%).
     num_repetitions : int, optional
         Number of repetitions of cross-validation estimation. Default: 200.
-    pos_class : str
+    positive_class : str
         Name of the class to be treated as positive in calculation of AUC
 
     Returns
@@ -252,7 +251,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         # add the valid dataset to list
         datasets.append(ds)
 
-    # ensure same set of subjects across all datasets
+    # ensure same number of subjects across all datasets
     num_datasets = int(len(datasets))
     # looking into the first dataset
     common_ds = datasets[0]
@@ -276,10 +275,10 @@ def run(dataset_path_file, method_names, out_results_dir,
     # finding the numeric label for positive class
     # label will also be in the index into the arrays over classes due to construction above
     if num_classes == 2:
-        if pos_class is None:
-            pos_class = class_set[-1]
+        if positive_class is None:
+            positive_class = class_set[-1]
         # List.index(item) returns the first index of a match
-        pos_class_index = class_set.index(pos_class) # remapped_class_labels[pos_class]
+        pos_class_index = class_set.index(positive_class)  # remapped_class_labels[positive_class]
 
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
@@ -327,8 +326,6 @@ def run(dataset_path_file, method_names, out_results_dir,
     # multi-class metrics
     confusion_matrix  = np.full([num_classes, num_classes, num_repetitions, num_datasets], np.nan)
     accuracy_balanced = np.full([num_repetitions, num_datasets], np.nan)
-
-    # binary metrics
     auc_weighted = np.full([num_repetitions, num_datasets], np.nan)
 
     # # specificity & sensitivity are ill-defined in the general case as they require us to know which class is positive
@@ -397,7 +394,7 @@ def run(dataset_path_file, method_names, out_results_dir,
                         feature_importances_rf, feature_names,
                         num_times_misclfd, num_times_tested,
                         confusion_matrix, class_set,
-                        accuracy_balanced, auc_weighted ]
+                        accuracy_balanced, auc_weighted, positive_class ]
 
     out_results_path = save_results(out_results_dir, var_list_to_save)
 
