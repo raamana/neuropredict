@@ -175,9 +175,9 @@ export PATH=$PATH:~/.local/bin/
 # Usage:
 
 ```
-usage: neuropredict [-h] -m METADATAFILE -o OUTDIR [-p POSITIVECLASS]
-                    [-f FSDIR] [-a ATLASID] [-u USERDIR] [-t TRAIN_PERC]
-                    [-r NUM_REP_CV]
+usage: neuropredict [-h] -m METADATAFILE -o OUTDIR [-f FSDIR]
+                    [-u USERDIR [USERDIR ...]] [-p POSITIVECLASS]
+                    [-t TRAIN_PERC] [-n NUM_REP_CV] [-a ATLASID]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -189,24 +189,27 @@ optional arguments:
                         sub003,disease sub004,disease
   -o OUTDIR, --outdir OUTDIR
                         Output folder to store features and results.
+  -f FSDIR, --fsdir FSDIR
+                        Absolute path to SUBJECTS_DIR containing the finished
+                        runs of Freesurfer parcellation (each subject named
+                        after its ID in the metadata file)
+  -u USERDIR [USERDIR ...], --userdir USERDIR [USERDIR ...]
+                        List of absolute paths to an user's own features.Each
+                        folder contains a separate folder for each subject
+                        (named after its ID in the metadata file) containing a
+                        file called features.txt with one number per line. All
+                        the subjects (in a given folder) must have the number
+                        of features (#lines in file). Different folders can
+                        have different number of features for each subject.
+                        Names of each folder is used to annotate the results
+                        in visualizations. Hence name them uniquely and
+                        meaningfully, keeping in mind these figures will be
+                        included in your papers.
   -p POSITIVECLASS, --positiveclass POSITIVECLASS
                         Name of the positive class (Alzheimers, MCI or
                         Parkinsons etc) to be used in calculation of area
                         under the ROC curve. Default: class appearning second
                         in order specified in metadata file.
-  -f FSDIR, --fsdir FSDIR
-                        Abs. path of SUBJECTS_DIR containing the finished runs
-                        of Freesurfer parcellation
-  -a ATLASID, --atlas ATLASID
-                        Name of the atlas to use for visualization. Default:
-                        fsaverage, if available.
-  -u USERDIR, --userdir USERDIR
-                        Abs. path to an user's own features.This contains a
-                        separate folder for each subject (named after its ID
-                        in the metadata file) containing a file called
-                        features.txt with one number per line. All the
-                        subjects must have the number of features (#lines in
-                        file)
   -t TRAIN_PERC, --trainperc TRAIN_PERC
                         Percentage of the smallest class to be reserved for
                         training. Must be in the interval [0.01 0.99].If
@@ -217,8 +220,13 @@ optional arguments:
                         Number of repetitions of the repeated-holdout cross-
                         validation. The larger the number, the better the
                         estimates will be.
+  -a ATLASID, --atlas ATLASID
+                        Name of the atlas to use for visualization. Default:
+                        fsaverage, if available.
 ```
 
 # Dependencies
  * numpy
  * scikit-learn
+ * pyradigm
+ * nibabel

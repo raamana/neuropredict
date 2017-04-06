@@ -47,26 +47,28 @@ def parse_args():
                         required=True,
                         help="Output folder to store features and results.")
 
+    parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
+                        default=None,
+                        help="Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation"
+                             " (each subject named after its ID in the metadata file)")
+
+    parser.add_argument("-u", "--userdir", action="store", dest="userdir",
+                        nargs = '+', # to allow for multiple features
+                        default=None,
+                        help="List of absolute paths to an user's own features."
+                             "Each folder contains a separate folder for each subject "
+                             "  (named after its ID in the metadata file) "
+                             "containing a file called features.txt with one number per line.\n"
+                             "All the subjects (in a given folder) must have the number of features (#lines in file). "
+                             "Different folders can have different number of features for each subject."
+                             "\n Names of each folder is used to annotate the results in visualizations. "
+                             "Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.")
+
     parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
                         default=None,
                         help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
                              "to be used in calculation of area under the ROC curve. "
                              "Default: class appearning second in order specified in metadata file.")
-
-    parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
-                        default=None,
-                        help="Abs. path of SUBJECTS_DIR containing the finished runs of Freesurfer parcellation")
-
-    parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
-                        default="fsaverage",
-                        help="Name of the atlas to use for visualization. Default: fsaverage, if available.")
-
-    parser.add_argument("-u", "--userdir", action="store", dest="userdir",
-                        default=None,
-                        help="Abs. path to an user's own features."
-                             "This contains a separate folder for each subject (named after its ID in the metadata "
-                             "file) containing a file called features.txt with one number per line. All the subjects "
-                             "must have the number of features (#lines in file)")
 
     parser.add_argument("-t", "--trainperc", action="store", dest="train_perc",
                         default=0.5,
@@ -79,6 +81,11 @@ def parse_args():
                         default=200,
                         help="Number of repetitions of the repeated-holdout cross-validation. "
                              "The larger the number, the better the estimates will be.")
+
+    parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
+                        default="fsaverage",
+                        help="Name of the atlas to use for visualization."
+                             "\nDefault: fsaverage, if available.")
 
     if len(sys.argv) < 2:
         print('Too few arguments!')
@@ -95,16 +102,25 @@ def parse_args():
     metadatafile = os.path.abspath(options.metadatafile)
     assert os.path.exists(metadatafile), "Given metadata file doesn't exist."
 
+    atleast_one_feature_specified = False
     if not_unspecified(options.fsdir):
         fsdir = os.path.abspath(options.fsdir)
         assert os.path.exists(fsdir), "Given Freesurfer directory doesn't exist."
-        userdir = None
-    elif not_unspecified(options.userdir):
-        fsdir = None
-        userdir = os.path.abspath(options.userdir)
-        assert os.path.exists(userdir), "Suppiled input directory for features doesn't exist."
+        atleast_one_feature_specified = True
     else:
-        raise IOError('One of Freesurfer or user-defined directory must be specified.')
+        fsdir = None
+
+    if not_unspecified(options.userdir):
+        userdir = map(os.path.abspath, options.userdir)
+        for udir in userdir:
+            assert os.path.exists(udir), "One of the user directories for features doesn't exist:" \
+                                         "\n {}".format(udir)
+        atleast_one_feature_specified = True
+    else:
+        userdir = None
+
+    if not atleast_one_feature_specified:
+        raise ValueError('Atleast a Freesurfer directory or one user-defined directory must be specified.')
 
     outdir = os.path.abspath(options.outdir)
     if not os.path.exists(outdir):
@@ -419,8 +435,9 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
         List of sample ids
     classes : dict
         Dict identifying the class for each sample id in the dataset.
-    feature_dir : str
-        Path to the root directory containing the features (pre- or user-defined).
+    feature_dir : list of str
+        List of paths to the root directory containing the features (pre- or user-defined).
+        Must be of same length as method_list
         
     Returns
     -------    
@@ -435,7 +452,7 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
     outpath_list = list()
     for mm, cur_method in enumerate(method_list):
         if cur_method == userdefinedget:
-            method_name = os.path.basename(feature_dir)
+            method_name = os.path.basename(feature_dir[mm])
         else:
             # adding an index for an even more unique identification
             method_name = '{}_{}'.format(cur_method.__name__,mm)
@@ -447,7 +464,7 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
         if not saved_dataset_matches(outpath_dataset, subjects, classes):
             # noinspection PyTypeChecker
             outpath_dataset = getfeatures(subjects, classes,
-                                          feature_dir,
+                                          feature_dir[mm],
                                           outdir, out_name,
                                           getmethod = cur_method)
 
@@ -461,6 +478,50 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
     return method_names, dataset_paths_file
 
 
+def make_method_list(userdir, fsdir):
+    """
+    Returns an organized list of feature paths and methods to read in features.
+    
+    Parameters
+    ----------
+    userdir : list of str
+    fsdir : str
+
+    Returns
+    -------
+    feature_dir : list
+    method_list : list
+    
+
+    """
+
+    freesurfer_readers = [aseg_stats_subcortical, aseg_stats_whole_brain]
+
+    feature_dir = list()
+    method_list = list()
+    if not_unspecified(userdir):
+        for udir in userdir:
+            feature_dir.append(udir)
+            method_list.append(userdefinedget)
+
+    if not_unspecified(fsdir):
+        for fsrdr in freesurfer_readers:
+            feature_dir.append(fsdir)
+            method_list.append(fsrdr)
+
+    if len(method_list) != len(feature_dir):
+        raise ValueError('Invalid specification for features!')
+
+    if len(method_list) < 1:
+        raise ValueError('Atleast one feature set must be specified.')
+
+    print "\nRequested features for analysis:"
+    for mm, method in enumerate(method_list):
+        print "{} from {}".format(method.__name__, feature_dir[mm])
+
+    return feature_dir, method_list
+
+
 def run():
     """
     Main entry point.
@@ -469,28 +530,18 @@ def run():
 
     # TODO design an API interface for advanced access as an importable package
 
-    metadatafile, outdir, userdir, fsdir, \
-        train_perc, num_rep_cv, \
-        positiveclass = parse_args()
+    metadatafile, outdir, userdir, fsdir, train_perc, num_rep_cv, positiveclass = parse_args()
 
     subjects, classes = get_metadata(metadatafile)
 
     positiveclass = validate_class_set(classes, positiveclass)
 
-    # let's start with one method/feature set for now
-    # TODO allow the user to specify arbitray combination of predefined and custom methods as well.
-    if not_unspecified(userdir):
-        feature_dir = userdir
-        method_list = [ userdefinedget ]
-    else:
-        feature_dir = fsdir
-        method_list = [aseg_stats_subcortical, aseg_stats_whole_brain]
+    feature_dir, method_list = make_method_list(userdir, fsdir)
 
     method_names, dataset_paths_file =  import_features(method_list, outdir, subjects, classes, feature_dir)
 
     results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
-                                 train_perc=train_perc,
-                                 num_repetitions=num_rep_cv,
+                                 train_perc=train_perc, num_repetitions=num_rep_cv,
                                  positive_class= positiveclass)
 
     visualize_results(results_file_path, outdir, method_names)

@@ -351,6 +351,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     # best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] \
     #     = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
+    max_width_method_names = max(map(len, method_names))
+
     for rep in range(num_repetitions):
         print("\n CV repetition {:3d} ".format(rep))
 
@@ -360,7 +362,11 @@ def run(dataset_path_file, method_names, out_results_dir,
         # evaluating each feature/dataset
         # try set test_labels_per_rep outside dd loop as its the same across all dd
         for dd in range(num_datasets):
-            print("\t feature {:3d}: ".format(dd), end='')
+            # print("\t feature {:3d} {:>{}}: ".format(dd, method_names[dd], max_width_method_names), end='')
+            print("\t feature {index:3d} {name:>{namewidth}} : ".format(index=dd,
+                                                                       name=method_names[dd],
+                                                                       namewidth=max_width_method_names),
+                  end='')
 
             train_fs = datasets[dd].get_subset(train_set)
             test_fs  = datasets[dd].get_subset(test_set)
