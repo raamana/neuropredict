@@ -393,8 +393,8 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major')
 
-    lower_lim = np.float64(0.9 / num_classes)
-    upper_lim = 1.01
+    lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), 3)
+    upper_lim = np.round(np.max([ 1.01, metric.max() ]), 3)
     step_tick = 0.1
     ax.set_ylim(lower_lim, upper_lim)
 

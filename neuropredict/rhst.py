@@ -377,6 +377,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
             if num_classes == 2:
                 # TODO FIX auc calculation flipped
+                # TODO store fpr and tpr per rep, and provide the user to option to vizualize the average if they wish
                 auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
                                                        pred_prob_per_class[rep, dd, :, pos_class_index],
                                                        average='weighted')
