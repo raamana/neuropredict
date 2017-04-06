@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='neuropredict',
-      version='0.2.2',
+      version='0.2.4',
       description='Neuroimaging Predictive Analysis',
       long_description=open('README.md').read(),
       author='Pradeep Reddy Raamana',
@@ -13,7 +13,6 @@ setup(name='neuropredict',
       install_requires=['numpy', 'sklearn', 'pyradigm', 'nibabel'],
       classifiers=[
               'Intended Audience :: Science/Research',
-              'Intended Audience :: Users',
               'Programming Language :: Python',
               'Topic :: Software Development',
               'Topic :: Scientific/Engineering',
@@ -23,4 +22,10 @@ setup(name='neuropredict',
               'Operating System :: MacOS',
               'Programming Language :: Python :: 2.7',
           ],
+      entry_points={
+          "console_scripts": [
+              "neuropredict=neuropredict.__main__:main",
+          ]
+      }
+
      )
