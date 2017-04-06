@@ -21,4 +21,8 @@
   * Also because Random forest are supposed to automatically discard features without any useful signal.
   * That said, this is not a permanent choice. `neuropredict` is designed such that another classifier or combination of classifiers could easily be plugged in. Based on user's demand, this might be offered after few initial releases and user testing/feedback.
   
+5. Does `neuropredict` handle covariates?
+  * No. Not yet. This feature request is not trivial to implement, as the nature of covariate handling is complex and variety of methods is large.
+  * If you need to, please regress them out (or handle them using another method of your choice) prior to inputting the features.
+  
    
