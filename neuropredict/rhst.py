@@ -149,13 +149,13 @@ def save_results(out_dir, var_list_to_save):
     return out_results_path
 
 
-def load_results(fpath):
+def load_results(results_file_path):
     "Loads the results serialized by RHsT."
     # TODO need to standardize what needs to saved/read back
 
-    assert os.path.exists(fpath), "Results file to be loaded doesn't exist!"
+    assert os.path.exists(results_file_path), "Results file to be loaded doesn't exist!"
     try:
-        with open(fpath) as rf:
+        with open(results_file_path) as rf:
             dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             best_min_leaf_size, best_num_predictors, \
@@ -165,7 +165,7 @@ def load_results(fpath):
                 pickle.load(rf)
 
     except:
-        raise IOError("Error loading/unpacking the results!")
+        raise IOError('Error loading the saved results from \n{}'.format(results_file_path))
 
     # TODO need a consolidated way to deal with what variable are saved and in what order
     return dataset_paths, method_names, train_perc, num_repetitions, num_classes, \

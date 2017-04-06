@@ -207,7 +207,7 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
                           "Excluding it.".format(subjid, getmethod.__name__))
 
     # warning for large number of fails for feature extraction
-    if len(ids_excluded) > 0.1*len(subjects):
+    if len(ids_excluded) > 0:
         warnings.warn('Features for {} subjects could not read. '.format(len(ids_excluded)))
         user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
@@ -215,8 +215,7 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
                           'Rerun after completing the feature extraction for all subjects '
                           'or exclude failed subjects..')
             sys.exit(1)
-        else:
-            print(' Yes. Proceeding with only {} subjects.'.format(ds.num_samples))
+        print(' Proceeding with only {} subjects.'.format(ds.num_samples))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
     savepath = os.path.join(outdir, outname)
@@ -265,24 +264,32 @@ def visualize_results(results_file_path, outdir, method_names):
         confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
             rhst.load_results(results_file_path)
 
-    num_classes = len(method_names)
+    if os.environ['DISPLAY'] is None:
+        warnings.warn('DISPLAY is not set. Skipping to generate any visualizations.')
+        return
 
-    balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
-    visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
-                                  num_classes, "Balanced Accuracy")
+    try:
+        num_classes = len(method_names)
 
-    confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
-    visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
+        balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
+        visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
+                                      num_classes, "Balanced Accuracy")
 
-    if num_classes > 2:
-        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
-        visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+        confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
+        visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
 
-    featimp_fig_path = os.path.join(outdir, 'feature_importance')
-    visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
+        if num_classes > 2:
+            cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
+            visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
-    misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
-    visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
+        featimp_fig_path = os.path.join(outdir, 'feature_importance')
+        visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
+
+        misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
+        visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
+    except:
+        warnings.warn('Error generating the visualizations! Skipping ..')
+
 
 
 def export_results(results_file_path, outdir, method_names):
@@ -297,7 +304,8 @@ def export_results(results_file_path, outdir, method_names):
 
     Returns
     -------
-
+    None
+    
     """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
@@ -321,37 +329,40 @@ def export_results(results_file_path, outdir, method_names):
     # pred_prob_per_class
 
 
-    balacc_path = os.path.join(exp_dir, 'balanced_accuracy.csv')
-    np.savetxt(balacc_path, accuracy_balanced,
-               delimiter=cfg.DELIMITER,
-               fmt = cfg.EXPORT_FORMAT,
-               header=','.join(method_names))
+    try:
+        balacc_path = os.path.join(exp_dir, 'balanced_accuracy.csv')
+        np.savetxt(balacc_path, accuracy_balanced,
+                   delimiter=cfg.DELIMITER,
+                   fmt = cfg.EXPORT_FORMAT,
+                   header=','.join(method_names))
 
-    cfmat_reshaped = np.reshape(confusion_matrix, [num_classes*num_classes, num_rep_cv, num_datasets] )
-    for mm in range(num_datasets):
-        confmat_path = os.path.join(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
-        np.savetxt(confmat_path,
-                   cfmat_reshaped[:,:,mm].T, # NOTICE the transpose
-                   delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
-                   comments= 'shape of confusion matrix: num_repetitions x num_classes^2')
+        cfmat_reshaped = np.reshape(confusion_matrix, [num_classes*num_classes, num_rep_cv, num_datasets] )
+        for mm in range(num_datasets):
+            confmat_path = os.path.join(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
+            np.savetxt(confmat_path,
+                       cfmat_reshaped[:,:,mm].T, # NOTICE the transpose
+                       delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
+                       comments= 'shape of confusion matrix: num_repetitions x num_classes^2')
 
-    avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
-    num_datasets = misclf_rate.shape[0]
-    for mm in range(num_datasets):
-        cmp_misclf_path = os.path.join(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
-        np.savetxt(cmp_misclf_path,
-                   misclf_rate[mm,:],
-                   fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
+        avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
+        num_datasets = misclf_rate.shape[0]
+        for mm in range(num_datasets):
+            cmp_misclf_path = os.path.join(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
+            np.savetxt(cmp_misclf_path,
+                       misclf_rate[mm,:],
+                       fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
 
-    for mm in range(num_datasets):
-        featimp_path = os.path.join(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
-        np.savetxt(featimp_path,
-                   feature_importances_rf[mm],
-                   fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
-                   header=','.join(feature_names[mm]))
+        for mm in range(num_datasets):
+            featimp_path = os.path.join(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
+            np.savetxt(featimp_path,
+                       feature_importances_rf[mm],
+                       fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
+                       header=','.join(feature_names[mm]))
 
-    # TODO should I export subject-wise misclassification rate as well?
+        # TODO should I export subject-wise misclassification rate as well?
 
+    except:
+        raise IOError('Unable to export the results to CSV files.')
 
     return
 

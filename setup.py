@@ -10,7 +10,7 @@ setup(name='neuropredict',
       author_email='raamana@gmail.com',
       url='https://github.com/raamana/neuropredict',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]), # ['neuropredict'],
-      install_requires=['numpy', 'sklearn', 'pyradigm', 'nibabel'],
+      install_requires=['numpy', 'scikit-learn', 'pyradigm', 'nibabel'],
       classifiers=[
               'Intended Audience :: Science/Research',
               'Programming Language :: Python',
