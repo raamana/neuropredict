@@ -275,6 +275,26 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
     return
 
 
+def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
+    "Utility function to compute subject-wise percentage of misclassification."
+
+    num_samples   = len(num_times_tested[0].keys())
+    num_datasets  = len(num_times_tested)
+    perc_misclsfd = [None]*num_datasets
+    never_tested  = list() # since train/test samples are same across different feature sets
+    for dd in range(num_datasets):
+        perc_misclsfd[dd] = dict()
+        for sid in num_times_misclfd[dd].keys():
+            if num_times_tested[dd][sid] > 0:
+                perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) / np.float64(num_times_tested[dd][sid])
+            else:
+                never_tested.append(sid)
+
+    never_tested = list(set(never_tested))
+
+    return perc_misclsfd, never_tested, num_samples, num_datasets
+
+
 def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath,
                                  separate_plots = False):
     """
@@ -300,17 +320,14 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         ax_h.set_ylabel('number of subjects')
         ax_h.set_xlabel('percentage of misclassification')
 
-
     # computing the percentage of misclassification per subject
-    # TODO separate this calculation for use in exporting of results
-    num_samples = len(num_times_tested[0].keys())
-    num_datasets = len(num_times_tested)
-    perc_misclsfd = [None]*num_datasets
-    for dd in range(num_datasets):
-        perc_misclsfd[dd] = dict()
-        for sid in num_times_misclfd[dd].keys():
-            if num_times_misclfd[dd][sid] > 0 and num_times_tested[dd][sid] > 0:
-                perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) / np.float64(num_times_tested[dd][sid])
+    perc_misclsfd, never_tested, num_samples, num_datasets = compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
+
+    if len(never_tested) > 0:
+        warnings.warn(' {} subjects were never selected for testing.'.format(len(never_tested)))
+        nvpath = outpath + '_never_tested_samples.txt'
+        with open(nvpath,'w') as nvf:
+            nvf.writelines('\n'.join(never_tested))
 
     # plot frequency histogram per dataset
     if num_datasets > 1 and separate_plots:

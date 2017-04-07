@@ -308,7 +308,7 @@ def visualize_results(results_file_path, outdir, method_names):
 
 
 
-def export_results(results_file_path, outdir, method_names):
+def export_results(results_file_path, outdir):
     """
     Exports the results to simpler CSV format for use in other packages!
     
@@ -316,7 +316,6 @@ def export_results(results_file_path, outdir, method_names):
     ----------
     results_file_path
     outdir
-    method_names
 
     Returns
     -------
@@ -375,7 +374,13 @@ def export_results(results_file_path, outdir, method_names):
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
                        header=','.join(feature_names[mm]))
 
-        # TODO should I export subject-wise misclassification rate as well?
+        perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
+        for mm in range(num_datasets):
+            subwise_misclf_path = os.path.join(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
+            # TODO there must be a more elegant way to write dict to CSV
+            with open(subwise_misclf_path, 'w') as smf:
+                for sid, val in perc_misclsfd[mm].items():
+                    smf.write('{}{}{}\n'.format(sid, cfg.DELIMITER, val))
 
     except:
         raise IOError('Unable to export the results to CSV files.')
@@ -546,7 +551,7 @@ def run():
 
     visualize_results(results_file_path, outdir, method_names)
 
-    export_results(results_file_path, outdir, method_names)
+    export_results(results_file_path, outdir)
 
 if __name__ == '__main__':
     run()
