@@ -25,7 +25,14 @@
   * No. Not yet. This feature request is not trivial to implement, as the nature of covariate handling is complex and variety of methods is large.
   * If you need to, please regress them out (or handle them using another method of your choice) prior to inputting the features.
   
-6. Can I get ROC curves?
+6. Can I compare an arbitrary set of my own custom-designed features?
+  * Yes. The -u option allows you to supply arbitrary set of paths to user's own custom features e.g. `-u /myproject/awsome-new-idea-v2.0 /myproject/awsome-new-idea-v1 /myproject/DTI_FA_Method1 /myproject/resting-dynamic-fc /prevproject/resting-dynamic-fc-competingmethod`
+  
+7. Can I combine `-f` option with `-u` to compare my own features with that of Freesurfer or other supported software?
+  * Absolutely. 
+  * While `-f` option allows specifying only 1 freesurfer folder, it can be combined with `-u` which can take arbitray number of custom features.
+
+7. Can I get ROC curves?
   * Not at the moment, as the presented results and report is obtained from a large number of CV iterations and there is not one ROC curve to represent it all.
   * It is indeed possible to *"average"* ROC curves from multiple iterations (see below) and visualize it. This feature will be added soon.
     * Fawcett, T. (2006). An introduction to ROC analysis. Pattern Recognition Letters, 27(8), 861–874.
