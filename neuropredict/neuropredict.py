@@ -50,19 +50,37 @@ def parse_args():
     parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
                         default=None,
                         help="Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation"
-                             " (each subject named after its ID in the metadata file)")
+                             " (each subject named after its ID in the metadata file). "
+                             "\nE.g. --fsdir /project/freesurfer_v5.3")
 
-    parser.add_argument("-u", "--userdir", action="store", dest="userdir",
-                        nargs = '+', # to allow for multiple features
-                        default=None,
-                        help="List of absolute paths to an user's own features."
-                             "Each folder contains a separate folder for each subject "
-                             "  (named after its ID in the metadata file) "
-                             "containing a file called features.txt with one number per line.\n"
-                             "All the subjects (in a given folder) must have the number of features (#lines in file). "
-                             "Different folders can have different number of features for each subject."
-                             "\n Names of each folder is used to annotate the results in visualizations. "
-                             "Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.")
+    user_defined = parser.add_mutually_exclusive_group()
+    user_defined.add_argument("-u", "--user_feature_paths", action="store", dest="user_feature_paths",
+                              nargs = '+', # to allow for multiple features
+                              default=None,
+                              help="List of absolute paths to an user's own features."
+                                 "\nEach folder contains a separate folder for each subject "
+                                 "  (named after its ID in the metadata file) "
+                                 "containing a file called features.txt with one number per line.\n"
+                                 "All the subjects (in a given folder) must have the number of features (#lines in file). "
+                                 "Different folders can have different number of features for each subject."
+                                 "\n Names of each folder is used to annotate the results in visualizations. "
+                                 "Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers."
+                                 "\nE.g. --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ ."
+                                 " \n Only one of user_feature_paths and user_feature_paths options can be specified.")
+
+    user_defined.add_argument("-d", "--data_matrix_path", action="store", dest="data_matrix_path",
+                              nargs = '+',
+                              default=None,
+                              help="List of absolute paths to text files containing one matrix "
+                                 " of size N x p (num_samples x num_features), comma-separated. "
+                                 " Each row in the data matrix file must represent data corresponding "
+                                 " to sample in the same row of the meta data file "
+                                   "(meta data file and data matrix must be in row-wise correspondence). "
+                                 "Name of the directory containing the file will be used to annotate the results and visualizations."
+                                 "\nE.g. --data_matrix_path /project/fmri.csv /project/dti.csv /project/t1_volumes.csv. "
+                                 " \n Only one of user_feature_paths and user_feature_paths options can be specified."
+                                 "Notes on file format: use numpy.savetxt(data_array, delimiter=',') to save features, "
+                                   "which can easily be read back with numpy.loadtxt(filepath, delimiter=','). ")
 
     parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
                         default=None,
@@ -110,17 +128,25 @@ def parse_args():
     else:
         fsdir = None
 
-    if not_unspecified(options.userdir):
-        userdir = map(os.path.abspath, options.userdir)
-        for udir in userdir:
+    if not_unspecified(options.user_feature_paths):
+        user_feature_paths = map(os.path.abspath, options.user_feature_paths)
+        for udir in user_feature_paths:
             assert os.path.exists(udir), "One of the user directories for features doesn't exist:" \
                                          "\n {}".format(udir)
-        atleast_one_feature_specified = True
-    else:
-        userdir = None
 
-    if not atleast_one_feature_specified:
-        raise ValueError('Atleast a Freesurfer directory or one user-defined directory must be specified.')
+        atleast_one_feature_specified = True
+        user_feature_type = 'dir_of_dirs'
+
+    elif not_unspecified(options.data_matrix_path):
+        user_feature_paths = map(os.path.abspath, options.data_matrix_path)
+        for dm in user_feature_paths:
+            assert os.path.exists(dm), "One of the data matrices specified does not exist:\n {}".format(dm)
+
+        atleast_one_feature_specified = True
+        user_feature_type = 'data_matrix'
+
+    elif not atleast_one_feature_specified:
+        raise ValueError('Atleast a Freesurfer directory or one user-defined directory or matrix must be specified.')
 
     outdir = os.path.abspath(options.outdir)
     if not os.path.exists(outdir):
@@ -137,7 +163,9 @@ def parse_args():
     assert num_rep_cv >= 10, \
         "Atleast 10 repitions of CV is recommened.".format(train_perc)
 
-    return metadatafile, outdir, userdir, fsdir, \
+    return metadatafile, outdir, \
+           user_feature_paths, user_feature_type, \
+           fsdir, \
            train_perc, num_rep_cv, options.positiveclass
 
 
@@ -147,23 +175,35 @@ def get_metadata(path):
 
     Currently supports the following per line: subjectid,class
     Future plans to include demographics data: subjectid,class,age,sex,education
+    
+    Returns
+    -------
+    sample_ids : list of str
+        list of strings identifying the sample ids
+    classes : dict
+        dict of class labels for each id in the sample_ids
 
     """
 
-    sample_ids = list()
-    classes = dict()
-    with open(path) as mf:
-        for line in mf:
-            if not line.startswith('#'):
-                parts = line.strip().split(',')
-                sid = parts[0]
-                sample_ids.append(sid)
-                classes[sid] = parts[1]
+    # sample_ids = list()
+    # classes = dict()
+    # with open(path) as mf:
+    #     for line in mf:
+    #         if not line.startswith('#'):
+    #             parts = line.strip().split(',')
+    #             sid = parts[0]
+    #             sample_ids.append(sid) # maintaining order of appearance is important as we use data_matrix input mechanism
+    #             classes[sid] = parts[1]
+
+    meta = np.genfromtxt(path, dtype=None, delimiter=cfg.DELIMITER)
+
+    sample_ids = list(meta[:,0])
+    classes    = dict(zip(sample_ids, meta[:,1]))
 
     return sample_ids, classes
 
 
-def userdefinedget(featdir, subjid):
+def get_dir_of_dirs(featdir, subjid):
     """
     Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a
     separate folder for each subject with a file called features.txt with one number per line.
@@ -192,7 +232,13 @@ def userdefinedget(featdir, subjid):
     return data, feat_names
 
 
-def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
+def get_data_matrix(featpath):
+    "Returns ndarray from data matrix stored in a file"
+
+    return np.loadtxt(featpath, delimiter=cfg.DELIMITER)
+
+
+def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None, feature_type = 'dir_of_dris'):
     """Populates the pyradigm data structure with features from a given method.
 
     getmethod: takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
@@ -212,32 +258,50 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None):
 
     ids_excluded = list()
 
+    if feature_type == 'data_matrix':
+        data_matrix = get_data_matrix(featdir)
+
     ds = MLDataset()
     for subjid in subjects:
         try:
-            data, feat_names = getmethod(featdir, subjid)
+            if feature_type == 'data_matrix':
+                data = data_matrix[subjects.index(subjid),:]
+                feat_names = None
+            else:
+                data, feat_names = getmethod(featdir, subjid)
+
             ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
         except:
             ids_excluded.append(subjid)
             warnings.warn("Features for {} via {} method could not be read. "
                           "Excluding it.".format(subjid, getmethod.__name__))
 
-    # warning for large number of fails for feature extraction
-    if len(ids_excluded) > 0:
-        warnings.warn('Features for {} subjects could not read. '.format(len(ids_excluded)))
-        user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
-        if user_confirmation.lower() not in ['y', 'yes', 'ye']:
-            print ('Stopping. \n'
-                          'Rerun after completing the feature extraction for all subjects '
-                          'or exclude failed subjects..')
-            sys.exit(1)
-        print(' Proceeding with only {} subjects.'.format(ds.num_samples))
+    # warning for if failed to extract features even for one subject
+    alert_failed_feature_extraction(len(ids_excluded), ds.num_samples, len(subjects))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
     savepath = os.path.join(outdir, outname)
     ds.save(savepath)
 
     return savepath
+
+
+def alert_failed_feature_extraction(num_excluded, num_read, total_num):
+    "Alerts user of failed feature extraction and get permission to proceed."
+
+    allowed_to_proceed = True
+    if num_excluded > 0:
+        warnings.warn('Features for {} / {} subjects could not be read. '.format(num_excluded, total_num))
+        user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
+        if user_confirmation.lower() not in ['y', 'yes', 'ye']:
+            print ('Stopping. \n'
+                          'Rerun after completing the feature extraction for all subjects '
+                          'or exclude failed subjects..')
+            allowed_to_proceed = False # unnecessary
+            sys.exit(1)
+        print(' Proceeding with only {} subjects.'.format(num_read))
+
+    return allowed_to_proceed
 
 
 def saved_dataset_matches(ds_path, subjects, classes):
@@ -424,13 +488,12 @@ def make_dataset_filename(method_name):
     return file_name
 
 
-def import_features(method_list, outdir, subjects, classes, feature_dir):
+def import_features(method_list, outdir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
     """
     Imports the specified features and organizes them into datasets.
      
     Parameters
     ----------
-    
     method_list : list of callables
         Set of predefined methods returning a vector of features for a given sample id and location
     outdir : str
@@ -440,9 +503,12 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
         List of sample ids
     classes : dict
         Dict identifying the class for each sample id in the dataset.
-    feature_dir : list of str
+    feature_path : list of str
         List of paths to the root directory containing the features (pre- or user-defined).
         Must be of same length as method_list
+    feature_type : str
+        a string identifying the structure of feature set.
+        Choices = ('dir_of_dirs', 'data_matrix')
         
     Returns
     -------    
@@ -456,11 +522,14 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
     method_names = list()
     outpath_list = list()
     for mm, cur_method in enumerate(method_list):
-        if cur_method == userdefinedget:
-            method_name = os.path.basename(feature_dir[mm])
+        if cur_method in [ get_dir_of_dirs ]:
+            method_name = os.path.basename(feature_path[mm])
+        elif cur_method in [ get_data_matrix ]:
+            method_name = os.path.basename(os.path.dirname(feature_path[mm]))
         else:
             # adding an index for an even more unique identification
-            method_name = '{}_{}'.format(cur_method.__name__,mm)
+            # method_name = '{}_{}'.format(cur_method.__name__,mm)
+            method_name = cur_method.__name__
 
         method_names.append(method_name)
         out_name = make_dataset_filename(method_name)
@@ -469,9 +538,9 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
         if not saved_dataset_matches(outpath_dataset, subjects, classes):
             # noinspection PyTypeChecker
             outpath_dataset = getfeatures(subjects, classes,
-                                          feature_dir[mm],
+                                          feature_path[mm],
                                           outdir, out_name,
-                                          getmethod = cur_method)
+                                          cur_method, feature_type)
 
         outpath_list.append(outpath_dataset)
 
@@ -483,14 +552,15 @@ def import_features(method_list, outdir, subjects, classes, feature_dir):
     return method_names, dataset_paths_file
 
 
-def make_method_list(userdir, fsdir):
+def make_method_list(fsdir, user_feature_paths, user_feature_type='dir_of_dirs'):
     """
     Returns an organized list of feature paths and methods to read in features.
     
     Parameters
     ----------
-    userdir : list of str
     fsdir : str
+    user_feature_paths : list of str
+    user_feature_type : str
 
     Returns
     -------
@@ -501,13 +571,18 @@ def make_method_list(userdir, fsdir):
     """
 
     freesurfer_readers = [aseg_stats_subcortical, aseg_stats_whole_brain]
+    userdefined_readers= { 'dir_of_dirs': get_dir_of_dirs,
+                           'data_matrix': get_data_matrix }
+
+    if user_feature_type not in userdefined_readers:
+        raise NotImplementedError("Invalid feature type or its reader is not implemented yet!")
 
     feature_dir = list()
     method_list = list()
-    if not_unspecified(userdir):
-        for udir in userdir:
-            feature_dir.append(udir)
-            method_list.append(userdefinedget)
+    if not_unspecified(user_feature_paths):
+        for upath in user_feature_paths:
+            feature_dir.append(upath)
+            method_list.append(userdefined_readers[user_feature_type])
 
     if not_unspecified(fsdir):
         for fsrdr in freesurfer_readers:
@@ -535,15 +610,17 @@ def run():
 
     # TODO design an API interface for advanced access as an importable package
 
-    metadatafile, outdir, userdir, fsdir, train_perc, num_rep_cv, positiveclass = parse_args()
+    metadatafile, outdir, user_feature_paths, user_feature_type, \
+        fsdir, train_perc, num_rep_cv, positiveclass = parse_args()
 
     subjects, classes = get_metadata(metadatafile)
 
     positiveclass = validate_class_set(classes, positiveclass)
 
-    feature_dir, method_list = make_method_list(userdir, fsdir)
+    feature_dir, method_list = make_method_list(fsdir, user_feature_paths, user_feature_type)
 
-    method_names, dataset_paths_file =  import_features(method_list, outdir, subjects, classes, feature_dir)
+    method_names, dataset_paths_file = import_features(method_list, outdir, subjects, classes,
+                                                       feature_dir, user_feature_type)
 
     results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
                                  train_perc=train_perc, num_repetitions=num_rep_cv,
