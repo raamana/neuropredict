@@ -26,6 +26,8 @@ EXPORT_DIR_NAME = 'exported_results'
 DELIMITER = ','
 EXPORT_FORMAT = '%10.5f'
 
+INPUT_FILE_FORMATS = ['.npy', '.numpy', '.csv', '.txt']
+
 # TODO decide to where to include eTIV
 # 'eTIV' is not included as it is used to norm subcortical volumes
 freesurfer_whole_brain_stats_to_select = [ 'BrainSegVol', 'BrainSegVolNotVent',

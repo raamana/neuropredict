@@ -72,15 +72,18 @@ def parse_args():
                               nargs = '+',
                               default=None,
                               help="List of absolute paths to text files containing one matrix "
-                                 " of size N x p (num_samples x num_features), comma-separated. "
+                                 " of size N x p (num_samples x num_features). "
                                  " Each row in the data matrix file must represent data corresponding "
                                  " to sample in the same row of the meta data file "
                                    "(meta data file and data matrix must be in row-wise correspondence). "
-                                 "Name of the directory containing the file will be used to annotate the results and visualizations."
+                                 "Name of this file will be used to annotate the results and visualizations."
                                  "\nE.g. --data_matrix_path /project/fmri.csv /project/dti.csv /project/t1_volumes.csv. "
                                  " \n Only one of user_feature_paths and user_feature_paths options can be specified."
-                                 "Notes on file format: use numpy.savetxt(data_array, delimiter=',') to save features, "
-                                   "which can easily be read back with numpy.loadtxt(filepath, delimiter=','). ")
+                                 "File format could be 1) a simple comma-separated text file (with extension .csv or .txt): "
+                                   "which can easily be read back with numpy.loadtxt(filepath, delimiter=',') or "
+                                   "2) a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath). "
+                                   "One could use numpy.savetxt(data_array, delimiter=',') or numpy.save(data_array) to save features."
+                                   "File format is inferred from its extension.")
 
     parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
                         default=None,
@@ -235,7 +238,18 @@ def get_dir_of_dirs(featdir, subjid):
 def get_data_matrix(featpath):
     "Returns ndarray from data matrix stored in a file"
 
-    return np.loadtxt(featpath, delimiter=cfg.DELIMITER)
+    file_ext = os.path.splitext(featpath)[1].lower()
+    try:
+        if file_ext in ['.npy', '.numpy']:
+            matrix = np.load(featpath)
+        elif file_ext in ['.csv', '.txt']:
+            matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
+        else:
+            raise ValueError('Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
+    except:
+        raise IOError('Unable to load the data matrix from disk.')
+
+    return matrix
 
 
 def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None, feature_type = 'dir_of_dris'):
@@ -273,7 +287,7 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None, f
             ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
         except:
             ids_excluded.append(subjid)
-            warnings.warn("Features for {} via {} method could not be read. "
+            warnings.warn("Features for {} via {} method could not be read or added. "
                           "Excluding it.".format(subjid, getmethod.__name__))
 
     # warning for if failed to extract features even for one subject
@@ -488,9 +502,9 @@ def make_dataset_filename(method_name):
     return file_name
 
 
-def import_features(method_list, outdir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
+def import_datasets(method_list, outdir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
     """
-    Imports the specified features and organizes them into datasets.
+    Imports all the specified feature sets and organizes them into datasets.
      
     Parameters
     ----------
@@ -525,7 +539,7 @@ def import_features(method_list, outdir, subjects, classes, feature_path, featur
         if cur_method in [ get_dir_of_dirs ]:
             method_name = os.path.basename(feature_path[mm])
         elif cur_method in [ get_data_matrix ]:
-            method_name = os.path.basename(os.path.dirname(feature_path[mm]))
+            method_name = os.path.splitext(os.path.basename(feature_path[mm]))[0]
         else:
             # adding an index for an even more unique identification
             # method_name = '{}_{}'.format(cur_method.__name__,mm)
@@ -619,7 +633,7 @@ def run():
 
     feature_dir, method_list = make_method_list(fsdir, user_feature_paths, user_feature_type)
 
-    method_names, dataset_paths_file = import_features(method_list, outdir, subjects, classes,
+    method_names, dataset_paths_file = import_datasets(method_list, outdir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
     results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
