@@ -89,6 +89,7 @@ def parse_args():
                         default=None,
                         help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
                              "to be used in calculation of area under the ROC curve. "
+                             "Applicable only for binary classification experiments. "
                              "Default: class appearning second in order specified in metadata file.")
 
     parser.add_argument("-t", "--trainperc", action="store", dest="train_perc",
@@ -107,6 +108,18 @@ def parse_args():
                         default="fsaverage",
                         help="Name of the atlas to use for visualization."
                              "\nDefault: fsaverage, if available.")
+
+    parser.add_argument("-s", "--subgroup", action="store", dest="subgroup",
+                        nargs="*",
+                        default="all",
+                        help="This option allows the user to study different combinations of classes in multi-class (N>2) dataset. "
+                             "For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied"
+                             " with the following flag --subgroup CN,FTD CN,AD . "
+                             "This allows the user to focus on few interesting subgroups depending on their dataset/goal. "
+                             "Format: each subgroup must be a comma-separated list of classes. "
+                             "Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and "
+                             "ideally just alphanumeric characters separated by underscores. "
+                             "Default: all - using all the available classes in a all-vs-all multi-class setting.")
 
     if len(sys.argv) < 2:
         print('Too few arguments!')
@@ -147,8 +160,11 @@ def parse_args():
 
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
+    else:
+        user_feature_paths = None
+        user_feature_type  = None
 
-    elif not atleast_one_feature_specified:
+    if not atleast_one_feature_specified:
         raise ValueError('Atleast a Freesurfer directory or one user-defined directory or matrix must be specified.')
 
     outdir = os.path.abspath(options.outdir)
@@ -166,10 +182,25 @@ def parse_args():
     assert num_rep_cv >= 10, \
         "Atleast 10 repitions of CV is recommened.".format(train_perc)
 
-    return metadatafile, outdir, \
+    sample_ids, classes = get_metadata(metadatafile)
+    class_set = set(classes.values())
+
+    subgroups = options.subgroup
+    if subgroups != 'all':
+        for comb in subgroups:
+            for cls in comb.split(','):
+                assert cls in class_set, \
+                    "Class {} in combination {} does not exist in meta data.".format(cls, comb)
+    else:
+        # using all classes
+        subgroups = ','.join(class_set)
+
+
+    return sample_ids, classes, outdir, \
            user_feature_paths, user_feature_type, \
            fsdir, \
-           train_perc, num_rep_cv, options.positiveclass
+           train_perc, num_rep_cv, \
+           options.positiveclass, subgroups
 
 
 def get_metadata(path):
@@ -624,10 +655,8 @@ def run():
 
     # TODO design an API interface for advanced access as an importable package
 
-    metadatafile, outdir, user_feature_paths, user_feature_type, \
-        fsdir, train_perc, num_rep_cv, positiveclass = parse_args()
-
-    subjects, classes = get_metadata(metadatafile)
+    subjects, classes, outdir, user_feature_paths, user_feature_type, \
+        fsdir, train_perc, num_rep_cv, positiveclass, subgroups = parse_args()
 
     positiveclass = validate_class_set(classes, positiveclass)
 

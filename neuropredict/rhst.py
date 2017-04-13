@@ -82,10 +82,17 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
     Optional argument can specify the amount of error that the user wants to allow (deafult : 5% prob of error ).
 
     Citation: Michael Fitzpatrick and Milan Sonka, Handbook of Medical Imaging, 2000
+    
+    Parameters
+    ----------
+    num_samples : int
+    perc_prob_error_allowed : float
 
-    :param num_samples:
-    :param perc_prob_error_allowed:
-    :return:
+    Returns
+    -------
+    max_red_dim : int
+    
+
     """
 
     if num_samples < 1/(2*perc_prob_error_allowed):
