@@ -8,6 +8,7 @@ import argparse
 import warnings
 import pickle
 from time import localtime, strftime
+from collections import Counter
 
 from freesurfer import *
 from pyradigm import MLDataset
@@ -232,6 +233,11 @@ def get_metadata(path):
     meta = np.genfromtxt(path, dtype=None, delimiter=cfg.DELIMITER)
 
     sample_ids = list(meta[:,0])
+    # checking for duplicates
+    if len(set(sample_ids)) < len(sample_ids):
+        duplicates = [ sample for sample, count in Counter(sample_ids).items() if count > 1 ]
+        raise ValueError('Duplicate sample ids found!\n{}\nRemove duplicates and rerun.'.format(duplicates))
+
     classes    = dict(zip(sample_ids, meta[:,1]))
 
     return sample_ids, classes
@@ -619,12 +625,12 @@ def make_method_list(fsdir, user_feature_paths, user_feature_type='dir_of_dirs')
     userdefined_readers= { 'dir_of_dirs': get_dir_of_dirs,
                            'data_matrix': get_data_matrix }
 
-    if user_feature_type not in userdefined_readers:
-        raise NotImplementedError("Invalid feature type or its reader is not implemented yet!")
-
     feature_dir = list()
     method_list = list()
     if not_unspecified(user_feature_paths):
+        if user_feature_type not in userdefined_readers:
+            raise NotImplementedError("Invalid feature type or its reader is not implemented yet!")
+
         for upath in user_feature_paths:
             feature_dir.append(upath)
             method_list.append(userdefined_readers[user_feature_type])
@@ -662,6 +668,7 @@ def run():
 
     feature_dir, method_list = make_method_list(fsdir, user_feature_paths, user_feature_type)
 
+    # TODO need to be able to parallelize at subgroup- and method-level
     method_names, dataset_paths_file = import_datasets(method_list, outdir, subjects, classes,
                                                        feature_dir, user_feature_type)
 

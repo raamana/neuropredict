@@ -363,6 +363,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     for rep in range(num_repetitions):
         print("\n CV repetition {:3d} ".format(rep))
 
+        # TODO to achieve feature- or method-level parallization,
+        #   train/test splits need to be saved at the entry level for each subgroup and used here
         train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
         test_labels_per_rep[rep, :] = [ common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
 
