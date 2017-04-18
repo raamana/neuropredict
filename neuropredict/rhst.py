@@ -21,7 +21,7 @@ from pyradigm import MLDataset
 def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
     "Method to optimize the classifier on the training set and return predictions on test set. "
 
-    MAX_DIM_FOR_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples)
+    MAX_DIM_FOR_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples, train_fs.num_features)
 
     range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
     range_num_predictors = range(1, MAX_DIM_FOR_TRAINING, cfg.NUM_PREDICTORS_STEP)
@@ -74,7 +74,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
            feat_importance, best_minleafsize, best_num_predictors
 
 
-def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
+def max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
                                                       perc_prob_error_allowed = cfg.PERC_PROB_ERROR_ALLOWED):
     """
     Computes the largest dimensionality that can be used to train a predictive model
@@ -86,6 +86,7 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
     Parameters
     ----------
     num_samples : int
+    num_features : int
     perc_prob_error_allowed : float
 
     Returns
@@ -100,7 +101,10 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples,
     else:
         max_red_dim = np.floor(num_samples * (2*perc_prob_error_allowed))
 
-    return np.int64(max_red_dim)
+    # to ensure we don't request more features than available
+    max_red_dim = np.int64( min(max_red_dim, num_features) )
+
+    return max_red_dim
 
 
 def chance_accuracy(class_sizes):

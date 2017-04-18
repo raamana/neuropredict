@@ -7,6 +7,7 @@ import sklearn
 import argparse
 import warnings
 import pickle
+import traceback
 from time import localtime, strftime
 from collections import Counter
 
@@ -265,9 +266,17 @@ def get_dir_of_dirs(featdir, subjid):
     """
 
     feat_names = None
-
     featfile = os.path.join(featdir, subjid, 'features.txt')
-    data = np.genfromtxt(featfile)
+
+    try:
+        data = np.genfromtxt(featfile)
+    except:
+        raise IOError('Unable to load features from \n{}'.format(featfile))
+
+    # the following ensures an array is returned even when data is a single scalar,
+    # for which len() is not defined (which is needed for pyradigm to find dimensionality
+    # order='F' (column-major) is chosen to as input is expected to be in a single column
+    data = data.flatten(order='F')
 
     return data, feat_names
 
@@ -283,8 +292,10 @@ def get_data_matrix(featpath):
             matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
         else:
             raise ValueError('Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
-    except:
+    except IOError:
         raise IOError('Unable to load the data matrix from disk.')
+    except:
+        raise
 
     return matrix
 
@@ -324,6 +335,7 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None, f
             ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
         except:
             ids_excluded.append(subjid)
+            traceback.print_exc()
             warnings.warn("Features for {} via {} method could not be read or added. "
                           "Excluding it.".format(subjid, getmethod.__name__))
 
@@ -400,7 +412,6 @@ def visualize_results(results_file_path, outdir, method_names):
         return
 
     try:
-        num_classes = len(method_names)
 
         balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
         visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
@@ -409,9 +420,11 @@ def visualize_results(results_file_path, outdir, method_names):
         confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
         visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
 
+        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
         if num_classes > 2:
-            cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
             visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+        elif num_classes == 2:
+            visualize.compare_misclf_pairwise_barplot(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
         featimp_fig_path = os.path.join(outdir, 'feature_importance')
         visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
@@ -419,6 +432,7 @@ def visualize_results(results_file_path, outdir, method_names):
         misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
         visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
     except:
+        traceback.print_exc()
         warnings.warn('Error generating the visualizations! Skipping ..')
 
 
@@ -498,6 +512,7 @@ def export_results(results_file_path, outdir):
                     smf.write('{}{}{}\n'.format(sid, cfg.DELIMITER, val))
 
     except:
+        traceback.print_exc()
         raise IOError('Unable to export the results to CSV files.')
 
     return

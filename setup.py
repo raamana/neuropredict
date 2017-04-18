@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='neuropredict',
-      version='0.2.4.2',
+      version='0.2.4.5',
       description='Neuroimaging Predictive Analysis',
       long_description=open('README.md').read(),
       author='Pradeep Reddy Raamana',

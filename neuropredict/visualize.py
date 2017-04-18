@@ -190,14 +190,21 @@ def compute_pairwise_misclf(cfmat_array):
     return avg_cfmat, misclf_rate
 
 
-def compare_misclf_pairwise(cfmat_array, class_labels,
-                                       method_labels, out_path):
+def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, out_path):
     """
-    Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
+    Produces a bar plot comparing the the misclassfication rate of all feature sets for different pairwise
     classifications.
+    
+    Parameters
+    ----------
+    cfmat_array
+    class_labels
+    method_labels
+    out_path
 
+    Returns
+    -------
 
-    :return:
     """
 
     num_datasets = cfmat_array.shape[3]
@@ -210,22 +217,67 @@ def compare_misclf_pairwise(cfmat_array, class_labels,
 
     out_path.replace(' ', '_')
 
-    # avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
-    # misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
-    # for dd in range(num_datasets):
-    #     # mean confusion over CV trials
-    #     avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 2)
-    #     # percentage confusion relative to class size
-    #     clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
-    #     avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
-    #     # making it human readable : 0-100%
-    #     avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=3)
-    #
-    #     count = 0
-    #     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
-    #         if ii != jj:
-    #             misclf_rate[dd,count] = avg_cfmat[dd, ii, jj]
-    #             count = count + 1
+    avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
+
+    misclf_ax_labels = list()
+    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+        if ii != jj:
+            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+
+    fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
+    ax = fig.add_subplot(1, 1, 1)
+
+    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+
+    misclf_ax_labels_loc = list()
+    handles = list()
+    for mca in range(num_misclf_axes):
+        x_pos = np.array(range(num_datasets)) + mca * (num_datasets + 1)
+        h = ax.bar(x_pos, misclf_rate[:,mca], color=cmap(range(num_datasets)))
+        handles.append(h)
+        misclf_ax_labels_loc.append(np.mean(x_pos))
+
+    ax.legend(handles[0], method_labels)
+    ax.set_xticks(misclf_ax_labels_loc)
+    ax.set_xticklabels(misclf_ax_labels)
+    ax.set_ylabel('misclassification rate (in %)')
+    ax.set_xlabel('misclassification type')
+
+    fig.tight_layout()
+
+    pp1 = PdfPages(out_path + '.pdf')
+    pp1.savefig()
+    pp1.close()
+
+    return
+
+
+def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
+    """
+    Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
+    classifications.
+    
+    Parameters
+    ----------
+    cfmat_array
+    class_labels
+    method_labels
+    out_path
+
+    Returns
+    -------
+
+    """
+
+    num_datasets = cfmat_array.shape[3]
+    num_classes  = cfmat_array.shape[0]
+    assert num_classes == cfmat_array.shape[1], \
+        "Invalid dimensions of confusion matrix. " \
+        "Required dims: [num_classes, num_classes, num_repetitions, num_datasets]"
+
+    num_misclf_axes = num_classes*(num_classes-1)
+
+    out_path.replace(' ', '_')
 
     avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
 
@@ -312,9 +364,11 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         highlight_thresh75 = 0.75
 
         cur_ylim = ax_h.get_ylim()
-        line50, = ax_h.plot([highlight_thresh50, highlight_thresh50],
-                            cur_ylim, 'k', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
-        line75, = ax_h.plot([highlight_thresh75, highlight_thresh75],
+        # line50, = ax_h.plot([highlight_thresh50, highlight_thresh50],
+        #                     cur_ylim, 'k', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
+        # line75, = ax_h.plot([highlight_thresh75, highlight_thresh75],
+        #                     cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
+        line_thresh, = ax_h.plot([count_thresh, count_thresh],
                             cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
         ax_h.set_ylim(cur_ylim)
         ax_h.set_ylabel('number of subjects')
