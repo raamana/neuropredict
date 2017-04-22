@@ -424,7 +424,7 @@ def visualize_results(results_file_path, outdir, method_names):
         if num_classes > 2:
             visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
         elif num_classes == 2:
-            visualize.compare_misclf_pairwise_barplot(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+            visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
         featimp_fig_path = os.path.join(outdir, 'feature_importance')
         visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)

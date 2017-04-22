@@ -190,6 +190,70 @@ def compute_pairwise_misclf(cfmat_array):
     return avg_cfmat, misclf_rate
 
 
+def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, method_labels, out_path):
+    """
+    Produces a parallel coordinate plot (unravelling the cobweb plot) 
+    comparing the the misclassfication rate of all feature sets 
+    for different pairwise classifications.
+
+    Parameters
+    ----------
+    cfmat_array
+    class_labels
+    method_labels
+    out_path
+
+    Returns
+    -------
+
+    """
+
+    num_datasets = cfmat_array.shape[3]
+    num_classes = cfmat_array.shape[0]
+    assert num_classes == cfmat_array.shape[1], \
+        "Invalid dimensions of confusion matrix. " \
+        "Required dims: [num_classes, num_classes, num_repetitions, num_datasets]"
+
+    num_misclf_axes = num_classes * (num_classes - 1)
+
+    out_path.replace(' ', '_')
+
+    avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
+
+    misclf_ax_labels = list()
+    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+        if ii != jj:
+            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+
+    fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
+    ax = fig.add_subplot(1, 1, 1)
+
+    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+
+    misclf_ax_labels_loc = list()
+    handles = list()
+
+    misclf_ax_labels_loc = range(1,num_misclf_axes+1)
+    for dd in range(num_datasets):
+        h = ax.plot(misclf_ax_labels_loc, misclf_rate[dd, :], color=cmap(dd))
+        handles.append(h[0])
+
+    ax.legend(handles, method_labels)
+    ax.set_xticks(misclf_ax_labels_loc)
+    ax.set_xticklabels(misclf_ax_labels)
+    ax.set_ylabel('misclassification rate (in %)')
+    ax.set_xlabel('misclassification type')
+    ax.set_xlim([0.75, num_misclf_axes+0.25])
+
+    fig.tight_layout()
+
+    pp1 = PdfPages(out_path + '.pdf')
+    pp1.savefig()
+    pp1.close()
+
+    return
+
+
 def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, out_path):
     """
     Produces a bar plot comparing the the misclassfication rate of all feature sets for different pairwise
