@@ -167,13 +167,24 @@ def load_results(results_file_path):
     assert os.path.exists(results_file_path), "Results file to be loaded doesn't exist!"
     try:
         with open(results_file_path) as rf:
+            # dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+            # pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+            # best_min_leaf_size, best_num_predictors, \
+            # feature_importances_rf, feature_names, \
+            # num_times_misclfd, num_times_tested, \
+            # confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class = \
+            #     pickle.load(rf)
+
+            results_dict = pickle.load(rf)
+            # # importing the keys and their values into the workspace
+            # locals().update(results_dict)
+
             dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-            best_min_leaf_size, best_num_predictors, \
-            feature_importances_rf, feature_names, \
-            num_times_misclfd, num_times_tested, \
-            confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class = \
-                pickle.load(rf)
+                pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+                best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+                feature_names, num_times_misclfd, num_times_tested, \
+                confusion_matrix, class_set, accuracy_balanced, \
+                auc_weighted, positive_class = [results_dict.get(var_name) for var_name in cfg.rhst_data_variables_to_persist]
 
     except:
         raise IOError('Error loading the saved results from \n{}'.format(results_file_path))
@@ -416,7 +427,18 @@ def run(dataset_path_file, method_names, out_results_dir,
                         confusion_matrix, class_set,
                         accuracy_balanced, auc_weighted, positive_class ]
 
-    out_results_path = save_results(out_results_dir, var_list_to_save)
+    var_names_to_save = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
+                        'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
+                        'best_min_leaf_size', 'best_num_predictors',
+                        'feature_importances_rf', 'feature_names',
+                        'num_times_misclfd', 'num_times_tested',
+                        'confusion_matrix', 'class_set',
+                        'accuracy_balanced', 'auc_weighted', 'positive_class' ]
+
+    locals_var_dict = locals()
+    dict_to_save = {var : locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+
+    out_results_path = save_results(out_results_dir, dict_to_save)
 
     return out_results_path
 
