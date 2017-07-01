@@ -2,6 +2,12 @@
 
 neuropredict is part of a broader intiative to develop standardized and easy predictive analysis - see [here](https://drive.google.com/open?id=0BxUb8ldwZEYJR3pCWFpyRUI1YUE) for an overview and the bigger picture idea. 
 
+## Overview
+![roleofneuropredict](docs/role.png)
+
+
+## Goals of the tool
+
 Automatic estimation of predictive power of commonly used neuroimaging features as well as user-defined features.
 
 The aim of this python module would be to automatically assess the predictive power of commonly used neuroimaging features (such as resting-state connectivity, fractional anisotropy, subcortical volumes and cortical thickness features) automatically read from the processing of popular tools such as FSL, DTIstudio, AFNI and Freesurfer, and present a comprehensive report on a given dataset. It is mainly aimed (to lower or remove the barriers) at clinical users who would like to understand what features and brain regions are discriminative in their shiny new dataset before diving into the deep grey sea of feature extraction and optimization.
