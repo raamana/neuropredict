@@ -3,9 +3,9 @@
 from setuptools import setup, find_packages
 
 setup(name='neuropredict',
-      version='0.2.4.5',
+      version='0.2.4.6',
       description='Neuroimaging Predictive Analysis',
-      long_description=open('README.md').read(),
+      long_description='Neuroimaging Predictive Analysis; neuropredict',
       author='Pradeep Reddy Raamana',
       author_email='raamana@gmail.com',
       url='https://github.com/raamana/neuropredict',
