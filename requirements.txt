@@ -3,3 +3,5 @@ sklearn
 nibabel
 pyradigm
 setuptools
+scipy
+matplotlib
