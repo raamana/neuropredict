@@ -280,6 +280,8 @@ optional arguments:
  * scikit-learn
  * pyradigm
  * nibabel
+ * scipy
+ * matplotlib
 
 ## Support on Beerpay
 Hey dude! Help me out for a couple of :beers:!
