@@ -184,8 +184,10 @@ export PATH=$PATH:~/.local/bin/
 
 ```
 usage: neuropredict [-h] -m METADATAFILE -o OUTDIR [-f FSDIR]
-                    [-u USERDIR [USERDIR ...]] [-p POSITIVECLASS]
-                    [-t TRAIN_PERC] [-n NUM_REP_CV] [-a ATLASID]
+                    [-u USER_FEATURE_PATHS [USER_FEATURE_PATHS ...] | -d
+                    DATA_MATRIX_PATH [DATA_MATRIX_PATH ...]]
+                    [-p POSITIVECLASS] [-t TRAIN_PERC] [-n NUM_REP_CV]
+                    [-a ATLASID] [-s [SUBGROUP [SUBGROUP ...]]]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -200,9 +202,10 @@ optional arguments:
   -f FSDIR, --fsdir FSDIR
                         Absolute path to SUBJECTS_DIR containing the finished
                         runs of Freesurfer parcellation (each subject named
-                        after its ID in the metadata file)
-  -u USERDIR [USERDIR ...], --userdir USERDIR [USERDIR ...]
-                        List of absolute paths to an user's own features.Each
+                        after its ID in the metadata file). E.g. --fsdir
+                        /project/freesurfer_v5.3
+  -u USER_FEATURE_PATHS [USER_FEATURE_PATHS ...], --user_feature_paths USER_FEATURE_PATHS [USER_FEATURE_PATHS ...]
+                        List of absolute paths to an user's own features. Each
                         folder contains a separate folder for each subject
                         (named after its ID in the metadata file) containing a
                         file called features.txt with one number per line. All
@@ -212,12 +215,36 @@ optional arguments:
                         Names of each folder is used to annotate the results
                         in visualizations. Hence name them uniquely and
                         meaningfully, keeping in mind these figures will be
-                        included in your papers.
+                        included in your papers. E.g. --user_feature_paths
+                        /project/fmri/ /project/dti/ /project/t1_volumes/ .
+                        Only one of user_feature_paths and user_feature_paths
+                        options can be specified.
+  -d DATA_MATRIX_PATH [DATA_MATRIX_PATH ...], --data_matrix_path DATA_MATRIX_PATH [DATA_MATRIX_PATH ...]
+                        List of absolute paths to text files containing one
+                        matrix of size N x p (num_samples x num_features).
+                        Each row in the data matrix file must represent data
+                        corresponding to sample in the same row of the meta
+                        data file (meta data file and data matrix must be in
+                        row-wise correspondence). Name of this file will be
+                        used to annotate the results and visualizations. E.g.
+                        --data_matrix_path /project/fmri.csv /project/dti.csv
+                        /project/t1_volumes.csv. Only one of
+                        user_feature_paths and user_feature_paths options can
+                        be specified.File format could be 1) a simple comma-
+                        separated text file (with extension .csv or .txt):
+                        which can easily be read back with
+                        numpy.loadtxt(filepath, delimiter=',') or 2) a numpy
+                        array saved to disk (with extension .npy or .numpy)
+                        that can read in with numpy.load(filepath). One could
+                        use numpy.savetxt(data_array, delimiter=',') or
+                        numpy.save(data_array) to save features.File format is
+                        inferred from its extension.
   -p POSITIVECLASS, --positiveclass POSITIVECLASS
                         Name of the positive class (Alzheimers, MCI or
                         Parkinsons etc) to be used in calculation of area
-                        under the ROC curve. Default: class appearning second
-                        in order specified in metadata file.
+                        under the ROC curve. Applicable only for binary
+                        classification experiments. Default: class appearning
+                        second in order specified in metadata file.
   -t TRAIN_PERC, --trainperc TRAIN_PERC
                         Percentage of the smallest class to be reserved for
                         training. Must be in the interval [0.01 0.99].If
@@ -231,6 +258,21 @@ optional arguments:
   -a ATLASID, --atlas ATLASID
                         Name of the atlas to use for visualization. Default:
                         fsaverage, if available.
+  -s [SUBGROUP [SUBGROUP ...]], --subgroup [SUBGROUP [SUBGROUP ...]]
+                        This option allows the user to study different
+                        combinations of classes in multi-class (N>2) dataset.
+                        For example, in a dataset with 3 classes CN, FTD and
+                        AD, two studies of pair-wise combinations can be
+                        studied with the following flag --subgroup CN,FTD
+                        CN,AD . This allows the user to focus on few
+                        interesting subgroups depending on their dataset/goal.
+                        Format: each subgroup must be a comma-separated list
+                        of classes. Hence it is strongly recommended to use
+                        class names without any spaces, commas, hyphens and
+                        special characters, and ideally just alphanumeric
+                        characters separated by underscores. Default: all -
+                        using all the available classes in a all-vs-all multi-
+                        class setting. Beware: this feature has not been tested heavily.
 ```
 
 # Dependencies
