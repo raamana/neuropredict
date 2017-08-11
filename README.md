@@ -238,3 +238,8 @@ optional arguments:
  * scikit-learn
  * pyradigm
  * nibabel
+
+## Support on Beerpay
+Hey dude! Help me out for a couple of :beers:!
+
+[![Beerpay](https://beerpay.io/raamana/neuropredict/badge.svg?style=beer-square)](https://beerpay.io/raamana/neuropredict)  [![Beerpay](https://beerpay.io/raamana/neuropredict/make-wish.svg?style=flat-square)](https://beerpay.io/raamana/neuropredict?focus=wish)
