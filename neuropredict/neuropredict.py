@@ -231,7 +231,7 @@ def get_metadata(path):
     #             sample_ids.append(sid) # maintaining order of appearance is important as we use data_matrix input mechanism
     #             classes[sid] = parts[1]
 
-    meta = np.genfromtxt(path, dtype=None, delimiter=cfg.DELIMITER)
+    meta = np.genfromtxt(path, dtype=str, delimiter=cfg.DELIMITER)
 
     sample_ids = list(meta[:,0])
     # checking for duplicates

@@ -2,3 +2,4 @@ numpy
 sklearn
 nibabel
 pyradigm
+setuptools
