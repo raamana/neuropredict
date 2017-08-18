@@ -11,7 +11,7 @@
   * Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.
 3. _Why random forests?_
   * Because they have consistently demonstrated top performance across multiple domains:
-    * Fernández-Delgado, M., Cernadas, E., Barro, S., & Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181.
+    * [Fernández-Delgado, M., Cernadas, E., Barro, S., & Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181.](http://jmlr.org/papers/volume15/delgado14a/delgado14a.pdf)
     * Lebedev, A. V., Westman, E., Van Westen, G. J. P., Kramberger, M. G., Lundervold, A., Aarsland, D., et al. (2014). Random Forest ensembles for detection and prediction of Alzheimer's disease with a good between-cohort robustness. NeuroImage: Clinical, 6, 115–125. http://doi.org/10.1016/j.nicl.2014.08.023
   * Because it's multi-class by design and automatically estimates feature importance.
 4. _Why no feature selection [yet]?_
