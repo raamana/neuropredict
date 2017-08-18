@@ -104,7 +104,6 @@ def feature_importance_map(feat_imp,
 
 def confusion_matrices(cfmat_array, class_labels,
                        method_names, base_output_path,
-                       title='Confusion matrix',
                        cmap=cfg.CMAP_CONFMATX):
     """
     Display routine for the confusion matrix.
@@ -138,7 +137,7 @@ def confusion_matrices(cfmat_array, class_labels,
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
         im = plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
-        plt.title(title)
+        plt.title(method_names[dd])
         plt.colorbar(im, fraction=0.046, pad=0.04)
         tick_marks = np.arange(len(class_labels))
         plt.xticks(tick_marks, class_labels, rotation=45)
