@@ -23,7 +23,7 @@ All you would need to provide are commonly used features (such as a Freesurfer o
 
 It is primary geared towards neuroscience data (where the need for machine learning is high) offering readers for popular tools. However, it is not restricted to neuro-data, you could input any arbitrary set of features (from astrophysics, biology or chemistry).
 
-**Happy machine learning! **
+**Happy machine learning!**
 
 And neuropredicting.
 
