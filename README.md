@@ -14,9 +14,10 @@ The aim of this python module would be to automatically assess the predictive po
 
 neuropredict sounds similar (on the surface) to other software available, such as scikit-learn (which is used underneath), however our aim here is to lower the barriers as much as possible, or remove them altogether and make machine learning seamless! For example, 
  * You don't have to code when you use neurpredict - saves you a lot of headache with development and debugging!
- * You don't have to learn how the machine learning toolkits work and their APIs (which can be daunting and time-consuming) and  can likely lead to bad choices made in terms of how proper cross-validation is done.
- * Toolkits like scikit-learn are geared towards developers (focusing on the API to support most generic uses), but not focused easing your workflow with many feature sets. 
- * Comprehensive analysis of misclassfied subjects, misclassification rates for different subject in different pairs of classes is not in the interest of other toolkits (who only provide basic metrics of classifier performance).
+ * You don't have to learn how the machine learning toolkits work and their APIs. This can be daunting and time-consuming, and  can likely lead to bad choices made in terms of how proper cross-validation is done.
+ * Toolkits like scikit-learn are geared towards developers (focusing on the API to support most generic uses), but not focused easing your workflow, esp. when analyzing many feature sets. 
+ * Comprehensive analysis of misclassfied subjects (histogram at top right in figure below) in different pairs of classes is not in the interest of other toolkits and not possible without significant rewriting of many underlying components of scikit-learn.
+ * Thorough analysis of  misclassification rates for different feature sets (radar plot at bottom right in figure below) is not possible in scikit-learn without significant development (who only provide basic metrics of classifier performance).. 
  * Methods and tools for statistical comparison of multiple features (and models) is missing in other toolkits, and which is a priority for neuropredict.
 
 All you would need to provide are commonly used features (such as a Freesurfer output directory) and obtain an easy to read report (see below), along with well-packaged export of performance metrics (for sharing and posthoc comparison) on the predictive power of the features they are interested in.
