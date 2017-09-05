@@ -2,6 +2,9 @@
 
 neuropredict is part of a broader intiative to develop standardized and easy predictive analysis - see [here](https://drive.google.com/open?id=0BxUb8ldwZEYJR3pCWFpyRUI1YUE) for an overview and the bigger picture idea. 
 
+[![travis](https://travis-ci.org/raamana/neuropredict.svg?branch=master)](https://travis-ci.org/raamana/neuropredict.svg?branch=master)
+[![PyPI version](https://badge.fury.io/py/neuropredict.svg)](https://badge.fury.io/py/neuropredict)
+
 ## Overview
 ![roleofneuropredict](docs/role.png)
 
