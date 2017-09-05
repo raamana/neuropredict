@@ -4,6 +4,7 @@ neuropredict is part of a broader intiative to develop standardized and easy pre
 
 [![travis](https://travis-ci.org/raamana/neuropredict.svg?branch=master)](https://travis-ci.org/raamana/neuropredict.svg?branch=master)
 [![PyPI version](https://badge.fury.io/py/neuropredict.svg)](https://badge.fury.io/py/neuropredict)
+[![Python versions](https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6-blue.svg)]
 
 ## Overview
 ![roleofneuropredict](docs/role.png)
