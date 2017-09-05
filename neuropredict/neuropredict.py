@@ -187,7 +187,7 @@ def parse_args():
 
     num_rep_cv = np.int64(options.num_rep_cv)
     assert num_rep_cv >= 10, \
-        "Atleast 10 repitions of CV is recommened.".format(train_perc)
+        "Atleast 10 repetitions of CV is recommened."
 
     sample_ids, classes = get_metadata(metadatafile)
     class_set = set(classes.values())
