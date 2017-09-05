@@ -179,20 +179,25 @@ $ 11:19:33 linux userdefined >>  head -n 5 */features.txt
 
 neuropredict could be easily installed by issuing the following command:
 ```bash
-pip install -U neuropredict
+pip install neuropredict
 ```
 
 If `pip` throws an error, re-run the above command few times, most errors usually get resolved.
 
 Installing it with admin privileges is the recommended way. However, if you do not have admin privileges, try this:
-```
-pip install -U neuropredict --user
+```bash
+pip install neuropredict --user
 ```
 
 However, you may need to add the location of binary files to your path by adding this command to your login script:
-```
+```bash
 export PATH=$PATH:~/.local/bin/
 ```
+
+## version comptability
+
+ - Neuropredict is continuously tested to work on Python 3.6, 3.5 and 2.7. 
+ - It's not guaranteed to work for the remaining versions.
 
 # Usage:
 
