@@ -16,8 +16,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
 elif version_info.major > 2:
-    # from neuropredict import config_neuropredict as cfg
-    import config_neuropredict as cfg
+    from neuropredict import config_neuropredict as cfg
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 

@@ -14,8 +14,7 @@ from sklearn.metrics import confusion_matrix, roc_auc_score
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
 elif version_info.major > 2:
-    import config_neuropredict as cfg
-    # from neuropredict import config_neuropredict as cfg
+    from neuropredict import config_neuropredict as cfg
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
@@ -170,7 +169,7 @@ def load_results(results_file_path):
 
     assert os.path.exists(results_file_path), "Results file to be loaded doesn't exist!"
     try:
-        with open(results_file_path) as rf:
+        with open(results_file_path, 'rb') as rf:
             # dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
             # pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             # best_min_leaf_size, best_num_predictors, \
@@ -421,6 +420,10 @@ def run(dataset_path_file, method_names, out_results_dir,
             num_times_tested[dd].update(test_fs.sample_ids)
 
             print('')
+
+    median_bal_acc = np.median(accuracy_balanced)
+    median_wtd_auc = np.median(auc_weighted)
+    print('\n median balanced accuracy : {} \n median weighted AUC : {}'.format(median_bal_acc, median_wtd_auc))
 
     # save results
     var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,

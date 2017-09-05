@@ -17,12 +17,9 @@ if version_info.major==2 and version_info.minor==7:
     from freesurfer import *
     import config_neuropredict as cfg
 elif version_info.major > 2:
-    import rhst, visualize
-    from freesurfer import *
-    import config_neuropredict as cfg
-    # from neuropredict import rhst, visualize
-    # from neuropredict.freesurfer import *
-    # from neuropredict import config_neuropredict as cfg
+    from neuropredict import rhst, visualize
+    from neuropredict.freesurfer import *
+    from neuropredict import config_neuropredict as cfg
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 from sys import version_info
+from os.path import join as pjoin, exists as pexists, realpath
 
 sys.dont_write_bytecode = True
 
@@ -18,6 +19,9 @@ else:
 feat_generator = np.random.randn
 
 out_dir = os.path.abspath('../tests')
+if not pexists(out_dir):
+    os.makedirs(out_dir)
+
 meta_file = os.path.join(out_dir,'meta.csv')
 
 meta = list()
@@ -75,7 +79,7 @@ def make_random_MLdataset(max_num_classes = 20,
 def test_chance_classifier_binary():
 
     rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True,
-        max_class_size = 100, max_dim = 100)
+        max_class_size = 1000, max_dim = 500)
 
     out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
     rand_two_class = rand_ds.get_class(rand_ds.class_set[0:2])
@@ -86,7 +90,7 @@ def test_chance_classifier_binary():
         lf.writelines('\n'.join([out_path, ]))
 
     res_path = rhst.run(out_list, ['random'], out_dir,
-                        train_perc=0.5, num_repetitions=50)
+                        train_perc=0.5, num_repetitions=100)
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
@@ -96,16 +100,19 @@ def test_chance_classifier_binary():
         confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class = rhst.load_results(res_path)
 
     # TODO replace hard coded chance accuracy calculation with programmatic based on class sample sizes
+    median_bal_acc = np.median(accuracy_balanced)
+    median_wtd_auc = np.median(auc_weighted)
+    print('median balanced accuracy : {} -- median weighted AUC : {}'.format(median_bal_acc, median_wtd_auc))
     # assert np.median(accuracy_balanced) == np.median(rhst.chance_accuracy(class_sizes))
-    if abs(np.median(accuracy_balanced)-0.5) > 0.05:
+    if abs(median_bal_acc-0.5) > 0.05:
         raise ValueError('Accuracy to discriminate between two inseparable classes significantly differs from 0.5')
 
-    if abs(np.median(auc_weighted)-0.5) > 0.05:
+    if abs(median_wtd_auc-0.5) > 0.05:
         raise ValueError('AUC to discriminate between two inseparable classes significantly differs from 0.5')
 
 
 
-test_chance_classifier_binary()
+# test_chance_classifier_binary()
 
 # random_dataset = make_random_MLdataset( max_num_classes = 3)
 # class_set, label_set, class_sizes = random_dataset.summarize_classes()
@@ -124,5 +131,5 @@ test_chance_classifier_binary()
 #            feature_importances_rf, feature_names, \
 #            num_times_misclfd, num_times_tested, \
 #            confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
-# print ''
+# print('')
 
