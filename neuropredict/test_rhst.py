@@ -79,7 +79,7 @@ def make_random_MLdataset(max_num_classes = 20,
 def test_chance_classifier_binary():
 
     rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True,
-        max_class_size = 1000, max_dim = 500)
+        max_class_size = 1000, max_dim = 100)
 
     out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
     rand_two_class = rand_ds.get_class(rand_ds.class_set[0:2])
