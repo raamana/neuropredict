@@ -79,7 +79,7 @@ def make_random_MLdataset(max_num_classes = 20,
 def test_chance_classifier_binary():
 
     rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True,
-        max_class_size = 1000, max_dim = 100)
+        max_class_size = 100, max_dim = 50)
 
     out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
     rand_two_class = rand_ds.get_class(rand_ds.class_set[0:2])
@@ -90,7 +90,7 @@ def test_chance_classifier_binary():
         lf.writelines('\n'.join([out_path, ]))
 
     res_path = rhst.run(out_list, ['random'], out_dir,
-                        train_perc=0.5, num_repetitions=100)
+                        train_perc=0.5, num_repetitions=200)
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
