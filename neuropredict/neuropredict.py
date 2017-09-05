@@ -1,22 +1,27 @@
 #/usr/bin/python
 
-import sys
-import os
-import nibabel
-import sklearn
 import argparse
-import warnings
-import pickle
+import sys
 import traceback
-from time import localtime, strftime
+import warnings
 from collections import Counter
+from time import localtime, strftime
 
-from freesurfer import *
 from pyradigm import MLDataset
-import rhst
-import visualize
 
-import config_neuropredict as cfg
+if __name__ == '__main__':
+    if __package__ is None:
+        from neuropredict import config_neuropredict as cfg
+        from neuropredict import rhst
+        from neuropredict import visualize
+        from neuropredict.freesurfer import *
+    else:
+        pass
+else:
+    from .neuropredict import config_neuropredict as cfg
+    from .neuropredict import rhst
+    from .neuropredict import visualize
+    from .neuropredict.freesurfer import *
 
 def make_time_stamp():
     "Returns a timestamp string."
@@ -355,7 +360,7 @@ def alert_failed_feature_extraction(num_excluded, num_read, total_num):
     allowed_to_proceed = True
     if num_excluded > 0:
         warnings.warn('Features for {} / {} subjects could not be read. '.format(num_excluded, total_num))
-        user_confirmation = raw_input("Would you like to proceed?  y / [N] : ")
+        user_confirmation = input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
             print ('Stopping. \n'
                           'Rerun after completing the feature extraction for all subjects '
@@ -661,9 +666,9 @@ def make_method_list(fsdir, user_feature_paths, user_feature_type='dir_of_dirs')
     if len(method_list) < 1:
         raise ValueError('Atleast one feature set must be specified.')
 
-    print "\nRequested features for analysis:"
+    print("\nRequested features for analysis:")
     for mm, method in enumerate(method_list):
-        print "{} from {}".format(method.__name__, feature_dir[mm])
+        print("{} from {}".format(method.__name__, feature_dir[mm]))
 
     return feature_dir, method_list
 

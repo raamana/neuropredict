@@ -1,4 +1,4 @@
 
 
-
-all = ['neuropredict', 'rhst', 'visualize', 'freesurfer']
+__all__ = ['neuropredict', 'rhst', 'visualize', 'freesurfer', 'config_neuropredict',
+           'model_comparison']

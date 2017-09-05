@@ -1,4 +1,4 @@
-import neuropredict
+from neuropredict import neuropredict
 
 def main():
     "Entry point."

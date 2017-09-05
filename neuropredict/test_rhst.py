@@ -4,19 +4,8 @@ import os, sys
 
 sys.dont_write_bytecode = True
 
-# sys.path.remove('/Users/Reddy/anaconda/lib/python2.7/site-packages/pyradigm')
-# sys.path.extend(['/Users/Reddy/opensource/pyradigm/pyradigm'])
-
 from pyradigm import MLDataset
-
-import neuropredict
-import rhst
-import freesurfer
-
-# out_dir = '/Users/Reddy/opensource/neuropredict/test_ppmi/'
-# res_path = os.path.join(out_dir, 'rhst_results.pkl')
-# neuropredict.export_results(res_path, out_dir, ['aseg_stats_subcortical', 'aseg_stats_whole_brain'])
-
+from neuropredict import rhst
 
 feat_generator = np.random.randn
 

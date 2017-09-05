@@ -13,7 +13,10 @@ from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score
 from sklearn.ensemble import RandomForestClassifier
 
-import config_neuropredict as cfg
+if __name__ == '__main__':
+    from neuropredict import config_neuropredict as cfg
+else:
+    import neuropredict.config_neuropredict as cfg
 
 from pyradigm import MLDataset
 
