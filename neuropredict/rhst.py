@@ -1,22 +1,23 @@
 from __future__ import print_function
-import os
-import sys
-import warnings
-import numpy as np
-import matplotlib.pyplot as plt
-import itertools
-from collections import Counter
-import random
-import pickle
-import sklearn
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score
-from sklearn.ensemble import RandomForestClassifier
 
-if __name__ == '__main__':
-    from neuropredict import config_neuropredict as cfg
+__all__ = ['run', 'load_results', 'save_results']
+
+import os
+import pickle
+from collections import Counter
+from sys import version_info
+
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, roc_auc_score
+
+if version_info.major==2 and version_info.minor==7:
+    import config_neuropredict as cfg
+elif version_info.major > 2:
+    import config_neuropredict as cfg
+    # from neuropredict import config_neuropredict as cfg
 else:
-    import neuropredict.config_neuropredict as cfg
+    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
 from pyradigm import MLDataset
 

@@ -1,17 +1,25 @@
 from __future__ import print_function, division
-import os
-import sys
-import warnings
-import numpy as np
-from scipy.stats import gaussian_kde
-import matplotlib.pyplot as plt
-from matplotlib import cm
-import matplotlib.colors as mcolors
-from matplotlib.backends.backend_pdf import PdfPages
-import itertools
-from collections import Counter
 
-import config_neuropredict as cfg
+__all__ = ['feature_importance_map', 'confusion_matrices',
+           'freq_hist_misclassifications', 'metric_distribution',
+           'compare_misclf_pairwise_parallel_coord_plot', 'compare_misclf_pairwise', ]
+
+import itertools
+import warnings
+from sys import version_info
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
+from matplotlib.backends.backend_pdf import PdfPages
+
+if version_info.major==2 and version_info.minor==7:
+    import config_neuropredict as cfg
+elif version_info.major > 2:
+    # from neuropredict import config_neuropredict as cfg
+    import config_neuropredict as cfg
+else:
+    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
 def feature_importance_map(feat_imp,
                            method_labels,
@@ -164,6 +172,7 @@ def confusion_matrices(cfmat_array, class_labels,
 
 
 def compute_pairwise_misclf(cfmat_array):
+    "Merely computes the misclassification rates, for pairs of classes."
 
     num_datasets = cfmat_array.shape[3]
     num_classes  = cfmat_array.shape[0]

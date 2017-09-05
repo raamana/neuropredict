@@ -1,11 +1,19 @@
 
 import numpy as np
-import os, sys
+import os
+import sys
+from sys import version_info
 
 sys.dont_write_bytecode = True
 
 from pyradigm import MLDataset
-from neuropredict import rhst
+
+if version_info.major==2 and version_info.minor==7:
+    from neuropredict import rhst
+elif version_info.major > 2:
+    from neuropredict import rhst
+else:
+    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
 feat_generator = np.random.randn
 
@@ -21,6 +29,8 @@ def make_random_MLdataset(max_num_classes = 20,
     "Generates a random MLDataset for use in testing."
 
     num_classes = np.random.randint(2, max_num_classes, 1)
+    if type(num_classes) == np.ndarray:
+        num_classes = num_classes[0]
     if not stratified:
         class_sizes = np.random.random_integers(min(50, max_class_size),
                                                 max(50, max_class_size),
@@ -95,8 +105,8 @@ def test_chance_classifier_binary():
 
 
 
-# test_chance_classifier_binary()
-#
+test_chance_classifier_binary()
+
 # random_dataset = make_random_MLdataset( max_num_classes = 3)
 # class_set, label_set, class_sizes = random_dataset.summarize_classes()
 #

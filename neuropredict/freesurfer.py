@@ -1,7 +1,15 @@
 
 import os
 import numpy as np
-import config_neuropredict as cfg
+from sys import version_info
+
+if version_info.major==2 and version_info.minor==7:
+    import config_neuropredict as cfg
+elif version_info.major > 2:
+    # from neuropredict import config_neuropredict as cfg
+    import config_neuropredict as cfg
+else:
+    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
 def aseg_stats_whole_brain_via_regex(fspath, subjid):
     """
