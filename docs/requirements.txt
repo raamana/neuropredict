@@ -1,0 +1,9 @@
+sphinx-argparse
+numpydoc
+numpy
+sklearn
+nibabel
+pyradigm
+setuptools
+scipy
+matplotlib

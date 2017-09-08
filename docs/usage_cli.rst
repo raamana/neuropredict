@@ -1,5 +1,5 @@
 
-Command line interface
+Usage and examples
 -----------------------
 
 The command line interface for graynet (preferred interface, given its target is HPC) is shown below. Check the bottom of this page for examples.
