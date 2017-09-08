@@ -1,6 +1,6 @@
 #/usr/bin/python
 
-__all__ = ['run', ]
+__all__ = ['run', 'get_parser' ]
 
 import argparse
 import sys
@@ -38,6 +38,7 @@ def not_unspecified( var ):
 
 
 def get_parser():
+    "Parser to specify arguments and their defaults."
 
     parser = argparse.ArgumentParser(prog="neuropredict")
 
