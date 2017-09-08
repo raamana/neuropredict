@@ -2,6 +2,10 @@
 
 neuropredict is part of a broader intiative to develop standardized and easy predictive analysis - see [here](https://drive.google.com/open?id=0BxUb8ldwZEYJR3pCWFpyRUI1YUE) for an overview and the bigger picture idea. 
 
+[![travis](https://travis-ci.org/raamana/neuropredict.svg?branch=master)](https://travis-ci.org/raamana/neuropredict.svg?branch=master)
+[![PyPI version](https://badge.fury.io/py/neuropredict.svg)](https://badge.fury.io/py/neuropredict)
+[![Python versions](https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6-blue.svg)]
+
 ## Overview
 ![roleofneuropredict](docs/role.png)
 
@@ -179,20 +183,25 @@ $ 11:19:33 linux userdefined >>  head -n 5 */features.txt
 
 neuropredict could be easily installed by issuing the following command:
 ```bash
-pip install -U neuropredict
+pip install neuropredict
 ```
 
 If `pip` throws an error, re-run the above command few times, most errors usually get resolved.
 
 Installing it with admin privileges is the recommended way. However, if you do not have admin privileges, try this:
-```
-pip install -U neuropredict --user
+```bash
+pip install neuropredict --user
 ```
 
 However, you may need to add the location of binary files to your path by adding this command to your login script:
-```
+```bash
 export PATH=$PATH:~/.local/bin/
 ```
+
+## version comptability
+
+ - Neuropredict is continuously tested to work on Python 3.6, 3.5 and 2.7. 
+ - It's not guaranteed to work for the remaining versions.
 
 # Usage:
 
