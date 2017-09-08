@@ -9,6 +9,7 @@ import warnings
 from collections import Counter
 from time import localtime, strftime
 from sys import version_info
+from os.path import join as pjoin, exists as pexists, abspath, realpath
 
 from pyradigm import MLDataset
 
@@ -36,8 +37,7 @@ def not_unspecified( var ):
     return var not in [ 'None', None, '' ]
 
 
-def parse_args():
-    """Parser/validator for the cmd line args."""
+def get_parser():
 
     parser = argparse.ArgumentParser(prog="neuropredict")
 
@@ -129,6 +129,14 @@ def parse_args():
                              "ideally just alphanumeric characters separated by underscores. "
                              "Default: all - using all the available classes in a all-vs-all multi-class setting.")
 
+    return parser
+
+
+def parse_args():
+    """Parser/validator for the cmd line args."""
+
+    parser = get_parser()
+
     if len(sys.argv) < 2:
         print('Too few arguments!')
         parser.print_help()
@@ -141,30 +149,30 @@ def parse_args():
         parser.exit(1)
 
     # noinspection PyUnboundLocalVariable
-    metadatafile = os.path.abspath(options.metadatafile)
-    assert os.path.exists(metadatafile), "Given metadata file doesn't exist."
+    metadatafile = abspath(options.metadatafile)
+    assert pexists(metadatafile), "Given metadata file doesn't exist."
 
     atleast_one_feature_specified = False
     if not_unspecified(options.fsdir):
-        fsdir = os.path.abspath(options.fsdir)
-        assert os.path.exists(fsdir), "Given Freesurfer directory doesn't exist."
+        fsdir = abspath(options.fsdir)
+        assert pexists(fsdir), "Given Freesurfer directory doesn't exist."
         atleast_one_feature_specified = True
     else:
         fsdir = None
 
     if not_unspecified(options.user_feature_paths):
-        user_feature_paths = map(os.path.abspath, options.user_feature_paths)
+        user_feature_paths = map(abspath, options.user_feature_paths)
         for udir in user_feature_paths:
-            assert os.path.exists(udir), "One of the user directories for features doesn't exist:" \
+            assert pexists(udir), "One of the user directories for features doesn't exist:" \
                                          "\n {}".format(udir)
 
         atleast_one_feature_specified = True
         user_feature_type = 'dir_of_dirs'
 
     elif not_unspecified(options.data_matrix_path):
-        user_feature_paths = map(os.path.abspath, options.data_matrix_path)
+        user_feature_paths = map(abspath, options.data_matrix_path)
         for dm in user_feature_paths:
-            assert os.path.exists(dm), "One of the data matrices specified does not exist:\n {}".format(dm)
+            assert pexists(dm), "One of the data matrices specified does not exist:\n {}".format(dm)
 
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
@@ -175,8 +183,8 @@ def parse_args():
     if not atleast_one_feature_specified:
         raise ValueError('Atleast a Freesurfer directory or one user-defined directory or matrix must be specified.')
 
-    outdir = os.path.abspath(options.outdir)
-    if not os.path.exists(outdir):
+    outdir = abspath(options.outdir)
+    if not pexists(outdir):
         try:
             os.mkdir(outdir)
         except:
@@ -272,7 +280,7 @@ def get_dir_of_dirs(featdir, subjid):
     """
 
     feat_names = None
-    featfile = os.path.join(featdir, subjid, 'features.txt')
+    featfile = pjoin(featdir, subjid, 'features.txt')
 
     try:
         data = np.genfromtxt(featfile)
@@ -306,12 +314,32 @@ def get_data_matrix(featpath):
     return matrix
 
 
-def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None, feature_type = 'dir_of_dris'):
-    """Populates the pyradigm data structure with features from a given method.
+def get_features(subjects, classes, featdir, outdir, outname, getmethod = None, feature_type ='dir_of_dris'):
+    """
+    Populates the pyradigm data structure with features from a given method.
 
-    getmethod: takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
+    Parameters
+    ----------
+    subjects : list or ndarray
+        List of subject IDs
+    classes : dict
+        dict of class labels keyed in by subject id
+    featdir : str
+        Path to input directory to read the features from
+    outdir : str
+        Path to output directory to save the gathered features to.
+    outname : str
+        Name of the feature set
+    getmethod : callable
+        Callable that takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
         with an optional array of names for each feature.
-    classes: dict of class labels keyed in by subject id
+    feature_type : str
+        Identifier of data organization for features.
+
+    Returns
+    -------
+    saved_path : str
+        Path where the features have been saved to as an MLDataset
 
     """
 
@@ -349,10 +377,10 @@ def getfeatures(subjects, classes, featdir, outdir, outname, getmethod = None, f
     alert_failed_feature_extraction(len(ids_excluded), ds.num_samples, len(subjects))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
-    savepath = os.path.join(outdir, outname)
-    ds.save(savepath)
+    saved_path = pjoin(outdir, outname)
+    ds.save(saved_path)
 
-    return savepath
+    return saved_path
 
 
 def alert_failed_feature_extraction(num_excluded, num_read, total_num):
@@ -383,7 +411,7 @@ def saved_dataset_matches(ds_path, subjects, classes):
     :returns bool.
     """
 
-    if (not os.path.exists(ds_path)) or (os.path.getsize(ds_path) <= 0):
+    if (not pexists(ds_path)) or (os.path.getsize(ds_path) <= 0):
         return False
     else:
         ds = MLDataset(ds_path)
@@ -419,23 +447,23 @@ def visualize_results(results_file_path, outdir, method_names):
 
     try:
 
-        balacc_fig_path = os.path.join(outdir, 'balanced_accuracy')
+        balacc_fig_path = pjoin(outdir, 'balanced_accuracy')
         visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
                                       num_classes, "Balanced Accuracy")
 
-        confmat_fig_path = os.path.join(outdir, 'confusion_matrix')
+        confmat_fig_path = pjoin(outdir, 'confusion_matrix')
         visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
 
-        cmp_misclf_fig_path = os.path.join(outdir, 'compare_misclf_rates')
+        cmp_misclf_fig_path = pjoin(outdir, 'compare_misclf_rates')
         if num_classes > 2:
             visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
         elif num_classes == 2:
             visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
 
-        featimp_fig_path = os.path.join(outdir, 'feature_importance')
+        featimp_fig_path = pjoin(outdir, 'feature_importance')
         visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
 
-        misclf_out_path = os.path.join(outdir, 'misclassified_subjects')
+        misclf_out_path = pjoin(outdir, 'misclassified_subjects')
         visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
     except:
         traceback.print_exc()
@@ -471,8 +499,8 @@ def export_results(results_file_path, outdir):
     num_datasets = confusion_matrix.shape[3]
 
     # separating CSVs from the PDFs
-    exp_dir = os.path.join(outdir, cfg.EXPORT_DIR_NAME)
-    if not os.path.exists(exp_dir):
+    exp_dir = pjoin(outdir, cfg.EXPORT_DIR_NAME)
+    if not pexists(exp_dir):
         os.mkdir(exp_dir)
 
     # TODO think about how to export predictive probability per class per CV rep
@@ -480,7 +508,7 @@ def export_results(results_file_path, outdir):
 
 
     try:
-        balacc_path = os.path.join(exp_dir, 'balanced_accuracy.csv')
+        balacc_path = pjoin(exp_dir, 'balanced_accuracy.csv')
         np.savetxt(balacc_path, accuracy_balanced,
                    delimiter=cfg.DELIMITER,
                    fmt = cfg.EXPORT_FORMAT,
@@ -488,7 +516,7 @@ def export_results(results_file_path, outdir):
 
         cfmat_reshaped = np.reshape(confusion_matrix, [num_classes*num_classes, num_rep_cv, num_datasets] )
         for mm in range(num_datasets):
-            confmat_path = os.path.join(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
+            confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
             np.savetxt(confmat_path,
                        cfmat_reshaped[:,:,mm].T, # NOTICE the transpose
                        delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
@@ -497,13 +525,13 @@ def export_results(results_file_path, outdir):
         avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
         num_datasets = misclf_rate.shape[0]
         for mm in range(num_datasets):
-            cmp_misclf_path = os.path.join(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
+            cmp_misclf_path = pjoin(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
             np.savetxt(cmp_misclf_path,
                        misclf_rate[mm,:],
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
 
         for mm in range(num_datasets):
-            featimp_path = os.path.join(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
+            featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
             np.savetxt(featimp_path,
                        feature_importances_rf[mm],
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
@@ -511,7 +539,7 @@ def export_results(results_file_path, outdir):
 
         perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
         for mm in range(num_datasets):
-            subwise_misclf_path = os.path.join(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
+            subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
             # TODO there must be a more elegant way to write dict to CSV
             with open(subwise_misclf_path, 'w') as smf:
                 for sid, val in perc_misclsfd[mm].items():
@@ -606,18 +634,18 @@ def import_datasets(method_list, outdir, subjects, classes, feature_path, featur
         method_names.append(method_name)
         out_name = make_dataset_filename(method_name)
 
-        outpath_dataset = os.path.join(outdir, out_name)
+        outpath_dataset = pjoin(outdir, out_name)
         if not saved_dataset_matches(outpath_dataset, subjects, classes):
             # noinspection PyTypeChecker
-            outpath_dataset = getfeatures(subjects, classes,
-                                          feature_path[mm],
-                                          outdir, out_name,
-                                          cur_method, feature_type)
+            outpath_dataset = get_features(subjects, classes,
+                                           feature_path[mm],
+                                           outdir, out_name,
+                                           cur_method, feature_type)
 
         outpath_list.append(outpath_dataset)
 
     combined_name = '_'.join(method_names)
-    dataset_paths_file = os.path.join(outdir, 'datasetlist.' + combined_name+ '.txt')
+    dataset_paths_file = pjoin(outdir, 'datasetlist.' + combined_name+ '.txt')
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
