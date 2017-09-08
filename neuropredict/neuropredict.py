@@ -42,7 +42,7 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="neuropredict")
 
-    parser.add_argument("-m", "--metadatafile", action="store", dest="metadatafile",
+    parser.add_argument("-m", "--meta_file", action="store", dest="metadatafile",
                         default=None, required=True,
                         help="Abs path to file containing metadata for subjects to be included for analysis. At the "
                              "minimum, each subject should have an id per row followed by the class it belongs to. "
@@ -52,11 +52,11 @@ def get_parser():
                              "sub003,disease\n"
                              "sub004,disease\n")
 
-    parser.add_argument("-o", "--outdir", action="store", dest="outdir",
+    parser.add_argument("-o", "--out_dir", action="store", dest="outdir",
                         required=True,
-                        help="Output folder to store features and results.")
+                        help="Output folder to store the gathered features and results.")
 
-    parser.add_argument("-f", "--fsdir", action="store", dest="fsdir",
+    parser.add_argument("-f", "--fs_dir", action="store", dest="fsdir",
                         default=None,
                         help="Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation"
                              " (each subject named after its ID in the metadata file). "
@@ -94,21 +94,21 @@ def get_parser():
                                    "One could use numpy.savetxt(data_array, delimiter=',') or numpy.save(data_array) to save features."
                                    "File format is inferred from its extension.")
 
-    parser.add_argument("-p", "--positiveclass", action="store", dest="positiveclass",
+    parser.add_argument("-p", "--positive_class", action="store", dest="positiveclass",
                         default=None,
                         help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
                              "to be used in calculation of area under the ROC curve. "
                              "Applicable only for binary classification experiments. "
                              "Default: class appearning second in order specified in metadata file.")
 
-    parser.add_argument("-t", "--trainperc", action="store", dest="train_perc",
+    parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
                         default=0.5,
                         help="Percentage of the smallest class to be reserved for training. "
                              "Must be in the interval [0.01 0.99]."
                              "If sample size is sufficiently big, we recommend 0.5."
                              "If sample size is small, or class imbalance is high, choose 0.8.")
 
-    parser.add_argument("-n", "--numrep", action="store", dest="num_rep_cv",
+    parser.add_argument("-n", "--num_rep_cv", action="store", dest="num_rep_cv",
                         default=200,
                         help="Number of repetitions of the repeated-holdout cross-validation. "
                              "The larger the number, the better the estimates will be.")
@@ -118,7 +118,7 @@ def get_parser():
                         help="Name of the atlas to use for visualization."
                              "\nDefault: fsaverage, if available.")
 
-    parser.add_argument("-s", "--subgroup", action="store", dest="subgroup",
+    parser.add_argument("-s", "--sub_groups", action="store", dest="subgroup",
                         nargs="*",
                         default="all",
                         help="This option allows the user to study different combinations of classes in multi-class (N>2) dataset. "
