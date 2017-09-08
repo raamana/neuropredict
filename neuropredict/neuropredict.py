@@ -42,6 +42,13 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="neuropredict")
 
+    help_text_user_defined_folder = """ List of absolute paths to user's own features. Each folder contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. 
+    
+    All the subjects (in a given folder) must have the number of features (#lines in file). Different folders can have different number of features for each subject. 
+    Names of each folder is used to annotate the results in visualizations. Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.
+  E.g. --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ .
+  Only one of user_feature_paths and user_feature_paths options can be specified. """
+
     parser.add_argument("-m", "--meta_file", action="store", dest="metadatafile",
                         default=None, required=True,
                         help="Abs path to file containing metadata for subjects to be included for analysis. At the "
@@ -66,16 +73,7 @@ def get_parser():
     user_defined.add_argument("-u", "--user_feature_paths", action="store", dest="user_feature_paths",
                               nargs = '+', # to allow for multiple features
                               default=None,
-                              help="List of absolute paths to an user's own features."
-                                 "\nEach folder contains a separate folder for each subject "
-                                 "  (named after its ID in the metadata file) "
-                                 "containing a file called features.txt with one number per line.\n"
-                                 "All the subjects (in a given folder) must have the number of features (#lines in file). "
-                                 "Different folders can have different number of features for each subject."
-                                 "\n Names of each folder is used to annotate the results in visualizations. "
-                                 "Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers."
-                                 "\nE.g. --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ ."
-                                 " \n Only one of user_feature_paths and user_feature_paths options can be specified.")
+                              help=help_text_user_defined_folder)
 
     user_defined.add_argument("-d", "--data_matrix_path", action="store", dest="data_matrix_path",
                               nargs = '+',
@@ -118,14 +116,14 @@ def get_parser():
                         help="Name of the atlas to use for visualization."
                              "\nDefault: fsaverage, if available.")
 
-    parser.add_argument("-s", "--sub_groups", action="store", dest="subgroup",
+    parser.add_argument("-s", "--sub_groups", action="store", dest="sub_groups",
                         nargs="*",
                         default="all",
                         help="This option allows the user to study different combinations of classes in multi-class (N>2) dataset. "
                              "For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied"
-                             " with the following flag --subgroup CN,FTD CN,AD . "
+                             " with the following flag --sub_groups CN,FTD CN,AD . "
                              "This allows the user to focus on few interesting subgroups depending on their dataset/goal. "
-                             "Format: each subgroup must be a comma-separated list of classes. "
+                             "Format: each sub-group must be a comma-separated list of classes. "
                              "Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and "
                              "ideally just alphanumeric characters separated by underscores. "
                              "Default: all - using all the available classes in a all-vs-all multi-class setting.")
@@ -200,18 +198,8 @@ def parse_args():
         "Atleast 10 repetitions of CV is recommened."
 
     sample_ids, classes = get_metadata(metadatafile)
-    class_set = set(classes.values())
 
-    subgroups = options.subgroup
-    if subgroups != 'all':
-        for comb in subgroups:
-            for cls in comb.split(','):
-                assert cls in class_set, \
-                    "Class {} in combination {} does not exist in meta data.".format(cls, comb)
-    else:
-        # using all classes
-        subgroups = ','.join(class_set)
-
+    class_set, subgroups, positiveclass = validate_class_set(classes, options.sub_groups, positiveclass)
 
     return sample_ids, classes, outdir, \
            user_feature_paths, user_feature_type, \
@@ -553,32 +541,44 @@ def export_results(results_file_path, outdir):
     return
 
 
-def validate_class_set(classes, positiveclass=None):
-    ""
+def validate_class_set(classes, subgroups, positiveclass=None):
+    "Ensures class names are valid and sub-groups exist."
+
+    class_set = set(classes.values())
+
+    if subgroups != 'all':
+        for comb in subgroups:
+            for cls in comb.split(','):
+                if cls not in class_set:
+                    raise ValueError("Class {} in combination {} "
+                                     "does not exist in meta data.".format(cls, comb))
+    else:
+        # using all classes
+        subgroups = ','.join(class_set)
 
     # the following loop is required to preserve original order
-    # this does not: class_set_in_meta = list(set(classes.values()))
-    class_set_in_meta = list()
-    for x in classes.values():
-        if x not in class_set_in_meta:
-            class_set_in_meta.append(x)
+    # this does not: class_order_in_meta = list(set(classes.values()))
+    class_order_in_meta = list()
+    for x in class_set:
+        if x not in class_order_in_meta:
+            class_order_in_meta.append(x)
 
-    num_classes = len(class_set_in_meta)
+    num_classes = len(class_order_in_meta)
     if num_classes < 2:
         raise ValueError("Atleast two classes are required for predictive analysis! "
                          "Only one given ({})".format(set(classes.values())))
 
     if num_classes == 2:
         if not_unspecified(positiveclass):
-            if positiveclass not in class_set_in_meta:
+            if positiveclass not in class_order_in_meta:
                 raise ValueError('Positive class specified does not exist in meta data.\n'
-                                 'Choose one of {}'.format(class_set_in_meta))
+                                 'Choose one of {}'.format(class_order_in_meta))
             print('Positive class specified for AUC calculation: {}'.format(positiveclass))
         else:
-            positiveclass = class_set_in_meta[-1]
+            positiveclass = class_order_in_meta[-1]
             print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
 
-    return positiveclass
+    return class_set, subgroups, positiveclass
 
 
 def make_dataset_filename(method_name):
@@ -713,8 +713,6 @@ def run():
 
     subjects, classes, outdir, user_feature_paths, user_feature_type, \
         fsdir, train_perc, num_rep_cv, positiveclass, subgroups = parse_args()
-
-    positiveclass = validate_class_set(classes, positiveclass)
 
     feature_dir, method_list = make_method_list(fsdir, user_feature_paths, user_feature_type)
 
