@@ -15,11 +15,11 @@ from pyradigm import MLDataset
 
 if version_info.major==2 and version_info.minor==7:
     import rhst, visualize
-    from freesurfer import *
+    from freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
     import config_neuropredict as cfg
 elif version_info.major > 2:
     from neuropredict import rhst, visualize
-    from neuropredict.freesurfer import *
+    from neuropredict.freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
     from neuropredict import config_neuropredict as cfg
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
@@ -45,19 +45,32 @@ def get_parser():
     help_text_user_defined_folder = """ List of absolute paths to user's own features. Each folder contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. 
     
     All the subjects (in a given folder) must have the number of features (#lines in file). Different folders can have different number of features for each subject. 
+    
     Names of each folder is used to annotate the results in visualizations. Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.
   E.g. --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ .
   Only one of user_feature_paths and user_feature_paths options can be specified. """
 
-    parser.add_argument("-m", "--meta_file", action="store", dest="metadatafile",
+    help_text_pyradigm_paths = """ Path(s) to pyradigm datasets.
+     
+     Each path is self-contained dataset identifying each sample, its class and features.
+     
+     """
+
+    help_text_metadata_file = """Abs path to file containing metadata for subjects to be included for analysis. At the minimum, each subject should have an id per row followed by the class it belongs to.
+     
+    E.g.
+    .. parsed-literal::
+    
+    sub001,control
+    sub002,control
+    sub003,disease
+    sub004,disease
+    
+    """
+
+    parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=True,
-                        help="Abs path to file containing metadata for subjects to be included for analysis. At the "
-                             "minimum, each subject should have an id per row followed by the class it belongs to. "
-                             "E.g. \n"
-                             "sub001,control\n"
-                             "sub002,control\n"
-                             "sub003,disease\n"
-                             "sub004,disease\n")
+                        help=help_text_metadata_file)
 
     parser.add_argument("-o", "--out_dir", action="store", dest="outdir",
                         required=True,
@@ -65,11 +78,15 @@ def get_parser():
 
     parser.add_argument("-f", "--fs_dir", action="store", dest="fsdir",
                         default=None,
-                        help="Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation"
-                             " (each subject named after its ID in the metadata file). "
-                             "\nE.g. --fsdir /project/freesurfer_v5.3")
+                        help="""Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation (each subject named after its ID in the metadata file). E.g. --fsdir /project/freesurfer_v5.3""")
 
     user_defined = parser.add_mutually_exclusive_group()
+
+    user_defined.add_argument("-y", "--pyradigm_paths", action="store", dest="pyradigm_paths",
+                              nargs='+',  # to allow for multiple features
+                              default=None,
+                              help=help_text_pyradigm_paths)
+
     user_defined.add_argument("-u", "--user_feature_paths", action="store", dest="user_feature_paths",
                               nargs = '+', # to allow for multiple features
                               default=None,
@@ -148,8 +165,8 @@ def parse_args():
         parser.exit(1)
 
     # noinspection PyUnboundLocalVariable
-    metadatafile = abspath(options.metadatafile)
-    assert pexists(metadatafile), "Given metadata file doesn't exist."
+    meta_file = abspath(options.meta_file)
+    assert pexists(meta_file), "Given metadata file doesn't exist."
 
     atleast_one_feature_specified = False
     if not_unspecified(options.fsdir):
@@ -175,12 +192,21 @@ def parse_args():
 
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
+
+    elif not_unspecified(options.pyradigm_paths):
+        user_feature_paths = map(abspath, options.pyradigm_paths)
+        for pp in user_feature_paths:
+            assert pexists(pp), "One of pyradigms specified does not exist:\n {}".format(pp)
+
+        atleast_one_feature_specified = True
+        user_feature_type = 'pyradigm'
     else:
         user_feature_paths = None
         user_feature_type  = None
 
     if not atleast_one_feature_specified:
-        raise ValueError('Atleast a Freesurfer directory or one user-defined directory or matrix must be specified.')
+        raise ValueError('Atleast one method specifying features must be specified. '
+                         'It can be a Freesurfer directory, user-defined folder(s), matrix path(s) or pyradigm path(s).')
 
     outdir = abspath(options.outdir)
     if not pexists(outdir):
@@ -197,7 +223,7 @@ def parse_args():
     assert num_rep_cv >= 10, \
         "Atleast 10 repetitions of CV is recommened."
 
-    sample_ids, classes = get_metadata(metadatafile)
+    sample_ids, classes = get_metadata(meta_file)
 
     class_set, subgroups, positiveclass = validate_class_set(classes, options.sub_groups, positiveclass)
 
@@ -303,7 +329,13 @@ def get_data_matrix(featpath):
     return matrix
 
 
-def get_features(subjects, classes, featdir, outdir, outname, getmethod = None, feature_type ='dir_of_dris'):
+def get_pyradigm(feat_path):
+    "Reader of pyradigm."
+
+    return
+
+
+def get_features(subjects, classes, featdir, outdir, outname, get_method = None, feature_type ='dir_of_dris'):
     """
     Populates the pyradigm data structure with features from a given method.
 
@@ -319,7 +351,7 @@ def get_features(subjects, classes, featdir, outdir, outname, getmethod = None, 
         Path to output directory to save the gathered features to.
     outname : str
         Name of the feature set
-    getmethod : callable
+    get_method : callable
         Callable that takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
         with an optional array of names for each feature.
     feature_type : str
@@ -332,7 +364,7 @@ def get_features(subjects, classes, featdir, outdir, outname, getmethod = None, 
 
     """
 
-    assert callable(getmethod), "Supplied getmethod is not callable!" \
+    assert callable(get_method), "Supplied get_method is not callable!" \
                                 "It must take in a path and return a vectorized feature set and labels."
 
     # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
@@ -353,14 +385,14 @@ def get_features(subjects, classes, featdir, outdir, outname, getmethod = None, 
                 data = data_matrix[subjects.index(subjid),:]
                 feat_names = None
             else:
-                data, feat_names = getmethod(featdir, subjid)
+                data, feat_names = get_method(featdir, subjid)
 
             ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
         except:
             ids_excluded.append(subjid)
             traceback.print_exc()
             warnings.warn("Features for {} via {} method could not be read or added. "
-                          "Excluding it.".format(subjid, getmethod.__name__))
+                          "Excluding it.".format(subjid, get_method.__name__))
 
     # warning for if failed to extract features even for one subject
     alert_failed_feature_extraction(len(ids_excluded), ds.num_samples, len(subjects))
@@ -627,6 +659,12 @@ def import_datasets(method_list, outdir, subjects, classes, feature_path, featur
             method_name = os.path.basename(feature_path[mm])
         elif cur_method in [ get_data_matrix ]:
             method_name = os.path.splitext(os.path.basename(feature_path[mm]))[0]
+        elif cur_method in [ get_pyradigm ]:
+            if saved_dataset_matches(outpath_dataset, subjects, classes):
+                outpath_list.append(feature_path[mm])
+                continue
+            else:
+                raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
         else:
             # adding an index for an even more unique identification
             # method_name = '{}_{}'.format(cur_method.__name__,mm)
@@ -673,7 +711,8 @@ def make_method_list(fsdir, user_feature_paths, user_feature_type='dir_of_dirs')
 
     freesurfer_readers = [aseg_stats_subcortical, aseg_stats_whole_brain]
     userdefined_readers= { 'dir_of_dirs': get_dir_of_dirs,
-                           'data_matrix': get_data_matrix }
+                           'data_matrix': get_data_matrix,
+                           'pyradigm' : get_pyradigm}
 
     feature_dir = list()
     method_list = list()
