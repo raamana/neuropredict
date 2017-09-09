@@ -25,9 +25,10 @@ def feature_importance_map(feat_imp,
                            base_output_path,
                            feature_names = None,
                            show_distr = False,
-                           plot_title = 'feature importance'):
+                           plot_title = 'feature importance',
+                           show_all = False):
     """
-    Generates a map/barplot of feature importance.
+        Generates a map/barplot of feature importance.
 
     feat_imp must be a list of length num_datasets,
         each an ndarray of size [num_repetitions,num_features[idx]]
@@ -36,9 +37,28 @@ def feature_importance_map(feat_imp,
     metho_names must be a list of strings of the same length as feat_imp.
     feature_names must be a list (of ndarrays of strings) same size as feat_imp,
         each element being another list of labels corresponding to num_features[idx].
-
-    show_distr, if True, plots the distribution (over different trials of cross-validation)
+        
+    Parameters
+    ----------
+    feat_imp : list
+        List of numpy arrays, each of length num_features
+    method_labels : list
+        List of names for each method (or feature set).
+    base_output_path : str
+    feature_names : list
+        List of names for each feature.
+    show_distr : bool
+        plots the distribution (over different trials of cross-validation)
         of feature importance for each feature.
+    plot_title : str
+        Title of the importance map figure.
+    show_all : bool
+        If true, this will attempt to show the importance values for all the features. 
+        Be advised if you have more than 50 features, the figure would illegible.
+        The default is to show only few important features (ranked by their median importance), when there is more than 25 features.
+
+    Returns
+    -------
 
     """
 
@@ -56,29 +76,46 @@ def feature_importance_map(feat_imp,
     for dd in range(num_datasets):
 
         num_features = feat_imp[dd].shape[1]
-        feat_ticks = range(num_features)
         if feature_names is None:
             feat_labels = [ "f{}".format(ix) for ix in feat_ticks]
         else:
             feat_labels = feature_names[dd]
             assert len(feat_labels)==num_features
 
+        if num_features > cfg.max_allowed_num_features_importance_map:
+            print('Too many (n={}) features detected.\n'
+                  'Showing only the top {} in to make the map legible.\n'
+                  'Use the exported results to plot your own feature importance maps.'.format(num_features,
+                cfg.max_allowed_num_features_importance_map))
+            median_feat_imp = np.median(feat_imp[dd], axis=0)
+            sort_indices = np.argsort(median_feat_imp)[::-1] # ascending order, then reversing
+            selected_indices = sort_indices[:cfg.max_allowed_num_features_importance_map]
+            selected_feat_imp = feat_imp[dd][:,selected_indices]
+            selected_feat_names = feat_labels[selected_indices]
+            effective_num_features = cfg.max_allowed_num_features_importance_map
+        else:
+            selected_feat_imp = feat_imp[dd]
+            selected_feat_names = feat_labels
+            effective_num_features = num_features
+
+        feat_ticks = range(effective_num_features)
+
         plt.sca(ax[dd])
         # violin distribution or stick bar plot?
         if show_distr:
-            line_coll = ax[dd].violinplot(feat_imp[dd],
+            line_coll = ax[dd].violinplot(selected_feat_imp,
                                           positions=feat_ticks,
                                           widths=0.8, bw_method=0.2,
                                           vert=False,
                                           showmedians=True, showextrema=False)
-            cmap = cm.get_cmap(cfg.CMAP_FEAT_IMP, num_features)
+            cmap = cm.get_cmap(cfg.CMAP_FEAT_IMP, effective_num_features)
             for cc, ln in enumerate(line_coll['bodies']):
                 ln.set_facecolor(cmap(cc))
                 #ln.set_label(feat_labels[cc])
         else:
-            median_feat_imp = np.median(feat_imp[dd], axis=0)
-            stdev_feat_imp  = np.nanstd(feat_imp[dd], axis=0)
-            barwidth = 8.0 / num_features
+            median_feat_imp = np.median(selected_feat_imp, axis=0)
+            stdev_feat_imp  = np.nanstd(selected_feat_imp, axis=0)
+            barwidth = 8.0 / effective_num_features
             rects = ax[dd].barh(feat_ticks, median_feat_imp,
                                height=barwidth, xerr=stdev_feat_imp)
 
@@ -89,7 +126,7 @@ def feature_importance_map(feat_imp,
 
         ax[dd].set_yticks(feat_ticks)
         ax[dd].set_ylim(np.min(feat_ticks) - 1, np.max(feat_ticks) + 1)
-        ax[dd].set_yticklabels(feat_labels) #, rotation=45)  # 'vertical'
+        ax[dd].set_yticklabels(selected_feat_names) #, rotation=45)  # 'vertical'
         ax[dd].set_title(method_labels[dd])
 
 
@@ -104,7 +141,6 @@ def feature_importance_map(feat_imp,
     pp1 = PdfPages(base_output_path + '.pdf')
     pp1.savefig()
     pp1.close()
-
 
     return
 
@@ -471,16 +507,18 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         if dd == 0:
             this_method_label = this_method_label + 'most frequently misclassfied'
 
+        # for plotting
         if num_datasets > 1 and separate_plots:
             ax_h = ax[dd]
             plt.sca(ax_h)
             ax_h.hist(perc_misclsfd[dd].values(), num_bins)  # label = method_labels[dd]
         else:
             # TODO smoother kde plots?
-            ax_h.hist(perc_misclsfd[dd].values(), num_bins,
+            ax_h.hist(list(perc_misclsfd[dd].values()), num_bins,
                       histtype = 'stepfilled', alpha = cfg.MISCLF_HIST_ALPHA,
                       label = this_method_label)
 
+        # for annotation
         if num_datasets > 1 and separate_plots:
             ax_h.set_title(this_method_label)
             annnotate_plots(ax_h)

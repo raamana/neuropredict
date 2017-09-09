@@ -19,7 +19,10 @@ MISCLF_HIST_ANNOT_LINEWIDTH = 2
 COMMON_FIG_SIZE = [9, 9]
 CMAP_DATASETS = 'Paired'
 CMAP_CONFMATX = plt.cm.Blues
+
+
 CMAP_FEAT_IMP = 'hsv'
+max_allowed_num_features_importance_map = 50
 
 file_name_results = 'rhst_results.pkl'
 EXPORT_DIR_NAME = 'exported_results'
