@@ -280,7 +280,10 @@ def run(dataset_path_file, method_names, out_results_dir,
     num_datasets = int(len(datasets))
     # looking into the first dataset
     common_ds = datasets[0]
-    class_set, label_set, class_sizes = common_ds.summarize_classes()
+    class_set, label_set_in_ds, class_sizes = common_ds.summarize_classes()
+    # below code turns the labels numeric regardless of dataset
+    label_set = list(range(len(label_set_in_ds)))
+
     num_samples = common_ds.num_samples
     num_classes = len(class_set)
 

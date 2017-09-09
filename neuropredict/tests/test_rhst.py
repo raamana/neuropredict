@@ -10,7 +10,7 @@ sys.dont_write_bytecode = True
 from pyradigm import MLDataset
 
 if version_info.major==2 and version_info.minor==7:
-    from neuropredict import rhst
+    import rhst
 elif version_info.major > 2:
     from neuropredict import rhst
 else:
@@ -90,7 +90,7 @@ def test_chance_classifier_binary():
         lf.writelines('\n'.join([out_path, ]))
 
     res_path = rhst.run(out_list, ['random'], out_dir,
-                        train_perc=0.5, num_repetitions=200)
+                        train_perc=0.5, num_repetitions=100)
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
