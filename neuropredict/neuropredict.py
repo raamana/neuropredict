@@ -1,8 +1,9 @@
 #/usr/bin/python
 
-__all__ = ['run', 'get_parser' ]
+__all__ = ['run_cli', 'get_parser']
 
 import argparse
+import os
 import sys
 import traceback
 import warnings
@@ -11,6 +12,7 @@ from time import localtime, strftime
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath
 
+import numpy as np
 from pyradigm import MLDataset
 
 if version_info.major==2 and version_info.minor==7:
@@ -109,7 +111,7 @@ def get_parser():
                                    "One could use numpy.savetxt(data_array, delimiter=',') or numpy.save(data_array) to save features."
                                    "File format is inferred from its extension.")
 
-    parser.add_argument("-p", "--positive_class", action="store", dest="positiveclass",
+    parser.add_argument("-p", "--positive_class", action="store", dest="positive_class",
                         default=None,
                         help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
                              "to be used in calculation of area under the ROC curve. "
@@ -225,13 +227,13 @@ def parse_args():
 
     sample_ids, classes = get_metadata(meta_file)
 
-    class_set, subgroups, positiveclass = validate_class_set(classes, options.sub_groups, positiveclass)
+    class_set, subgroups, positive_class = validate_class_set(classes, options.sub_groups, options.positive_class)
 
     return sample_ids, classes, outdir, \
            user_feature_paths, user_feature_type, \
            fsdir, \
            train_perc, num_rep_cv, \
-           options.positiveclass, subgroups
+           positive_class, subgroups
 
 
 def get_metadata(path):
@@ -742,7 +744,7 @@ def make_method_list(fsdir, user_feature_paths, user_feature_type='dir_of_dirs')
     return feature_dir, method_list
 
 
-def run():
+def run_cli():
     """
     Main entry point.
     
@@ -768,4 +770,4 @@ def run():
     export_results(results_file_path, outdir)
 
 if __name__ == '__main__':
-    run()
+    run_cli()
