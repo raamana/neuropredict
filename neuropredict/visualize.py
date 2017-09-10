@@ -175,7 +175,7 @@ def confusion_matrices(cfmat_array, class_labels,
         clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
         cfmat = np.divide(avg_cfmat, clsiz_elemwise)
         # human readable in 0-100%, 3 deciamls
-        cfmat = 100 * np.around(cfmat, decimals=3)
+        cfmat = 100 * np.around(cfmat, decimals=cfg.PRECISION_METRICS)
 
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
@@ -222,7 +222,7 @@ def compute_pairwise_misclf(cfmat_array):
         clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
         avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
         # making it human readable : 0-100%
-        avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=3)
+        avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=cfg.PRECISION_METRICS)
 
         count = 0
         for ii, jj in itertools.product(range(num_classes), range(num_classes)):
@@ -573,17 +573,19 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major')
 
-    lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), 3)
-    upper_lim = np.round(np.max([ 1.01, metric.max() ]), 3)
-    step_tick = 0.1
+    lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), cfg.PRECISION_METRICS)
+    upper_lim = np.round(np.min([ 1.01, metric.max() ]), cfg.PRECISION_METRICS)
+    step_tick = 0.05
     ax.set_ylim(lower_lim, upper_lim)
 
     ax.set_xticks(method_ticks)
     ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
     ax.set_xticklabels(labels, rotation=45)  # 'vertical'
 
-    ax.set_yticks(np.arange(lower_lim, upper_lim, step_tick))
-    ax.set_yticklabels(np.arange(lower_lim, upper_lim, step_tick))
+    ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
+    ytick_loc = np.append(ytick_loc, 1/num_classes)
+    ax.set_yticks(ytick_loc)
+    ax.set_yticklabels(ytick_loc)
     # plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(metric_label, fontsize=16)
 
