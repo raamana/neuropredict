@@ -3,14 +3,18 @@ import numpy as np
 import os
 import sys
 from sys import version_info
-from os.path import join as pjoin, exists as pexists, realpath
+from os.path import join as pjoin, exists as pexists, realpath, dirname, abspath
 
 sys.dont_write_bytecode = True
 
 from pyradigm import MLDataset
 
+if __name__ == '__main__' and __package__ is None:
+    parent_dir = dirname(dirname(abspath(__file__)))
+    sys.path.append(parent_dir)
+
 if version_info.major==2 and version_info.minor==7:
-    import rhst
+    from neuropredict import rhst
 elif version_info.major > 2:
     from neuropredict import rhst
 else:

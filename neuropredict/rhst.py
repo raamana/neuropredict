@@ -491,11 +491,11 @@ def run(dataset_path_file, method_names, out_results_dir,
     median_bal_acc = np.median(accuracy_balanced, axis=0)
     median_wtd_auc = np.median(auc_weighted, axis=0)
 
-    print('median balanced accuracy and median weighted AUC: ')
+    print('\n\nmedian balanced accuracy and median weighted AUC: ')
     for dd in range(num_datasets):
         print("\t feature {index:3d} {name:>{namewidth}} : {accuracy:2.2f} {auc:2.2f}".format(index=dd,
             name=method_names[dd], namewidth=max_width_method_names,
-            accuracy=median_bal_acc[dd], auc=median_wtd_auc[dd]), end='')
+            accuracy=median_bal_acc[dd], auc=median_wtd_auc[dd]))
 
     # save results
     var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,
