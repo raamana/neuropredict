@@ -1,4 +1,4 @@
-#/usr/bin/env python
+from __future__ import print_function
 
 __all__ = ['run_cli', 'get_parser']
 
@@ -47,22 +47,19 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="neuropredict")
 
-    help_text_user_defined_folder = """ List of absolute paths to user's own features. Each folder contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. 
-    
-    All the subjects (in a given folder) must have the number of features (#lines in file). Different folders can have different number of features for each subject. 
-    
-    Names of each folder is used to annotate the results in visualizations. Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.
-  E.g. --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ .
-  Only one of user_feature_paths and user_feature_paths options can be specified. """
+    help_text_fs_dir = """Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation (each subject named after its ID in the metadata file). E.g. --fs_subject_dir /project/freesurfer_v5.3"""
+    help_text_user_defined_folder = """ List of absolute paths to user's own features. Each folder contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. All the subjects (in a given folder) must have the number of features (#lines in file). Different folders can have different number of features for each subject. Names of each folder is used to annotate the results in visualizations. Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers. E.g. --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ . Only one of user_feature_paths and user_feature_paths options can be specified. """
+    help_text_pyradigm_paths = """ Path(s) to pyradigm datasets. Each path is self-contained dataset identifying each sample, its class and features. """
+    help_text_data_matrix = "List of absolute paths to text files containing one matrix of size N x p  (num_samples x num_features).  Each row in the data matrix file must represent data corresponding  to sample in the same row of the meta data file (meta data file and data matrix must be in row-wise correspondence). Name of this file will be used to annotate the results and visualizations.\nE.g. --data_matrix_path /project/fmri.csv /project/dti.csv /project/t1_volumes.csv.  \n Only one of user_feature_paths and user_feature_paths options can be specified.File format could be 1) a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with numpy.loadtxt(filepath, delimiter=',') or 2) a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath). One could use numpy.savetxt(data_array, delimiter=',') or numpy.save(data_array) to save features. File format is inferred from its extension."
 
-    help_text_pyradigm_paths = """ Path(s) to pyradigm datasets.
-     
-     Each path is self-contained dataset identifying each sample, its class and features.
-     
-     """
+    help_text_positive_class = "Name of the positive class (Alzheimers, MCI or Parkinsons etc) to be used in calculation of area under the ROC curve. Applicable only for binary classification experiments. Default: class appearning second in order specified in metadata file."
+    help_text_train_perc = "Percentage of the smallest class to be reserved for training. Must be in the interval [0.01 0.99].If sample size is sufficiently big, we recommend 0.5.If sample size is small, or class imbalance is high, choose 0.8."
+
+    help_text_num_rep_cv = "Number of repetitions of the repeated-holdout cross-validation. The larger the number, the better the estimates will be."
+    help_text_sub_groups = "This option allows the user to study different combinations of classes in multi-class (N>2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied with the following flag --sub_groups CN,FTD CN,AD . This allows the user to focus on few interesting subgroups depending on their dataset/goal. Format: each sub-group must be a comma-separated list of classes. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Default: all - using all the available classes in a all-vs-all multi-class setting."
 
     help_text_metadata_file = """Abs path to file containing metadata for subjects to be included for analysis. At the minimum, each subject should have an id per row followed by the class it belongs to.
-     
+    
     E.g.
     .. parsed-literal::
     
@@ -72,6 +69,8 @@ def get_parser():
     sub004,disease
     
     """
+
+    help_text_feature_selection = "Number of features to select as part of feature selection. The larger the number, the better the estimates will be. Default: \'tenth\' of the smallest class in the training set. For example, if smallest class has only 40 samples, you chose 50 percent for training (default),  then Y will have 40*.5=20 samples in training set, leading to 2 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features."
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=True,
@@ -83,7 +82,7 @@ def get_parser():
 
     parser.add_argument("-f", "--fs_subject_dir", action="store", dest="fs_subject_dir",
                         default=None,
-                        help="""Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation (each subject named after its ID in the metadata file). E.g. --fs_subject_dir /project/freesurfer_v5.3""")
+                        help=help_text_fs_dir)
 
     user_defined = parser.add_mutually_exclusive_group()
 
@@ -100,38 +99,23 @@ def get_parser():
     user_defined.add_argument("-d", "--data_matrix_path", action="store", dest="data_matrix_path",
                               nargs = '+',
                               default=None,
-                              help="List of absolute paths to text files containing one matrix "
-                                 " of size N x p (num_samples x num_features). "
-                                 " Each row in the data matrix file must represent data corresponding "
-                                 " to sample in the same row of the meta data file "
-                                   "(meta data file and data matrix must be in row-wise correspondence). "
-                                 "Name of this file will be used to annotate the results and visualizations."
-                                 "\nE.g. --data_matrix_path /project/fmri.csv /project/dti.csv /project/t1_volumes.csv. "
-                                 " \n Only one of user_feature_paths and user_feature_paths options can be specified."
-                                 "File format could be 1) a simple comma-separated text file (with extension .csv or .txt): "
-                                   "which can easily be read back with numpy.loadtxt(filepath, delimiter=',') or "
-                                   "2) a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath). "
-                                   "One could use numpy.savetxt(data_array, delimiter=',') or numpy.save(data_array) to save features."
-                                   "File format is inferred from its extension.")
+                              help=help_text_data_matrix)
 
     parser.add_argument("-p", "--positive_class", action="store", dest="positive_class",
                         default=None,
-                        help="Name of the positive class (Alzheimers, MCI or Parkinsons etc) "
-                             "to be used in calculation of area under the ROC curve. "
-                             "Applicable only for binary classification experiments. "
-                             "Default: class appearning second in order specified in metadata file.")
+                        help= help_text_positive_class)
 
     parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
                         default=0.5,
-                        help="Percentage of the smallest class to be reserved for training. "
-                             "Must be in the interval [0.01 0.99]."
-                             "If sample size is sufficiently big, we recommend 0.5."
-                             "If sample size is small, or class imbalance is high, choose 0.8.")
+                        help=help_text_train_perc)
 
     parser.add_argument("-n", "--num_rep_cv", action="store", dest="num_rep_cv",
                         default=200,
-                        help="Number of repetitions of the repeated-holdout cross-validation. "
-                             "The larger the number, the better the estimates will be.")
+                        help=help_text_num_rep_cv)
+
+    parser.add_argument("-k", "--num_features_to_select", dest="num_features_to_select",
+                        action="store", default= cfg.default_num_features_to_select,
+                        help=help_text_feature_selection)
 
     parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
                         default="fsaverage",
@@ -141,14 +125,7 @@ def get_parser():
     parser.add_argument("-s", "--sub_groups", action="store", dest="sub_groups",
                         nargs="*",
                         default="all",
-                        help="This option allows the user to study different combinations of classes in multi-class (N>2) dataset. "
-                             "For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied"
-                             " with the following flag --sub_groups CN,FTD CN,AD . "
-                             "This allows the user to focus on few interesting subgroups depending on their dataset/goal. "
-                             "Format: each sub-group must be a comma-separated list of classes. "
-                             "Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and "
-                             "ideally just alphanumeric characters separated by underscores. "
-                             "Default: all - using all the available classes in a all-vs-all multi-class setting.")
+                        help=help_text_sub_groups)
 
     return parser
 
@@ -236,11 +213,40 @@ def parse_args():
 
     class_set, subgroups, positive_class = validate_class_set(classes, user_args.sub_groups, user_args.positive_class)
 
+    feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
+
     return sample_ids, classes, outdir, \
            user_feature_paths, user_feature_type, \
            fs_subject_dir, \
            train_perc, num_rep_cv, \
-           positive_class, subgroups
+           positive_class, subgroups, feature_selection_size
+
+
+def validate_feature_selection_size(feature_select_method, dim_in_data=None):
+    "Ensures valid method / input."
+
+    if feature_select_method.lower() in cfg.feature_selection_size_methods:
+        num_select = feature_select_method
+    elif feature_select_method.isdigit():
+        num_select = np.int64(feature_select_method)
+        if not 0 < num_select < np.Inf:
+            raise UnboundLocalError('feature selection size out of bounds.\n'
+                                    'Must be > 0 and < {}'.format(np.Inf))
+    else:
+        raise ValueError('Invalid choise - Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
+
+    # if feature_select_method.lower() not in cfg.feature_selection_size_methods:
+    #     # assuming it was an integer specified
+    #     if feature_select_method.isdigit():
+    #         num_select = np.int64(feature_select_method)
+    #         if not 0 < num_select <= dim_in_data:
+    #             raise UnboundLocalError('feature selection size out of bounds.\n'
+    #                                     'Must be > 0 and < {}'.format(dim_in_data))
+    # else:
+    #     raise NotImplementedError('Give method for computing size of feature selection is not implemented.\n'
+    #                               'Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
+
+    return num_select
 
 
 def get_metadata(path):
@@ -431,7 +437,7 @@ def alert_failed_feature_extraction(num_excluded, num_read, total_num):
     return allowed_to_proceed
 
 
-def saved_dataset_matches(ds_path, subjects, classes):
+def saved_dataset_matches(dataset_spec, subjects, classes):
     """
     Checks if the dataset on disk contains requested samples with the same classes
 
@@ -440,8 +446,8 @@ def saved_dataset_matches(ds_path, subjects, classes):
 
     Parameters
     ----------
-    ds_path : MLDataset
-        dataset object
+    dataset_spec : MLDataset or str
+        dataset object, or path to one.
     subjects : list
         sample ids
     classes : dict
@@ -453,14 +459,20 @@ def saved_dataset_matches(ds_path, subjects, classes):
 
     """
 
-    if (not pexists(ds_path)) or (os.path.getsize(ds_path) <= 0):
-        return False
-    else:
-        ds = MLDataset(ds_path)
-        if set(ds.class_set) != set(classes.values()) or set(ds.sample_ids) != set(subjects):
+    if isinstance(dataset_spec, str):
+        if (not pexists(dataset_spec)) or (os.path.getsize(dataset_spec) <= 0):
             return False
         else:
-            return True
+            ds = MLDataset(dataset_spec)
+    elif isinstance(dataset_spec, MLDataset):
+            ds = dataset_spec
+    else:
+        raise ValueError('Input must be a path or MLDataset.')
+
+    if set(ds.class_set) != set(classes.values()) or set(ds.sample_ids) != set(subjects):
+        return False
+    else:
+        return True
 
 
 def make_visualizations(results_file_path, outdir, method_names):
@@ -696,9 +708,13 @@ def import_datasets(method_list, outdir, subjects, classes, feature_path, featur
         elif cur_method in [ get_data_matrix ]:
             method_name = os.path.splitext(basename(feature_path[mm]))[0]
         elif cur_method in [ get_pyradigm ]:
-            method_name = basename(feature_path[mm])
+            loaded_dataset = MLDataset(feature_path[mm])
+            if len(loaded_dataset.description) > 1:
+                method_name = loaded_dataset.description.replace(' ', '_')
+            else:
+                method_name = basename(feature_path[mm])
             method_names.append(method_name)
-            if saved_dataset_matches(feature_path[mm], subjects, classes):
+            if saved_dataset_matches(loaded_dataset, subjects, classes):
                 outpath_list.append(feature_path[mm])
                 continue
             else:
@@ -789,7 +805,8 @@ def run_cli():
     # TODO design an API interface for advanced access as an importable package
 
     subjects, classes, outdir, user_feature_paths, user_feature_type, \
-        fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups = parse_args()
+        fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
+        feature_selection_size = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
@@ -799,7 +816,8 @@ def run_cli():
 
     results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
                                  train_perc=train_perc, num_repetitions=num_rep_cv,
-                                 positive_class= positiveclass)
+                                 positive_class= positiveclass,
+                                 feat_sel_size=feature_selection_size)
 
     make_visualizations(results_file_path, outdir, method_names)
 

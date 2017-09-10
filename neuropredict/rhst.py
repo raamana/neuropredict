@@ -21,19 +21,26 @@ else:
 from pyradigm import MLDataset
 
 
-def eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM):
+def eval_optimized_clsfr_on_testset(train_fs, test_fs,
+                                    label_order_in_CM=None,
+                                    feat_sel_size=cfg.default_num_features_to_select):
     "Method to optimize the classifier on the training set and return predictions on test set. "
 
-    MAX_DIM_FOR_TRAINING = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples, train_fs.num_features)
+    if label_order_in_CM is None:
+        raise ValueError('Label order for confusion matrix must be specified for accurate results/visulizations.')
+
+    # reduced_dim = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples, train_fs.num_features)
+    train_class_sizees = list(train_fs.class_sizes.values())
+    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizees, train_fs.num_features)
 
     range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
-    range_num_predictors = range(1, MAX_DIM_FOR_TRAINING, cfg.NUM_PREDICTORS_STEP)
+    range_num_predictors = range(1, reduced_dim, cfg.NUM_PREDICTORS_STEP)
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
         range_min_leafsize = [ 1 ]
     if len(range_num_predictors) < 1:
-        range_num_predictors = [MAX_DIM_FOR_TRAINING]
+        range_num_predictors = [reduced_dim]
 
     oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
 
@@ -99,15 +106,66 @@ def max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
 
     """
 
-    if num_samples < 1/(2*perc_prob_error_allowed):
+    if num_samples < 1.0/(2.0*perc_prob_error_allowed):
         max_red_dim = 1
     else:
-        max_red_dim = np.floor(num_samples * (2*perc_prob_error_allowed))
+        max_red_dim = np.floor(num_samples * (2.0*perc_prob_error_allowed))
 
     # to ensure we don't request more features than available
     max_red_dim = np.int64( min(max_red_dim, num_features) )
 
     return max_red_dim
+
+
+def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_dim):
+    """
+    Estimates the number of features to retain for feature selection based on method chosen.
+
+    Parameters
+    ----------
+    select_method : str
+        Type of feature selection.
+    train_class_sizes : iterable
+        Sizes of all classes in training set.
+    train_data_dim : int
+        Data dimensionality for the feature set.
+
+    Returns
+    -------
+    reduced_dim : int
+        Reduced dimensionality n, such that 1 <= n <= train_data_dim.
+
+    Raises
+    ------
+    ValueError
+        If method choices were invalid.
+    """
+
+    def do_sqrt(size):
+        return np.floor(np.sqrt(size))
+
+    def do_tenth(size):
+        return np.floor(size/10)
+
+    get_reduced_dim = {'tenth': do_tenth,
+                       'sqrt' : do_sqrt}
+
+    if isinstance(select_method, str):
+        smallest_class_size = np.min(train_class_sizes)
+        calc_size = get_reduced_dim[select_method](smallest_class_size)
+        reduced_dim = min(calc_size, train_data_dim)
+    else:
+        if select_method > train_data_dim:
+            reduced_dim = train_data_dim
+            print('Reducing the feature selection size to {}, '
+                  'to accommondate the current feature set.'.format(train_data_dim))
+        else:
+            reduced_dim = select_method
+
+    # ensuring it is an integer >= 1
+    reduced_dim = np.int64(np.max([reduced_dim, 1]))
+
+    return reduced_dim
 
 
 def chance_accuracy(class_sizes):
@@ -203,7 +261,8 @@ def load_results(results_file_path):
 
 def run(dataset_path_file, method_names, out_results_dir,
         train_perc = 0.8, num_repetitions = 200,
-        positive_class = None):
+        positive_class = None,
+        feat_sel_size=cfg.default_num_features_to_select):
     """
 
     Parameters
@@ -224,7 +283,10 @@ def run(dataset_path_file, method_names, out_results_dir,
         Number of repetitions of cross-validation estimation. Default: 200.
     positive_class : str
         Name of the class to be treated as positive in calculation of AUC
-
+    feat_sel_size : str or int
+        Number of features to retain after feature selection.
+        Must be a method (tenth or square root of the size of smallest class in training set,
+            or a finite integer smaller than the data dimensionality.
     Returns
     -------
     results_path : str
@@ -395,9 +457,9 @@ def run(dataset_path_file, method_names, out_results_dir,
             # print("\t feature {:3d} {:>{}}: ".format(dd, method_names[dd], max_width_method_names), end='')
             print("\t feature {index:3d} {name:>{namewidth}} : ".format(index=dd,
                                                                        name=method_names[dd],
-                                                                       namewidth=max_width_method_names),
-                  end='')
+                                                                       namewidth=max_width_method_names), end='')
 
+            # using the same train/test sets for all feature sets.
             train_fs = datasets[dd].get_subset(train_set)
             test_fs  = datasets[dd].get_subset(test_set)
 
@@ -405,7 +467,9 @@ def run(dataset_path_file, method_names, out_results_dir,
                 pred_labels_per_rep_fs[rep, dd, :], true_test_labels, \
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
-                eval_optimized_clsfr_on_testset(train_fs, test_fs, label_order_in_CM=label_set)
+                eval_optimized_clsfr_on_testset(train_fs, test_fs,
+                                                label_order_in_CM=label_set,
+                                                feat_sel_size=feat_sel_size)
 
             accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat
@@ -424,9 +488,14 @@ def run(dataset_path_file, method_names, out_results_dir,
 
             print('')
 
-    median_bal_acc = np.median(accuracy_balanced)
-    median_wtd_auc = np.median(auc_weighted)
-    print('\n median balanced accuracy : {} \n median weighted AUC : {}'.format(median_bal_acc, median_wtd_auc))
+    median_bal_acc = np.median(accuracy_balanced, axis=0)
+    median_wtd_auc = np.median(auc_weighted, axis=0)
+
+    print('median balanced accuracy and median weighted AUC: ')
+    for dd in range(num_datasets):
+        print("\t feature {index:3d} {name:>{namewidth}} : {accuracy:2.2f} {auc:2.2f}".format(index=dd,
+            name=method_names[dd], namewidth=max_width_method_names,
+            accuracy=median_bal_acc[dd], auc=median_wtd_auc[dd]), end='')
 
     # save results
     var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,

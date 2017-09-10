@@ -84,7 +84,7 @@ def feature_importance_map(feat_imp,
 
         if num_features > cfg.max_allowed_num_features_importance_map:
             print('Too many (n={}) features detected.\n'
-                  'Showing only the top {} in to make the map legible.\n'
+                  'Showing only the top {} to make the map legible.\n'
                   'Use the exported results to plot your own feature importance maps.'.format(num_features,
                 cfg.max_allowed_num_features_importance_map))
             median_feat_imp = np.median(feat_imp[dd], axis=0)
