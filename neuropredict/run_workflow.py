@@ -78,7 +78,7 @@ def get_parser():
 
     parser.add_argument("-o", "--out_dir", action="store", dest="outdir",
                         required=True,
-                        help="Output folder to store the gathered features and results.")
+                        help="Output folder to store gathered features & results.")
 
     parser.add_argument("-f", "--fs_subject_dir", action="store", dest="fs_subject_dir",
                         default=None,

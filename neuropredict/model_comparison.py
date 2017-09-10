@@ -7,21 +7,28 @@ from scipy.stats import friedmanchisquare
 def vertical_nemenyi_plot(data, num_reps,
                           alpha = 0.05,
                           cmap = plt.cm.Greens):
-    """Vertical Nemenyi plot to compare model ranks and show differences.
+    """Vertical Nemenyi plot to compare model ranks and show differences."""
 
+    #Take a look at this implementation also:
+    # https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
 
-    Take a look at this implementation also:
-    https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
+    pass
 
-    """
-
+    return
 
 
 def nemenyi_test():
-    """Nemenyi test.
+    """
+    Nemenyi post-hoc analysis.
 
-
-    Take a look at this implementation also:
-    https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
+    Returns
+    -------
 
     """
+
+    # Take a look at this implementation also:
+    # https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
+
+    pass
+
+    return

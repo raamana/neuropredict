@@ -24,7 +24,24 @@ from pyradigm import MLDataset
 def eval_optimized_clsfr_on_testset(train_fs, test_fs,
                                     label_order_in_CM=None,
                                     feat_sel_size=cfg.default_num_features_to_select):
-    "Method to optimize the classifier on the training set and return predictions on test set. "
+    """
+    Optimize the classifier on the training set and return predictions on test set.
+
+    Parameters
+    ----------
+    train_fs : MLDataset
+        Dataset to optimize a given classifier on.
+    test_fs : MLDataset
+        Dataset to make predictions on using the classifier optimized on training set.
+    label_order_in_CM : list
+        List of labels to compute the order of confusion matrix.
+    feat_sel_size : str or int
+        Metho to choose the number of featurese to select
+
+    Returns
+    -------
+
+    """
 
     if label_order_in_CM is None:
         raise ValueError('Label order for confusion matrix must be specified for accurate results/visulizations.')
@@ -84,7 +101,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs,
            feat_importance, best_minleafsize, best_num_predictors
 
 
-def max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
+def __max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
                                                       perc_prob_error_allowed = cfg.PERC_PROB_ERROR_ALLOWED):
     """
     Computes the largest dimensionality that can be used to train a predictive model
@@ -172,8 +189,14 @@ def chance_accuracy(class_sizes):
     """
     Computes the chance accuracy for a given set of classes with varying sizes.
 
-    :param class_sizes:
-    :return:
+    Parameters
+    ----------
+    class_sizes : list
+        List of sizes of the classes.
+
+    Returns
+    -------
+
     """
 
     num_classes = len(class_sizes)
@@ -287,6 +310,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         Number of features to retain after feature selection.
         Must be a method (tenth or square root of the size of smallest class in training set,
             or a finite integer smaller than the data dimensionality.
+
     Returns
     -------
     results_path : str
