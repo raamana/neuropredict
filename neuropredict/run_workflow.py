@@ -5,6 +5,7 @@ __all__ = ['run_cli', 'get_parser']
 import argparse
 import os
 import sys
+import re
 import traceback
 import warnings
 from collections import Counter
@@ -76,7 +77,7 @@ def get_parser():
                         default=None, required=True,
                         help=help_text_metadata_file)
 
-    parser.add_argument("-o", "--out_dir", action="store", dest="outdir",
+    parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=True,
                         help="Output folder to store gathered features & results.")
 
@@ -194,12 +195,12 @@ def parse_args():
         raise ValueError('Atleast one method specifying features must be specified. '
                          'It can be a Freesurfer directory, user-defined folder(s), matrix path(s) or pyradigm path(s).')
 
-    outdir = abspath(user_args.outdir)
-    if not pexists(outdir):
+    out_dir = abspath(user_args.out_dir)
+    if not pexists(out_dir):
         try:
-            os.mkdir(outdir)
+            os.mkdir(out_dir)
         except:
-            raise
+            raise IOError('Output folder could not be created.')
 
     train_perc = np.float32(user_args.train_perc)
     assert (train_perc >= 0.01 and train_perc <= 0.99), \
@@ -215,7 +216,7 @@ def parse_args():
 
     feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
 
-    return sample_ids, classes, outdir, \
+    return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, \
            fs_subject_dir, \
            train_perc, num_rep_cv, \
@@ -669,7 +670,7 @@ def make_dataset_filename(method_name):
     return file_name
 
 
-def import_datasets(method_list, outdir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
+def import_datasets(method_list, out_dir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
     """
     Imports all the specified feature sets and organizes them into datasets.
      
@@ -677,7 +678,7 @@ def import_datasets(method_list, outdir, subjects, classes, feature_path, featur
     ----------
     method_list : list of callables
         Set of predefined methods returning a vector of features for a given sample id and location
-    outdir : str
+    out_dir : str
         Path to the output folder
 
     subjects : list of str
@@ -727,22 +728,41 @@ def import_datasets(method_list, outdir, subjects, classes, feature_path, featur
         method_names.append(method_name)
         out_name = make_dataset_filename(method_name)
 
-        outpath_dataset = pjoin(outdir, out_name)
+        outpath_dataset = pjoin(out_dir, out_name)
         if not saved_dataset_matches(outpath_dataset, subjects, classes):
             # noinspection PyTypeChecker
             outpath_dataset = get_features(subjects, classes,
                                            feature_path[mm],
-                                           outdir, out_name,
+                                           out_dir, out_name,
                                            cur_method, feature_type)
 
         outpath_list.append(outpath_dataset)
 
-    combined_name = '_'.join(method_names)
-    dataset_paths_file = pjoin(outdir, 'datasetlist.' + combined_name+ '.txt')
+    combined_name = uniq_combined_name(method_names)
+
+    dataset_paths_file = pjoin(out_dir, 'datasetlist.' + combined_name + '.txt')
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
     return method_names, dataset_paths_file
+
+
+def uniq_combined_name(method_names, max_len=180, num_char_each_word=1):
+    "Function to produce a uniq, and not a long combined name. Recursive"
+
+    re_delimiters_word = '_|; |, |\*|\n'
+    combined_name = '_'.join(method_names)
+    # depending on number and lengths of method_names, this can get very long
+    if len(combined_name) > max_len:
+        first_letters = list()
+        for mname in method_names:
+            first_letters.append(''.join([ word[:num_char_each_word] for word in re.split(re_delimiters_word,mname)]))
+        combined_name = '_'.join(first_letters)
+
+        if len(combined_name) > max_len:
+            combined_name = uniq_combined_name(first_letters)
+
+    return combined_name
 
 
 def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_of_dirs'):
@@ -804,24 +824,24 @@ def run_cli():
 
     # TODO design an API interface for advanced access as an importable package
 
-    subjects, classes, outdir, user_feature_paths, user_feature_type, \
+    subjects, classes, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
         feature_selection_size = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
     # TODO need to be able to parallelize at subgroup- and method-level
-    method_names, dataset_paths_file = import_datasets(method_list, outdir, subjects, classes,
+    method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
-    results_file_path = rhst.run(dataset_paths_file, method_names, outdir,
+    results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
                                  train_perc=train_perc, num_repetitions=num_rep_cv,
                                  positive_class= positiveclass,
                                  feat_sel_size=feature_selection_size)
 
-    make_visualizations(results_file_path, outdir, method_names)
+    make_visualizations(results_file_path, out_dir, method_names)
 
-    export_results(results_file_path, outdir)
+    export_results(results_file_path, out_dir)
 
 if __name__ == '__main__':
     run_cli()

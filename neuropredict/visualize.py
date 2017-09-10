@@ -65,6 +65,7 @@ def feature_importance_map(feat_imp,
     num_datasets = len(feat_imp)
 
     if num_datasets > 1:
+        # TODO show no more than 4 subplots per figure.
         fig, ax = plt.subplots(num_datasets, 1,
                                sharex=True,
                                figsize=[9, 12])
@@ -83,10 +84,10 @@ def feature_importance_map(feat_imp,
             assert len(feat_labels)==num_features
 
         if num_features > cfg.max_allowed_num_features_importance_map:
-            print('Too many (n={}) features detected.\n'
+            print('Too many (n={}) features detected for {}.\n'
                   'Showing only the top {} to make the map legible.\n'
                   'Use the exported results to plot your own feature importance maps.'.format(num_features,
-                cfg.max_allowed_num_features_importance_map))
+                    method_labels[dd], cfg.max_allowed_num_features_importance_map))
             median_feat_imp = np.median(feat_imp[dd], axis=0)
             sort_indices = np.argsort(median_feat_imp)[::-1] # ascending order, then reversing
             selected_indices = sort_indices[:cfg.max_allowed_num_features_importance_map]
@@ -155,6 +156,17 @@ def confusion_matrices(cfmat_array, class_labels,
     Use a separate method to iteratve over multiple datasets.
     confusion_matrix dime: [num_classes, num_classes, num_repetitions, num_datasets]
 
+    Parameters
+    ----------
+    cfmat_array
+    class_labels
+    method_names
+    base_output_path
+    cmap
+
+    Returns
+    -------
+
     """
 
     num_datasets = cfmat_array.shape[3]
@@ -189,7 +201,7 @@ def confusion_matrices(cfmat_array, class_labels,
         # trick from sklearn
         thresh = 100.0 / num_classes  # cfmat.max() / 2.
         for i, j in itertools.product(range(num_classes), range(num_classes)):
-            plt.text(j, i, "{}%".format(cfmat[i, j]),
+            plt.text(j, i, "{:.{prec}f}%".format(cfmat[i, j], prec=cfg.PRECISION_METRICS),
                      horizontalalignment="center", fontsize=14,
                      color="tomato" if cfmat[i, j] > thresh else "teal")
 
