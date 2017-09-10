@@ -142,6 +142,7 @@ def feature_importance_map(feat_imp,
     pp1 = PdfPages(base_output_path + '.pdf')
     pp1.savefig()
     pp1.close()
+    plt.close()
 
     return
 
@@ -214,6 +215,8 @@ def confusion_matrices(cfmat_array, class_labels,
         pp1 = PdfPages(output_path + '.pdf')
         pp1.savefig()
         pp1.close()
+
+    plt.close()
 
     return
 
@@ -306,6 +309,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     pp1.savefig()
     pp1.close()
 
+    plt.close()
+
     return
 
 
@@ -367,6 +372,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     pp1 = PdfPages(out_path + '.pdf')
     pp1.savefig()
     pp1.close()
+
+    plt.close()
 
     return
 
@@ -442,6 +449,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     pp1 = PdfPages(out_path + '.pdf')
     pp1.savefig()
     pp1.close()
+
+    plt.close()
 
     return
 
@@ -551,7 +560,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     pp1 = PdfPages(outpath + '_frequency_histogram.pdf')
     pp1.savefig()
     pp1.close()
-
+    plt.close()
 
     return
 
@@ -606,6 +615,7 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
     pp1 = PdfPages(output_path + '.pdf')
     pp1.savefig()
     pp1.close()
+    plt.close()
 
     return
 
