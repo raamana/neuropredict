@@ -116,7 +116,7 @@ def test_chance_classifier_binary():
 
 
 
-# test_chance_classifier_binary()
+test_chance_classifier_binary()
 
 # random_dataset = make_random_MLdataset( max_num_classes = 3)
 # class_set, label_set, class_sizes = random_dataset.summarize_classes()
