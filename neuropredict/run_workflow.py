@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__all__ = ['run_cli', 'get_parser']
+__all__ = ['fit', 'run_cli', 'get_parser']
 
 import argparse
 import os
@@ -224,7 +224,18 @@ def parse_args():
 
 
 def validate_feature_selection_size(feature_select_method, dim_in_data=None):
-    "Ensures valid method / input."
+    """
+    Ensures method chosen for the type of computation for the size of reduced dimensionality.
+
+    Parameters
+    ----------
+    feature_select_method
+    dim_in_data
+
+    Returns
+    -------
+
+    """
 
     if feature_select_method.lower() in cfg.feature_selection_size_methods:
         num_select = feature_select_method
@@ -346,9 +357,9 @@ def get_data_matrix(featpath):
 
 
 def get_pyradigm(feat_path):
-    "Reader of pyradigm."
+    "Do-nothing reader of pyradigm."
 
-    return
+    return feat_path
 
 
 def get_features(subjects, classes, featdir, outdir, outname, get_method = None, feature_type ='dir_of_dris'):
@@ -476,15 +487,17 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
         return True
 
 
-def make_visualizations(results_file_path, outdir, method_names):
+def make_visualizations(results_file_path, outdir):
     """
     Produces the performance visualizations/comparisons from the cross-validation results.
     
     Parameters
     ----------
-    results_file_path
-    outdir
-    method_names
+    results_file_path : str
+        Path to file containing results produced by `rhst`
+
+    outdir : str
+        Path to a folder to store results.
 
     """
 
@@ -499,6 +512,12 @@ def make_visualizations(results_file_path, outdir, method_names):
     if os.environ['DISPLAY'] is None:
         warnings.warn('DISPLAY is not set. Skipping to generate any visualizations.')
         return
+
+    if not pexists(outdir):
+        try:
+            os.mkdir(outdir)
+        except:
+            raise IOError('Can not create output folder.')
 
     try:
 
@@ -839,9 +858,75 @@ def run_cli():
                                  positive_class= positiveclass,
                                  feat_sel_size=feature_selection_size)
 
-    make_visualizations(results_file_path, out_dir, method_names)
+    make_visualizations(results_file_path, out_dir)
 
     export_results(results_file_path, out_dir)
+
+    return
+
+
+def fit(input_specification, meta_data, output_dir,
+        pipeline=None,
+        train_perc=0.5,
+        num_repetitions = 200,
+        positive_class = None,
+        feat_sel_size=cfg.default_num_features_to_select):
+    """
+    Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.
+
+    Main entry point for API access.
+
+    Parameters
+    ----------
+    input_specification : multiple
+        Either
+            - path to a file containing list of paths (each line containing path to a valid MLDataset)
+            - list of paths to MLDatasets saved on disk
+            - list of MLDatasets (not recommended when feature sets and datasets are big in size and number)
+            - list of tuples (to specify multiple features), each element containing (X, y) i.e. data and target labels
+            - a single tuple containing (X, y) i.e. data and target labels
+            - list of paths to CSV files, each containing one type of features.
+
+            When specifying multiple sets of input features, ensure:
+            - all of them contain the same number of samples
+            - each sample belongs to same class across all feature sets.
+
+    meta_data : multiple
+        - a path to a meta data file (see :doc:`features` page)
+        - a tuple conaining (sample_id_list, classes_dict), where the first element is list of samples IDs and the second element is a dict (keyed in sample IDs) with values representing their classes.
+    pipeline : object
+        A sciki-learn pipeline describing the sequence of steps (typically a set of feature selections and dimensionality reduction steps followed by classifier).
+        Default: None, which leads to the selection of a Random Forest classifier with no feature selection.
+    method_names : list
+        A list of names to denote the different feature extraction methods
+    out_results_dir : str
+        Path to output directory to save the cross validation results to.
+    train_perc : float, optional
+        Percetange of subjects to train the classifier on.
+        The percentage is applied to the size of the smallest class to estimate
+        the number of subjects from each class to be reserved for training.
+        The smallest class is chosen to avoid class-imbalance in the training set.
+        Default: 0.8 (80%).
+    num_repetitions : int, optional
+        Number of repetitions of cross-validation estimation. Default: 200.
+    positive_class : str
+        Name of the class to be treated as positive in calculation of AUC
+    feat_sel_size : str or int
+        Number of features to retain after feature selection.
+        Must be a method (tenth or square root of the size of smallest class in training set,
+            or a finite integer smaller than the data dimensionality.
+
+    Returns
+    -------
+    results_path : str
+        Path to pickle file containing full set of CV results.
+
+    """
+
+    raise NotImplementedError
+
+    return
+
 
 if __name__ == '__main__':
     run_cli()
