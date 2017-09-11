@@ -439,16 +439,24 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     tick_perc = [ '{:.2f}%'.format(tt) for tt in ax.get_yticks() ]
     ax.set_yticklabels(tick_perc)
     # ax.set_yticks(np.arange(100 / num_classes, 100, 10))
-    leg = ax.legend(method_labels, loc=2)
+
+    # putting legends outside the plot below.
+    fig.subplots_adjust(bottom=0.2)
+    leg = ax.legend(method_labels, ncol=3, loc=9, bbox_to_anchor=(0.5, -0.1))
+
+    # ax.legend(method_labels, loc=3, bbox_to_anchor=(box.x0, 1, 1., .1))
+    # leg = ax.legend()
+
     # setting colors manually as plot has been through arbitray jumps
     for ix, lh in enumerate(leg.legendHandles):
         lh.set_color(cmap(ix))
 
     fig.tight_layout()
+    fig.savefig(out_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
 
-    pp1 = PdfPages(out_path + '.pdf')
-    pp1.savefig()
-    pp1.close()
+    # pp1 = PdfPages(out_path + '.pdf')
+    # pp1.savefig()
+    # pp1.close()
 
     plt.close()
 

@@ -29,6 +29,7 @@ Welcome to neuropredict's documentation!
    features
    results
    faq
+   implementation
    API
 
 
