@@ -10,6 +10,7 @@ from sys import version_info
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
+from sklearn.model_selection import GridSearchCV, ShuffleSplit
 
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
@@ -22,8 +23,9 @@ from pyradigm import MLDataset
 
 
 def eval_optimized_clsfr_on_testset(train_fs, test_fs,
-                                    label_order_in_CM=None,
-                                    feat_sel_size=cfg.default_num_features_to_select):
+                                    label_order_in_conf_matrix=None,
+                                    feat_sel_size=cfg.default_num_features_to_select,
+                                    train_perc=0.5):
     """
     Optimize the classifier on the training set and return predictions on test set.
 
@@ -31,57 +33,53 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs,
     ----------
     train_fs : MLDataset
         Dataset to optimize a given classifier on.
+
     test_fs : MLDataset
         Dataset to make predictions on using the classifier optimized on training set.
-    label_order_in_CM : list
+
+    label_order_in_conf_matrix : list
         List of labels to compute the order of confusion matrix.
+
     feat_sel_size : str or int
-        Metho to choose the number of featurese to select
+        Metho to choose the number of featurese to select.
+
+    train_perc : float
+        Training set fraction to run the inner cross-validation.
 
     Returns
     -------
 
     """
 
-    if label_order_in_CM is None:
+    if label_order_in_conf_matrix is None:
         raise ValueError('Label order for confusion matrix must be specified for accurate results/visulizations.')
 
     # reduced_dim = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples, train_fs.num_features)
     train_class_sizees = list(train_fs.class_sizes.values())
     reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizees, train_fs.num_features)
 
+    train_data_mat, train_labels, _                    = train_fs.data_and_labels()
+    test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
+
+    # setting the hyper parameter grid
+    range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
     range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
     range_num_predictors = range(1, reduced_dim, cfg.NUM_PREDICTORS_STEP)
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
-        range_min_leafsize = [ 1 ]
+        range_min_leafsize = [ 1, ]
     if len(range_num_predictors) < 1:
-        range_num_predictors = [reduced_dim]
+        range_num_predictors = [reduced_dim, ]
+    if len(range_num_trees) < 1:
+        range_num_trees = [cfg.NUM_TREES, ]
 
-    oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
+    param_grid = {'min_samples_leaf' : range_min_leafsize,
+                  'max_features': range_num_predictors,
+                  'n_estimators': range_num_trees}
 
-    train_data_mat, train_labels, _                    = train_fs.data_and_labels()
-    test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
-
-    for idx_ls, minls in enumerate(range_min_leafsize):
-        for idx_np, num_pred in enumerate(range_num_predictors):
-            rf = RandomForestClassifier(max_features=num_pred , min_samples_leaf = minls,
-                                        n_estimators=cfg.NUM_TREES, max_depth=None,
-                                        oob_score = True) # , random_state=SEED_RANDOM)
-            rf.fit(train_data_mat, train_labels)
-            oob_error_train[idx_ls, idx_np] = rf.oob_score_
-
-    # identifying the best parameters
-    best_idx_ls, best_idx_numpred = np.unravel_index(oob_error_train.argmin(), oob_error_train.shape)
-    best_minleafsize    = range_min_leafsize[best_idx_ls]
-    best_num_predictors = range_num_predictors[best_idx_numpred]
-
-    # training the RF using the best parameters
-    best_rf = RandomForestClassifier( max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
-                                      oob_score=True,
-                                      n_estimators=cfg.NUM_TREES) # , random_state=SEED_RANDOM)
-    best_rf.fit(train_data_mat, train_labels)
+    # best_rf = optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors)
+    best_rf = optimize_via_grid_search_CV(train_data_mat, train_labels, param_grid, train_perc)
 
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_rf.predict(test_data_mat)
@@ -92,13 +90,53 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs,
     # The order of the classes corresponds to that in the attribute best_rf.classes_.
     pred_prob = best_rf.predict_proba(test_data_mat)
 
-    conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_CM)
+    conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_conf_matrix)
 
     misclsfd_samples = test_sample_ids[true_test_labels != pred_test_labels]
 
     return pred_prob, pred_test_labels, true_test_labels, \
            conf_mat, misclsfd_samples, \
            feat_importance, best_minleafsize, best_num_predictors
+
+
+def optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors):
+    "Finds the best parameters just based on out of bag error within the training set (supposed to reflect test error)."
+
+    oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
+
+    for idx_ls, minls in enumerate(range_min_leafsize):
+        for idx_np, num_pred in enumerate(range_num_predictors):
+            rf = RandomForestClassifier(max_features=num_pred, min_samples_leaf=minls,
+                                        n_estimators=cfg.NUM_TREES, max_depth=None,
+                                        oob_score=True)  # , random_state=SEED_RANDOM)
+            rf.fit(train_data_mat, train_labels)
+            oob_error_train[idx_ls, idx_np] = rf.oob_score_
+
+    # identifying the best parameters
+    best_idx_ls, best_idx_numpred = np.unravel_index(oob_error_train.argmin(), oob_error_train.shape)
+    best_minleafsize = range_min_leafsize[best_idx_ls]
+    best_num_predictors = range_num_predictors[best_idx_numpred]
+
+    # training the RF using the best parameters
+    best_rf = RandomForestClassifier(max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
+                                     oob_score=True,
+                                     n_estimators=cfg.NUM_TREES)  # , random_state=SEED_RANDOM)
+    best_rf.fit(train_data_mat, train_labels)
+
+    return best_rf, best_minleafsize, best_num_predictors
+
+
+def optimize_via_grid_search_CV(train_data_mat, train_labels, param_grid, train_perc):
+    "Performs GridSearchCV and returns the best parameters."
+
+    # sample classifier
+    rf = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
+
+    inner_cv = ShuffleSplit(n_splits=25, train_size=train_perc)
+    gs = GridSearchCV(estimator=rf, param_grid=param_grid, cv=inner_cv)
+    gs.fit(train_data_mat, train_labels)
+
+    return gs.best_estimator_
 
 
 def __max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
@@ -164,8 +202,12 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     def do_tenth(size):
         return np.floor(size/10)
 
+    def do_log2(size):
+        return np.floor(np.log2(size))
+
     get_reduced_dim = {'tenth': do_tenth,
-                       'sqrt' : do_sqrt}
+                       'sqrt' : do_sqrt,
+                       'log2' : do_log2}
 
     if isinstance(select_method, str):
         smallest_class_size = np.min(train_class_sizes)
@@ -492,8 +534,8 @@ def run(dataset_path_file, method_names, out_results_dir,
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
                 eval_optimized_clsfr_on_testset(train_fs, test_fs,
-                                                label_order_in_CM=label_set,
-                                                feat_sel_size=feat_sel_size)
+                                                label_order_in_conf_matrix=label_set,
+                                                feat_sel_size=feat_sel_size, train_perc=train_perc)
 
             accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
             confusion_matrix[:,:,rep,dd] = confmat

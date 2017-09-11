@@ -1,13 +1,17 @@
 import matplotlib.pyplot as plt
 
-NUM_TREES = 250
-NUM_PREDICTORS_STEP = 2
 
 # following affects the maximum num of predictors to be tried in random forest
 PERC_PROB_ERROR_ALLOWED = 0.05
 
 default_num_features_to_select = 'tenth'
-feature_selection_size_methods = ('tenth', 'sqrt')
+feature_selection_size_methods = ('tenth', 'sqrt', 'log2')
+
+#Parameters specific to random forest classifier optimization
+NUM_TREES = 100
+NUM_TREES_RANGE = [200, 500]
+NUM_TREES_STEP = 25
+NUM_PREDICTORS_STEP = 2
 
 MAX_MIN_LEAFSIZE = 20
 LEAF_SIZE_STEP = 5
