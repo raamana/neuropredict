@@ -9,8 +9,8 @@ feature_selection_size_methods = ('tenth', 'sqrt', 'log2')
 
 #Parameters specific to random forest classifier optimization
 NUM_TREES = 100
-NUM_TREES_RANGE = [200, 500]
-NUM_TREES_STEP = 25
+NUM_TREES_RANGE = [100, 300]
+NUM_TREES_STEP = 50
 NUM_PREDICTORS_STEP = 2
 
 MAX_MIN_LEAFSIZE = 20
