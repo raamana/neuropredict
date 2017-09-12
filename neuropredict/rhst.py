@@ -63,8 +63,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
 
     best_model, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
-    best_minleafsize, best_num_predictors, best_num_trees = best_params['min_samples_leaf'], \
-                                                            best_params['max_features'], best_params['n_estimators']
+    # best_minleafsize, best_num_predictors, best_num_trees = best_params['min_samples_leaf'], best_params['max_features'], best_params['n_estimators']
 
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_model.predict(test_data_mat)
@@ -81,7 +80,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     return pred_prob, pred_test_labels, true_test_labels, \
            conf_mat, misclsfd_samples, \
-           feat_importance, best_minleafsize, best_num_predictors
+           feat_importance, best_params
 
 
 def optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors):
@@ -290,21 +289,9 @@ def load_results(results_file_path):
     assert os.path.exists(results_file_path), "Results file to be loaded doesn't exist!"
     try:
         with open(results_file_path, 'rb') as rf:
-            # dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-            # pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-            # best_min_leaf_size, best_num_predictors, \
-            # feature_importances_rf, feature_names, \
-            # num_times_misclfd, num_times_tested, \
-            # confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class = \
-            #     pickle.load(rf)
-
-            results_dict = pickle.load(rf)
-            # # importing the keys and their values into the workspace
-            # locals().update(results_dict)
-
             dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
                 pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-                best_min_leaf_size, best_num_predictors, feature_importances_rf, \
+                best_params, feature_importances_rf, \
                 feature_names, num_times_misclfd, num_times_tested, \
                 confusion_matrix, class_set, accuracy_balanced, \
                 auc_weighted, positive_class = [results_dict.get(var_name) for var_name in cfg.rhst_data_variables_to_persist]
@@ -315,7 +302,7 @@ def load_results(results_file_path):
     # TODO need a consolidated way to deal with what variable are saved and in what order
     return dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-           best_min_leaf_size, best_num_predictors, \
+           best_params, \
            feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
            confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class
@@ -499,6 +486,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     best_min_leaf_size  = np.full([num_repetitions, num_datasets], np.nan)
     best_num_predictors = np.full([num_repetitions, num_datasets], np.nan)
+    best_params = dict()
 
     # initialize misclassification counters
     num_times_tested = list()
@@ -535,8 +523,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     # use the following one statement processing that can be forked to parallel threads
     # pred_prob_per_class[rep, dd, :, :], pred_labels_per_rep_fs[rep, dd, :], \
     # confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep, :], \
-    # best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] \
-    #     = holdout_evaluation(datasets, train_size_common, total_test_samples)
+    # best_params = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
     max_width_method_names = max(map(len, method_names))
 
@@ -563,7 +550,7 @@ def run(dataset_path_file, method_names, out_results_dir,
             pred_prob_per_class[rep, dd, :, :], \
                 pred_labels_per_rep_fs[rep, dd, :], true_test_labels, \
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
-                best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
+                best_params[(rep, dd)] = \
                 eval_optimized_model_on_testset(train_fs, test_fs,
                                                 label_order_in_conf_matrix=label_set,
                                                 feat_sel_size=feat_sel_size, train_perc=train_perc)
@@ -597,7 +584,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     # save results
     var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,
                         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
-                        best_min_leaf_size, best_num_predictors,
+                        best_params,
                         feature_importances_rf, feature_names,
                         num_times_misclfd, num_times_tested,
                         confusion_matrix, class_set,
@@ -605,7 +592,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     var_names_to_save = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
                         'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
-                        'best_min_leaf_size', 'best_num_predictors',
+                        'best_params',
                         'feature_importances_rf', 'feature_names',
                         'num_times_misclfd', 'num_times_tested',
                         'confusion_matrix', 'class_set',
@@ -633,8 +620,7 @@ if __name__ == '__main__':
 #     pred_labels_per_rep_fs = np.full([total_test_samples], np.nan)
 #     test_labels_per_rep    = np.full([total_test_samples], np.nan)
 #
-#     best_min_leaf_size  = np.full([num_datasets], np.nan)
-#     best_num_predictors = np.full([num_datasets], np.nan)
+#     best_params = dict()
 #
 #     confusion_matrix  = np.full([num_classes, num_classes, num_datasets], np.nan)
 #     accuracy_balanced = np.full([num_datasets], np.nan)
@@ -650,7 +636,7 @@ if __name__ == '__main__':
 #
 #         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], \
 #         confmat, misclsfd_ids_this_run, feature_importances_rf[dd], \
-#         best_min_leaf_size[dd], best_num_predictors[dd] = \
+#         best_params[dd] = \
 #             eval_optimized_model_on_testset(train_fs, test_fs)
 #
 #         accuracy_balanced[dd] = balanced_accuracy(confmat)
@@ -660,4 +646,4 @@ if __name__ == '__main__':
 #
 #     return pred_prob_per_class, pred_labels_per_rep_fs, \
 #         confmat, misclsfd_ids_this_run, feature_importances_rf, \
-#         best_min_leaf_size, best_num_predictors
+#         best_params
