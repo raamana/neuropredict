@@ -72,6 +72,7 @@ def get_parser():
     """
 
     help_text_feature_selection = "Number of features to select as part of feature selection. The larger the number, the better the estimates will be. Default: \'tenth\' of the smallest class in the training set. For example, if smallest class has only 40 samples, you chose 50 percent for training (default),  then Y will have 40*.5=20 samples in training set, leading to 2 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features."
+    help_text_atlas = "Name of the atlas to use for visualization. Default: fsaverage, if available."
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=True,
@@ -120,8 +121,7 @@ def get_parser():
 
     parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
                         default="fsaverage",
-                        help="Name of the atlas to use for visualization."
-                             "\nDefault: fsaverage, if available.")
+                        help=help_text_atlas)
 
     parser.add_argument("-s", "--sub_groups", action="store", dest="sub_groups",
                         nargs="*",
@@ -131,25 +131,25 @@ def get_parser():
     return parser
 
 
-def parse_args():
-    """Parser/validator for the cmd line args."""
+def organize_inputs(user_args):
+    """
+    Validates the input features specified and returns organized list of paths and readers.
 
-    parser = get_parser()
+    Parameters
+    ----------
+    user_args : ArgParse object
+        Various options specified by the user.
 
-    if len(sys.argv) < 2:
-        print('Too few arguments!')
-        parser.print_help()
-        parser.exit(1)
+    Returns
+    -------
+    user_feature_paths : list
+        List of paths to specified input features
+    user_feature_type : str
+        String identifying the type of user-defined input
+    fs_subject_dir : str
+        Path to freesurfer subject directory, if supplied.
 
-    # parsing
-    try:
-        user_args = parser.parse_args()
-    except:
-        parser.exit(1)
-
-    # noinspection PyUnboundLocalVariable
-    meta_file = abspath(user_args.meta_file)
-    assert pexists(meta_file), "Given metadata file doesn't exist."
+    """
 
     atleast_one_feature_specified = False
     if not_unspecified(user_args.fs_subject_dir):
@@ -193,7 +193,33 @@ def parse_args():
 
     if not atleast_one_feature_specified:
         raise ValueError('Atleast one method specifying features must be specified. '
-                         'It can be a Freesurfer directory, user-defined folder(s), matrix path(s) or pyradigm path(s).')
+                         'It can be a path(s) to pyradigm dataset, matrix file, user-defined folder or a Freesurfer subject directory.')
+
+    return user_feature_paths, user_feature_type, fs_subject_dir
+
+
+def parse_args():
+    """Parser/validator for the cmd line args."""
+
+    parser = get_parser()
+
+    if len(sys.argv) < 2:
+        print('Too few arguments!')
+        parser.print_help()
+        parser.exit(1)
+
+    # parsing
+    try:
+        user_args = parser.parse_args()
+    except:
+        parser.exit(1)
+
+    # noinspection PyUnboundLocalVariable
+    meta_file = abspath(user_args.meta_file)
+    if not pexists(meta_file):
+        raise IOError("Meta data file doesn't exist.")
+
+    user_feature_paths, user_feature_type, fs_subject_dir = organize_inputs(user_args)
 
     out_dir = abspath(user_args.out_dir)
     if not pexists(out_dir):
@@ -217,8 +243,7 @@ def parse_args():
     feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
 
     return sample_ids, classes, out_dir, \
-           user_feature_paths, user_feature_type, \
-           fs_subject_dir, \
+           user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, feature_selection_size
 
