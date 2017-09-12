@@ -60,9 +60,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
     train_class_sizes = list(train_fs.class_sizes.values())
-    pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, num_features)
+    pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
 
-    best_model, best_params = optimize_pipeline_via_grid_search_CV(pipe, train_data_mat, train_labels, param_grid, train_perc)
+    best_model, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
     best_minleafsize, best_num_predictors, best_num_trees = best_params['min_samples_leaf'], \
                                                             best_params['max_features'], best_params['n_estimators']
 
@@ -115,7 +115,7 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
     "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
 
     inner_cv = ShuffleSplit(n_splits=cfg.NUM_SPLITS_INNER_CV, train_size=train_perc)
-    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv)
+    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
     gs.fit(train_data_mat, train_labels)
 
     return gs.best_estimator_, gs.best_params_
@@ -324,7 +324,6 @@ def load_results(results_file_path):
 def get_pipeline(train_class_sizes, feat_sel_size, num_features):
     "Constructor for pipeline."
 
-    train_class_sizes = list(train_fs.class_sizes.values())
     reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
 
     # setting the hyper parameter grid
@@ -351,7 +350,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features):
     feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
     steps = [('feat_sel', feat_selector),
              ('clf_model', rfc)]
-    pipe = Pipeline(steps)
+    pipeline = Pipeline(steps)
 
     return pipeline, param_grid
 
