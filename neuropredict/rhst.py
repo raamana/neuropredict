@@ -308,12 +308,9 @@ def load_results(results_file_path):
            confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class
 
 
-def get_pipeline(train_class_sizes, feat_sel_size, num_features):
-    "Constructor for pipeline."
+def get_RandomForestClassifier(reduced_dim='all'):
+    "Returns the Random Forest classifier and its parameter grid. "
 
-    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
-
-    # setting the hyper parameter grid
     range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
     range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
     range_num_predictors = range(1, reduced_dim, cfg.NUM_PREDICTORS_STEP)
@@ -328,15 +325,135 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features):
 
     # name clf_model chosen to enable generic selection classifier later on
     # not optimizing over number of features to save time
-    param_grid = {'clf_model__min_samples_leaf' : range_min_leafsize,
-                  'clf_model__max_features': range_num_predictors,
-                  'clf_model__n_estimators': range_num_trees}
+    clf_name = 'random_forest_clf'
+    param_name = lambda string: '{}__{}'.format(clf_name, string)
+    param_grid = {param_name('min_samples_leaf'): range_min_leafsize,
+                  param_name('max_features'): range_num_predictors,
+                  param_name('n_estimators'): range_num_trees}
 
-    # NOT EASY TODO enable users choose selector and classifier
     rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
-    feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
-    steps = [('feat_sel', feat_selector),
-             ('clf_model', rfc)]
+
+    return rfc, clf_name, param_grid
+
+
+def get_classifier(classifier_name='RandomForestClassifier',
+                   reduced_dim='all'):
+    """
+    Returns the named classifier and its parameter grid.
+
+    Parameters
+    ----------
+    classifier_name : str
+        String referring to a valid scikit-learn classifier.
+
+    reduced_dim : int or str
+        Reduced dimensionality, either an integer or "all", which defaults to using everything.
+
+    Returns
+    -------
+    clf : sklearn.estimator
+        Valid scikit-learn estimator.
+    clf_name : str
+        String identifying the classifier to construct the parameter grid.
+    param_grid : dict
+        Dict of named ranges to construct the parameter grid.
+
+    """
+
+    if classifier_name.lower() in ['randomforestclassifier', ]:
+        clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim)
+    else:
+        raise NotImplementedError('Invalid name or classifier not implemented.')
+
+    return clf, clf_name, param_grid
+
+
+def get_feature_selector(feat_selector_name='SelectKBest_mutual_info_classif',
+                         reduced_dim='all'):
+    """
+    Returns the named classifier and its parameter grid.
+
+    Parameters
+    ----------
+    feat_selector_name : str
+        String referring to a valid scikit-learn feature selector.
+    reduced_dim : str or int
+        Reduced dimensionality, either an integer or "all", which defaults to using everything.
+
+    Returns
+    -------
+    feat_selector : sklearn.feature_selection method
+        Valid scikit-learn feature selector.
+    clf_name : str
+        String identifying the feature selector to construct the parameter grid.
+    param_grid : dict
+        Dict of named ranges to construct the parameter grid.
+
+    """
+
+    fs_name = feat_selector_name.lower()
+    if fs_name in ['selectkbest_mutual_info_classif', ]:
+        # no param optimization for feat selector for now.
+        feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
+        fs_param_grid = None
+    else:
+        raise NotImplementedError('Invalid name or feature selector not implemented.')
+
+    return feat_selector, fs_name, fs_param_grid
+
+
+def get_pipeline(train_class_sizes, feat_sel_size, num_features,
+                 classifier_name='RandomForestClassifier',
+                 feat_selector_name='SelectKBest_mutual_info_classif'):
+    """
+    Constructor for pipeline (feature selection followed by a classifier).
+
+    Parameters
+    ----------
+    train_class_sizes : list
+        sizes of different classes in the training set, to estimate the reduced dimensionality.
+
+    feat_sel_size : str or int
+        Method specify the method to estimate the reduced dimensionality.
+        Choices : integer, or one of the methods in ['sqrt', 'tenth', 'log2', 'all']
+
+    num_features : int
+        Number of features in the training set.
+
+    classifier_name : str
+        String referring to a valid scikit-learn classifier.
+
+    feat_selector_name : str
+        String referring to a valid scikit-learn feature selector.
+
+    Returns
+    -------
+    pipeline : sklearn.pipeline.Pipeline
+        Valid scikit learn pipeline.
+    param_grid : dict
+        Dict of named ranges to construct the parameter grid.
+        Grid contains ranges for parameters of both feature selector and classifier.
+
+    """
+
+    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
+
+    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim)
+    feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name, reduced_dim)
+
+    param_grid = clf_param_grid
+    if fs_param_grid: # None or empty dict both evaluate to False
+        fs_params = set(fs_param_grid.keys())
+        clf_params = set(param_grid.keys())
+        if len(fs_params.intersection(clf_params)):
+            # raising error to avoid silent overwrite
+            raise ValueError('Overlap in parameters betwen feature selector and the classifier. Remove it.')
+
+        # dict gets extended due to lack of overlap in keys
+        param_grid.update(fs_param_grid)
+
+    steps = [(fs_name , feat_selector),
+             (est_name, estimator)]
     pipeline = Pipeline(steps)
 
     return pipeline, param_grid
