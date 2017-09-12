@@ -612,6 +612,7 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
     ax.set_xticklabels(labels, rotation=45)  # 'vertical'
 
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
+    # add a tick for chance accuracy and/or % of majority class
     ytick_loc = np.append(ytick_loc, 1/num_classes)
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)

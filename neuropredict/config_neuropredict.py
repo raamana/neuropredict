@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 PERC_PROB_ERROR_ALLOWED = 0.05
 
 default_num_features_to_select = 'tenth'
-feature_selection_size_methods = ('tenth', 'sqrt', 'log2')
+feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
 #Parameters specific to random forest classifier optimization
 NUM_TREES = 100

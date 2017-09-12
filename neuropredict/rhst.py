@@ -190,6 +190,10 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
         If method choices were invalid.
     """
 
+    # default to use them all.
+    if select_method in [None, 'all']:
+        return train_data_dim
+
     def do_sqrt(size):
         return np.ceil(np.sqrt(size))
 
@@ -217,7 +221,7 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     else:
         raise ValueError('method to choose feature selection size can only be string or integer!')
 
-    # ensuring it is an integer >= 1 and smaller than train_data_dim
+    # ensuring it is an integer >= 1
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
 
     return reduced_dim

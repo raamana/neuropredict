@@ -4,22 +4,25 @@ Input formats
 
 Currently supported
 
-* Freesurfer
+ * Freesurfer
+
   * Subcortical volumes
   * Wholebrain Aseg stats
-* Arbitary/user-defined format (see below)
+ * Arbitary/user-defined format (see below)
+
 
 In development (stay tuned)
 
-* Freesurfer
-  * cortical thickness
-  * gray matter density
-  * structural covariance
-* Any nibabel-readable data
-* DT-MRI features
-* task-free fMRI features
-* HCP datasets
-* Weka's ARFF format
+ * Freesurfer
+
+   * cortical thickness
+   * gray matter density
+   * structural covariance
+ * Any nibabel-readable data
+ * DT-MRI features
+ * task-free fMRI features
+ * HCP datasets
+ * Weka's ARFF format
 
 Interfaces to Neuroimaging tools
 --------------------------------
