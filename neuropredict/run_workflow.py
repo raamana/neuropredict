@@ -272,17 +272,6 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
     else:
         raise ValueError('Invalid choise - Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
 
-    # if feature_select_method.lower() not in cfg.feature_selection_size_methods:
-    #     # assuming it was an integer specified
-    #     if feature_select_method.isdigit():
-    #         num_select = np.int64(feature_select_method)
-    #         if not 0 < num_select <= dim_in_data:
-    #             raise UnboundLocalError('feature selection size out of bounds.\n'
-    #                                     'Must be > 0 and < {}'.format(dim_in_data))
-    # else:
-    #     raise NotImplementedError('Give method for computing size of feature selection is not implemented.\n'
-    #                               'Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
-
     return num_select
 
 
@@ -301,16 +290,6 @@ def get_metadata(path):
         dict of class labels for each id in the sample_ids
 
     """
-
-    # sample_ids = list()
-    # classes = dict()
-    # with open(path) as mf:
-    #     for line in mf:
-    #         if not line.startswith('#'):
-    #             parts = line.strip().split(',')
-    #             sid = parts[0]
-    #             sample_ids.append(sid) # maintaining order of appearance is important as we use data_matrix input mechanism
-    #             classes[sid] = parts[1]
 
     meta = np.genfromtxt(path, dtype=str, delimiter=cfg.DELIMITER)
 
