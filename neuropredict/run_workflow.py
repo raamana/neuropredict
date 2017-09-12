@@ -48,9 +48,11 @@ def get_parser():
 
     parser = argparse.ArgumentParser(prog="neuropredict")
 
-    help_text_fs_dir = """Absolute path to SUBJECTS_DIR containing the finished runs of Freesurfer parcellation (each subject named after its ID in the metadata file). E.g. ``--fs_subject_dir /project/freesurfer_v5.3`` """
+    help_text_fs_dir = """Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation (each subject named after its ID in the metadata file). E.g. ``--fs_subject_dir /project/freesurfer_v5.3`` """
 
-    help_text_user_defined_folder = """ List of absolute paths to user's own features. Each of these folders contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. All the subjects (in a given folder) must have the number of features (#lines in file). Different parent folders (describing one feature set) can have different number of features for each subject, but they must all have the same number of subjects (folders) within them. 
+    help_text_user_defined_folder = """List of absolute paths to user's own features. 
+    
+Format: Each of these folders contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. All the subjects (in a given folder) must have the number of features (#lines in file). Different parent folders (describing one feature set) can have different number of features for each subject, but they must all have the same number of subjects (folders) within them. 
     
 Names of each folder is used to annotate the results in visualizations. Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers. For example,  
 
@@ -78,7 +80,11 @@ File format could be
 
     help_text_num_rep_cv = """Number of repetitions of the repeated-holdout cross-validation. The larger the number, the better the estimates will be."""
 
-    help_text_sub_groups = """This option allows the user to study different combinations of classes in multi-class (N>2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied with the following flag --sub_groups CN,FTD CN,AD . This allows the user to focus on few interesting subgroups depending on their dataset/goal. Format: each sub-group must be a comma-separated list of classes. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Default: all - using all the available classes in a all-vs-all multi-class setting."""
+    help_text_sub_groups = """This option allows the user to study different combinations of classes in a multi-class (N>2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied separately with the following flag ``--sub_groups CN,FTD CN,AD``. This allows the user to focus on few interesting subgroups depending on their dataset/goal. 
+    
+Format: Different subgroups must be separated by space, and each sub-group must be a comma-separated list of class names defined in the meta data file. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes. 
+
+Default: ``'all'``, leading to inclusion of all available classes in a all-vs-all multi-class setting."""
 
     help_text_metadata_file = """Abs path to file containing metadata for subjects to be included for analysis. At the minimum, each subject should have an id per row followed by the class it belongs to.
 
@@ -681,7 +687,13 @@ def validate_class_set(classes, subgroups, positiveclass=None):
 
     if subgroups != 'all':
         for comb in subgroups:
-            for cls in comb.split(','):
+            cls_list = comb.split(',')
+            # ensuring each subgroup has atleast two classes
+            if len(set(cls_list)) < 2:
+                raise ValueError('This subgroup {} does not contain two unique classes.'.format(comb))
+
+            # verify each of them were defined in meta
+            for cls in cls_list:
                 if cls not in class_set:
                     raise ValueError("Class {} in combination {} "
                                      "does not exist in meta data.".format(cls, comb))
