@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 from sklearn.feature_selection import mutual_info_classif, SelectKBest, VarianceThreshold
+from sklearn.pipeline import Pipeline
 
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
@@ -23,7 +24,7 @@ else:
 from pyradigm import MLDataset
 
 
-def eval_optimized_clsfr_on_testset(train_fs, test_fs,
+def eval_optimized_model_on_testset(train_fs, test_fs,
                                     label_order_in_conf_matrix=None,
                                     feat_sel_size=cfg.default_num_features_to_select,
                                     train_perc=0.5):
@@ -55,41 +56,11 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs,
     if label_order_in_conf_matrix is None:
         raise ValueError('Label order for confusion matrix must be specified for accurate results/visulizations.')
 
-    # reduced_dim = max_dimensionality_to_avoid_curseofdimensionality(train_fs.num_samples, train_fs.num_features)
-    train_class_sizees = list(train_fs.class_sizes.values())
-    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizees, train_fs.num_features)
-
     train_data_mat, train_labels, _                    = train_fs.data_and_labels()
     test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
 
-    # setting the hyper parameter grid
-    range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
-    range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
-    range_num_predictors = range(1, reduced_dim, cfg.NUM_PREDICTORS_STEP)
-
-    # capturing the edge cases
-    if len(range_min_leafsize) < 1:
-        range_min_leafsize = [ 1, ]
-    if len(range_num_predictors) <= 1:
-        range_num_predictors = [reduced_dim, ]
-    if len(range_num_trees) < 1:
-        range_num_trees = [cfg.NUM_TREES, ]
-
-    # name clf_model chosen to enable generic selection classifier later on
-    # not optimizing over number of features to save time
-    param_grid = {'clf_model__min_samples_leaf' : range_min_leafsize,
-                  'clf_model__max_features': range_num_predictors,
-                  'clf_model__n_estimators': range_num_trees}
-
-    # NOT EASY TODO enable users choose selector and classifier
-    rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
-    feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
-    steps = [('feat_sel', feat_selector),
-             ('clf_model', rfc)]
-    pipe = Pipeline(steps)
-
-    # best_model, best_minleafsize, best_num_predictors = optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors)
-    # best_model, best_params = optimize_RF_via_grid_search_CV(pipe, train_data_mat, train_labels, param_grid, train_perc)
+    train_class_sizes = list(train_fs.class_sizes.values())
+    pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, num_features)
 
     best_model, best_params = optimize_pipeline_via_grid_search_CV(pipe, train_data_mat, train_labels, param_grid, train_perc)
     best_minleafsize, best_num_predictors, best_num_trees = best_params['min_samples_leaf'], \
@@ -99,7 +70,7 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs,
     pred_test_labels = best_model.predict(test_data_mat)
     feat_importance  = best_model.feature_importances_
 
-    #TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
+    # TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
     # The order of the classes corresponds to that in the attribute best_model.classes_.
     pred_prob = best_model.predict_proba(test_data_mat)
@@ -349,6 +320,41 @@ def load_results(results_file_path):
            confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class
 
 
+def get_pipeline(train_class_sizes, feat_sel_size, num_features):
+    "Constructor for pipeline."
+
+    train_class_sizes = list(train_fs.class_sizes.values())
+    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
+
+    # setting the hyper parameter grid
+    range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
+    range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
+    range_num_predictors = range(1, reduced_dim, cfg.NUM_PREDICTORS_STEP)
+
+    # capturing the edge cases
+    if len(range_min_leafsize) < 1:
+        range_min_leafsize = [ 1, ]
+    if len(range_num_predictors) <= 1:
+        range_num_predictors = [reduced_dim, ]
+    if len(range_num_trees) < 1:
+        range_num_trees = [cfg.NUM_TREES, ]
+
+    # name clf_model chosen to enable generic selection classifier later on
+    # not optimizing over number of features to save time
+    param_grid = {'clf_model__min_samples_leaf' : range_min_leafsize,
+                  'clf_model__max_features': range_num_predictors,
+                  'clf_model__n_estimators': range_num_trees}
+
+    # NOT EASY TODO enable users choose selector and classifier
+    rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
+    feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
+    steps = [('feat_sel', feat_selector),
+             ('clf_model', rfc)]
+    pipe = Pipeline(steps)
+
+    return pipeline, param_grid
+
+
 def run(dataset_path_file, method_names, out_results_dir,
         train_perc = 0.8, num_repetitions = 200,
         positive_class = None,
@@ -558,7 +564,7 @@ def run(dataset_path_file, method_names, out_results_dir,
                 pred_labels_per_rep_fs[rep, dd, :], true_test_labels, \
                 confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
                 best_min_leaf_size[rep, dd], best_num_predictors[rep, dd] = \
-                eval_optimized_clsfr_on_testset(train_fs, test_fs,
+                eval_optimized_model_on_testset(train_fs, test_fs,
                                                 label_order_in_conf_matrix=label_set,
                                                 feat_sel_size=feat_sel_size, train_perc=train_perc)
 
@@ -645,7 +651,7 @@ if __name__ == '__main__':
 #         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], \
 #         confmat, misclsfd_ids_this_run, feature_importances_rf[dd], \
 #         best_min_leaf_size[dd], best_num_predictors[dd] = \
-#             eval_optimized_clsfr_on_testset(train_fs, test_fs)
+#             eval_optimized_model_on_testset(train_fs, test_fs)
 #
 #         accuracy_balanced[dd] = balanced_accuracy(confmat)
 #         confusion_matrix[:, :, dd] = confmat
