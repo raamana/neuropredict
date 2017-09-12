@@ -11,6 +11,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
+from sklearn.feature_selection import mutual_info_classif, SelectKBest, VarianceThreshold
 
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
@@ -69,26 +70,39 @@ def eval_optimized_clsfr_on_testset(train_fs, test_fs,
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
         range_min_leafsize = [ 1, ]
-    if len(range_num_predictors) < 1:
+    if len(range_num_predictors) <= 1:
         range_num_predictors = [reduced_dim, ]
     if len(range_num_trees) < 1:
         range_num_trees = [cfg.NUM_TREES, ]
 
-    param_grid = {'min_samples_leaf' : range_min_leafsize,
-                  'max_features': range_num_predictors,
-                  'n_estimators': range_num_trees}
+    # name clf_model chosen to enable generic selection classifier later on
+    # not optimizing over number of features to save time
+    param_grid = {'clf_model__min_samples_leaf' : range_min_leafsize,
+                  'clf_model__max_features': range_num_predictors,
+                  'clf_model__n_estimators': range_num_trees}
 
-    # best_rf = optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors)
-    best_rf = optimize_via_grid_search_CV(train_data_mat, train_labels, param_grid, train_perc)
+    # NOT EASY TODO enable users choose selector and classifier
+    rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
+    feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
+    steps = [('feat_sel', feat_selector),
+             ('clf_model', rfc)]
+    pipe = Pipeline(steps)
+
+    # best_model, best_minleafsize, best_num_predictors = optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors)
+    # best_model, best_params = optimize_RF_via_grid_search_CV(pipe, train_data_mat, train_labels, param_grid, train_perc)
+
+    best_model, best_params = optimize_pipeline_via_grid_search_CV(pipe, train_data_mat, train_labels, param_grid, train_perc)
+    best_minleafsize, best_num_predictors, best_num_trees = best_params['min_samples_leaf'], \
+                                                            best_params['max_features'], best_params['n_estimators']
 
     # making predictions on the test set and assessing their performance
-    pred_test_labels = best_rf.predict(test_data_mat)
-    feat_importance  = best_rf.feature_importances_
+    pred_test_labels = best_model.predict(test_data_mat)
+    feat_importance  = best_model.feature_importances_
 
     #TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
-    # The order of the classes corresponds to that in the attribute best_rf.classes_.
-    pred_prob = best_rf.predict_proba(test_data_mat)
+    # The order of the classes corresponds to that in the attribute best_model.classes_.
+    pred_prob = best_model.predict_proba(test_data_mat)
 
     conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_conf_matrix)
 
@@ -126,8 +140,18 @@ def optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize
     return best_rf, best_minleafsize, best_num_predictors
 
 
-def optimize_via_grid_search_CV(train_data_mat, train_labels, param_grid, train_perc):
-    "Performs GridSearchCV and returns the best parameters."
+def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc):
+    "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
+
+    inner_cv = ShuffleSplit(n_splits=cfg.NUM_SPLITS_INNER_CV, train_size=train_perc)
+    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv)
+    gs.fit(train_data_mat, train_labels)
+
+    return gs.best_estimator_, gs.best_params_
+
+
+def optimize_RF_via_grid_search_CV(train_data_mat, train_labels, param_grid, train_perc):
+    "Performs GridSearchCV and returns the best parameters and refitted RandomForest on full dataset with the best parameters."
 
     # sample classifier
     rf = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
@@ -136,7 +160,7 @@ def optimize_via_grid_search_CV(train_data_mat, train_labels, param_grid, train_
     gs = GridSearchCV(estimator=rf, param_grid=param_grid, cv=inner_cv)
     gs.fit(train_data_mat, train_labels)
 
-    return gs.best_estimator_
+    return gs.best_estimator_, gs.best_params_
 
 
 def __max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
@@ -197,20 +221,20 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     """
 
     def do_sqrt(size):
-        return np.floor(np.sqrt(size))
+        return np.ceil(np.sqrt(size))
 
     def do_tenth(size):
-        return np.floor(size/10)
+        return np.ceil(size/10)
 
     def do_log2(size):
-        return np.floor(np.log2(size))
+        return np.ceil(np.log2(size))
 
     get_reduced_dim = {'tenth': do_tenth,
                        'sqrt' : do_sqrt,
                        'log2' : do_log2}
 
     if isinstance(select_method, str):
-        smallest_class_size = np.min(train_class_sizes)
+        smallest_class_size = np.sum(train_class_sizes)
         calc_size = get_reduced_dim[select_method](smallest_class_size)
         reduced_dim = min(calc_size, train_data_dim)
     else:
@@ -221,7 +245,8 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
         else:
             reduced_dim = select_method
 
-    # ensuring it is an integer >= 1
+    # ensuring it is an integer >= 1 and smaller than train_data_dim
+    reduced_dim = min(train_data_dim, reduced_dim)
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
 
     return reduced_dim
