@@ -62,8 +62,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     train_class_sizes = list(train_fs.class_sizes.values())
     pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
 
-    best_model, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
-    # best_minleafsize, best_num_predictors, best_num_trees = best_params['min_samples_leaf'], best_params['max_features'], best_params['n_estimators']
+    # best_model, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
+    best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat, train_labels,
+        param_grid['random_forest_clf__min_samples_leaf'], param_grid['random_forest_clf__max_features'])
 
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_model.predict(test_data_mat)
@@ -83,7 +84,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
            feat_importance, best_params
 
 
-def optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors):
+def optimize_RF_via_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors):
     "Finds the best parameters just based on out of bag error within the training set (supposed to reflect test error)."
 
     oob_error_train = np.full([len(range_min_leafsize), len(range_num_predictors)], np.nan)
@@ -100,6 +101,8 @@ def optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize
     best_idx_ls, best_idx_numpred = np.unravel_index(oob_error_train.argmin(), oob_error_train.shape)
     best_minleafsize = range_min_leafsize[best_idx_ls]
     best_num_predictors = range_num_predictors[best_idx_numpred]
+    best_params = { 'min_samples_leaf': best_minleafsize,
+                    'max_features' : best_num_predictors}
 
     # training the RF using the best parameters
     best_rf = RandomForestClassifier(max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
@@ -107,7 +110,7 @@ def optimize_training_oob_score(train_data_mat, train_labels, range_min_leafsize
                                      n_estimators=cfg.NUM_TREES)  # , random_state=SEED_RANDOM)
     best_rf.fit(train_data_mat, train_labels)
 
-    return best_rf, best_minleafsize, best_num_predictors
+    return best_rf, best_params
 
 
 def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc):
