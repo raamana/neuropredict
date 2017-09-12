@@ -289,6 +289,11 @@ def load_results(results_file_path):
     assert os.path.exists(results_file_path), "Results file to be loaded doesn't exist!"
     try:
         with open(results_file_path, 'rb') as rf:
+            results_dict = pickle.load(rf)
+            # # below is possible, but not explicit and a bad practice
+            # # importing the keys and their values into the workspace
+            # locals().update(results_dict)
+
             dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
                 pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
                 best_params, feature_importances_rf, \
