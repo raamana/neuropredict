@@ -208,16 +208,17 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
         smallest_class_size = np.sum(train_class_sizes)
         calc_size = get_reduced_dim[select_method](smallest_class_size)
         reduced_dim = min(calc_size, train_data_dim)
-    else:
+    elif isinstance(select_method, int):
         if select_method > train_data_dim:
             reduced_dim = train_data_dim
             print('Reducing the feature selection size to {}, '
                   'to accommondate the current feature set.'.format(train_data_dim))
         else:
             reduced_dim = select_method
+    else:
+        raise ValueError('method to choose feature selection size can only be string or integer!')
 
     # ensuring it is an integer >= 1 and smaller than train_data_dim
-    reduced_dim = min(train_data_dim, reduced_dim)
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
 
     return reduced_dim
