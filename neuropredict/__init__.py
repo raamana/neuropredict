@@ -1,5 +1,5 @@
 
-__all__ = ['run_workflow.py', 'rhst', 'visualize', 'freesurfer',
+__all__ = ['run_workflow', 'rhst', 'visualize', 'freesurfer',
            'config_neuropredict', 'model_comparison']
 
 from sys import version_info

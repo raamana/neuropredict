@@ -12,7 +12,7 @@ def vertical_nemenyi_plot(data, num_reps,
     #Take a look at this implementation also:
     # https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
 
-    pass
+    # pass
 
     return
 
@@ -29,6 +29,6 @@ def nemenyi_test():
     # Take a look at this implementation also:
     # https://gist.github.com/ptasheq/ceb29503fbc16b048bb121684f7fe7dc
 
-    pass
+    # pass
 
     return

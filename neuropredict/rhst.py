@@ -14,14 +14,14 @@ from sklearn.model_selection import GridSearchCV, ShuffleSplit
 from sklearn.feature_selection import mutual_info_classif, SelectKBest, VarianceThreshold
 from sklearn.pipeline import Pipeline
 
+from pyradigm import MLDataset
+
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
 elif version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
-
-from pyradigm import MLDataset
 
 
 def eval_optimized_model_on_testset(train_fs, test_fs,

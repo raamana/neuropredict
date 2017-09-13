@@ -78,7 +78,7 @@ def feature_importance_map(feat_imp,
 
         num_features = feat_imp[dd].shape[1]
         if feature_names is None:
-            feat_labels = [ "f{}".format(ix) for ix in feat_ticks]
+            feat_labels = [ "f{}".format(ix) for ix in num_features]
         else:
             feat_labels = feature_names[dd]
             assert len(feat_labels)==num_features

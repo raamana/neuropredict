@@ -18,7 +18,7 @@ import numpy as np
 from pyradigm import MLDataset
 
 # the order of import is very important to avoid circular imports
-if version_info.major==2 and version_info.minor==7:
+if version_info.major == 2 and version_info.minor == 7:
     import config_neuropredict as cfg
     import rhst, visualize
     from freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
@@ -37,10 +37,11 @@ def make_time_stamp():
     # just by the hour
     return strftime('%Y%m%d-T%H', localtime())
 
-def not_unspecified( var ):
+
+def not_unspecified(var):
     """ Checks for null values of a give variable! """
 
-    return var not in [ 'None', None, '' ]
+    return var not in ['None', None, '']
 
 
 def get_parser():
@@ -129,18 +130,18 @@ Default: \'tenth\' of the number of samples in the training set. For example, if
                               help=help_text_pyradigm_paths)
 
     user_defined.add_argument("-u", "--user_feature_paths", action="store", dest="user_feature_paths",
-                              nargs = '+', # to allow for multiple features
+                              nargs='+',  # to allow for multiple features
                               default=None,
                               help=help_text_user_defined_folder)
 
     user_defined.add_argument("-d", "--data_matrix_paths", action="store", dest="data_matrix_paths",
-                              nargs = '+',
+                              nargs='+',
                               default=None,
                               help=help_text_data_matrix)
 
     parser.add_argument("-p", "--positive_class", action="store", dest="positive_class",
                         default=None,
-                        help= help_text_positive_class)
+                        help=help_text_positive_class)
 
     parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
                         default=0.5,
@@ -151,7 +152,7 @@ Default: \'tenth\' of the number of samples in the training set. For example, if
                         help=help_text_num_rep_cv)
 
     parser.add_argument("-k", "--num_features_to_select", dest="num_features_to_select",
-                        action="store", default= cfg.default_num_features_to_select,
+                        action="store", default=cfg.default_num_features_to_select,
                         help=help_text_feature_selection)
 
     parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
@@ -189,7 +190,8 @@ def organize_inputs(user_args):
     atleast_one_feature_specified = False
     if not_unspecified(user_args.fs_subject_dir):
         fs_subject_dir = abspath(user_args.fs_subject_dir)
-        assert pexists(fs_subject_dir), "Given Freesurfer directory doesn't exist."
+        if not pexists(fs_subject_dir):
+            raise IOError("Given Freesurfer directory doesn't exist.")
         atleast_one_feature_specified = True
     else:
         fs_subject_dir = None
@@ -197,8 +199,8 @@ def organize_inputs(user_args):
     if not_unspecified(user_args.user_feature_paths):
         user_feature_paths = list(map(abspath, user_args.user_feature_paths))
         for udir in user_feature_paths:
-            assert pexists(udir), "One of the user directories for features doesn't exist:" \
-                                         "\n {}".format(udir)
+            if not pexists(udir):
+                raise IOError("One of the user directories for features doesn't exist:\n {}".format(udir))
 
         atleast_one_feature_specified = True
         user_feature_type = 'dir_of_dirs'
@@ -206,7 +208,8 @@ def organize_inputs(user_args):
     elif not_unspecified(user_args.data_matrix_paths):
         user_feature_paths = list(map(abspath, user_args.data_matrix_paths))
         for dm in user_feature_paths:
-            assert pexists(dm), "One of the data matrices specified does not exist:\n {}".format(dm)
+            if not pexists(dm):
+                raise IOError("One of the data matrices specified does not exist:\n {}".format(dm))
 
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
@@ -214,13 +217,14 @@ def organize_inputs(user_args):
     elif not_unspecified(user_args.pyradigm_paths):
         user_feature_paths = list(map(abspath, user_args.pyradigm_paths))
         for pp in user_feature_paths:
-            assert pexists(pp), "One of pyradigms specified does not exist:\n {}".format(pp)
+            if not pexists(pp):
+                raise IOError("One of pyradigms specified does not exist:\n {}".format(pp))
 
         atleast_one_feature_specified = True
         user_feature_type = 'pyradigm'
     else:
         user_feature_paths = None
-        user_feature_type  = None
+        user_feature_type = None
 
     # map in python 3 returns a generator, not a list, so len() wouldnt work
     if not isinstance(user_feature_paths, list):
@@ -264,12 +268,12 @@ def parse_args():
             raise IOError('Output folder could not be created.')
 
     train_perc = np.float32(user_args.train_perc)
-    assert (train_perc >= 0.01 and train_perc <= 0.99), \
-        "Training percentage {} out of bounds - must be > 0.01 and < 0.99".format(train_perc)
+    if not ( 0.01 <= train_perc <= 0.99):
+        raise ValueError("Training percentage {} out of bounds - must be >= 0.01 and <= 0.99".format(train_perc))
 
     num_rep_cv = np.int64(user_args.num_rep_cv)
-    assert num_rep_cv >= 10, \
-        "Atleast 10 repetitions of CV is recommened."
+    if num_rep_cv < 10:
+        raise ValueError("Atleast 10 repetitions of CV is recommened.")
 
     sample_ids, classes = get_metadata(meta_file)
 
@@ -328,13 +332,13 @@ def get_metadata(path):
 
     meta = np.genfromtxt(path, dtype=str, delimiter=cfg.DELIMITER)
 
-    sample_ids = list(meta[:,0])
+    sample_ids = list(meta[:, 0])
     # checking for duplicates
     if len(set(sample_ids)) < len(sample_ids):
-        duplicates = [ sample for sample, count in Counter(sample_ids).items() if count > 1 ]
+        duplicates = [sample for sample, count in Counter(sample_ids).items() if count > 1]
         raise ValueError('Duplicate sample ids found!\n{}\nRemove duplicates and rerun.'.format(duplicates))
 
-    classes    = dict(zip(sample_ids, meta[:,1]))
+    classes = dict(zip(sample_ids, meta[:, 1]))
 
     return sample_ids, classes
 
@@ -386,7 +390,8 @@ def get_data_matrix(featpath):
         elif file_ext in ['.csv', '.txt']:
             matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
         else:
-            raise ValueError('Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
+            raise ValueError(
+                'Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
     except IOError:
         raise IOError('Unable to load the data matrix from disk.')
     except:
@@ -401,7 +406,7 @@ def get_pyradigm(feat_path):
     return feat_path
 
 
-def get_features(subjects, classes, featdir, outdir, outname, get_method = None, feature_type ='dir_of_dris'):
+def get_features(subjects, classes, featdir, outdir, outname, get_method=None, feature_type='dir_of_dris'):
     """
     Populates the pyradigm data structure with features from a given method.
 
@@ -430,8 +435,8 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method = None,
 
     """
 
-    assert callable(get_method), "Supplied get_method is not callable!" \
-                                "It must take in a path and return a vectorized feature set and labels."
+    if not callable(get_method):
+        raise ValueError("Supplied get_method is not callable! It must take in a path and return a vectorized feature set and labels.")
 
     # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
@@ -448,7 +453,7 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method = None,
     for subjid in subjects:
         try:
             if feature_type == 'data_matrix':
-                data = data_matrix[subjects.index(subjid),:]
+                data = data_matrix[subjects.index(subjid), :]
                 feat_names = None
             else:
                 data, feat_names = get_method(featdir, subjid)
@@ -478,10 +483,10 @@ def alert_failed_feature_extraction(num_excluded, num_read, total_num):
         warnings.warn('Features for {} / {} subjects could not be read. '.format(num_excluded, total_num))
         user_confirmation = input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
-            print ('Stopping. \n'
-                          'Rerun after completing the feature extraction for all subjects '
-                          'or exclude failed subjects..')
-            allowed_to_proceed = False # unnecessary
+            print('Stopping. \n'
+                  'Rerun after completing the feature extraction for all subjects '
+                  'or exclude failed subjects..')
+            allowed_to_proceed = False  # unnecessary
             sys.exit(1)
         print(' Proceeding with only {} subjects.'.format(num_read))
 
@@ -516,7 +521,7 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
         else:
             ds = MLDataset(dataset_spec)
     elif isinstance(dataset_spec, MLDataset):
-            ds = dataset_spec
+        ds = dataset_spec
     else:
         raise ValueError('Input must be a path or MLDataset.')
 
@@ -541,12 +546,12 @@ def make_visualizations(results_file_path, outdir):
     """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_params, \
-        feature_importances_rf, feature_names, \
-        num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
-            rhst.load_results(results_file_path)
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+    best_params, \
+    feature_importances_rf, feature_names, \
+    num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
+        rhst.load_results(results_file_path)
 
     if os.environ['DISPLAY'] is None:
         warnings.warn('DISPLAY is not set. Skipping to generate any visualizations.')
@@ -571,7 +576,8 @@ def make_visualizations(results_file_path, outdir):
         if num_classes > 2:
             visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
         elif num_classes == 2:
-            visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
+            visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix, class_order, method_names,
+                                                                  cmp_misclf_fig_path)
 
         featimp_fig_path = pjoin(outdir, 'feature_importance')
         visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
@@ -604,12 +610,12 @@ def export_results(results_file_path, outdir):
     """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_params, \
-        feature_importances_rf, feature_names, \
-        num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
-            rhst.load_results(results_file_path)
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+    best_params, \
+    feature_importances_rf, feature_names, \
+    num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
+        rhst.load_results(results_file_path)
 
     num_classes = confusion_matrix.shape[0]
     num_rep_cv = confusion_matrix.shape[2]
@@ -629,19 +635,19 @@ def export_results(results_file_path, outdir):
         balacc_path = pjoin(exp_dir, 'balanced_accuracy.csv')
         np.savetxt(balacc_path, accuracy_balanced,
                    delimiter=cfg.DELIMITER,
-                   fmt = cfg.EXPORT_FORMAT,
+                   fmt=cfg.EXPORT_FORMAT,
                    header=','.join(method_names))
 
         print('Done.')
 
         print('Saving confusion matrices ..', end='')
-        cfmat_reshaped = np.reshape(confusion_matrix, [num_classes*num_classes, num_rep_cv, num_datasets] )
+        cfmat_reshaped = np.reshape(confusion_matrix, [num_classes * num_classes, num_rep_cv, num_datasets])
         for mm in range(num_datasets):
             confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
             np.savetxt(confmat_path,
-                       cfmat_reshaped[:,:,mm].T, # NOTICE the transpose
+                       cfmat_reshaped[:, :, mm].T,  # NOTICE the transpose
                        delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
-                       comments= 'shape of confusion matrix: num_repetitions x num_classes^2')
+                       comments='shape of confusion matrix: num_repetitions x num_classes^2')
         print('Done.')
 
         print('Saving misclassfiication rates ..', end='')
@@ -650,7 +656,7 @@ def export_results(results_file_path, outdir):
         for mm in range(num_datasets):
             cmp_misclf_path = pjoin(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
             np.savetxt(cmp_misclf_path,
-                       misclf_rate[mm,:],
+                       misclf_rate[mm, :],
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
         print('Done.')
 
@@ -768,11 +774,11 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     method_names = list()
     outpath_list = list()
     for mm, cur_method in enumerate(method_list):
-        if cur_method in [ get_dir_of_dirs ]:
+        if cur_method in [get_dir_of_dirs]:
             method_name = basename(feature_path[mm])
-        elif cur_method in [ get_data_matrix ]:
+        elif cur_method in [get_data_matrix]:
             method_name = os.path.splitext(basename(feature_path[mm]))[0]
-        elif cur_method in [ get_pyradigm ]:
+        elif cur_method in [get_pyradigm]:
             loaded_dataset = MLDataset(feature_path[mm])
             if len(loaded_dataset.description) > 1:
                 method_name = loaded_dataset.description.replace(' ', '_')
@@ -820,7 +826,7 @@ def uniq_combined_name(method_names, max_len=180, num_char_each_word=1):
     if len(combined_name) > max_len:
         first_letters = list()
         for mname in method_names:
-            first_letters.append(''.join([ word[:num_char_each_word] for word in re.split(re_delimiters_word,mname)]))
+            first_letters.append(''.join([word[:num_char_each_word] for word in re.split(re_delimiters_word, mname)]))
         combined_name = '_'.join(first_letters)
 
         if len(combined_name) > max_len:
@@ -848,9 +854,9 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
     """
 
     freesurfer_readers = [aseg_stats_subcortical, aseg_stats_whole_brain]
-    userdefined_readers= { 'dir_of_dirs': get_dir_of_dirs,
+    userdefined_readers = {'dir_of_dirs': get_dir_of_dirs,
                            'data_matrix': get_data_matrix,
-                           'pyradigm' : get_pyradigm}
+                           'pyradigm': get_pyradigm}
 
     feature_dir = list()
     method_list = list()
@@ -889,8 +895,8 @@ def run_cli():
     # TODO design an API interface for advanced access as an importable package
 
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
-        fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
-        feature_selection_size = parse_args()
+    fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
+    feature_selection_size = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
@@ -900,7 +906,7 @@ def run_cli():
 
     results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
                                  train_perc=train_perc, num_repetitions=num_rep_cv,
-                                 positive_class= positiveclass,
+                                 positive_class=positiveclass,
                                  feat_sel_size=feature_selection_size)
 
     make_visualizations(results_file_path, out_dir)
@@ -913,8 +919,8 @@ def run_cli():
 def fit(input_specification, meta_data, output_dir,
         pipeline=None,
         train_perc=0.5,
-        num_repetitions = 200,
-        positive_class = None,
+        num_repetitions=200,
+        positive_class=None,
         feat_sel_size=cfg.default_num_features_to_select):
     """
     Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.
