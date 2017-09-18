@@ -916,7 +916,7 @@ def run_cli():
     return
 
 
-def fit(input_specification, meta_data, output_dir,
+def fit(feature_sets, meta_data, output_dir,
         pipeline=None,
         train_perc=0.5,
         num_repetitions=200,
@@ -929,11 +929,12 @@ def fit(input_specification, meta_data, output_dir,
 
     Parameters
     ----------
-    input_specification : multiple
-        Either
+    feature_sets : multiple
+        The input can be specified in either of the following ways:
+
             - path to a file containing list of paths (each line containing path to a valid MLDataset)
             - list of paths to MLDatasets saved on disk
-            - list of MLDatasets (not recommended when feature sets and datasets are big in size and number)
+            - list of MLDatasets
             - list of tuples (to specify multiple features), each element containing (X, y) i.e. data and target labels
             - a single tuple containing (X, y) i.e. data and target labels
             - list of paths to CSV files, each containing one type of features.
@@ -943,25 +944,38 @@ def fit(input_specification, meta_data, output_dir,
             - each sample belongs to same class across all feature sets.
 
     meta_data : multiple
-        - a path to a meta data file (see :doc:`features` page)
-        - a tuple conaining (sample_id_list, classes_dict), where the first element is list of samples IDs and the second element is a dict (keyed in sample IDs) with values representing their classes.
+        The meta data can be specified in either of the following ways:
+
+            - a path to a meta data file (see :doc:`features` page)
+            - a dict keyed in by sample IDs with values representing their classes.
+            - None, if meta data is already specified in ``feature_sets`` input.
+
     pipeline : object
-        A sciki-learn pipeline describing the sequence of steps (typically a set of feature selections and dimensionality reduction steps followed by classifier).
-        Default: None, which leads to the selection of a Random Forest classifier with no feature selection.
+        A sciki-learn pipeline describing the sequence of steps. This is typically a set of feature selections or dimensionality reduction steps followed by an estimator (classifier).
+
+        See http://scikit-learn.org/stable/modules/pipeline.html#pipeline for more details.
+
+        Default: None, which leads to the selection of a Random Forest classifier with feature selection based on mutual information (top k = N_train/10 features).
+
     method_names : list
-        A list of names to denote the different feature extraction methods
+        A list of names to denote the different feature sets
+
     out_results_dir : str
         Path to output directory to save the cross validation results to.
+
     train_perc : float, optional
         Percetange of subjects to train the classifier on.
         The percentage is applied to the size of the smallest class to estimate
         the number of subjects from each class to be reserved for training.
         The smallest class is chosen to avoid class-imbalance in the training set.
         Default: 0.8 (80%).
+
     num_repetitions : int, optional
         Number of repetitions of cross-validation estimation. Default: 200.
+
     positive_class : str
         Name of the class to be treated as positive in calculation of AUC
+
     feat_sel_size : str or int
         Number of features to retain after feature selection.
         Must be a method (tenth or square root of the size of smallest class in training set,

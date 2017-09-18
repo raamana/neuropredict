@@ -8,16 +8,18 @@ default_num_features_to_select = 'tenth'
 feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
 #Parameters specific to random forest classifier optimization
-NUM_TREES = 100
-NUM_TREES_RANGE = [100, 300]
-NUM_TREES_STEP = 50
+NUM_TREES = 250
+NUM_TREES_RANGE = [250, 300]
+NUM_TREES_STEP = 200
 NUM_PREDICTORS_STEP = 2
 
-MAX_MIN_LEAFSIZE = 20
+MAX_MIN_LEAFSIZE = 5
 LEAF_SIZE_STEP = 5
 
 # model optimization
-NUM_SPLITS_INNER_CV = 10
+INNER_CV_NUM_SPLITS = 10
+INNER_CV_TRAIN_PERC = 0.8
+INNER_CV_TEST_PERC = 0.2
 GRIDSEARCH_PRE_DISPATCH = 1
 
 SEED_RANDOM = 652

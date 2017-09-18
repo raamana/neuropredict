@@ -62,18 +62,27 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     train_class_sizes = list(train_fs.class_sizes.values())
     pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
 
-    # best_model, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
-    best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat, train_labels,
-        param_grid['random_forest_clf__min_samples_leaf'], param_grid['random_forest_clf__max_features'])
+    best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
+    # best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat, train_labels,
+    #     param_grid['random_forest_clf__min_samples_leaf'], param_grid['random_forest_clf__max_features'])
+
+    _, best_fsr = best_pipeline.steps[ 0] # assuming order in pipeline construction - step 0 : feature selector
+    _, best_clf = best_pipeline.steps[-1] # the final step in an sklearn pipeline is always an estimator/classifier
+
+    # could be useful to compute frequency of selection
+    index_selected_features = best_fsr.get_support(indices=True)
 
     # making predictions on the test set and assessing their performance
-    pred_test_labels = best_model.predict(test_data_mat)
-    feat_importance  = best_model.feature_importances_
+    pred_test_labels = best_pipeline.predict(test_data_mat)
+
+    feat_importance = np.full(train_fs.num_features, np.nan)
+    if hasattr(best_clf, 'feature_importances_'):
+        feat_importance[index_selected_features] = best_clf.feature_importances_
 
     # TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
     # The order of the classes corresponds to that in the attribute best_model.classes_.
-    pred_prob = best_model.predict_proba(test_data_mat)
+    pred_prob = best_pipeline.predict_proba(test_data_mat)
 
     conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_conf_matrix)
 
@@ -116,7 +125,7 @@ def optimize_RF_via_training_oob_score(train_data_mat, train_labels, range_min_l
 def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc):
     "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
 
-    inner_cv = ShuffleSplit(n_splits=cfg.NUM_SPLITS_INNER_CV, train_size=train_perc)
+    inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0-train_perc)
     gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
     gs.fit(train_data_mat, train_labels)
 
