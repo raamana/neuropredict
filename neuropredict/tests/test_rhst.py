@@ -8,6 +8,7 @@ from os.path import join as pjoin, exists as pexists, realpath, dirname, abspath
 sys.dont_write_bytecode = True
 
 from pyradigm import MLDataset
+import pytest
 
 if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
@@ -66,24 +67,12 @@ def make_random_MLdataset(max_num_classes = 20,
     return ds
 
 
-# # code to generate two classes with the same features
-# clset = rand_ds.class_set
-# class_one = rand_ds.get_class(clset[0])
-# class_two = rand_ds.get_class(clset[1])
-# same_data_two_classes = rand_ds.get_class(clset[0])
-#
-# ids_class1 = class_one.sample_ids
-# for idx, id in enumerate(class_two.sample_ids):
-#     # id from class 2, but data from class 1
-#     same_data_two_classes.add_sample(id, class_one.data[ids_class1[idx]], class_two.labels[id], class_two.classes[id])
-#
-# out_path = os.path.join(out_dir, 'same_data_two_classes.pkl')
-# # same_data_two_classes.save(out_path)
-
+@pytest.mark.workflow_slow
 def test_chance_classifier_binary():
 
+    # using a really small sample size for faster testing.
     rand_ds = make_random_MLdataset(max_num_classes=3, stratified=True,
-        max_class_size = 100, max_dim = 50)
+        max_class_size = 25, max_dim = 5)
 
     out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
     rand_two_class = rand_ds.get_class(rand_ds.class_set[0:2])
@@ -115,24 +104,4 @@ def test_chance_classifier_binary():
 
 
 
-test_chance_classifier_binary()
-
-# random_dataset = make_random_MLdataset( max_num_classes = 3)
-# class_set, label_set, class_sizes = random_dataset.summarize_classes()
-#
-# out_path = os.path.join(out_dir, 'random_dataset.pkl')
-# random_dataset.save(out_path)
-#
-# out_list = os.path.join(out_dir, 'list_datasets.txt')
-# with open(out_list, 'w') as lf:
-#     lf.writelines('\n'.join([out_path, ]))
-#
-# # res_path = rhst.run(out_list, out_dir, num_repetitions=20)
-# dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-#            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-#            best_min_leaf_size, best_num_predictors, \
-#            feature_importances_rf, feature_names, \
-#            num_times_misclfd, num_times_tested, \
-#            confusion_matrix, class_set, accuracy_balanced, auc_weighted = rhst.load_results(res_path)
-# print('')
 
