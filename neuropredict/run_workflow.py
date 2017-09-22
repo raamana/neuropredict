@@ -260,7 +260,7 @@ def parse_args():
 
     user_feature_paths, user_feature_type, fs_subject_dir = organize_inputs(user_args)
 
-    out_dir = abspath(user_args.out_dir)
+    out_dir = realpath(user_args.out_dir)
     if not pexists(out_dir):
         try:
             os.mkdir(out_dir)
@@ -895,8 +895,8 @@ def run_cli():
     # TODO design an API interface for advanced access as an importable package
 
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
-    fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
-    feature_selection_size = parse_args()
+        fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
+        feature_selection_size = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
@@ -909,8 +909,10 @@ def run_cli():
                                  positive_class=positiveclass,
                                  feat_sel_size=feature_selection_size)
 
+    print('Saving the visualizations and results to \n{}'.format(out_dir))
     make_visualizations(results_file_path, out_dir)
 
+    # TODO avoid loading results from disk twice (vis & export)
     export_results(results_file_path, out_dir)
 
     return
