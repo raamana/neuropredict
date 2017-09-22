@@ -671,6 +671,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     # best_params = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
     max_width_method_names = max(map(len, method_names))
+    ndigits_ndatasets = len(str(num_datasets))
 
     for rep in range(num_repetitions):
         print("\n CV repetition {:3d} ".format(rep))
@@ -684,9 +685,8 @@ def run(dataset_path_file, method_names, out_results_dir,
         # try set test_labels_per_rep outside dd loop as its the same across all dd
         for dd in range(num_datasets):
             # print("\t feature {:3d} {:>{}}: ".format(dd, method_names[dd], max_width_method_names), end='')
-            print("\t feature {index:3d} {name:>{namewidth}} : ".format(index=dd,
-                                                                       name=method_names[dd],
-                                                                       namewidth=max_width_method_names), end='')
+            print("\t feature {index:{nd}} {name:>{namewidth}} : ".format(index=dd, nd=ndigits_ndatasets,
+                name=method_names[dd], namewidth=max_width_method_names), end='')
 
             # using the same train/test sets for all feature sets.
             train_fs = datasets[dd].get_subset(train_set)
@@ -717,14 +717,16 @@ def run(dataset_path_file, method_names, out_results_dir,
 
             print('')
 
-    median_bal_acc = np.median(accuracy_balanced, axis=0)
-    median_wtd_auc = np.median(auc_weighted, axis=0)
+    median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
+    if num_classes == 2:
+        median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
 
-    print('\n\nmedian balanced accuracy and median weighted AUC: ')
+    print('\nMedian performance summary:\n')
     for dd in range(num_datasets):
-        print("\t feature {index:3d} {name:>{namewidth}} : {accuracy:2.2f} {auc:2.2f}".format(index=dd,
-            name=method_names[dd], namewidth=max_width_method_names,
-            accuracy=median_bal_acc[dd], auc=median_wtd_auc[dd]))
+        print("feature {index:{nd}} {name:>{namewidth}} : balanced accuracy {accuracy:2.2f} {auc:2.2f}".format(index=dd,
+            name=method_names[dd], namewidth=max_width_method_names, accuracy=median_bal_acc[dd], nd=ndigits_ndatasets), end='')
+        if num_classes == 2:
+            print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
 
     # save results
     var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,

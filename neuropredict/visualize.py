@@ -88,7 +88,7 @@ def feature_importance_map(feat_imp,
                   'Showing only the top {} to make the map legible.\n'
                   'Use the exported results to plot your own feature importance maps.'.format(num_features,
                     method_labels[dd], cfg.max_allowed_num_features_importance_map))
-            median_feat_imp = np.median(feat_imp[dd], axis=0)
+            median_feat_imp = np.nanmedian(feat_imp[dd], axis=0)
             sort_indices = np.argsort(median_feat_imp)[::-1] # ascending order, then reversing
             selected_indices = sort_indices[:cfg.max_allowed_num_features_importance_map]
             selected_feat_imp = feat_imp[dd][:,selected_indices]
@@ -114,7 +114,7 @@ def feature_importance_map(feat_imp,
                 ln.set_facecolor(cmap(cc))
                 #ln.set_label(feat_labels[cc])
         else:
-            median_feat_imp = np.median(selected_feat_imp, axis=0)
+            median_feat_imp = np.nanmedian(selected_feat_imp, axis=0)
             stdev_feat_imp  = np.nanstd(selected_feat_imp, axis=0)
             barwidth = 8.0 / effective_num_features
             rects = ax[dd].barh(feat_ticks, median_feat_imp,
