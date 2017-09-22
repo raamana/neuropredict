@@ -138,7 +138,7 @@ def optimize_RF_via_grid_search_CV(train_data_mat, train_labels, param_grid, tra
     # sample classifier
     rf = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
 
-    inner_cv = ShuffleSplit(n_splits=25, train_size=train_perc)
+    inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0-train_perc)
     gs = GridSearchCV(estimator=rf, param_grid=param_grid, cv=inner_cv)
     gs.fit(train_data_mat, train_labels)
 
@@ -220,8 +220,12 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
                        'log2' : do_log2}
 
     if isinstance(select_method, str):
-        smallest_class_size = np.sum(train_class_sizes)
-        calc_size = get_reduced_dim[select_method](smallest_class_size)
+        if select_method in get_reduced_dim:
+            smallest_class_size = np.sum(train_class_sizes)
+            calc_size = get_reduced_dim[select_method](smallest_class_size)
+        else:
+            # arg could be string coming from command line
+            calc_size = np.int64(select_method)
         reduced_dim = min(calc_size, train_data_dim)
     elif isinstance(select_method, int):
         if select_method > train_data_dim:
@@ -333,8 +337,8 @@ def get_RandomForestClassifier(reduced_dim='all'):
     "Returns the Random Forest classifier and its parameter grid. "
 
     range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
-    range_min_leafsize   = range(1, cfg.MAX_MIN_LEAFSIZE, cfg.LEAF_SIZE_STEP)
-    range_num_predictors = range(1, reduced_dim, cfg.NUM_PREDICTORS_STEP)
+    range_min_leafsize   = range(cfg.MAX_MIN_LEAFSIZE, 1, -cfg.LEAF_SIZE_STEP)
+    range_num_predictors = range(reduced_dim, 1, -cfg.NUM_PREDICTORS_STEP)
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
@@ -389,7 +393,7 @@ def get_classifier(classifier_name='RandomForestClassifier',
     return clf, clf_name, param_grid
 
 
-def get_feature_selector(feat_selector_name='SelectKBest_mutual_info_classif',
+def get_feature_selector(feat_selector_name='variancethreshold',
                          reduced_dim='all'):
     """
     Returns the named classifier and its parameter grid.
@@ -417,6 +421,9 @@ def get_feature_selector(feat_selector_name='SelectKBest_mutual_info_classif',
         # no param optimization for feat selector for now.
         feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
         fs_param_grid = None
+    elif fs_name in ['variancethreshold', ]:
+        feat_selector = VarianceThreshold(threshold=cfg.variance_threshold)
+        fs_param_grid = None
     else:
         raise NotImplementedError('Invalid name or feature selector not implemented.')
 
@@ -425,7 +432,7 @@ def get_feature_selector(feat_selector_name='SelectKBest_mutual_info_classif',
 
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
                  classifier_name='RandomForestClassifier',
-                 feat_selector_name='SelectKBest_mutual_info_classif'):
+                 feat_selector_name='variancethreshold'):
     """
     Constructor for pipeline (feature selection followed by a classifier).
 

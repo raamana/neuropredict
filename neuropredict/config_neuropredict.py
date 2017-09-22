@@ -7,14 +7,16 @@ PERC_PROB_ERROR_ALLOWED = 0.05
 default_num_features_to_select = 'tenth'
 feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
+variance_threshold = 0.001
+
 #Parameters specific to random forest classifier optimization
 NUM_TREES = 250
 NUM_TREES_RANGE = [250, 300]
 NUM_TREES_STEP = 200
-NUM_PREDICTORS_STEP = 2
+NUM_PREDICTORS_STEP = 5
 
 MAX_MIN_LEAFSIZE = 5
-LEAF_SIZE_STEP = 5
+LEAF_SIZE_STEP = 3
 
 # model optimization
 INNER_CV_NUM_SPLITS = 10
