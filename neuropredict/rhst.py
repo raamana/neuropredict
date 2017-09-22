@@ -275,7 +275,8 @@ def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
 
     num_classes = confmat.shape[0]
-    assert num_classes==confmat.shape[1], "given confusion matrix is not square!"
+    if num_classes!=confmat.shape[1]:
+        raise ValueError("given confusion matrix is not square!")
 
     confmat = confmat.astype(np.float64)
 
@@ -306,7 +307,9 @@ def load_results(results_file_path):
     "Loads the results serialized by RHsT."
     # TODO need to standardize what needs to saved/read back
 
-    assert os.path.exists(results_file_path), "Results file to be loaded doesn't exist!"
+    if not os.path.exists(results_file_path):
+        raise IOError("Results file to be loaded doesn't exist!")
+
     try:
         with open(results_file_path, 'rb') as rf:
             results_dict = pickle.load(rf)
@@ -536,7 +539,9 @@ def run(dataset_path_file, method_names, out_results_dir,
     #   keep tab on misclassifications
     # save results (comprehensive and reloadable manner)
 
-    assert os.path.exists(dataset_path_file), "File containing dataset paths does not exist."
+    if not os.path.exists(dataset_path_file):
+        raise IOError("File containing dataset paths does not exist.")
+
     with open(dataset_path_file, 'r') as dpf:
         dataset_paths = dpf.read().splitlines()
 
@@ -548,14 +553,19 @@ def run(dataset_path_file, method_names, out_results_dir,
         raise IOError('Error in checking or creating output directiory. Ensure write permissions!')
 
     num_repetitions = int(num_repetitions)
-    assert num_repetitions < np.Inf, "Infinite number of repetitions is not recommened!"
-    assert num_repetitions > 1, "More than repetition is necessary!"
+    if not np.isfinite(num_repetitions):
+        raise ValueError("Infinite number of repetitions is not recommened!")
+
+    if num_repetitions <= 1:
+        raise ValueError("More than 1 repetition is necessary!")
+
     # TODO warning when num_rep are not suficient: need a heuristic to assess it
 
     # loading datasets
     datasets = list()
     for fp in dataset_paths:
-        assert os.path.exists(fp), "Dataset @ {} does not exist.".format(fp)
+        if not os.path.exists(fp):
+            raise IOError("Dataset @ {} does not exist.".format(fp))
 
         try:
             # there is an internal validation of dataset
@@ -581,10 +591,11 @@ def run(dataset_path_file, method_names, out_results_dir,
     if num_datasets > 1:
         for idx in range(1, num_datasets):
             this_ds = datasets[idx]
-            assert num_samples==this_ds.num_samples, "Number of samples in different datasets differ!"
-            assert set(class_set)==set(this_ds.classes.values()), \
-                "Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                    set(class_set), set(this_ds.classes.values()))
+            if num_samples!=this_ds.num_samples:
+                raise ValueError("Number of samples in different datasets differ!")
+            if set(class_set)!=set(this_ds.classes.values()):
+                raise ValueError("Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
+                    set(class_set), set(this_ds.classes.values())))
 
     # re-map the labels (from 1 to n) to ensure numeric labels do not differ
     remapped_class_labels = dict()
@@ -606,8 +617,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     for idx in range(num_datasets):
         datasets[idx].labels = labels_with_correspondence
 
-    assert (train_perc >= 0.01 and train_perc <= 0.99), \
-        "Training percentage {} out of bounds - must be > 0.01 and < 0.99".format(train_perc)
+    if not 0.01 <= train_perc <= 0.99:
+        raise ValueError("Training percentage {} out of bounds - must be > 0.01 and < 0.99".format(train_perc))
 
     num_features = np.zeros(num_datasets).astype(np.int64)
     for idx in range(num_datasets):
@@ -620,7 +631,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     train_size_common = np.int64(np.minimum(min(train_size_per_class), train_size_per_class))
     # single number
     reduced_sizes = np.unique(train_size_common)
-    assert len(reduced_sizes)==1, "Error in stratification of training set based on the smallest class!"
+    if len(reduced_sizes)!=1:
+        raise ValueError("Error in stratification of training set based on the smallest class!")
     train_size_common = reduced_sizes[0]
 
     total_test_samples = np.int64(np.sum(class_sizes) - num_classes*train_size_common)
@@ -629,8 +641,6 @@ def run(dataset_path_file, method_names, out_results_dir,
     pred_labels_per_rep_fs = np.full([num_repetitions, num_datasets, total_test_samples], np.nan)
     test_labels_per_rep    = np.full([num_repetitions, total_test_samples], np.nan)
 
-    best_min_leaf_size  = np.full([num_repetitions, num_datasets], np.nan)
-    best_num_predictors = np.full([num_repetitions, num_datasets], np.nan)
     best_params = dict()
 
     # initialize misclassification counters

@@ -81,7 +81,8 @@ def feature_importance_map(feat_imp,
             feat_labels = [ "f{}".format(ix) for ix in num_features]
         else:
             feat_labels = feature_names[dd]
-            assert len(feat_labels)==num_features
+            if len(feat_labels)<num_features:
+                raise ValueError('Insufficient number of feature labels.')
 
         if num_features > cfg.max_allowed_num_features_importance_map:
             print('Too many (n={}) features detected for {}.\n'
@@ -172,9 +173,8 @@ def confusion_matrices(cfmat_array, class_labels,
 
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[0]
-    assert num_classes == cfmat_array.shape[1], \
-        "Invalid dimensions of confusion matrix. " \
-        "Need [num_classes, num_classes, num_repetitions, num_datasets]"
+    if num_classes != cfmat_array.shape[1]:
+        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
 
     np.set_printoptions(2)
     for dd in range(num_datasets):
@@ -268,9 +268,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
 
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[0]
-    assert num_classes == cfmat_array.shape[1], \
-        "Invalid dimensions of confusion matrix. " \
-        "Required dims: [num_classes, num_classes, num_repetitions, num_datasets]"
+    if num_classes != cfmat_array.shape[1]:
+        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
@@ -333,9 +332,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
 
     num_datasets = cfmat_array.shape[3]
     num_classes  = cfmat_array.shape[0]
-    assert num_classes == cfmat_array.shape[1], \
-        "Invalid dimensions of confusion matrix. " \
-        "Required dims: [num_classes, num_classes, num_repetitions, num_datasets]"
+    if num_classes != cfmat_array.shape[1]:
+        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -397,9 +395,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
 
     num_datasets = cfmat_array.shape[3]
     num_classes  = cfmat_array.shape[0]
-    assert num_classes == cfmat_array.shape[1], \
-        "Invalid dimensions of confusion matrix. " \
-        "Required dims: [num_classes, num_classes, num_repetitions, num_datasets]"
+    if num_classes != cfmat_array.shape[1]:
+        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -584,7 +581,8 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
 
     num_repetitions = metric.shape[0]
     num_datasets = metric.shape[1]
-    assert len(labels) == num_datasets, "Differing number of features and labels!"
+    if len(labels) < num_datasets:
+        raise ValueError("Insufficient number of labels for {} features!".format(num_datasets))
     method_ticks = 1.0 + np.arange(num_datasets)
 
     fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)

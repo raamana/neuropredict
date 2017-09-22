@@ -469,7 +469,7 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method=None, f
     alert_failed_feature_extraction(len(ids_excluded), ds.num_samples, len(subjects))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
-    saved_path = pjoin(outdir, outname)
+    saved_path = realpath(pjoin(outdir, outname))
     ds.save(saved_path)
 
     return saved_path
