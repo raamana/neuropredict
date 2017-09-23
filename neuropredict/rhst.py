@@ -126,7 +126,8 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
     "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
 
     inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0-train_perc)
-    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
+    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
+                      n_jobs=GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
     gs.fit(train_data_mat, train_labels)
 
     return gs.best_estimator_, gs.best_params_
