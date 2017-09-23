@@ -4,7 +4,7 @@ __all__ = ['run', 'load_results', 'save_results']
 
 import os
 import pickle
-from collections import Counter
+from collections import Counter, namedtuple
 from sys import version_info
 
 import numpy as np
@@ -16,7 +16,7 @@ from sklearn.pipeline import Pipeline
 
 from pyradigm import MLDataset
 
-if version_info.major==2 and version_info.minor==7:
+if version_info.major == 2 and version_info.minor == 7:
     import config_neuropredict as cfg
 elif version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
@@ -56,18 +56,19 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     if label_order_in_conf_matrix is None:
         raise ValueError('Label order for confusion matrix must be specified for accurate results/visulizations.')
 
-    train_data_mat, train_labels, _                    = train_fs.data_and_labels()
-    test_data_mat , true_test_labels , test_sample_ids = test_fs.data_and_labels()
+    train_data_mat, train_labels, _ = train_fs.data_and_labels()
+    test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_labels()
 
     train_class_sizes = list(train_fs.class_sizes.values())
     pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
 
-    best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc)
+    best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
+                                                                      param_grid, train_perc)
     # best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat, train_labels,
     #     param_grid['random_forest_clf__min_samples_leaf'], param_grid['random_forest_clf__max_features'])
 
-    _, best_fsr = best_pipeline.steps[ 0] # assuming order in pipeline construction - step 0 : feature selector
-    _, best_clf = best_pipeline.steps[-1] # the final step in an sklearn pipeline is always an estimator/classifier
+    _, best_fsr = best_pipeline.steps[0]  # assuming order in pipeline construction - step 0 : feature selector
+    _, best_clf = best_pipeline.steps[-1]  # the final step in an sklearn pipeline is always an estimator/classifier
 
     # could be useful to compute frequency of selection
     index_selected_features = best_fsr.get_support(indices=True)
@@ -110,8 +111,8 @@ def optimize_RF_via_training_oob_score(train_data_mat, train_labels, range_min_l
     best_idx_ls, best_idx_numpred = np.unravel_index(oob_error_train.argmin(), oob_error_train.shape)
     best_minleafsize = range_min_leafsize[best_idx_ls]
     best_num_predictors = range_num_predictors[best_idx_numpred]
-    best_params = { 'min_samples_leaf': best_minleafsize,
-                    'max_features' : best_num_predictors}
+    best_params = {'min_samples_leaf': best_minleafsize,
+                   'max_features'    : best_num_predictors}
 
     # training the RF using the best parameters
     best_rf = RandomForestClassifier(max_features=best_num_predictors, min_samples_leaf=best_minleafsize,
@@ -125,9 +126,9 @@ def optimize_RF_via_training_oob_score(train_data_mat, train_labels, range_min_l
 def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc):
     "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
 
-    inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0-train_perc)
+    inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0 - train_perc)
     gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
-                      n_jobs=GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
+                      n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
     gs.fit(train_data_mat, train_labels)
 
     return gs.best_estimator_, gs.best_params_
@@ -139,7 +140,7 @@ def optimize_RF_via_grid_search_CV(train_data_mat, train_labels, param_grid, tra
     # sample classifier
     rf = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
 
-    inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0-train_perc)
+    inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0 - train_perc)
     gs = GridSearchCV(estimator=rf, param_grid=param_grid, cv=inner_cv)
     gs.fit(train_data_mat, train_labels)
 
@@ -147,7 +148,7 @@ def optimize_RF_via_grid_search_CV(train_data_mat, train_labels, param_grid, tra
 
 
 def __max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_features,
-                                                      perc_prob_error_allowed = cfg.PERC_PROB_ERROR_ALLOWED):
+                                                        perc_prob_error_allowed=cfg.PERC_PROB_ERROR_ALLOWED):
     """
     Computes the largest dimensionality that can be used to train a predictive model
         avoiding curse of dimensionality for a 5% probability of error.
@@ -168,13 +169,13 @@ def __max_dimensionality_to_avoid_curseofdimensionality(num_samples, num_feature
 
     """
 
-    if num_samples < 1.0/(2.0*perc_prob_error_allowed):
+    if num_samples < 1.0 / (2.0 * perc_prob_error_allowed):
         max_red_dim = 1
     else:
-        max_red_dim = np.floor(num_samples * (2.0*perc_prob_error_allowed))
+        max_red_dim = np.floor(num_samples * (2.0 * perc_prob_error_allowed))
 
     # to ensure we don't request more features than available
-    max_red_dim = np.int64( min(max_red_dim, num_features) )
+    max_red_dim = np.int64(min(max_red_dim, num_features))
 
     return max_red_dim
 
@@ -207,14 +208,18 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     if select_method in [None, 'all']:
         return train_data_dim
 
+
     def do_sqrt(size):
         return np.ceil(np.sqrt(size))
 
+
     def do_tenth(size):
-        return np.ceil(size/10)
+        return np.ceil(size / 10)
+
 
     def do_log2(size):
         return np.ceil(np.log2(size))
+
 
     get_reduced_dim = {'tenth': do_tenth,
                        'sqrt' : do_sqrt,
@@ -276,14 +281,14 @@ def balanced_accuracy(confmat):
     "Computes the balanced accuracy in a given confusion matrix!"
 
     num_classes = confmat.shape[0]
-    if num_classes!=confmat.shape[1]:
+    if num_classes != confmat.shape[1]:
         raise ValueError("given confusion matrix is not square!")
 
     confmat = confmat.astype(np.float64)
 
-    indiv_class_acc = np.full([num_classes,1], np.nan)
+    indiv_class_acc = np.full([num_classes, 1], np.nan)
     for cc in range(num_classes):
-        indiv_class_acc[cc] = confmat[cc,cc] / np.sum(confmat[cc,:])
+        indiv_class_acc[cc] = confmat[cc, cc] / np.sum(confmat[cc, :])
 
     bal_acc = np.mean(indiv_class_acc)
 
@@ -319,11 +324,12 @@ def load_results(results_file_path):
             # locals().update(results_dict)
 
             dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-                pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-                best_params, feature_importances_rf, \
-                feature_names, num_times_misclfd, num_times_tested, \
-                confusion_matrix, class_set, accuracy_balanced, \
-                auc_weighted, positive_class = [results_dict.get(var_name) for var_name in cfg.rhst_data_variables_to_persist]
+            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+            best_params, feature_importances_rf, \
+            feature_names, num_times_misclfd, num_times_tested, \
+            confusion_matrix, class_set, accuracy_balanced, \
+            auc_weighted, positive_class = [results_dict.get(var_name) for var_name in
+                                            cfg.rhst_data_variables_to_persist]
 
     except:
         raise IOError('Error loading the saved results from \n{}'.format(results_file_path))
@@ -338,15 +344,15 @@ def load_results(results_file_path):
 
 
 def get_RandomForestClassifier(reduced_dim='all'):
-    "Returns the Random Forest classifier and its parameter grid. "
+    """ Returns the Random Forest classifier and its parameter grid. """
 
     range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
-    range_min_leafsize   = range(cfg.MAX_MIN_LEAFSIZE, 1, -cfg.LEAF_SIZE_STEP)
+    range_min_leafsize = range(cfg.MAX_MIN_LEAFSIZE, 1, -cfg.LEAF_SIZE_STEP)
     range_num_predictors = range(reduced_dim, 1, -cfg.NUM_PREDICTORS_STEP)
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
-        range_min_leafsize = [ 1, ]
+        range_min_leafsize = [1, ]
     if len(range_num_predictors) <= 1:
         range_num_predictors = [reduced_dim, ]
     if len(range_num_trees) < 1:
@@ -357,8 +363,8 @@ def get_RandomForestClassifier(reduced_dim='all'):
     clf_name = 'random_forest_clf'
     param_name = lambda string: '{}__{}'.format(clf_name, string)
     param_grid = {param_name('min_samples_leaf'): range_min_leafsize,
-                  param_name('max_features'): range_num_predictors,
-                  param_name('n_estimators'): range_num_trees}
+                  param_name('max_features')    : range_num_predictors,
+                  param_name('n_estimators')    : range_num_trees}
 
     rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
 
@@ -474,7 +480,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name, reduced_dim)
 
     param_grid = clf_param_grid
-    if fs_param_grid: # None or empty dict both evaluate to False
+    if fs_param_grid:  # None or empty dict both evaluate to False
         fs_params = set(fs_param_grid.keys())
         clf_params = set(param_grid.keys())
         if len(fs_params.intersection(clf_params)):
@@ -484,7 +490,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
         # dict gets extended due to lack of overlap in keys
         param_grid.update(fs_param_grid)
 
-    steps = [(fs_name , feat_selector),
+    steps = [(fs_name, feat_selector),
              (est_name, estimator)]
     pipeline = Pipeline(steps)
 
@@ -492,8 +498,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
 
 
 def run(dataset_path_file, method_names, out_results_dir,
-        train_perc = 0.8, num_repetitions = 200,
-        positive_class = None,
+        train_perc=0.8, num_repetitions=200,
+        positive_class=None,
         feat_sel_size=cfg.default_num_features_to_select):
     """
 
@@ -580,6 +586,10 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     # ensure same number of subjects across all datasets
     num_datasets = int(len(datasets))
+
+    if len(method_names) < num_datasets:
+        raise ValueError('Insufficient number of names (n={}) for the given feature sets (n={}).'.format(len(method_names), num_datasets))
+
     # looking into the first dataset
     common_ds = datasets[0]
     class_set, label_set_in_ds, class_sizes = common_ds.summarize_classes()
@@ -592,11 +602,11 @@ def run(dataset_path_file, method_names, out_results_dir,
     if num_datasets > 1:
         for idx in range(1, num_datasets):
             this_ds = datasets[idx]
-            if num_samples!=this_ds.num_samples:
+            if num_samples != this_ds.num_samples:
                 raise ValueError("Number of samples in different datasets differ!")
-            if set(class_set)!=set(this_ds.classes.values()):
+            if set(class_set) != set(this_ds.classes.values()):
                 raise ValueError("Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                    set(class_set), set(this_ds.classes.values())))
+                        set(class_set), set(this_ds.classes.values())))
 
     # re-map the labels (from 1 to n) to ensure numeric labels do not differ
     remapped_class_labels = dict()
@@ -605,11 +615,11 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     # finding the numeric label for positive class
     # label will also be in the index into the arrays over classes due to construction above
-    if num_classes == 2:
-        if positive_class is None:
-            positive_class = class_set[-1]
-        # List.index(item) returns the first index of a match
-        pos_class_index = class_set.index(positive_class)  # remapped_class_labels[positive_class]
+    if positive_class is None:
+        positive_class = class_set[-1]
+    elif positive_class not in class_set:
+        raise ValueError('Chosen positive class does not exist in the dataset')
+    pos_class_index = class_set.index(positive_class)  # remapped_class_labels[positive_class]
 
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
@@ -627,106 +637,59 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     # determine the common size for training
     print("Different classes in the training set are stratified to match the smallest class!")
-    train_size_per_class = np.int64(np.floor(train_perc*class_sizes).astype(np.float64))
+    train_size_per_class = np.int64(np.floor(train_perc * class_sizes).astype(np.float64))
     # per-class
     train_size_common = np.int64(np.minimum(min(train_size_per_class), train_size_per_class))
     # single number
     reduced_sizes = np.unique(train_size_common)
-    if len(reduced_sizes)!=1:
+    if len(reduced_sizes) != 1:
         raise ValueError("Error in stratification of training set based on the smallest class!")
     train_size_common = reduced_sizes[0]
 
-    total_test_samples = np.int64(np.sum(class_sizes) - num_classes*train_size_common)
+    total_test_samples = np.int64(np.sum(class_sizes) - num_classes * train_size_common)
 
-    pred_prob_per_class    = np.full([num_repetitions, num_datasets, total_test_samples, num_classes], np.nan)
+    pred_prob_per_class = np.full([num_repetitions, num_datasets, total_test_samples, num_classes], np.nan)
     pred_labels_per_rep_fs = np.full([num_repetitions, num_datasets, total_test_samples], np.nan)
-    test_labels_per_rep    = np.full([num_repetitions, total_test_samples], np.nan)
+    test_labels_per_rep = np.full([num_repetitions, total_test_samples], np.nan)
 
-    best_params = dict()
+    best_params = [None]*num_repetitions
 
     # initialize misclassification counters
     num_times_tested = list()
-    num_times_misclfd= list()
+    num_times_misclfd = list()
     for dd in range(num_datasets):
         num_times_tested.append(Counter(common_ds.sample_ids))
         num_times_misclfd.append(Counter(common_ds.sample_ids))
         for subid in common_ds.sample_ids:
             num_times_tested[dd][subid] = 0
-            num_times_misclfd[dd][subid]= 0
+            num_times_misclfd[dd][subid] = 0
 
     # multi-class metrics
-    confusion_matrix  = np.full([num_classes, num_classes, num_repetitions, num_datasets], np.nan)
+    confusion_matrix = np.full([num_repetitions, num_classes, num_classes, num_datasets], np.nan)
     accuracy_balanced = np.full([num_repetitions, num_datasets], np.nan)
     auc_weighted = np.full([num_repetitions, num_datasets], np.nan)
 
-    # # specificity & sensitivity are ill-defined in the general case as they require us to know which class is positive
-    # # hence would refer them from now on simply correct classification rates (ccr)
-    # moreover this can be easily computed from the confusion matrix anyway.
-    # ccr_perclass = np.full([num_repetitions, num_datasets, num_classes], np.nan)
-    # binary metrics
-    # TODO later when are the uses of precision and recall appropriate?
-    # precision    = np.full([num_repetitions, num_datasets], np.nan)
-    # recall       = np.full([num_repetitions, num_datasets], np.nan)
-
-    feature_names = [None]*num_datasets
-    feature_importances_rf = [None]*num_datasets
+    feature_names = [None] * num_datasets
+    feature_importances_per_rep = [None]*num_repetitions
+    feature_importances_rf = [None] * num_datasets
     for idx in range(num_datasets):
-        feature_importances_rf[idx] = np.full([num_repetitions,num_features[idx]], np.nan)
+        feature_importances_rf[idx] = np.full([num_repetitions, num_features[idx]], np.nan)
         feature_names[idx] = datasets[idx].feature_names
-
-    # repeated-hold out CV begins here
-    # TODO LATER implement a multi-process version as differnt rep's are embarrasingly parallel
-    # use the following one statement processing that can be forked to parallel threads
-    # pred_prob_per_class[rep, dd, :, :], pred_labels_per_rep_fs[rep, dd, :], \
-    # confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep, :], \
-    # best_params = holdout_evaluation(datasets, train_size_common, total_test_samples)
 
     max_width_method_names = max(map(len, method_names))
     ndigits_ndatasets = len(str(num_datasets))
+    pretty_print = namedtuple('pprint', ['str_width', 'num_digits'])
+    print_options = pretty_print(max_width_method_names, ndigits_ndatasets)
 
     for rep in range(num_repetitions):
         print("\n CV repetition {:3d} ".format(rep))
-
-        # TODO to achieve feature- or method-level parallization,
-        #   train/test splits need to be saved at the entry level for each subgroup and used here
-        train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
-        test_labels_per_rep[rep, :] = [ common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
-
-        # evaluating each feature/dataset
-        # try set test_labels_per_rep outside dd loop as its the same across all dd
-        for dd in range(num_datasets):
-            # print("\t feature {:3d} {:>{}}: ".format(dd, method_names[dd], max_width_method_names), end='')
-            print("\t feature {index:{nd}} {name:>{namewidth}} : ".format(index=dd, nd=ndigits_ndatasets,
-                name=method_names[dd], namewidth=max_width_method_names), end='')
-
-            # using the same train/test sets for all feature sets.
-            train_fs = datasets[dd].get_subset(train_set)
-            test_fs  = datasets[dd].get_subset(test_set)
-
-            pred_prob_per_class[rep, dd, :, :], \
-                pred_labels_per_rep_fs[rep, dd, :], true_test_labels, \
-                confmat, misclsfd_ids_this_run, feature_importances_rf[dd][rep,:], \
-                best_params[(rep, dd)] = \
-                eval_optimized_model_on_testset(train_fs, test_fs,
-                                                label_order_in_conf_matrix=label_set,
-                                                feat_sel_size=feat_sel_size, train_perc=train_perc)
-
-            accuracy_balanced[rep,dd] = balanced_accuracy(confmat)
-            confusion_matrix[:,:,rep,dd] = confmat
-            print('balanced accuracy: {:.4f} '.format(accuracy_balanced[rep, dd]), end='')
-
-            if num_classes == 2:
-                # TODO FIX auc calculation flipped
-                # TODO store fpr and tpr per rep, and provide the user to option to vizualize the average if they wish
-                auc_weighted[rep,dd] = roc_auc_score(true_test_labels,
-                                                       pred_prob_per_class[rep, dd, :, pos_class_index],
-                                                       average='weighted')
-                print('\t weighted AUC: {:.4f}'.format(auc_weighted[rep,dd]), end='')
-
-            num_times_misclfd[dd].update(misclsfd_ids_this_run)
-            num_times_tested[dd].update(test_fs.sample_ids)
-
-            print('')
+        pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
+        accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
+        feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
+                                                           total_test_samples, num_classes, num_features,
+                                                           num_times_tested, num_times_misclfd, label_set,
+                                                           method_names, pos_class_index, print_options)
+        print('--')
 
     median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
     if num_classes == 2:
@@ -734,8 +697,9 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     print('\nMedian performance summary:\n')
     for dd in range(num_datasets):
-        print("feature {index:{nd}} {name:>{namewidth}} : balanced accuracy {accuracy:2.2f} {auc:2.2f}".format(index=dd,
-            name=method_names[dd], namewidth=max_width_method_names, accuracy=median_bal_acc[dd], nd=ndigits_ndatasets), end='')
+        print("feature {index:{nd}} {name:>{namewidth}} : "
+              "balanced accuracy {accuracy:2.2f} ".format(index=dd, name=method_names[dd], accuracy=median_bal_acc[dd],
+                                                                    namewidth=max_width_method_names, nd=ndigits_ndatasets), end='')
         if num_classes == 2:
             print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
 
@@ -746,24 +710,84 @@ def run(dataset_path_file, method_names, out_results_dir,
                         feature_importances_rf, feature_names,
                         num_times_misclfd, num_times_tested,
                         confusion_matrix, class_set,
-                        accuracy_balanced, auc_weighted, positive_class ]
+                        accuracy_balanced, auc_weighted, positive_class]
 
     var_names_to_save = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
-                        'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
-                        'best_params',
-                        'feature_importances_rf', 'feature_names',
-                        'num_times_misclfd', 'num_times_tested',
-                        'confusion_matrix', 'class_set',
-                        'accuracy_balanced', 'auc_weighted', 'positive_class' ]
+                         'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
+                         'best_params',
+                         'feature_importances_rf', 'feature_names',
+                         'num_times_misclfd', 'num_times_tested',
+                         'confusion_matrix', 'class_set',
+                         'accuracy_balanced', 'auc_weighted', 'positive_class']
 
     locals_var_dict = locals()
-    dict_to_save = {var : locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
 
     out_results_path = save_results(out_results_dir, dict_to_save)
 
     return out_results_path
 
 
+def holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
+                                   total_test_samples, num_classes, num_features_per_dataset,
+                                   num_times_tested, num_times_misclfd,
+                                   label_set, method_names, pos_class_index, print_options):
+    """"""
+
+    num_datasets = len(datasets)
+    pred_prob_per_class = np.full([num_datasets, total_test_samples, num_classes], np.nan)
+    pred_labels_per_rep_fs = np.full([num_datasets, total_test_samples], np.nan)
+    true_test_labels = np.full(total_test_samples, np.nan)
+
+    # multi-class metrics
+    confusion_matrix = np.full([num_classes, num_classes, num_datasets], np.nan)
+    accuracy_balanced = np.full(num_datasets, np.nan)
+    auc_weighted = np.full(num_datasets, np.nan)
+    best_params = [None] * num_datasets
+
+    feature_importances = [None] * num_datasets
+    for idx in range(num_datasets):
+        feature_importances[idx] = np.full(num_features_per_dataset[idx], np.nan)
+
+    # set of subjects for training and testing, common for all datasets.
+    train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
+    true_test_labels = [common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
+
+    # evaluating each feature/dataset
+    for dd in range(num_datasets):
+        print("\t feature {index:{nd}} {name:>{namewidth}} : ".format(index=dd, name=method_names[dd],
+                                                                      nd=print_options.num_digits,
+                                                                      namewidth=print_options.str_width), end='')
+
+        # using the same train/test sets for all feature sets.
+        train_fs = datasets[dd].get_subset(train_set)
+        test_fs = datasets[dd].get_subset(test_set)
+
+        pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], true_test_labels, \
+        confmat, misclsfd_ids_this_run, feature_importances[dd], best_params[dd] = \
+            eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc, feat_sel_size=feat_sel_size,
+                                            label_order_in_conf_matrix=label_set)
+
+        accuracy_balanced[dd] = balanced_accuracy(confmat)
+        confusion_matrix[:, :, dd] = confmat
+        print('balanced accuracy: {:.4f} '.format(accuracy_balanced[dd]), end='')
+
+        if num_classes == 2:
+            # TODO FIX auc calculation flipped
+            # TODO store fpr and tpr per trial, and provide the user to option to vizualize the average if they wish
+            auc_weighted[dd] = roc_auc_score(true_test_labels, pred_prob_per_class[dd, :, pos_class_index],
+                                             average='weighted')
+            print('\t weighted AUC: {:.4f}'.format(auc_weighted[dd]), end='')
+
+        num_times_misclfd[dd].update(misclsfd_ids_this_run)
+        num_times_tested[dd].update(test_fs.sample_ids)
+
+        print('')
+
+    return pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, \
+           accuracy_balanced, confusion_matrix, auc_weighted, \
+           feature_importances, best_params
+
+
 if __name__ == '__main__':
     pass
-
