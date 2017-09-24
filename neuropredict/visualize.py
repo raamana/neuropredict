@@ -170,12 +170,12 @@ def confusion_matrices(cfmat_array, class_labels,
     -------
 
     """
-    raise TypeError(
-        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
+
     num_datasets = cfmat_array.shape[3]
-    num_classes = cfmat_array.shape[0]
-    if num_classes != cfmat_array.shape[1]:
-        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
+    num_classes = cfmat_array.shape[1]
+    if num_classes != cfmat_array.shape[2]:
+        raise ValueError("Invalid dimensions of confusion matrix.\n"
+                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
 
     np.set_printoptions(2)
     for dd in range(num_datasets):
@@ -183,17 +183,19 @@ def confusion_matrices(cfmat_array, class_labels,
         output_path.replace(' ', '_')
 
         # mean confusion over CV trials
-        avg_cfmat = np.mean(cfmat_array[:, :, :, dd], 2)
+        avg_cfmat = mean_over_cv_trials(cfmat_array[:, :, :, dd], num_classes)
 
-        # percentage confusion relative to class size
-        clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
-        cfmat = np.divide(avg_cfmat, clsiz_elemwise)
-        # human readable in 0-100%, 3 deciamls
-        cfmat = 100 * np.around(cfmat, decimals=cfg.PRECISION_METRICS)
+        # avg_cfmat = np.mean(cfmat_array[:, :, :, dd], 0)
+        #
+        # # percentage confusion relative to class size
+        # class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
+        # cfmat = np.divide(avg_cfmat, class_size_elementwise)
+        # # human readable in 0-100%, 3 deciamls
+        # cfmat = 100 * np.around(cfmat, decimals=cfg.PRECISION_METRICS)
 
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
-        im = plt.imshow(cfmat, interpolation='nearest', cmap=cmap)
+        im = plt.imshow(avg_cfmat, interpolation='nearest', cmap=cmap)
         plt.title(method_names[dd])
         plt.colorbar(im, fraction=0.046, pad=0.04)
         tick_marks = np.arange(len(class_labels))
@@ -203,9 +205,9 @@ def confusion_matrices(cfmat_array, class_labels,
         # trick from sklearn
         thresh = 100.0 / num_classes  # cfmat.max() / 2.
         for i, j in itertools.product(range(num_classes), range(num_classes)):
-            plt.text(j, i, "{:.{prec}f}%".format(cfmat[i, j], prec=cfg.PRECISION_METRICS),
+            plt.text(j, i, "{:.{prec}f}%".format(avg_cfmat[i, j], prec=cfg.PRECISION_METRICS),
                      horizontalalignment="center", fontsize=14,
-                     color="tomato" if cfmat[i, j] > thresh else "teal")
+                     color="tomato" if avg_cfmat[i, j] > thresh else "teal")
 
         plt.tight_layout()
         plt.ylabel('True class')
@@ -222,25 +224,44 @@ def confusion_matrices(cfmat_array, class_labels,
     return
 
 
+def mean_over_cv_trials(conf_mat_array, num_classes):
+    """Common method to average over different CV trials,
+    to ensure it is done over the right axis (the first one - axis=0, column 1) for all confusion matrix methods"""
+
+    avg_cfmat = np.mean(conf_mat_array[:, :, :], 0)
+
+    # percentage confusion relative to class size
+    class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
+    avg_cfmat = np.divide(avg_cfmat, class_size_elementwise)
+    # making it human readable : 0-100%
+    avg_cfmat = 100 * np.around(avg_cfmat, decimals=cfg.PRECISION_METRICS)
+
+    return avg_cfmat
+
+
 def compute_pairwise_misclf(cfmat_array):
     "Merely computes the misclassification rates, for pairs of classes."
-    raise TypeError(
-        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
 
     num_datasets = cfmat_array.shape[3]
-    num_classes  = cfmat_array.shape[0]
+    num_classes = cfmat_array.shape[1]
+    if num_classes != cfmat_array.shape[2]:
+        raise ValueError("Invalid dimensions of confusion matrix.\n"
+                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+
     num_misclf_axes = num_classes * (num_classes - 1)
 
     avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
     misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
     for dd in range(num_datasets):
         # mean confusion over CV trials
-        avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 2)
-        # percentage confusion relative to class size
-        clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
-        avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
-        # making it human readable : 0-100%
-        avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=cfg.PRECISION_METRICS)
+        avg_cfmat[dd, :, :] = mean_over_cv_trials(cfmat_array[:, :, :, dd], num_classes)
+
+        # avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 0)
+        # # percentage confusion relative to class size
+        # clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
+        # avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
+        # # making it human readable : 0-100%
+        # avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=cfg.PRECISION_METRICS)
 
         count = 0
         for ii, jj in itertools.product(range(num_classes), range(num_classes)):
@@ -268,12 +289,12 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     -------
 
     """
-    raise TypeError(
-        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
+
     num_datasets = cfmat_array.shape[3]
-    num_classes = cfmat_array.shape[0]
-    if num_classes != cfmat_array.shape[1]:
-        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
+    num_classes = cfmat_array.shape[1]
+    if num_classes != cfmat_array.shape[2]:
+        raise ValueError("Invalid dimensions of confusion matrix.\n"
+                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
@@ -333,12 +354,12 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     -------
 
     """
-    raise TypeError(
-        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
+
     num_datasets = cfmat_array.shape[3]
-    num_classes  = cfmat_array.shape[0]
-    if num_classes != cfmat_array.shape[1]:
-        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
+    num_classes = cfmat_array.shape[1]
+    if num_classes != cfmat_array.shape[2]:
+        raise ValueError("Invalid dimensions of confusion matrix.\n"
+                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -398,16 +419,13 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
 
     """
 
-    raise TypeError('Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
-
     num_datasets = cfmat_array.shape[3]
-    num_classes  = cfmat_array.shape[0]
-    if num_classes != cfmat_array.shape[1]:
-        raise ValueError("Invalid dimensions of confusion matrix.\nNeed [num_classes, num_classes, num_repetitions, num_datasets]")
+    num_classes = cfmat_array.shape[1]
+    if num_classes != cfmat_array.shape[2]:
+        raise ValueError("Invalid dimensions of confusion matrix.\n"
+                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
-
-    out_path.replace(' ', '_')
 
     avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
 
@@ -456,6 +474,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
         lh.set_color(cmap(ix))
 
     fig.tight_layout()
+
+    out_path.replace(' ', '_')
     fig.savefig(out_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
 
     # pp1 = PdfPages(out_path + '.pdf')

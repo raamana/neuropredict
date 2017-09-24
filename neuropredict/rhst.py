@@ -583,17 +583,6 @@ def run(dataset_path_file, method_names, out_results_dir,
         print('--')
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options)
-    # median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
-    # if num_classes == 2:
-    #     median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
-    #
-    # print('\nMedian performance summary:\n')
-    # for dd in range(num_datasets):
-    #     print("feature {index:{nd}} {name:>{namewidth}} : "
-    #           "balanced accuracy {accuracy:2.2f} ".format(index=dd, name=method_names[dd], accuracy=median_bal_acc[dd],
-    #                                                                 namewidth=max_width_method_names, nd=ndigits_ndatasets), end='')
-    #     if num_classes == 2:
-    #         print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
 
     # saving the required variables to disk in a dict
     locals_var_dict = locals()
@@ -853,6 +842,7 @@ def holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_
 def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options):
     """Prints median performance for each feature set"""
 
+    # assuming the first column (axis=0) is over num_repititions
     median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
     if num_classes == 2:
         median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
@@ -865,7 +855,7 @@ def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, n
                                                           namewidth=print_options.str_width,
                                                           nd=print_options.num_digits), end='')
         if num_classes == 2:
-            print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
+            print("\t AUC {auc:2.2f}".format(auc=median_wtd_auc[dd]))
 
     return
 
