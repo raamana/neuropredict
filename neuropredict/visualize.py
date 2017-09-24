@@ -228,6 +228,7 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
     """Common method to average over different CV trials,
     to ensure it is done over the right axis (the first one - axis=0, column 1) for all confusion matrix methods"""
 
+    # can not expect nan's here; If so, its a bug somewhere else
     avg_cfmat = np.mean(conf_mat_array[:, :, :], 0)
 
     # percentage confusion relative to class size

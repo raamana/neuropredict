@@ -22,8 +22,8 @@ LEAF_SIZE_STEP = 3
 INNER_CV_NUM_SPLITS = 10
 INNER_CV_TRAIN_PERC = 0.8
 INNER_CV_TEST_PERC = 0.2
-GRIDSEARCH_PRE_DISPATCH = 8
-GRIDSEARCH_NUM_JOBS = 8
+GRIDSEARCH_PRE_DISPATCH = 4
+GRIDSEARCH_NUM_JOBS = 4
 
 SEED_RANDOM = 652
 
@@ -49,6 +49,9 @@ DELIMITER = ','
 EXPORT_FORMAT = '%10.5f'
 
 INPUT_FILE_FORMATS = ['.npy', '.numpy', '.csv', '.txt']
+
+# when more than one feature set is given, which one to map everyone to
+COMMON_DATASET_INDEX = 0
 
 rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
                   'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',

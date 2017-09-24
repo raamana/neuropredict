@@ -7,6 +7,7 @@ import pickle
 from collections import Counter, namedtuple
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, realpath
+from multiprocessing import Pool, Array as multiArray, Value as multiValue
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -556,6 +557,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     # making sure different feature sets are comparable
     common_ds, class_set, label_set, class_sizes, \
         num_samples, num_classes, num_datasets, num_features = check_feature_sets_are_comparable(datasets)
+    # TODO warning when num_rep are not suficient: need a heuristic to assess it
 
     # re-map the labels (from 1 to n) to ensure numeric labels do not differ
     datasets, positive_class, pos_class_index = remap_labels(datasets, common_ds, class_set, positive_class)
@@ -571,24 +573,27 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     print_options = get_pretty_print_options(method_names, num_datasets)
 
-    # TODO warning when num_rep are not suficient: need a heuristic to assess it
+
+
+    results = list()
     for rep in range(num_repetitions):
         print("\n CV repetition {:3d} ".format(rep))
+
         pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
         accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
-        feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
+        feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                                            total_test_samples, num_classes, num_features,
                                                            num_times_tested, num_times_misclfd, label_set,
-                                                           method_names, pos_class_index, print_options)
+                                                           method_names, pos_class_index, out_results_dir, print_options)
         print('--')
-
-    summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options)
 
     # saving the required variables to disk in a dict
     locals_var_dict = locals()
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
-
     out_results_path = save_results(out_results_dir, dict_to_save)
+
+    summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options)
+
 
     return out_results_path
 
@@ -718,11 +723,11 @@ def get_pretty_print_options(method_names, num_datasets):
     return print_options
 
 
-def check_feature_sets_are_comparable(datasets):
+def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATASET_INDEX):
     """Validating all the datasets are comparable e.g. with same samples and classes."""
 
     # looking into the first dataset
-    common_ds = datasets[0]
+    common_ds = datasets[common_ds_index]
     class_set, label_set_in_ds, class_sizes = common_ds.summarize_classes()
     # below code turns the labels numeric regardless of dataset
     label_set = list(range(len(label_set_in_ds)))
@@ -778,13 +783,15 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
     return datasets, positive_class, pos_class_index
 
 
-def holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
+def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    num_times_tested, num_times_misclfd,
-                                   label_set, method_names, pos_class_index, print_options):
+                                   label_set, method_names, pos_class_index, out_results_dir, print_options):
     """"""
 
+    common_ds = datasets[cfg.COMMON_DATASET_INDEX]
     num_datasets = len(datasets)
+
     pred_prob_per_class = np.full([num_datasets, total_test_samples, num_classes], np.nan)
     pred_labels_per_rep_fs = np.full([num_datasets, total_test_samples], np.nan)
     true_test_labels = np.full(total_test_samples, np.nan)
@@ -833,6 +840,10 @@ def holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_
         num_times_tested[dd].update(test_fs.sample_ids)
 
         print('')
+
+    # TODO save results for each rep independently - in a way that I can re-assemble in case grid search job crashes
+    out_path = pjoin(out_results_dir, 'trial.pkl')
+
 
     return pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, \
            accuracy_balanced, confusion_matrix, auc_weighted, \
