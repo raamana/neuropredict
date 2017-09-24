@@ -6,6 +6,7 @@ import os
 import pickle
 from collections import Counter, namedtuple
 from sys import version_info
+from os.path import join as pjoin, exists as pexists, realpath
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -295,14 +296,14 @@ def balanced_accuracy(confmat):
     return bal_acc
 
 
-def save_results(out_dir, var_list_to_save):
+def save_results(out_dir, dict_of_objects_to_save):
     "Serializes the results to disk."
 
     # LATER choose a more universal serialization method (that could be loaded from a web app)
     try:
-        out_results_path = os.path.join(out_dir, cfg.file_name_results)
+        out_results_path = pjoin(out_dir, cfg.file_name_results)
         with open(out_results_path, 'wb') as resfid:
-            pickle.dump(var_list_to_save, resfid)
+            pickle.dump(dict_of_objects_to_save, resfid)
     except:
         raise IOError('Error saving the results to disk!')
 
@@ -313,7 +314,7 @@ def load_results(results_file_path):
     "Loads the results serialized by RHsT."
     # TODO need to standardize what needs to saved/read back
 
-    if not os.path.exists(results_file_path):
+    if not pexists(results_file_path):
         raise IOError("Results file to be loaded doesn't exist!")
 
     try:
@@ -546,15 +547,77 @@ def run(dataset_path_file, method_names, out_results_dir,
     #   keep tab on misclassifications
     # save results (comprehensive and reloadable manner)
 
-    if not os.path.exists(dataset_path_file):
+
+    dataset_paths, num_repetitions = check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc)
+
+    # loading datasets
+    datasets = load_pyradigms(dataset_paths)
+
+    # making sure different feature sets are comparable
+    common_ds, class_set, label_set, class_sizes, \
+        num_samples, num_classes, num_datasets, num_features = check_feature_sets_are_comparable(datasets)
+
+    # re-map the labels (from 1 to n) to ensure numeric labels do not differ
+    datasets, positive_class, pos_class_index = remap_labels(datasets, common_ds, class_set, positive_class)
+
+    # determine the common size for training
+    train_size_common, total_test_samples = determine_training_size(train_perc, class_sizes, num_classes)
+
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
+        accuracy_balanced, auc_weighted, best_params, feature_names, \
+        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
+        num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples, num_repetitions,
+                                                         num_datasets, num_classes, num_features)
+
+    print_options = get_pretty_print_options(method_names, num_datasets)
+
+    # TODO warning when num_rep are not suficient: need a heuristic to assess it
+    for rep in range(num_repetitions):
+        print("\n CV repetition {:3d} ".format(rep))
+        pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
+        accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
+        feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
+                                                           total_test_samples, num_classes, num_features,
+                                                           num_times_tested, num_times_misclfd, label_set,
+                                                           method_names, pos_class_index, print_options)
+        print('--')
+
+    summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options)
+    # median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
+    # if num_classes == 2:
+    #     median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
+    #
+    # print('\nMedian performance summary:\n')
+    # for dd in range(num_datasets):
+    #     print("feature {index:{nd}} {name:>{namewidth}} : "
+    #           "balanced accuracy {accuracy:2.2f} ".format(index=dd, name=method_names[dd], accuracy=median_bal_acc[dd],
+    #                                                                 namewidth=max_width_method_names, nd=ndigits_ndatasets), end='')
+    #     if num_classes == 2:
+    #         print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
+
+    # saving the required variables to disk in a dict
+    locals_var_dict = locals()
+    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+
+    out_results_path = save_results(out_results_dir, dict_to_save)
+
+    return out_results_path
+
+
+def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc):
+    """Validates inputs and returns paths to feature sets to load"""
+
+    if not pexists(dataset_path_file):
         raise IOError("File containing dataset paths does not exist.")
 
     with open(dataset_path_file, 'r') as dpf:
         dataset_paths = dpf.read().splitlines()
+        # removing duplicates
+        dataset_paths = set(dataset_paths)
 
     try:
-        out_results_dir = os.path.abspath(out_results_dir)
-        if not os.path.exists(out_results_dir):
+        out_results_dir = realpath(out_results_dir)
+        if not pexists(out_results_dir):
             os.mkdir(out_results_dir)
     except:
         raise IOError('Error in checking or creating output directiory. Ensure write permissions!')
@@ -566,12 +629,20 @@ def run(dataset_path_file, method_names, out_results_dir,
     if num_repetitions <= 1:
         raise ValueError("More than 1 repetition is necessary!")
 
-    # TODO warning when num_rep are not suficient: need a heuristic to assess it
+    if not 0.01 <= train_perc <= 0.99:
+        raise ValueError("Training percentage {} out of bounds "
+                         "- must be > 0.01 and < 0.99".format(train_perc))
+
+    return dataset_paths, num_repetitions
+
+
+def load_pyradigms(dataset_paths):
+    """Reads in a list of datasets in pyradigm format"""
 
     # loading datasets
     datasets = list()
     for fp in dataset_paths:
-        if not os.path.exists(fp):
+        if not pexists(fp):
             raise IOError("Dataset @ {} does not exist.".format(fp))
 
         try:
@@ -584,58 +655,12 @@ def run(dataset_path_file, method_names, out_results_dir,
         # add the valid dataset to list
         datasets.append(ds)
 
-    # ensure same number of subjects across all datasets
-    num_datasets = int(len(datasets))
+    return datasets
 
-    if len(method_names) < num_datasets:
-        raise ValueError('Insufficient number of names (n={}) for the given feature sets (n={}).'.format(len(method_names), num_datasets))
 
-    # looking into the first dataset
-    common_ds = datasets[0]
-    class_set, label_set_in_ds, class_sizes = common_ds.summarize_classes()
-    # below code turns the labels numeric regardless of dataset
-    label_set = list(range(len(label_set_in_ds)))
+def determine_training_size(train_perc, class_sizes, num_classes):
+    """Computes the maximum training size that the smallest class can provide """
 
-    num_samples = common_ds.num_samples
-    num_classes = len(class_set)
-
-    if num_datasets > 1:
-        for idx in range(1, num_datasets):
-            this_ds = datasets[idx]
-            if num_samples != this_ds.num_samples:
-                raise ValueError("Number of samples in different datasets differ!")
-            if set(class_set) != set(this_ds.classes.values()):
-                raise ValueError("Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                        set(class_set), set(this_ds.classes.values())))
-
-    # re-map the labels (from 1 to n) to ensure numeric labels do not differ
-    remapped_class_labels = dict()
-    for idx, cls in enumerate(class_set):
-        remapped_class_labels[cls] = idx
-
-    # finding the numeric label for positive class
-    # label will also be in the index into the arrays over classes due to construction above
-    if positive_class is None:
-        positive_class = class_set[-1]
-    elif positive_class not in class_set:
-        raise ValueError('Chosen positive class does not exist in the dataset')
-    pos_class_index = class_set.index(positive_class)  # remapped_class_labels[positive_class]
-
-    labels_with_correspondence = dict()
-    for subid in common_ds.sample_ids:
-        labels_with_correspondence[subid] = remapped_class_labels[common_ds.classes[subid]]
-
-    for idx in range(num_datasets):
-        datasets[idx].labels = labels_with_correspondence
-
-    if not 0.01 <= train_perc <= 0.99:
-        raise ValueError("Training percentage {} out of bounds - must be > 0.01 and < 0.99".format(train_perc))
-
-    num_features = np.zeros(num_datasets).astype(np.int64)
-    for idx in range(num_datasets):
-        num_features[idx] = datasets[idx].num_features
-
-    # determine the common size for training
     print("Different classes in the training set are stratified to match the smallest class!")
     train_size_per_class = np.int64(np.floor(train_perc * class_sizes).astype(np.float64))
     # per-class
@@ -648,11 +673,18 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     total_test_samples = np.int64(np.sum(class_sizes) - num_classes * train_size_common)
 
+    return train_size_common, total_test_samples
+
+
+def initialize_result_containers(common_ds, datasets, total_test_samples,
+                                 num_repetitions, num_datasets, num_classes, num_features):
+    """Prepare containers for various outputs"""
+
     pred_prob_per_class = np.full([num_repetitions, num_datasets, total_test_samples, num_classes], np.nan)
     pred_labels_per_rep_fs = np.full([num_repetitions, num_datasets, total_test_samples], np.nan)
     test_labels_per_rep = np.full([num_repetitions, total_test_samples], np.nan)
 
-    best_params = [None]*num_repetitions
+    best_params = [None] * num_repetitions
 
     # initialize misclassification counters
     num_times_tested = list()
@@ -670,62 +702,91 @@ def run(dataset_path_file, method_names, out_results_dir,
     auc_weighted = np.full([num_repetitions, num_datasets], np.nan)
 
     feature_names = [None] * num_datasets
-    feature_importances_per_rep = [None]*num_repetitions
+    feature_importances_per_rep = [None] * num_repetitions
     feature_importances_rf = [None] * num_datasets
     for idx in range(num_datasets):
         feature_importances_rf[idx] = np.full([num_repetitions, num_features[idx]], np.nan)
         feature_names[idx] = datasets[idx].feature_names
+
+    return pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+           confusion_matrix, accuracy_balanced, auc_weighted, best_params, \
+           feature_names, feature_importances_per_rep, feature_importances_rf, \
+           num_times_tested, num_times_misclfd,
+
+
+def get_pretty_print_options(method_names, num_datasets):
+    """Returns field widths for formatting"""
+
+    if len(method_names) < num_datasets:
+        raise ValueError('Insufficient number of names (n={}) '
+                         'for the given feature sets (n={}).'.format(len(method_names), num_datasets))
 
     max_width_method_names = max(map(len, method_names))
     ndigits_ndatasets = len(str(num_datasets))
     pretty_print = namedtuple('pprint', ['str_width', 'num_digits'])
     print_options = pretty_print(max_width_method_names, ndigits_ndatasets)
 
-    for rep in range(num_repetitions):
-        print("\n CV repetition {:3d} ".format(rep))
-        pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
-        accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
-        feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
-                                                           total_test_samples, num_classes, num_features,
-                                                           num_times_tested, num_times_misclfd, label_set,
-                                                           method_names, pos_class_index, print_options)
-        print('--')
+    return print_options
 
-    median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
-    if num_classes == 2:
-        median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
 
-    print('\nMedian performance summary:\n')
-    for dd in range(num_datasets):
-        print("feature {index:{nd}} {name:>{namewidth}} : "
-              "balanced accuracy {accuracy:2.2f} ".format(index=dd, name=method_names[dd], accuracy=median_bal_acc[dd],
-                                                                    namewidth=max_width_method_names, nd=ndigits_ndatasets), end='')
-        if num_classes == 2:
-            print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
+def check_feature_sets_are_comparable(datasets):
+    """Validating all the datasets are comparable e.g. with same samples and classes."""
 
-    # save results
-    var_list_to_save = [dataset_paths, method_names, train_perc, num_repetitions, num_classes,
-                        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep,
-                        best_params,
-                        feature_importances_rf, feature_names,
-                        num_times_misclfd, num_times_tested,
-                        confusion_matrix, class_set,
-                        accuracy_balanced, auc_weighted, positive_class]
+    # looking into the first dataset
+    common_ds = datasets[0]
+    class_set, label_set_in_ds, class_sizes = common_ds.summarize_classes()
+    # below code turns the labels numeric regardless of dataset
+    label_set = list(range(len(label_set_in_ds)))
 
-    var_names_to_save = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
-                         'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
-                         'best_params',
-                         'feature_importances_rf', 'feature_names',
-                         'num_times_misclfd', 'num_times_tested',
-                         'confusion_matrix', 'class_set',
-                         'accuracy_balanced', 'auc_weighted', 'positive_class']
+    common_samples = set(common_ds.sample_ids)
 
-    locals_var_dict = locals()
-    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+    num_samples = common_ds.num_samples
+    num_classes = len(class_set)
 
-    out_results_path = save_results(out_results_dir, dict_to_save)
+    num_datasets = len(datasets)
+    if num_datasets > 1:
+        for idx in range(1, num_datasets):
+            this_ds = datasets[idx]
+            if num_samples != this_ds.num_samples:
+                raise ValueError("Number of samples in different datasets differ!")
+            if common_samples != set(this_ds.sample_ids):
+                raise ValueError("Sample IDs differ across atleast two datasets!\n"
+                                 "All datasets must have the same set of samples, "
+                                 "even if the dimensionality of individual feature set changes.")
+            if set(class_set) != set(this_ds.classes.values()):
+                raise ValueError("Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
+                        set(class_set), set(this_ds.classes.values())))
 
-    return out_results_path
+    num_features = np.zeros(num_datasets).astype(np.int64)
+    for idx in range(num_datasets):
+        num_features[idx] = datasets[idx].num_features
+
+    return common_ds, class_set, label_set, class_sizes, num_samples, num_classes, num_datasets, num_features
+
+
+def remap_labels(datasets, common_ds, class_set, positive_class=None):
+    """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
+
+    remapped_class_labels = dict()
+    for idx, cls in enumerate(class_set):
+        remapped_class_labels[cls] = idx
+
+    # finding the numeric label for positive class
+    # label will also be in the index into the arrays over classes due to construction above
+    if positive_class is None:
+        positive_class = class_set[-1]
+    elif positive_class not in class_set:
+        raise ValueError('Chosen positive class does not exist in the dataset')
+    pos_class_index = class_set.index(positive_class)  # remapped_class_labels[positive_class]
+
+    labels_with_correspondence = dict()
+    for subid in common_ds.sample_ids:
+        labels_with_correspondence[subid] = remapped_class_labels[common_ds.classes[subid]]
+
+    for idx in range(len(datasets)):
+        datasets[idx].labels = labels_with_correspondence
+
+    return datasets, positive_class, pos_class_index
 
 
 def holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_sel_size, train_perc,
@@ -787,6 +848,26 @@ def holdout_trial_compare_datasets(common_ds, datasets, train_size_common, feat_
     return pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, \
            accuracy_balanced, confusion_matrix, auc_weighted, \
            feature_importances, best_params
+
+
+def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options):
+    """Prints median performance for each feature set"""
+
+    median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
+    if num_classes == 2:
+        median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
+
+    print('\nMedian performance summary:\n')
+    for dd in range(num_datasets):
+        print("feature {index:{nd}} {name:>{namewidth}} : "
+              "balanced accuracy {accuracy:2.2f} ".format(index=dd, name=method_names[dd],
+                                                          accuracy=median_bal_acc[dd],
+                                                          namewidth=print_options.str_width,
+                                                          nd=print_options.num_digits), end='')
+        if num_classes == 2:
+            print("\t AUC {auc:2.2f}\n".format(auc=median_wtd_auc[dd]))
+
+    return
 
 
 if __name__ == '__main__':

@@ -170,7 +170,8 @@ def confusion_matrices(cfmat_array, class_labels,
     -------
 
     """
-
+    raise TypeError(
+        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[0]
     if num_classes != cfmat_array.shape[1]:
@@ -223,6 +224,8 @@ def confusion_matrices(cfmat_array, class_labels,
 
 def compute_pairwise_misclf(cfmat_array):
     "Merely computes the misclassification rates, for pairs of classes."
+    raise TypeError(
+        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
 
     num_datasets = cfmat_array.shape[3]
     num_classes  = cfmat_array.shape[0]
@@ -265,7 +268,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     -------
 
     """
-
+    raise TypeError(
+        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[0]
     if num_classes != cfmat_array.shape[1]:
@@ -329,7 +333,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     -------
 
     """
-
+    raise TypeError(
+        'Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
     num_datasets = cfmat_array.shape[3]
     num_classes  = cfmat_array.shape[0]
     if num_classes != cfmat_array.shape[1]:
@@ -392,6 +397,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     -------
 
     """
+
+    raise TypeError('Confusion matrix format changed - new shape: [num_repetitions, num_classes, num_classes, num_datasets].')
 
     num_datasets = cfmat_array.shape[3]
     num_classes  = cfmat_array.shape[0]
