@@ -4,10 +4,13 @@ __all__ = ['run', 'load_results', 'save_results']
 
 import os
 import pickle
+import logging
+import warnings
 from collections import Counter, namedtuple
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, realpath
-from multiprocessing import Pool, Array as multiArray, Value as multiValue
+from multiprocessing import Pool, Manager, Array as multiArray, Value as multiValue
+from functools import partial
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -131,7 +134,11 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
     inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0 - train_perc)
     gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
                       n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
-    gs.fit(train_data_mat, train_labels)
+
+    with warnings.catch_warnings() as warn_ctrl:
+        warnings.filterwarnings(action='once', category=UserWarning, module='joblib',
+                                message='Multiprocessing-backed parallel loops cannot be nested, setting n_jobs=1')
+        gs.fit(train_data_mat, train_labels)
 
     return gs.best_estimator_, gs.best_params_
 
@@ -502,31 +509,41 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
 def run(dataset_path_file, method_names, out_results_dir,
         train_perc=0.8, num_repetitions=200,
         positive_class=None,
-        feat_sel_size=cfg.default_num_features_to_select):
+        feat_sel_size=cfg.default_num_features_to_select,
+        num_procs=4):
     """
 
     Parameters
     ----------
     dataset_path_file : str
         path to file containing list of paths (each containing a valid MLDataset).
+
     method_names : list
         A list of names to denote the different feature extraction methods
+
     out_results_dir : str
         Path to output directory to save the cross validation results to.
+
     train_perc : float, optional
         Percetange of subjects to train the classifier on.
         The percentage is applied to the size of the smallest class to estimate
         the number of subjects from each class to be reserved for training.
         The smallest class is chosen to avoid class-imbalance in the training set.
+
         Default: 0.8 (80%).
     num_repetitions : int, optional
         Number of repetitions of cross-validation estimation. Default: 200.
+
     positive_class : str
         Name of the class to be treated as positive in calculation of AUC
+
     feat_sel_size : str or int
         Number of features to retain after feature selection.
         Must be a method (tenth or square root of the size of smallest class in training set,
             or a finite integer smaller than the data dimensionality.
+
+    num_procs : int
+        Number of parallel processes to run to parallelize the repetitions of CV
 
     Returns
     -------
@@ -571,28 +588,38 @@ def run(dataset_path_file, method_names, out_results_dir,
         num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples, num_repetitions,
                                                          num_datasets, num_classes, num_features)
 
-    print_options = get_pretty_print_options(method_names, num_datasets)
+    # TODO create shared memory object for datasets
+    # open a multiprocessing pool
+    # call holdout_trial_compare_datasets n times within Pool
+    # gather results from multiple processes and assemble
+
+    chunk_size = int(np.ceil(num_repetitions/num_procs))
+    with Manager() as proxy_manager:
+        shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc, total_test_samples,
+                                         num_classes, num_features, num_times_tested, num_times_misclfd, label_set,
+                                         method_names, pos_class_index, out_results_dir])
+        partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
+
+        with Pool(processes=num_procs) as pool:
+            results = pool.map(partial_func_holdout, range(num_repetitions), chunk_size)
 
 
-
-    results = list()
-    for rep in range(num_repetitions):
-        print("\n CV repetition {:3d} ".format(rep))
-
-        pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
-        accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
-        feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
-                                                           total_test_samples, num_classes, num_features,
-                                                           num_times_tested, num_times_misclfd, label_set,
-                                                           method_names, pos_class_index, out_results_dir, print_options)
-        print('--')
+    # for rep in range(num_repetitions):
+    #     print("\n CV repetition {:3d} ".format(rep))
+    #
+    #     pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
+    #     accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
+    #     feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(datasets, train_size_common,
+    #         feat_sel_size, train_perc, total_test_samples, num_classes, num_features, num_times_tested, num_times_misclfd,
+    #         label_set, method_names, pos_class_index, out_results_dir, print_options, rep_id=rep)
+    #     print('--')
 
     # saving the required variables to disk in a dict
     locals_var_dict = locals()
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
     out_results_path = save_results(out_results_dir, dict_to_save)
 
-    summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options)
+    summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
 
 
     return out_results_path
@@ -786,8 +813,10 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    num_times_tested, num_times_misclfd,
-                                   label_set, method_names, pos_class_index, out_results_dir, print_options):
-    """"""
+                                   label_set, method_names, pos_class_index,
+                                   out_results_dir, rep_id=None):
+    """Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
+    and evaluations on the given test set. """
 
     common_ds = datasets[cfg.COMMON_DATASET_INDEX]
     num_datasets = len(datasets)
@@ -810,11 +839,17 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
     train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
     true_test_labels = [common_ds.labels[sid] for sid in test_set if sid in common_ds.labels]
 
+    # to uniquely identify this iteration
+    if rep_id is None:
+        rep_proc_id = str(os.getpid())
+    else:
+        rep_proc_id = str(rep_id)
+    print_options = get_pretty_print_options(method_names, num_datasets)
+
     # evaluating each feature/dataset
     for dd in range(num_datasets):
-        print("\t feature {index:{nd}} {name:>{namewidth}} : ".format(index=dd, name=method_names[dd],
-                                                                      nd=print_options.num_digits,
-                                                                      namewidth=print_options.str_width), end='')
+        print("CV trial {rep:6} feature {index:{nd}} {name:>{namewidth}} : ".format(rep=rep_proc_id, index=dd,
+            name=method_names[dd], nd=print_options.num_digits, namewidth=print_options.str_width), end='')
 
         # using the same train/test sets for all feature sets.
         train_fs = datasets[dd].get_subset(train_set)
@@ -841,32 +876,40 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
 
         print('')
 
-    # TODO save results for each rep independently - in a way that I can re-assemble in case grid search job crashes
-    out_path = pjoin(out_results_dir, 'trial.pkl')
+    results_list = [pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, accuracy_balanced,
+                     confusion_matrix, auc_weighted, feature_importances, best_params]
+
+    out_path = pjoin(out_results_dir, 'trial_{}.pkl'.format(rep_proc_id))
+    logging.info('results from rep {} saved to {}'.format(rep_proc_id, out_path))
+    with open(out_path, 'bw') as of:
+        pickle.dump(results_list, of)
+
+    return results_list
 
 
-    return pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, \
-           accuracy_balanced, confusion_matrix, auc_weighted, \
-           feature_importances, best_params
-
-
-def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets, print_options):
+def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets):
     """Prints median performance for each feature set"""
 
-    # assuming the first column (axis=0) is over num_repititions
-    median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
-    if num_classes == 2:
-        median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action='ignore', message='All-NaN slice encountered',
+                                module='numpy', category=RuntimeWarning)
 
-    print('\nMedian performance summary:\n')
+        # assuming the first column (axis=0) is over num_repititions
+        median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
+        if num_classes == 2:
+            median_wtd_auc = np.nanmedian(auc_weighted, axis=0)
+
+    print_options = get_pretty_print_options(method_names, num_datasets)
+
+    print('\nMedian performance summary:', end='')
     for dd in range(num_datasets):
-        print("feature {index:{nd}} {name:>{namewidth}} : "
+        print("\nfeature {index:{nd}} {name:>{namewidth}} : "
               "balanced accuracy {accuracy:2.2f} ".format(index=dd, name=method_names[dd],
                                                           accuracy=median_bal_acc[dd],
                                                           namewidth=print_options.str_width,
                                                           nd=print_options.num_digits), end='')
         if num_classes == 2:
-            print("\t AUC {auc:2.2f}".format(auc=median_wtd_auc[dd]))
+            print("\t AUC {auc:2.2f}".format(auc=median_wtd_auc[dd]), end='')
 
     return
 
