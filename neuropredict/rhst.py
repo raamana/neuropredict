@@ -23,8 +23,10 @@ from pyradigm import MLDataset
 
 if version_info.major == 2 and version_info.minor == 7:
     import config_neuropredict as cfg
+    import run_workflow
 elif version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
+    from neuropredict import run_workflow
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
@@ -614,10 +616,19 @@ def run(dataset_path_file, method_names, out_results_dir,
     #         label_set, method_names, pos_class_index, out_results_dir, print_options, rep_id=rep)
     #     print('--')
 
+    # re-assemble data
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
+        accuracy_balanced, auc_weighted, best_params, feature_names, \
+        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
+        num_times_misclfd = gather_results_across_trials(results)
+
     # saving the required variables to disk in a dict
     locals_var_dict = locals()
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
     out_results_path = save_results(out_results_dir, dict_to_save)
+
+    # exporting the results right away, without waiting for figures
+    run_workflow.export_results(out_results_path, out_results_dir)
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
 
@@ -885,6 +896,23 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
         pickle.dump(results_list, of)
 
     return results_list
+
+
+def gather_results_across_trials(cv_results):
+    "Reorganizes list of indiv CV trial results into rectangular arrays."
+
+    raise NotImplementedError
+
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
+        accuracy_balanced, auc_weighted, best_params, feature_names, \
+        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
+        num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples,
+                                     num_repetitions, num_datasets, num_classes, num_features)
+
+    return pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
+        accuracy_balanced, auc_weighted, best_params, feature_names, \
+        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
+        num_times_misclfd
 
 
 def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets):
