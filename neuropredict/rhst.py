@@ -590,11 +590,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples, num_repetitions,
                                                          num_datasets, num_classes, num_features)
 
-    # TODO create shared memory object for datasets
-    # open a multiprocessing pool
-    # call holdout_trial_compare_datasets n times within Pool
-    # gather results from multiple processes and assemble
-
+    # the main parallel loop to crunch optimizations, predictions and evaluations
     chunk_size = int(np.ceil(num_repetitions/num_procs))
     with Manager() as proxy_manager:
         shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc, total_test_samples,
@@ -603,24 +599,14 @@ def run(dataset_path_file, method_names, out_results_dir,
         partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
         with Pool(processes=num_procs) as pool:
-            results = pool.map(partial_func_holdout, range(num_repetitions), chunk_size)
+            cv_results = pool.map(partial_func_holdout, range(num_repetitions), chunk_size)
 
-
-    # for rep in range(num_repetitions):
-    #     print("\n CV repetition {:3d} ".format(rep))
-    #
-    #     pred_prob_per_class[rep, :, :, :], pred_labels_per_rep_fs[rep, :, :], test_labels_per_rep[rep, :], \
-    #     accuracy_balanced[rep, :], confusion_matrix[rep, :, :, :], auc_weighted[rep, :], \
-    #     feature_importances_per_rep[rep], best_params[rep] = holdout_trial_compare_datasets(datasets, train_size_common,
-    #         feat_sel_size, train_perc, total_test_samples, num_classes, num_features, num_times_tested, num_times_misclfd,
-    #         label_set, method_names, pos_class_index, out_results_dir, print_options, rep_id=rep)
-    #     print('--')
-
-    # re-assemble data
+    # re-assemble results into a convenient form
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \
-        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
-        num_times_misclfd = gather_results_across_trials(results)
+        feature_importances_per_rep, num_times_tested, \
+        num_times_misclfd = gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples, num_repetitions,
+                                                         num_datasets, num_classes, num_features)
 
     # saving the required variables to disk in a dict
     locals_var_dict = locals()
@@ -628,10 +614,9 @@ def run(dataset_path_file, method_names, out_results_dir,
     out_results_path = save_results(out_results_dir, dict_to_save)
 
     # exporting the results right away, without waiting for figures
-    run_workflow.export_results(out_results_path, out_results_dir)
+    run_workflow.export_results(dict_to_save, out_results_dir)
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
-
 
     return out_results_path
 
@@ -898,16 +883,33 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
     return results_list
 
 
-def gather_results_across_trials(cv_results):
+def gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples,
+                                 num_repetitions, num_datasets, num_classes, num_features):
     "Reorganizes list of indiv CV trial results into rectangular arrays."
-
-    raise NotImplementedError
 
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \
         feature_importances_per_rep, feature_importances_rf, num_times_tested, \
         num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples,
                                      num_repetitions, num_datasets, num_classes, num_features)
+
+    for rep in range(num_repetitions):
+        # unpacking each rep
+        _rep_pred_prob_per_class, _rep_pred_labels_per_rep_fs, _rep_true_test_labels, \
+            _rep_accuracy_balanced, _rep_confusion_matrix, _rep_auc_weighted, \
+            _rep_feature_importances, _rep_best_params = cv_results[rep]
+
+        pred_prob_per_class[rep, :, :, :]   = _rep_pred_prob_per_class
+        pred_labels_per_rep_fs[rep, :, :]   = _rep_pred_labels_per_rep_fs
+        test_labels_per_rep[rep, :]         = _rep_true_test_labels
+        accuracy_balanced[rep, :]           = _rep_accuracy_balanced
+        confusion_matrix[rep, :, :, :]      = _rep_confusion_matrix
+        auc_weighted[rep, :]                = _rep_auc_weighted
+        best_params[rep]                    = _rep_best_params
+
+        # TODO reorg by dataset; and ensure it works with visualize methods
+        # _rep_feature_importances : list of len num_datasets, each of len num_features
+        feature_importances_per_rep[rep]    = _rep_feature_importances
 
     return pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \

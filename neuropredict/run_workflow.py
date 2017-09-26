@@ -594,14 +594,48 @@ def make_visualizations(results_file_path, outdir):
     return
 
 
-def export_results(results_file_path, outdir):
+def export_results_from_disk(results_file_path, out_dir):
+    """
+    Exports the results to simpler CSV format for use in other packages!
+
+    Parameters
+    ----------
+    results_file_path : str
+        Path to a pickle file containing all the relevant results
+
+    out_dir : str
+        Path to save the results to
+
+    Returns
+    -------
+    None
+
+    """
+
+    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
+            rhst.load_results(results_file_path)
+
+    locals_var_dict = locals()
+    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+    export_results(dict_to_save, out_dir)
+
+    return
+
+
+def export_results(dict_to_save, out_dir):
     """
     Exports the results to simpler CSV format for use in other packages!
     
     Parameters
     ----------
-    results_file_path
-    outdir
+    dict_to_save : dict
+        Containing all the relevant results
+
+    out_dir : str
+        Path to save the results to.
 
     Returns
     -------
@@ -609,20 +643,20 @@ def export_results(results_file_path, outdir):
     
     """
 
-    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_params, \
-    feature_importances_rf, feature_names, \
-    num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
-        rhst.load_results(results_file_path)
+    confusion_matrix        = dict_to_save['confusion_matrix']
+    accuracy_balanced       = dict_to_save['accuracy_balanced']
+    method_names            = dict_to_save['method_names']
+    feature_importances_rf  = dict_to_save['feature_importances_rf']
+    feature_names           = dict_to_save['feature_names']
+    num_times_misclfd       = dict_to_save['num_times_misclfd']
+    num_times_tested        = dict_to_save['num_times_tested']
 
     num_classes = confusion_matrix.shape[0]
     num_rep_cv = confusion_matrix.shape[2]
     num_datasets = confusion_matrix.shape[3]
 
     # separating CSVs from the PDFs
-    exp_dir = pjoin(outdir, cfg.EXPORT_DIR_NAME)
+    exp_dir = pjoin(out_dir, cfg.EXPORT_DIR_NAME)
     if not pexists(exp_dir):
         os.mkdir(exp_dir)
 
@@ -912,8 +946,6 @@ def run_cli():
     print('Saving the visualizations and results to \n{}'.format(out_dir))
     make_visualizations(results_file_path, out_dir)
 
-    # TODO avoid loading results from disk twice (vis & export)
-    export_results(results_file_path, out_dir)
 
     return
 
