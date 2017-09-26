@@ -15,8 +15,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 if version_info.major==2 and version_info.minor==7:
     import config_neuropredict as cfg
+    import rhst
 elif version_info.major > 2:
-    from neuropredict import config_neuropredict as cfg
+    from neuropredict import config_neuropredict as cfg, rhst
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
@@ -598,7 +599,8 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     return
 
 
-def metric_distribution(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):
+def metric_distribution(metric, labels, output_path, class_sizes,
+                        num_classes=2, metric_label='balanced accuracy'):
     """
 
     Distribution plots of various metrics such as balanced accuracy!
@@ -639,7 +641,9 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
 
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
     # add a tick for chance accuracy and/or % of majority class
-    ytick_loc = np.append(ytick_loc, 1/num_classes)
+    chance_acc = rhst.chance_accuracy(class_sizes)
+    ytick_loc = np.append(ytick_loc, chance_acc)
+
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
     # plt.xlabel(xlabel, fontsize=16)

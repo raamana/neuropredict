@@ -55,12 +55,13 @@ INPUT_FILE_FORMATS = ['.npy', '.numpy', '.csv', '.txt']
 # when more than one feature set is given, which one to map everyone to
 COMMON_DATASET_INDEX = 0
 
+# TODO save class_sizes too
 rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
                   'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
                   'best_params',
                   'feature_importances_rf', 'feature_names',
                   'num_times_misclfd', 'num_times_tested',
-                  'confusion_matrix', 'class_set',
+                  'confusion_matrix', 'class_set', 'class_sizes',
                   'accuracy_balanced', 'auc_weighted', 'positive_class']
 
 # TODO decide to where to include eTIV

@@ -547,10 +547,8 @@ def make_visualizations(results_file_path, outdir):
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_params, \
-    feature_importances_rf, feature_names, \
-    num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
+    best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
         rhst.load_results(results_file_path)
 
     if os.environ['DISPLAY'] is None:
@@ -567,7 +565,7 @@ def make_visualizations(results_file_path, outdir):
 
         balacc_fig_path = pjoin(outdir, 'balanced_accuracy')
         visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
-                                      num_classes, "Balanced Accuracy")
+                                      class_sizes, num_classes, "Balanced Accuracy")
 
         confmat_fig_path = pjoin(outdir, 'confusion_matrix')
         visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)

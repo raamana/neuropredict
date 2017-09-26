@@ -260,7 +260,7 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     return reduced_dim
 
 
-def chance_accuracy(class_sizes):
+def chance_accuracy(class_sizes, method='imbalanced'):
     """
     Computes the chance accuracy for a given set of classes with varying sizes.
 
@@ -269,8 +269,20 @@ def chance_accuracy(class_sizes):
     class_sizes : list
         List of sizes of the classes.
 
+    method : str
+        Type of method to use to compute the chance accuracy. Two options:
+
+            - `imbalanced` : uses the proportions of all classes [Default]
+            - `zero_rule`  : uses the so called Zero Rule (fraction of majority class)
+
+        Both methods return similar results, with Zero Rule erring on the side higher chance accuracy.
+
+    Useful discussion at `stackexchange.com <https://stats.stackexchange.com/questions/148149/what-is-the-chance-level-accuracy-in-unbalanced-classification-problems>`_
+
     Returns
     -------
+    chance_acc : float
+        Accuracy of purely random/chance classifier on this particular dataset.
 
     """
 
@@ -279,11 +291,14 @@ def chance_accuracy(class_sizes):
     # # the following is wrong if imbalance is present
     # chance_acc = 1.0 / num_classes
 
-    # TODO find a reference to choose this and back this up
-    # chance_acc = np.sum( np.array(class_sizes/num_samples)^2 )
-
-    # zero rule: fraction of largest class
-    chance_acc = np.max(class_sizes) / num_samples
+    method = method.lower()
+    if method in ['imbalanced', ]:
+        chance_acc = np.sum( np.array(class_sizes/num_samples)^2 )
+    elif method in ['zero_rule', 'zeror' ]:
+        # zero rule: fraction of largest class
+        chance_acc = np.max(class_sizes) / num_samples
+    else:
+        raise ValueError('Invalid choice of method to compute choice accuracy!')
 
     return chance_acc
 
@@ -338,7 +353,7 @@ def load_results(results_file_path):
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             best_params, feature_importances_rf, \
             feature_names, num_times_misclfd, num_times_tested, \
-            confusion_matrix, class_set, accuracy_balanced, \
+            confusion_matrix, class_set, class_sizes, accuracy_balanced, \
             auc_weighted, positive_class = [results_dict.get(var_name) for var_name in
                                             cfg.rhst_data_variables_to_persist]
 
@@ -348,10 +363,10 @@ def load_results(results_file_path):
     # TODO need a consolidated way to deal with what variable are saved and in what order
     return dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-           best_params, \
-           feature_importances_rf, feature_names, \
+           best_params, feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
-           confusion_matrix, class_set, accuracy_balanced, auc_weighted, positive_class
+           confusion_matrix, class_set, class_sizes, \
+           accuracy_balanced, auc_weighted, positive_class
 
 
 def get_RandomForestClassifier(reduced_dim='all'):
