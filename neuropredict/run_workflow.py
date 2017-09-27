@@ -552,7 +552,7 @@ def make_visualizations(results_file_path, outdir):
         rhst.load_results(results_file_path)
 
     if os.environ['DISPLAY'] is None:
-        warnings.warn('DISPLAY is not set. Skipping to generate any visualizations.')
+        warnings.warn('DISPLAY is not set. Skipping the generation of any visualizations.')
         return
 
     if not pexists(outdir):
@@ -649,9 +649,9 @@ def export_results(dict_to_save, out_dir):
     num_times_misclfd       = dict_to_save['num_times_misclfd']
     num_times_tested        = dict_to_save['num_times_tested']
 
-    num_classes = confusion_matrix.shape[0]
-    num_rep_cv = confusion_matrix.shape[2]
+    num_rep_cv   = confusion_matrix.shape[0]
     num_datasets = confusion_matrix.shape[3]
+    num_classes  = confusion_matrix.shape[2]
 
     # separating CSVs from the PDFs
     exp_dir = pjoin(out_dir, cfg.EXPORT_DIR_NAME)

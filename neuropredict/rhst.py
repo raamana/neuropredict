@@ -924,6 +924,7 @@ def gather_results_across_trials(cv_results, common_ds, datasets, total_test_sam
         for dd in range(num_datasets):
             num_times_misclfd[dd].update(_rep_misclsfd_ids_this_run[dd])
             num_times_tested[dd].update(_rep_test_set)
+            feature_importances_rf[dd][rep,:] = _rep_feature_importances[dd]
 
         # TODO reorg by dataset; and ensure it works with visualize methods
         # _rep_feature_importances : list of len num_datasets, each of len num_features
