@@ -599,17 +599,11 @@ def run(dataset_path_file, method_names, out_results_dir,
     # determine the common size for training
     train_size_common, total_test_samples = determine_training_size(train_perc, class_sizes, num_classes)
 
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
-        accuracy_balanced, auc_weighted, best_params, feature_names, \
-        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
-        num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples, num_repetitions,
-                                                         num_datasets, num_classes, num_features)
-
     # the main parallel loop to crunch optimizations, predictions and evaluations
     chunk_size = int(np.ceil(num_repetitions/num_procs))
     with Manager() as proxy_manager:
         shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc, total_test_samples,
-                                         num_classes, num_features, num_times_tested, num_times_misclfd, label_set,
+                                         num_classes, num_features, label_set,
                                          method_names, pos_class_index, out_results_dir])
         partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
@@ -619,9 +613,9 @@ def run(dataset_path_file, method_names, out_results_dir,
     # re-assemble results into a convenient form
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \
-        feature_importances_per_rep, num_times_tested, \
-        num_times_misclfd = gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples, num_repetitions,
-                                                         num_datasets, num_classes, num_features)
+        feature_importances_per_rep, feature_importances_rf, \
+        num_times_misclfd, num_times_tested = gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples,
+                                                         num_repetitions, num_datasets, num_classes, num_features)
 
     # saving the required variables to disk in a dict
     locals_var_dict = locals()
@@ -708,6 +702,21 @@ def determine_training_size(train_perc, class_sizes, num_classes):
     return train_size_common, total_test_samples
 
 
+def initialize_misclf_counters(sample_ids, num_datasets):
+    """Initialize misclassification counters."""
+
+    num_times_tested = list()
+    num_times_misclfd = list()
+    for dd in range(num_datasets):
+        num_times_tested.append(Counter(sample_ids))
+        num_times_misclfd.append(Counter(sample_ids))
+        for subid in sample_ids:
+            num_times_tested[dd][subid] = 0
+            num_times_misclfd[dd][subid] = 0
+
+    return num_times_misclfd, num_times_tested
+
+
 def initialize_result_containers(common_ds, datasets, total_test_samples,
                                  num_repetitions, num_datasets, num_classes, num_features):
     """Prepare containers for various outputs"""
@@ -718,15 +727,7 @@ def initialize_result_containers(common_ds, datasets, total_test_samples,
 
     best_params = [None] * num_repetitions
 
-    # initialize misclassification counters
-    num_times_tested = list()
-    num_times_misclfd = list()
-    for dd in range(num_datasets):
-        num_times_tested.append(Counter(common_ds.sample_ids))
-        num_times_misclfd.append(Counter(common_ds.sample_ids))
-        for subid in common_ds.sample_ids:
-            num_times_tested[dd][subid] = 0
-            num_times_misclfd[dd][subid] = 0
+    num_times_misclfd, num_times_tested = initialize_misclf_counters(common_ds.sample_ids, num_datasets)
 
     # multi-class metrics
     confusion_matrix = np.full([num_repetitions, num_classes, num_classes, num_datasets], np.nan)
@@ -743,7 +744,7 @@ def initialize_result_containers(common_ds, datasets, total_test_samples,
     return pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
            confusion_matrix, accuracy_balanced, auc_weighted, best_params, \
            feature_names, feature_importances_per_rep, feature_importances_rf, \
-           num_times_tested, num_times_misclfd,
+           num_times_misclfd, num_times_tested
 
 
 def get_pretty_print_options(method_names, num_datasets):
@@ -823,7 +824,6 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 
 def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
-                                   num_times_tested, num_times_misclfd,
                                    label_set, method_names, pos_class_index,
                                    out_results_dir, rep_id=None):
     """Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
@@ -841,6 +841,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
     accuracy_balanced = np.full(num_datasets, np.nan)
     auc_weighted = np.full(num_datasets, np.nan)
     best_params = [None] * num_datasets
+    misclsfd_ids_this_run = [None] * num_datasets
 
     feature_importances = [None] * num_datasets
     for idx in range(num_datasets):
@@ -852,7 +853,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
 
     # to uniquely identify this iteration
     if rep_id is None:
-        rep_proc_id = str(os.getpid())
+        rep_proc_id = 'process{}'.format(os.getpid()) # str(os.getpid())
     else:
         rep_proc_id = str(rep_id)
     print_options = get_pretty_print_options(method_names, num_datasets)
@@ -867,7 +868,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
         test_fs = datasets[dd].get_subset(test_set)
 
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], true_test_labels, \
-        confmat, misclsfd_ids_this_run, feature_importances[dd], best_params[dd] = \
+        confmat, misclsfd_ids_this_run[dd], feature_importances[dd], best_params[dd] = \
             eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc, feat_sel_size=feat_sel_size,
                                             label_order_in_conf_matrix=label_set)
 
@@ -882,13 +883,11 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
                                              average='weighted')
             print('\t weighted AUC: {:.4f}'.format(auc_weighted[dd]), end='')
 
-        num_times_misclfd[dd].update(misclsfd_ids_this_run)
-        num_times_tested[dd].update(test_fs.sample_ids)
-
         print('')
 
     results_list = [pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, accuracy_balanced,
-                     confusion_matrix, auc_weighted, feature_importances, best_params]
+                    confusion_matrix, auc_weighted, feature_importances, best_params,
+                    misclsfd_ids_this_run, test_set]
 
     out_path = pjoin(out_results_dir, 'trial_{}.pkl'.format(rep_proc_id))
     logging.info('results from rep {} saved to {}'.format(rep_proc_id, out_path))
@@ -904,15 +903,15 @@ def gather_results_across_trials(cv_results, common_ds, datasets, total_test_sam
 
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \
-        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
-        num_times_misclfd = initialize_result_containers(common_ds, datasets, total_test_samples,
-                                     num_repetitions, num_datasets, num_classes, num_features)
+        feature_importances_per_rep, feature_importances_rf, \
+        num_times_misclfd, num_times_tested = initialize_result_containers(common_ds, datasets,
+                total_test_samples, num_repetitions, num_datasets, num_classes, num_features)
 
     for rep in range(num_repetitions):
         # unpacking each rep
         _rep_pred_prob_per_class, _rep_pred_labels_per_rep_fs, _rep_true_test_labels, \
-            _rep_accuracy_balanced, _rep_confusion_matrix, _rep_auc_weighted, \
-            _rep_feature_importances, _rep_best_params = cv_results[rep]
+            _rep_accuracy_balanced, _rep_confusion_matrix, _rep_auc_weighted, _rep_feature_importances, \
+            _rep_best_params, _rep_misclsfd_ids_this_run, _rep_test_set = cv_results[rep]
 
         pred_prob_per_class[rep, :, :, :]   = _rep_pred_prob_per_class
         pred_labels_per_rep_fs[rep, :, :]   = _rep_pred_labels_per_rep_fs
@@ -922,14 +921,17 @@ def gather_results_across_trials(cv_results, common_ds, datasets, total_test_sam
         auc_weighted[rep, :]                = _rep_auc_weighted
         best_params[rep]                    = _rep_best_params
 
+        for dd in range(num_datasets):
+            num_times_misclfd[dd].update(_rep_misclsfd_ids_this_run[dd])
+            num_times_tested[dd].update(_rep_test_set)
+
         # TODO reorg by dataset; and ensure it works with visualize methods
         # _rep_feature_importances : list of len num_datasets, each of len num_features
         feature_importances_per_rep[rep]    = _rep_feature_importances
 
     return pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \
-        feature_importances_per_rep, feature_importances_rf, num_times_tested, \
-        num_times_misclfd
+        feature_importances_per_rep, feature_importances_rf, num_times_misclfd, num_times_tested
 
 
 def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets):
