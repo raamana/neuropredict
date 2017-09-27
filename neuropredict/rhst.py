@@ -293,7 +293,7 @@ def chance_accuracy(class_sizes, method='imbalanced'):
 
     method = method.lower()
     if method in ['imbalanced', ]:
-        chance_acc = np.sum( np.array(class_sizes/num_samples)^2 )
+        chance_acc = np.sum(np.square(class_sizes / num_samples))
     elif method in ['zero_rule', 'zeror' ]:
         # zero rule: fraction of largest class
         chance_acc = np.max(class_sizes) / num_samples
@@ -929,8 +929,7 @@ def gather_results_across_trials(cv_results, common_ds, datasets, total_test_sam
             num_times_tested[dd].update(_rep_test_set)
             feature_importances_rf[dd][rep,:] = _rep_feature_importances[dd]
 
-        # TODO reorg by dataset; and ensure it works with visualize methods
-        # _rep_feature_importances : list of len num_datasets, each of len num_features
+        # this variable is not being saved/used in any other way.
         feature_importances_per_rep[rep]    = _rep_feature_importances
 
     return pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \

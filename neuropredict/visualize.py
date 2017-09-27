@@ -646,6 +646,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
 
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
+    plt.text(0.05, chance_acc, 'chance accuracy')
     # plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(metric_label, fontsize=16)
 
