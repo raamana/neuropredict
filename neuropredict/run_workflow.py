@@ -13,6 +13,7 @@ from time import localtime, strftime
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
+import multiprocessing
 
 import numpy as np
 from pyradigm import MLDataset
@@ -109,6 +110,8 @@ E.g.
 Default: \'tenth\' of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features."""
 
     help_text_atlas = "Name of the atlas to use for visualization. Default: fsaverage, if available."
+    help_text_num_cpus = "Number of CPUs to use to parallelize CV repetitions. " \
+                         "Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested."
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=True,
@@ -163,6 +166,9 @@ Default: \'tenth\' of the number of samples in the training set. For example, if
                         nargs="*",
                         default="all",
                         help=help_text_sub_groups)
+
+    parser.add_argument("-c", "--num_procs", action="store", dest="num_procs",
+                        default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
 
     return parser
 
@@ -275,6 +281,8 @@ def parse_args():
     if num_rep_cv < 10:
         raise ValueError("Atleast 10 repetitions of CV is recommened.")
 
+    num_procs = check_num_procs(user_args.num_procs)
+
     sample_ids, classes = get_metadata(meta_file)
 
     class_set, subgroups, positive_class = validate_class_set(classes, user_args.sub_groups, user_args.positive_class)
@@ -284,7 +292,22 @@ def parse_args():
     return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
-           positive_class, subgroups, feature_selection_size
+           positive_class, subgroups, feature_selection_size, num_procs
+
+
+def check_num_procs(num_procs=cfg.DEFAULT_NUM_PROCS):
+    "Ensures num_procs is finite and <= available cpu count."
+
+    num_procs  = int(num_procs)
+    avail_cpu_count = multiprocessing.cpu_count()
+    if num_procs < 1 or not np.isfinite(num_procs) or num_procs is None:
+        num_procs = 1
+        print('Invalid value for num_procs. Using num_procs=1')
+    elif num_procs > avail_cpu_count:
+        print('# CPUs requested higher than available - choosing {}'.format(avail_cpu_count))
+        num_procs = avail_cpu_count
+
+    return num_procs
 
 
 def validate_feature_selection_size(feature_select_method, dim_in_data=None):
@@ -613,7 +636,7 @@ def export_results_from_disk(results_file_path, out_dir):
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
         best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
+        confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
             rhst.load_results(results_file_path)
 
     locals_var_dict = locals()
@@ -663,7 +686,7 @@ def export_results(dict_to_save, out_dir):
 
 
     try:
-        print('Saving accuracy distribution ..', end='')
+        print('Exporting accuracy distribution ..', end='')
         balacc_path = pjoin(exp_dir, 'balanced_accuracy.csv')
         np.savetxt(balacc_path, accuracy_balanced,
                    delimiter=cfg.DELIMITER,
@@ -672,7 +695,7 @@ def export_results(dict_to_save, out_dir):
 
         print('Done.')
 
-        print('Saving confusion matrices ..', end='')
+        print('Exporting confusion matrices ..', end='')
         cfmat_reshaped = np.reshape(confusion_matrix, [num_classes * num_classes, num_rep_cv, num_datasets])
         for mm in range(num_datasets):
             confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
@@ -682,7 +705,7 @@ def export_results(dict_to_save, out_dir):
                        comments='shape of confusion matrix: num_repetitions x num_classes^2')
         print('Done.')
 
-        print('Saving misclassfiication rates ..', end='')
+        print('Exporting misclassfiication rates ..', end='')
         avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
         num_datasets = misclf_rate.shape[0]
         for mm in range(num_datasets):
@@ -692,7 +715,7 @@ def export_results(dict_to_save, out_dir):
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
         print('Done.')
 
-        print('Saving feature importance values ..', end='')
+        print('Exporting feature importance values ..', end='')
         for mm in range(num_datasets):
             featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
             np.savetxt(featimp_path,
@@ -701,7 +724,7 @@ def export_results(dict_to_save, out_dir):
                        header=','.join(feature_names[mm]))
         print('Done.')
 
-        print('Saving subject-wise misclassification frequencies ..', end='')
+        print('Exporting subject-wise misclassification frequencies ..', end='')
         perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
         for mm in range(num_datasets):
             subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
@@ -928,7 +951,7 @@ def run_cli():
 
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
-        feature_selection_size = parse_args()
+        feature_selection_size, num_procs = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
@@ -939,7 +962,7 @@ def run_cli():
     results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
                                  train_perc=train_perc, num_repetitions=num_rep_cv,
                                  positive_class=positiveclass,
-                                 feat_sel_size=feature_selection_size)
+                                 feat_sel_size=feature_selection_size, num_procs=num_procs)
 
     print('Saving the visualizations and results to \n{}'.format(out_dir))
     make_visualizations(results_file_path, out_dir)

@@ -583,7 +583,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     # save results (comprehensive and reloadable manner)
 
 
-    dataset_paths, num_repetitions = check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc)
+    dataset_paths, num_repetitions, num_procs = check_params_rhst(dataset_path_file, out_results_dir, num_repetitions,
+                                                                  train_perc, num_procs)
 
     # loading datasets
     datasets = load_pyradigms(dataset_paths)
@@ -630,7 +631,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     return out_results_path
 
 
-def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc):
+def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc, num_procs):
     """Validates inputs and returns paths to feature sets to load"""
 
     if not pexists(dataset_path_file):
@@ -659,7 +660,9 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
         raise ValueError("Training percentage {} out of bounds "
                          "- must be > 0.01 and < 0.99".format(train_perc))
 
-    return dataset_paths, num_repetitions
+    num_procs = run_workflow.check_num_procs(num_procs)
+
+    return dataset_paths, num_repetitions, num_procs
 
 
 def load_pyradigms(dataset_paths):
