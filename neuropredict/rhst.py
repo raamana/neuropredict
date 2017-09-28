@@ -525,7 +525,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
 
 def run(dataset_path_file, method_names, out_results_dir,
         train_perc=0.8, num_repetitions=200,
-        positive_class=None,
+        positive_class=None, sub_group=None,
         feat_sel_size=cfg.default_num_features_to_select,
         num_procs=4):
     """
@@ -559,6 +559,9 @@ def run(dataset_path_file, method_names, out_results_dir,
         Must be a method (tenth or square root of the size of smallest class in training set,
             or a finite integer smaller than the data dimensionality.
 
+    sub_group : list
+        List of classes to focus on for classification. Default: all classes available.
+
     num_procs : int
         Number of parallel processes to run to parallelize the repetitions of CV
 
@@ -583,11 +586,11 @@ def run(dataset_path_file, method_names, out_results_dir,
     # save results (comprehensive and reloadable manner)
 
 
-    dataset_paths, num_repetitions, num_procs = check_params_rhst(dataset_path_file, out_results_dir, num_repetitions,
-                                                                  train_perc, num_procs)
+    dataset_paths, num_repetitions, num_procs, sub_group = check_params_rhst(dataset_path_file, out_results_dir,
+                                                                             num_repetitions, train_perc, sub_group, num_procs)
 
     # loading datasets
-    datasets = load_pyradigms(dataset_paths)
+    datasets = load_pyradigms(dataset_paths, sub_group)
 
     # making sure different feature sets are comparable
     common_ds, class_set, label_set, class_sizes, \
@@ -614,8 +617,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     # re-assemble results into a convenient form
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
         accuracy_balanced, auc_weighted, best_params, feature_names, \
-        feature_importances_per_rep, feature_importances_rf, \
-        num_times_misclfd, num_times_tested = gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples,
+        feature_importances_per_rep, feature_importances_rf, num_times_misclfd, num_times_tested = \
+        gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples,
                                                          num_repetitions, num_datasets, num_classes, num_features)
 
     # saving the required variables to disk in a dict
@@ -631,7 +634,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     return out_results_path
 
 
-def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc, num_procs):
+def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc, sub_groups, num_procs):
     """Validates inputs and returns paths to feature sets to load"""
 
     if not pexists(dataset_path_file):
@@ -662,11 +665,39 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     num_procs = run_workflow.check_num_procs(num_procs)
 
-    return dataset_paths, num_repetitions, num_procs
+    if not isinstance(sub_groups, list):
+        raise ValueError('sub_groups must be a list.')
+
+    # removing empty elements
+    sub_groups = [ group for group in sub_groups if group]
+
+    # NOTE: here, we are not ensuring classes in all the subgroups actually exist in all datasets
+    # that happens when loading data.
+
+    return dataset_paths, num_repetitions, num_procs, sub_groups
 
 
-def load_pyradigms(dataset_paths):
-    """Reads in a list of datasets in pyradigm format"""
+def load_pyradigms(dataset_paths, sub_group=None):
+    """Reads in a list of datasets in pyradigm format.
+
+    Parameters
+    ----------
+    dataset_paths : iterable
+        List of paths to pyradigm dataset
+
+    sub_group : iterable
+        subset of classes to return. Default: return all classes.
+        If sub_group is specified, returns only that subset of classes for all datasets.
+
+    Raises
+    ------
+        ValueError
+            If all the datasets do not contain the request subset of classes.
+
+    """
+
+    if sub_group is not None:
+        sub_group = set(sub_group)
 
     # loading datasets
     datasets = list()
@@ -676,13 +707,21 @@ def load_pyradigms(dataset_paths):
 
         try:
             # there is an internal validation of dataset
-            ds = MLDataset(fp)
+            ds_in = MLDataset(fp)
         except:
             print("Dataset @ {} is not a valid MLDataset!".format(fp))
             raise
 
+        class_set = set(ds_in.class_set)
+        if sub_group is None or sub_group == class_set:
+            ds_out = ds_in
+        elif sub_group < class_set: # < on sets is an issubset operation
+            ds_out = ds_in.get_class(sub_group)
+        else:
+            raise ValueError('One or more classes in {} does not exist in\n{}'.format(sub_group, fp))
+
         # add the valid dataset to list
-        datasets.append(ds)
+        datasets.append(ds_out)
 
     return datasets
 

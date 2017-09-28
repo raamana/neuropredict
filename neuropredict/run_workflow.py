@@ -13,7 +13,7 @@ from time import localtime, strftime
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
-import multiprocessing
+from multiprocessing import Pool, Manager, cpu_count
 
 import numpy as np
 from pyradigm import MLDataset
@@ -299,7 +299,7 @@ def check_num_procs(num_procs=cfg.DEFAULT_NUM_PROCS):
     "Ensures num_procs is finite and <= available cpu count."
 
     num_procs  = int(num_procs)
-    avail_cpu_count = multiprocessing.cpu_count()
+    avail_cpu_count = cpu_count()
     if num_procs < 1 or not np.isfinite(num_procs) or num_procs is None:
         num_procs = 1
         print('Invalid value for num_procs. Using num_procs=1')
@@ -741,7 +741,7 @@ def export_results(dict_to_save, out_dir):
     return
 
 
-def validate_class_set(classes, subgroups, positiveclass=None):
+def validate_class_set(classes, subgroups, positive_class=None):
     "Ensures class names are valid and sub-groups exist."
 
     class_set = set(classes.values())
@@ -775,16 +775,16 @@ def validate_class_set(classes, subgroups, positiveclass=None):
                          "Only one given ({})".format(set(classes.values())))
 
     if num_classes == 2:
-        if not_unspecified(positiveclass):
-            if positiveclass not in class_order_in_meta:
+        if not_unspecified(positive_class):
+            if positive_class not in class_order_in_meta:
                 raise ValueError('Positive class specified does not exist in meta data.\n'
                                  'Choose one of {}'.format(class_order_in_meta))
-            print('Positive class specified for AUC calculation: {}'.format(positiveclass))
+            print('Positive class specified for AUC calculation: {}'.format(positive_class))
         else:
-            positiveclass = class_order_in_meta[-1]
-            print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
+            positive_class = class_order_in_meta[-1]
+            print('Positive class inferred for AUC calculation: {}'.format(positive_class))
 
-    return class_set, subgroups, positiveclass
+    return class_set, subgroups, positive_class
 
 
 def make_dataset_filename(method_name):
@@ -947,10 +947,8 @@ def run_cli():
     
     """
 
-    # TODO design an API interface for advanced access as an importable package
-
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
-        fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
+        fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
         feature_selection_size, num_procs = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
@@ -959,13 +957,16 @@ def run_cli():
     method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
-    results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
-                                 train_perc=train_perc, num_repetitions=num_rep_cv,
-                                 positive_class=positiveclass,
-                                 feat_sel_size=feature_selection_size, num_procs=num_procs)
+    # iterating through the given set of subgroups
+    for sub_group in sub_group_list:
+        print('{}\nProcessing subgroup : {}\n{}'.format('-'*80, sub_group, '-'*80))
+        results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
+                                     train_perc=train_perc, num_repetitions=num_rep_cv,
+                                     positive_class=positive_class, sub_group=sub_group,
+                                     feat_sel_size=feature_selection_size, num_procs=num_procs)
 
-    print('Saving the visualizations and results to \n{}'.format(out_dir))
-    make_visualizations(results_file_path, out_dir)
+        print('Saving the visualizations and results to \n{}'.format(out_dir))
+        make_visualizations(results_file_path, out_dir)
 
 
     return

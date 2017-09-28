@@ -56,7 +56,6 @@ INPUT_FILE_FORMATS = ['.npy', '.numpy', '.csv', '.txt']
 # when more than one feature set is given, which one to map everyone to
 COMMON_DATASET_INDEX = 0
 
-# TODO save class_sizes too
 rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
                   'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
                   'best_params',
