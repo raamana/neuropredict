@@ -100,16 +100,12 @@ def test_chance_classifier_binary():
         num_times_misclfd, num_times_tested, \
         confusion_matrix, class_set, class_sizes, accuracy_balanced, auc_weighted, positive_class = rhst.load_results(res_path)
 
-    # TODO replace hard coded chance accuracy calculation with programmatic based on class sample sizes
     median_bal_acc = np.median(accuracy_balanced)
-    median_wtd_auc = np.median(auc_weighted)
-    print('median balanced accuracy : {} -- median weighted AUC : {}'.format(median_bal_acc, median_wtd_auc))
-    # assert np.median(accuracy_balanced) == np.median(rhst.chance_accuracy(class_sizes))
-    if abs(median_bal_acc-0.5) > 0.05:
-        raise ValueError('Accuracy to discriminate between two inseparable classes significantly differs from 0.5')
+    # median_wtd_auc = np.median(auc_weighted)
+    chance_acc = rhst.chance_accuracy(class_sizes)
 
-    if abs(median_wtd_auc-0.5) > 0.05:
-        raise ValueError('AUC to discriminate between two inseparable classes significantly differs from 0.5')
+    if abs(median_bal_acc-chance_acc) > chance_acc:
+        raise ValueError('Chance accuracy estimated via repeated holdout CV to substantially differs from that based on class sizes : {}'.format(chance_acc))
 
 
 # res_path = pjoin(out_dir, 'rhst_results.pkl')
