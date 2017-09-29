@@ -4,7 +4,6 @@ import versioneer
 from setuptools import setup, find_packages
 
 setup(name='neuropredict',
-      version='0.2.5',
       description='Neuroimaging Predictive Analysis',
       long_description='Neuroimaging Predictive Analysis; neuropredict',
       author='Pradeep Reddy Raamana',
