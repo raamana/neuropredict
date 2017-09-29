@@ -746,7 +746,11 @@ def validate_class_set(classes, subgroups, positive_class=None):
 
     class_set = set(classes.values())
 
+    sub_group_list = list()
     if subgroups != 'all':
+        if isinstance(subgroups, str):
+            subgroups = [ subgroups, ]
+
         for comb in subgroups:
             cls_list = comb.split(',')
             # ensuring each subgroup has atleast two classes
@@ -758,9 +762,11 @@ def validate_class_set(classes, subgroups, positive_class=None):
                 if cls not in class_set:
                     raise ValueError("Class {} in combination {} "
                                      "does not exist in meta data.".format(cls, comb))
+
+            sub_group_list.append(cls_list)
     else:
         # using all classes
-        subgroups = ','.join(class_set)
+        sub_group_list.append(class_set)
 
     # the following loop is required to preserve original order
     # this does not: class_order_in_meta = list(set(classes.values()))
@@ -784,7 +790,7 @@ def validate_class_set(classes, subgroups, positive_class=None):
             positive_class = class_order_in_meta[-1]
             print('Positive class inferred for AUC calculation: {}'.format(positive_class))
 
-    return class_set, subgroups, positive_class
+    return class_set, sub_group_list, positive_class
 
 
 def make_dataset_filename(method_name):
@@ -826,6 +832,8 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     
     """
 
+    def clean_str(string): return ' '.join(string.strip().split(' _-:\n\r\t'))
+
     method_names = list()
     outpath_list = list()
     for mm, cur_method in enumerate(method_list):
@@ -836,10 +844,10 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
         elif cur_method in [get_pyradigm]:
             loaded_dataset = MLDataset(feature_path[mm])
             if len(loaded_dataset.description) > 1:
-                method_name = loaded_dataset.description.replace(' ', '_')
+                method_name = loaded_dataset.description
             else:
                 method_name = basename(feature_path[mm])
-            method_names.append(method_name)
+            method_names.append(clean_str(method_name))
             if saved_dataset_matches(loaded_dataset, subjects, classes):
                 outpath_list.append(feature_path[mm])
                 continue
@@ -850,7 +858,7 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
             # method_name = '{}_{}'.format(cur_method.__name__,mm)
             method_name = cur_method.__name__
 
-        method_names.append(method_name)
+        method_names.append(clean_str(method_name))
         out_name = make_dataset_filename(method_name)
 
         outpath_dataset = pjoin(out_dir, out_name)

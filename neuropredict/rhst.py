@@ -665,9 +665,6 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     num_procs = run_workflow.check_num_procs(num_procs)
 
-    if not isinstance(sub_groups, list):
-        raise ValueError('sub_groups must be a list.')
-
     # removing empty elements
     sub_groups = [ group for group in sub_groups if group]
 
