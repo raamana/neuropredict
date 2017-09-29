@@ -20,7 +20,8 @@ setup(name='neuropredict',
               'Operating System :: POSIX',
               'Operating System :: Unix',
               'Operating System :: MacOS',
-              'Programming Language :: Python :: 2.7',
+              'Programming Language :: Python :: 3.5',
+              'Programming Language :: Python :: 3.6',
           ],
       entry_points={
           "console_scripts": [
