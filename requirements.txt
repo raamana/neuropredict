@@ -2,6 +2,7 @@ numpy
 sklearn
 nibabel
 pyradigm
+versioneer
 setuptools
 scipy
 matplotlib
