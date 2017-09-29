@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import versioneer
 from setuptools import setup, find_packages
 
 setup(name='neuropredict',
@@ -26,6 +27,8 @@ setup(name='neuropredict',
           "console_scripts": [
               "neuropredict=neuropredict.__main__:main",
           ]
-      }
+      },
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass()
 
      )
