@@ -666,8 +666,8 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
     num_procs = run_workflow.check_num_procs(num_procs)
 
     # removing empty elements
-    sub_groups = [ group for group in sub_groups if group]
-
+    if sub_groups is not None:
+        sub_groups = [ group for group in sub_groups if group]
     # NOTE: here, we are not ensuring classes in all the subgroups actually exist in all datasets
     # that happens when loading data.
 

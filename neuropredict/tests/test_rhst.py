@@ -112,6 +112,6 @@ def test_chance_classifier_binary():
         raise ValueError('AUC to discriminate between two inseparable classes significantly differs from 0.5')
 
 
-res_path = pjoin(out_dir, 'rhst_results.pkl')
-run_workflow.make_visualizations(res_path, out_dir)
-# test_chance_classifier_binary()
+# res_path = pjoin(out_dir, 'rhst_results.pkl')
+# run_workflow.make_visualizations(res_path, out_dir)
+test_chance_classifier_binary()
