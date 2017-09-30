@@ -1,7 +1,0 @@
-numpy
-scikit-learn
-pyradigm
-nibabel
-scipy
-matplotlib
-setuptools
