@@ -14,3 +14,7 @@ elif version_info.major > 2:
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

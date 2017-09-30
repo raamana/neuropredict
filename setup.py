@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+import versioneer
 
 setup(name='neuropredict',
-      version='0.2.5',
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description='Neuroimaging Predictive Analysis',
       long_description='Neuroimaging Predictive Analysis; neuropredict',
       author='Pradeep Reddy Raamana',
