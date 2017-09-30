@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 import versioneer
 
-setup(name='faberfase',
+setup(name='neuropredic',
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
       description='Neuroimaging Predictive Analysis',
