@@ -13,7 +13,7 @@ Welcome to neuropredict's documentation!
    :alt: Code Health
 .. image:: https://api.codacy.com/project/badge/Grade/cffd80f290544e2e824011bfccf35ff8
    :target: https://www.codacy.com/app/raamana/neuropredict?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/neuropredict&amp;utm_campaign=Badge_Grade
-.. image:: https://img.shields.io/badge/python-2.7%2C%203.5%2C%203.6-blue.svg
+.. image:: https://img.shields.io/badge/python-3.5%2C%203.6-blue.svg
    :alt: Python versions
 .. image:: https://badge.fury.io/py/neuropredict.svg
    :target: https://badge.fury.io/py/neuropredict

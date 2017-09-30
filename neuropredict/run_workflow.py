@@ -13,6 +13,7 @@ from time import localtime, strftime
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
+from multiprocessing import Pool, Manager, cpu_count
 
 import numpy as np
 from pyradigm import MLDataset
@@ -109,6 +110,8 @@ E.g.
 Default: \'tenth\' of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features."""
 
     help_text_atlas = "Name of the atlas to use for visualization. Default: fsaverage, if available."
+    help_text_num_cpus = "Number of CPUs to use to parallelize CV repetitions. " \
+                         "Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested."
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=True,
@@ -163,6 +166,9 @@ Default: \'tenth\' of the number of samples in the training set. For example, if
                         nargs="*",
                         default="all",
                         help=help_text_sub_groups)
+
+    parser.add_argument("-c", "--num_procs", action="store", dest="num_procs",
+                        default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
 
     return parser
 
@@ -275,6 +281,8 @@ def parse_args():
     if num_rep_cv < 10:
         raise ValueError("Atleast 10 repetitions of CV is recommened.")
 
+    num_procs = check_num_procs(user_args.num_procs)
+
     sample_ids, classes = get_metadata(meta_file)
 
     class_set, subgroups, positive_class = validate_class_set(classes, user_args.sub_groups, user_args.positive_class)
@@ -284,7 +292,22 @@ def parse_args():
     return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
-           positive_class, subgroups, feature_selection_size
+           positive_class, subgroups, feature_selection_size, num_procs
+
+
+def check_num_procs(num_procs=cfg.DEFAULT_NUM_PROCS):
+    "Ensures num_procs is finite and <= available cpu count."
+
+    num_procs  = int(num_procs)
+    avail_cpu_count = cpu_count()
+    if num_procs < 1 or not np.isfinite(num_procs) or num_procs is None:
+        num_procs = 1
+        print('Invalid value for num_procs. Using num_procs=1')
+    elif num_procs > avail_cpu_count:
+        print('# CPUs requested higher than available - choosing {}'.format(avail_cpu_count))
+        num_procs = avail_cpu_count
+
+    return num_procs
 
 
 def validate_feature_selection_size(feature_select_method, dim_in_data=None):
@@ -547,14 +570,12 @@ def make_visualizations(results_file_path, outdir):
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_params, \
-    feature_importances_rf, feature_names, \
-    num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
+    best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
         rhst.load_results(results_file_path)
 
     if os.environ['DISPLAY'] is None:
-        warnings.warn('DISPLAY is not set. Skipping to generate any visualizations.')
+        warnings.warn('DISPLAY is not set. Skipping the generation of any visualizations.')
         return
 
     if not pexists(outdir):
@@ -567,7 +588,7 @@ def make_visualizations(results_file_path, outdir):
 
         balacc_fig_path = pjoin(outdir, 'balanced_accuracy')
         visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
-                                      num_classes, "Balanced Accuracy")
+                                      class_sizes, num_classes, "Balanced Accuracy")
 
         confmat_fig_path = pjoin(outdir, 'confusion_matrix')
         visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
@@ -594,14 +615,48 @@ def make_visualizations(results_file_path, outdir):
     return
 
 
-def export_results(results_file_path, outdir):
+def export_results_from_disk(results_file_path, out_dir):
+    """
+    Exports the results to simpler CSV format for use in other packages!
+
+    Parameters
+    ----------
+    results_file_path : str
+        Path to a pickle file containing all the relevant results
+
+    out_dir : str
+        Path to save the results to
+
+    Returns
+    -------
+    None
+
+    """
+
+    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
+            rhst.load_results(results_file_path)
+
+    locals_var_dict = locals()
+    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+    export_results(dict_to_save, out_dir)
+
+    return
+
+
+def export_results(dict_to_save, out_dir):
     """
     Exports the results to simpler CSV format for use in other packages!
     
     Parameters
     ----------
-    results_file_path
-    outdir
+    dict_to_save : dict
+        Containing all the relevant results
+
+    out_dir : str
+        Path to save the results to.
 
     Returns
     -------
@@ -609,20 +664,20 @@ def export_results(results_file_path, outdir):
     
     """
 
-    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_params, \
-    feature_importances_rf, feature_names, \
-    num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, accuracy_balanced, auc_weighted, positive_class = \
-        rhst.load_results(results_file_path)
+    confusion_matrix        = dict_to_save['confusion_matrix']
+    accuracy_balanced       = dict_to_save['accuracy_balanced']
+    method_names            = dict_to_save['method_names']
+    feature_importances_rf  = dict_to_save['feature_importances_rf']
+    feature_names           = dict_to_save['feature_names']
+    num_times_misclfd       = dict_to_save['num_times_misclfd']
+    num_times_tested        = dict_to_save['num_times_tested']
 
-    num_classes = confusion_matrix.shape[0]
-    num_rep_cv = confusion_matrix.shape[2]
+    num_rep_cv   = confusion_matrix.shape[0]
     num_datasets = confusion_matrix.shape[3]
+    num_classes  = confusion_matrix.shape[2]
 
     # separating CSVs from the PDFs
-    exp_dir = pjoin(outdir, cfg.EXPORT_DIR_NAME)
+    exp_dir = pjoin(out_dir, cfg.EXPORT_DIR_NAME)
     if not pexists(exp_dir):
         os.mkdir(exp_dir)
 
@@ -631,7 +686,7 @@ def export_results(results_file_path, outdir):
 
 
     try:
-        print('Saving accuracy distribution ..', end='')
+        print('Exporting accuracy distribution ..', end='')
         balacc_path = pjoin(exp_dir, 'balanced_accuracy.csv')
         np.savetxt(balacc_path, accuracy_balanced,
                    delimiter=cfg.DELIMITER,
@@ -640,7 +695,7 @@ def export_results(results_file_path, outdir):
 
         print('Done.')
 
-        print('Saving confusion matrices ..', end='')
+        print('Exporting confusion matrices ..', end='')
         cfmat_reshaped = np.reshape(confusion_matrix, [num_classes * num_classes, num_rep_cv, num_datasets])
         for mm in range(num_datasets):
             confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
@@ -650,7 +705,7 @@ def export_results(results_file_path, outdir):
                        comments='shape of confusion matrix: num_repetitions x num_classes^2')
         print('Done.')
 
-        print('Saving misclassfiication rates ..', end='')
+        print('Exporting misclassfiication rates ..', end='')
         avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
         num_datasets = misclf_rate.shape[0]
         for mm in range(num_datasets):
@@ -660,7 +715,7 @@ def export_results(results_file_path, outdir):
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
         print('Done.')
 
-        print('Saving feature importance values ..', end='')
+        print('Exporting feature importance values ..', end='')
         for mm in range(num_datasets):
             featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
             np.savetxt(featimp_path,
@@ -669,7 +724,7 @@ def export_results(results_file_path, outdir):
                        header=','.join(feature_names[mm]))
         print('Done.')
 
-        print('Saving subject-wise misclassification frequencies ..', end='')
+        print('Exporting subject-wise misclassification frequencies ..', end='')
         perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
         for mm in range(num_datasets):
             subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
@@ -686,12 +741,16 @@ def export_results(results_file_path, outdir):
     return
 
 
-def validate_class_set(classes, subgroups, positiveclass=None):
+def validate_class_set(classes, subgroups, positive_class=None):
     "Ensures class names are valid and sub-groups exist."
 
     class_set = set(classes.values())
 
+    sub_group_list = list()
     if subgroups != 'all':
+        if isinstance(subgroups, str):
+            subgroups = [ subgroups, ]
+
         for comb in subgroups:
             cls_list = comb.split(',')
             # ensuring each subgroup has atleast two classes
@@ -703,9 +762,11 @@ def validate_class_set(classes, subgroups, positiveclass=None):
                 if cls not in class_set:
                     raise ValueError("Class {} in combination {} "
                                      "does not exist in meta data.".format(cls, comb))
+
+            sub_group_list.append(cls_list)
     else:
         # using all classes
-        subgroups = ','.join(class_set)
+        sub_group_list.append(class_set)
 
     # the following loop is required to preserve original order
     # this does not: class_order_in_meta = list(set(classes.values()))
@@ -720,16 +781,16 @@ def validate_class_set(classes, subgroups, positiveclass=None):
                          "Only one given ({})".format(set(classes.values())))
 
     if num_classes == 2:
-        if not_unspecified(positiveclass):
-            if positiveclass not in class_order_in_meta:
+        if not_unspecified(positive_class):
+            if positive_class not in class_order_in_meta:
                 raise ValueError('Positive class specified does not exist in meta data.\n'
                                  'Choose one of {}'.format(class_order_in_meta))
-            print('Positive class specified for AUC calculation: {}'.format(positiveclass))
+            print('Positive class specified for AUC calculation: {}'.format(positive_class))
         else:
-            positiveclass = class_order_in_meta[-1]
-            print('Positive class inferred for AUC calculation: {}'.format(positiveclass))
+            positive_class = class_order_in_meta[-1]
+            print('Positive class inferred for AUC calculation: {}'.format(positive_class))
 
-    return class_set, subgroups, positiveclass
+    return class_set, sub_group_list, positive_class
 
 
 def make_dataset_filename(method_name):
@@ -771,6 +832,8 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     
     """
 
+    def clean_str(string): return ' '.join(string.strip().split(' _-:\n\r\t'))
+
     method_names = list()
     outpath_list = list()
     for mm, cur_method in enumerate(method_list):
@@ -781,10 +844,10 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
         elif cur_method in [get_pyradigm]:
             loaded_dataset = MLDataset(feature_path[mm])
             if len(loaded_dataset.description) > 1:
-                method_name = loaded_dataset.description.replace(' ', '_')
+                method_name = loaded_dataset.description
             else:
                 method_name = basename(feature_path[mm])
-            method_names.append(method_name)
+            method_names.append(clean_str(method_name))
             if saved_dataset_matches(loaded_dataset, subjects, classes):
                 outpath_list.append(feature_path[mm])
                 continue
@@ -795,7 +858,7 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
             # method_name = '{}_{}'.format(cur_method.__name__,mm)
             method_name = cur_method.__name__
 
-        method_names.append(method_name)
+        method_names.append(clean_str(method_name))
         out_name = make_dataset_filename(method_name)
 
         outpath_dataset = pjoin(out_dir, out_name)
@@ -892,11 +955,9 @@ def run_cli():
     
     """
 
-    # TODO design an API interface for advanced access as an importable package
-
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
-        fs_subject_dir, train_perc, num_rep_cv, positiveclass, subgroups, \
-        feature_selection_size = parse_args()
+        fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
+        feature_selection_size, num_procs = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
@@ -904,16 +965,17 @@ def run_cli():
     method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
-    results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
-                                 train_perc=train_perc, num_repetitions=num_rep_cv,
-                                 positive_class=positiveclass,
-                                 feat_sel_size=feature_selection_size)
+    # iterating through the given set of subgroups
+    for sub_group in sub_group_list:
+        print('{}\nProcessing subgroup : {}\n{}'.format('-'*80, sub_group, '-'*80))
+        results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
+                                     train_perc=train_perc, num_repetitions=num_rep_cv,
+                                     positive_class=positive_class, sub_group=sub_group,
+                                     feat_sel_size=feature_selection_size, num_procs=num_procs)
 
-    print('Saving the visualizations and results to \n{}'.format(out_dir))
-    make_visualizations(results_file_path, out_dir)
+        print('Saving the visualizations and results to \n{}'.format(out_dir))
+        make_visualizations(results_file_path, out_dir)
 
-    # TODO avoid loading results from disk twice (vis & export)
-    export_results(results_file_path, out_dir)
 
     return
 

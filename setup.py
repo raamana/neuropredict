@@ -2,8 +2,11 @@
 
 import versioneer
 from setuptools import setup, find_packages
+import versioneer
 
 setup(name='neuropredict',
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description='Neuroimaging Predictive Analysis',
       long_description='Neuroimaging Predictive Analysis; neuropredict',
       author='Pradeep Reddy Raamana',
@@ -20,14 +23,13 @@ setup(name='neuropredict',
               'Operating System :: POSIX',
               'Operating System :: Unix',
               'Operating System :: MacOS',
-              'Programming Language :: Python :: 2.7',
+              'Programming Language :: Python :: 3.5',
+              'Programming Language :: Python :: 3.6',
           ],
       entry_points={
           "console_scripts": [
               "neuropredict=neuropredict.__main__:main",
           ]
-      },
-      version=versioneer.get_version(),
-      cmdclass=versioneer.get_cmdclass()
+      }
 
      )
