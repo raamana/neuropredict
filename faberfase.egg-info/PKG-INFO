@@ -1,0 +1,20 @@
+Metadata-Version: 1.1
+Name: faberfase
+Version: 0.0.2+0.gbb431ca.dirty
+Summary: Neuroimaging Predictive Analysis
+Home-page: https://github.com/raamana/neuropredict
+Author: Pradeep Reddy Raamana
+Author-email: raamana@gmail.com
+License: UNKNOWN
+Description: Neuroimaging Predictive Analysis; neuropredict
+Platform: UNKNOWN
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development
+Classifier: Topic :: Scientific/Engineering
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Unix
+Classifier: Operating System :: MacOS
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6

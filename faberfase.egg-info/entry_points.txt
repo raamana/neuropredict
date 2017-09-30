@@ -1,0 +1,3 @@
+[console_scripts]
+neuropredict = neuropredict.__main__:main
+

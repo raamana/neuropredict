@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-import versioneer
 from setuptools import setup, find_packages
 import versioneer
 
-setup(name='neuropredict',
+setup(name='faberfase',
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
       description='Neuroimaging Predictive Analysis',
