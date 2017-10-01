@@ -1,0 +1,2 @@
+include versioneer.py
+include neuropredict/_version.py

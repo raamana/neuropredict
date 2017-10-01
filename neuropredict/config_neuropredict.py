@@ -22,8 +22,11 @@ LEAF_SIZE_STEP = 3
 INNER_CV_NUM_SPLITS = 10
 INNER_CV_TRAIN_PERC = 0.8
 INNER_CV_TEST_PERC = 0.2
-GRIDSEARCH_PRE_DISPATCH = 8
-GRIDSEARCH_NUM_JOBS = 8
+
+# parallelization is now achieved at the repetitions level.
+DEFAULT_NUM_PROCS = 4
+GRIDSEARCH_PRE_DISPATCH = 1
+GRIDSEARCH_NUM_JOBS = 1
 
 SEED_RANDOM = 652
 
@@ -50,12 +53,15 @@ EXPORT_FORMAT = '%10.5f'
 
 INPUT_FILE_FORMATS = ['.npy', '.numpy', '.csv', '.txt']
 
+# when more than one feature set is given, which one to map everyone to
+COMMON_DATASET_INDEX = 0
+
 rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
                   'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
                   'best_params',
                   'feature_importances_rf', 'feature_names',
                   'num_times_misclfd', 'num_times_tested',
-                  'confusion_matrix', 'class_set',
+                  'confusion_matrix', 'class_set', 'class_sizes',
                   'accuracy_balanced', 'auc_weighted', 'positive_class']
 
 # TODO decide to where to include eTIV
