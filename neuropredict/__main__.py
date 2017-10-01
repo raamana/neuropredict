@@ -10,7 +10,7 @@ else:
 def main():
     "Entry point."
 
-    run_workflow.run_cli()
+    run_workflow.cli()
 
 if __name__ == '__main__':
     main()

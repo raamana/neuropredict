@@ -9,7 +9,7 @@ import warnings
 from collections import Counter, namedtuple
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, realpath
-from multiprocessing import Pool, Manager, Array as multiArray, Value as multiValue
+from multiprocessing import Pool, Manager
 from functools import partial
 
 import numpy as np
@@ -137,7 +137,7 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
     gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
                       n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
 
-    with warnings.catch_warnings() as warn_ctrl:
+    with warnings.catch_warnings():
         warnings.filterwarnings(action='once', category=UserWarning, module='joblib',
                                 message='Multiprocessing-backed parallel loops cannot be nested, setting n_jobs=1')
         gs.fit(train_data_mat, train_labels)
