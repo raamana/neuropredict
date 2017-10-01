@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__all__ = ['run', 'run_cli', 'get_parser']
+__all__ = ['run', 'cli', 'get_parser']
 
 import argparse
 import os
@@ -13,7 +13,7 @@ from time import localtime, strftime
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
-from multiprocessing import Pool, Manager, cpu_count
+from multiprocessing import cpu_count
 
 import numpy as np
 from pyradigm import MLDataset
@@ -570,8 +570,8 @@ def make_visualizations(results_file_path, outdir):
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
+    _, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class = \
         rhst.load_results(results_file_path)
 
     if os.environ['DISPLAY'] is None:
@@ -949,7 +949,7 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
     return feature_dir, method_list
 
 
-def run_cli():
+def cli():
     """
     Main entry point.
     
@@ -1077,4 +1077,4 @@ def run(feature_sets, meta_data, output_dir,
 
 
 if __name__ == '__main__':
-    run_cli()
+    cli()
