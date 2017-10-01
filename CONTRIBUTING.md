@@ -3,9 +3,6 @@ Hello there!
 Thank you for the checking out neuropredict, and for your interest in contributing. 
 
 As you may notice, this is a relatively new project with an exciting roadmap, both in scope and in long term goals. The core functions of neuropredict as a tool (learning, cross-validation and visualization) have been implemented already in their basic form. You could helpe improve and test them, and also contribute in the following areas:
- * write tests for command line usage
- * write docs for results produced
- * write tests for integration among different modules
  * identifying any bugs by focusing on the areas of neuropredict that you have expertise in 
     * write unit tests or property tests to assert its advertised functionality
  * propose interesting, popular and exciting use cases that neuropredict could support to further multiply its value
