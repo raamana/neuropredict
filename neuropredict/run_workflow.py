@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__all__ = ['fit', 'run_cli', 'get_parser']
+__all__ = ['run', 'run_cli', 'get_parser']
 
 import argparse
 import os
@@ -980,12 +980,14 @@ def run_cli():
     return
 
 
-def fit(feature_sets, meta_data, output_dir,
+def run(feature_sets, meta_data, output_dir,
         pipeline=None,
         train_perc=0.5,
         num_repetitions=200,
         positive_class=None,
-        feat_sel_size=cfg.default_num_features_to_select):
+        feat_sel_size=cfg.default_num_features_to_select,
+        sub_groups='all',
+        num_procs=2):
     """
     Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.
 
@@ -1034,16 +1036,33 @@ def fit(feature_sets, meta_data, output_dir,
         The smallest class is chosen to avoid class-imbalance in the training set.
         Default: 0.8 (80%).
 
-    num_repetitions : int, optional
-        Number of repetitions of cross-validation estimation. Default: 200.
-
     positive_class : str
         Name of the class to be treated as positive in calculation of AUC
 
     feat_sel_size : str or int
-        Number of features to retain after feature selection.
-        Must be a method (tenth or square root of the size of smallest class in training set,
-            or a finite integer smaller than the data dimensionality.
+        Number of features to select as part of feature selection. Options:
+
+             - 'tenth'
+             - 'sqrt'
+             - 'log2'
+             - 'all'
+
+            Default: \'tenth\' of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.
+
+    num_repetitions : int, optional
+        Number of repetitions of cross-validation estimation. Default: 200.
+
+    num_procs : int, optional
+        Number of CPUs to use to parallelize CV repetitions.
+
+        Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested.
+
+    sub_groups : list
+        This option allows the user to study different combinations of classes in a multi-class (N>2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied separately with the following flag ``--sub_groups CN,FTD CN,AD``. This allows the user to focus on few interesting subgroups depending on their dataset/goal.
+
+        Format: Different subgroups must be separated by space, and each sub-group must be a comma-separated list of class names defined in the meta data file. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes.
+
+        Default: ``'all'``, leading to inclusion of all available classes in a all-vs-all multi-class setting.
 
     Returns
     -------
