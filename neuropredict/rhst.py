@@ -385,18 +385,10 @@ def get_RandomForestClassifier(reduced_dim=None):
     range_num_trees     = [10, 30, 100, 500]
     split_criteria      = ['gini', 'entropy']
     range_min_leafsize  = [1, 3, 5]
-    range_min_impurity  = range(0., 0.41, 0.1)
+    range_min_impurity  = np.arange(0., 0.41, 0.1)
 
     # if user supplied reduced_dim, it will be tried also. Default None --> all features.
     range_max_features  = ['sqrt', 'log2', 0.05, 0.1, 0.25, 0.5, 0.75, reduced_dim]
-
-    # capturing the edge cases
-    if len(range_min_leafsize) < 1:
-        range_min_leafsize = [1, ]
-    if len(range_num_predictors) <= 1:
-        range_num_predictors = [reduced_dim, ]
-    if len(range_num_trees) < 1:
-        range_num_trees = [cfg.NUM_TREES, ]
 
     # name clf_model chosen to enable generic selection classifier later on
     # not optimizing over number of features to save time
