@@ -67,6 +67,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_labels()
 
     train_class_sizes = list(train_fs.class_sizes.values())
+    # TODO look for ways to avoid building this every iter and every dataset.
     pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
 
     best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
@@ -212,7 +213,7 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     Raises
     ------
     ValueError
-        If method choices were invalid.
+        If method choice is invalid.
     """
 
     # default to use them all.
@@ -245,14 +246,23 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
             calc_size = np.int64(select_method)
         reduced_dim = min(calc_size, train_data_dim)
     elif isinstance(select_method, int):
-        if select_method > train_data_dim:
+        if select_method > train_data_dim: # case of Inf is covered
             reduced_dim = train_data_dim
             print('Reducing the feature selection size to {}, '
                   'to accommondate the current feature set.'.format(train_data_dim))
         else:
             reduced_dim = select_method
+    elif isinstance(select_method, float):
+        if not np.isfinite(select_method):
+            raise ValueError('Fraction for the reduced dimensionality must be finite within (0.0, 1.0).')
+        elif select_method <= 0.0:
+            reduced_dim = 1
+        elif select_method >= 1.0:
+            reduced_dim = train_data_dim
+        else:
+            reduced_dim = np.int64(np.floor(train_data_dim/select_method))
     else:
-        raise ValueError('method to choose feature selection size can only be string or integer!')
+        raise ValueError('Invalid method to choose size of feature selection. It can only be 1) string or 2) finite integer (< data dimensionality) or 3) a fraction between 0.0 and 1.0 !')
 
     # ensuring it is an integer >= 1
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
@@ -369,12 +379,16 @@ def load_results(results_file_path):
            accuracy_balanced, auc_weighted, positive_class
 
 
-def get_RandomForestClassifier(reduced_dim='all'):
+def get_RandomForestClassifier(reduced_dim=None):
     """ Returns the Random Forest classifier and its parameter grid. """
 
-    range_num_trees = range(cfg.NUM_TREES_RANGE[0], cfg.NUM_TREES_RANGE[1], cfg.NUM_TREES_STEP)
-    range_min_leafsize = range(cfg.MAX_MIN_LEAFSIZE, 1, -cfg.LEAF_SIZE_STEP)
-    range_num_predictors = range(reduced_dim, 1, -cfg.NUM_PREDICTORS_STEP)
+    range_num_trees     = [10, 30, 100, 500]
+    split_criteria      = ['gini', 'entropy']
+    range_min_leafsize  = [1, 3, 5]
+    range_min_impurity  = range(0., 0.41, 0.1)
+
+    # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+    range_max_features  = ['sqrt', 'log2', 0.05, 0.1, 0.25, 0.5, 0.75, reduced_dim]
 
     # capturing the edge cases
     if len(range_min_leafsize) < 1:
@@ -388,9 +402,12 @@ def get_RandomForestClassifier(reduced_dim='all'):
     # not optimizing over number of features to save time
     clf_name = 'random_forest_clf'
     param_name = lambda string: '{}__{}'.format(clf_name, string)
-    param_grid = {param_name('min_samples_leaf'): range_min_leafsize,
-                  param_name('max_features')    : range_num_predictors,
-                  param_name('n_estimators')    : range_num_trees}
+    param_grid = {param_name('n_estimators')    : range_num_trees,
+                  param_name('criterion')       : split_criteria,
+                  param_name('min_impurity_decrease') : range_min_impurity,
+                  param_name('min_samples_leaf'): range_min_leafsize,
+                  param_name('max_features')    : range_max_features,
+                  }
 
     rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
 
@@ -509,7 +526,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     if fs_param_grid:  # None or empty dict both evaluate to False
         fs_params = set(fs_param_grid.keys())
         clf_params = set(param_grid.keys())
-        if len(fs_params.intersection(clf_params)):
+        if len(fs_params.intersection(clf_params)) > 0:
             # raising error to avoid silent overwrite
             raise ValueError('Overlap in parameters betwen feature selector and the classifier. Remove it.')
 

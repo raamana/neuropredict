@@ -11,12 +11,12 @@ variance_threshold = 0.001
 
 #Parameters specific to random forest classifier optimization
 NUM_TREES = 250
-NUM_TREES_RANGE = [250, 300]
-NUM_TREES_STEP = 200
-NUM_PREDICTORS_STEP = 5
+NUM_TREES_RANGE = [250, 500]
+NUM_TREES_STEP = 100
+NUM_PREDICTORS_STEP = 2
 
 MAX_MIN_LEAFSIZE = 5
-LEAF_SIZE_STEP = 3
+LEAF_SIZE_STEP = 2
 
 # model optimization
 INNER_CV_NUM_SPLITS = 10
