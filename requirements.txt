@@ -1,5 +1,5 @@
 numpy==1.13.3
-sklearn
+sklearn==0.0
 nibabel
 pyradigm
 setuptools
