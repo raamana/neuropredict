@@ -6,6 +6,7 @@ import argparse
 import os
 import sys
 import re
+import textwrap
 import traceback
 import warnings
 from collections import Counter
@@ -18,12 +19,7 @@ from multiprocessing import cpu_count
 import numpy as np
 from pyradigm import MLDataset
 
-# the order of import is very important to avoid circular imports
-if version_info.major == 2 and version_info.minor == 7:
-    import config_neuropredict as cfg
-    import rhst, visualize
-    from freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
-elif version_info.major > 2:
+if version_info.major > 2:
     # the order of import is very important to avoid circular imports
     from neuropredict import config_neuropredict as cfg
     from neuropredict import rhst, visualize, freesurfer, model_comparison
@@ -48,70 +44,149 @@ def not_unspecified(var):
 def get_parser():
     "Parser to specify arguments and their defaults."
 
-    parser = argparse.ArgumentParser(prog="neuropredict")
+    parser = argparse.ArgumentParser(prog="neuropredict", formatter_class=argparse.RawTextHelpFormatter,
+                                     description='Easy, standardized and comprehensive predictive analysis.')
 
-    help_text_fs_dir = """Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation (each subject named after its ID in the metadata file). E.g. ``--fs_subject_dir /project/freesurfer_v5.3`` """
-
-    help_text_user_defined_folder = """List of absolute paths to user's own features. 
+    help_text_fs_dir = textwrap.dedent("""
+    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation 
+    Each subject will be queried after its ID in the metadata file. 
     
-Format: Each of these folders contains a separate folder for each subject (named after its ID in the metadata file) containing a file called features.txt with one number per line. All the subjects (in a given folder) must have the number of features (#lines in file). Different parent folders (describing one feature set) can have different number of features for each subject, but they must all have the same number of subjects (folders) within them. 
+    E.g. ``--fs_subject_dir /project/freesurfer_v5.3`` 
+    \n \n """)
+
+    help_text_user_defined_folder = textwrap.dedent("""
+    List of absolute paths to user's own features. 
+        
+    Format: Each of these folders contains a separate folder for each subject (named after its ID in the metadata file) 
+    containing a file called features.txt with one number per line. 
+    All the subjects (in a given folder) must have the number of features (#lines in file). 
+    Different parent folders (describing one feature set) can have different number of features for each subject, 
+    but they must all have the same number of subjects (folders) within them. 
+        
+    Names of each folder is used to annotate the results in visualizations. 
+    Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers. 
+    For example,  
     
-Names of each folder is used to annotate the results in visualizations. Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers. For example,  
-
-.. parsed-literal::
+    .. parsed-literal::
+        
+        --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ 
     
-    --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/ 
+    Only one of ``--pyradigm_paths``, ``user_feature_paths`` and ``daa_matrix_path`` options can be specified. 
+    \n \n """)
 
-Only one of ``--pyradigm_paths``, ``user_feature_paths`` and ``daa_matrix_path`` options can be specified. """
-
-    help_text_pyradigm_paths = """ Path(s) to pyradigm datasets. Each path is self-contained dataset identifying each sample, its class and features. """
-
-    help_text_data_matrix = """List of absolute paths to text files containing one matrix of size N x p  (num_samples x num_features).  Each row in the data matrix file must represent data corresponding  to sample in the same row of the meta data file (meta data file and data matrix must be in row-wise correspondence). Name of this file will be used to annotate the results and visualizations.
-
-E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``
+    help_text_pyradigm_paths = textwrap.dedent(""" 
+    Path(s) to pyradigm datasets. 
     
-Only one of ``--pyradigm_paths``, ``user_feature_paths`` and ``daa_matrix_path`` options can be specified.  
-File format could be 
- - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with numpy.loadtxt(filepath, delimiter=',') or 
- - a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath). 
- 
- One could use ``numpy.savetxt(data_array, delimiter=',')`` or ``numpy.save(data_array)`` to save features. File format is inferred from its extension."""
+    Each path is self-contained dataset identifying each sample, its class and features. 
+    \n \n """)
 
-    help_text_positive_class = "Name of the positive class (Alzheimers, MCI or Parkinsons etc) to be used in calculation of area under the ROC curve. Applicable only for binary classification experiments. Default: class appearning second in order specified in metadata file."
-    help_text_train_perc = "Percentage of the smallest class to be reserved for training. Must be in the interval [0.01 0.99].If sample size is sufficiently big, we recommend 0.5.If sample size is small, or class imbalance is high, choose 0.8."
-
-    help_text_num_rep_cv = """Number of repetitions of the repeated-holdout cross-validation. The larger the number, the better the estimates will be."""
-
-    help_text_sub_groups = """This option allows the user to study different combinations of classes in a multi-class (N>2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied separately with the following flag ``--sub_groups CN,FTD CN,AD``. This allows the user to focus on few interesting subgroups depending on their dataset/goal. 
+    help_text_data_matrix = textwrap.dedent("""
+    List of absolute paths to text files containing one matrix of size N x p  (num_samples x num_features).  
     
-Format: Different subgroups must be separated by space, and each sub-group must be a comma-separated list of class names defined in the meta data file. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes. 
-
-Default: ``'all'``, leading to inclusion of all available classes in a all-vs-all multi-class setting."""
-
-    help_text_metadata_file = """Abs path to file containing metadata for subjects to be included for analysis. At the minimum, each subject should have an id per row followed by the class it belongs to.
-
-E.g.
-.. parsed-literal::
-
-    sub001,control
-    sub002,control
-    sub003,disease
-    sub004,disease
+    Each row in the data matrix file must represent data corresponding to sample in the same row 
     
-    """
+    of the meta data file (meta data file and data matrix must be in row-wise correspondence). 
+    
+    Name of this file will be used to annotate the results and visualizations.
 
-    help_text_feature_selection = """Number of features to select as part of feature selection. Options:
+    E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``
+        
+    Only one of ``--pyradigm_paths``, ``user_feature_paths`` and ``daa_matrix_path`` options can be specified.  
+    File format could be 
+     - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with 
+        numpy.loadtxt(filepath, delimiter=',') 
+        or 
+     - a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath). 
+     
+     One could use ``numpy.savetxt(data_array, delimiter=',')`` or ``numpy.save(data_array)`` to save features. 
+     
+     File format is inferred from its extension.
+     \n \n """)
 
- - 'tenth'
- - 'sqrt'
- - 'log2'
- - 'all'
+    help_text_positive_class = textwrap.dedent("""
+    Name of the positive class (e.g. Alzheimers, MCI etc) to be used in calculation of area under the ROC curve. 
+    Applicable only for binary classification experiments. 
+    
+    Default: class appearing last in order specified in metadata file.
+    \n \n """)
 
-Default: \'tenth\' of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features."""
+    help_text_train_perc = textwrap.dedent("""
+    Percentage of the smallest class to be reserved for training. 
+    
+    Must be in the interval [0.01 0.99]. 
+    
+    If sample size is sufficiently big, we recommend 0.5.
+    If sample size is small, or class imbalance is high, choose 0.8.
+    \n \n """)
 
-    help_text_atlas = "Name of the atlas to use for visualization. Default: fsaverage, if available."
-    help_text_num_cpus = "Number of CPUs to use to parallelize CV repetitions. " \
-                         "Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested."
+    help_text_num_rep_cv = textwrap.dedent("""
+    Number of repetitions of the repeated-holdout cross-validation. 
+    
+    The larger the number, more stable the estimates will be.
+    \n \n """)
+
+    help_text_sub_groups = textwrap.dedent("""
+    This option allows the user to study different combinations of classes in a multi-class (N>2) dataset. 
+    
+    For example, in a dataset with 3 classes CN, FTD and AD, 
+    two studies of pair-wise combinations can be studied separately 
+    with the following flag ``--sub_groups CN,FTD CN,AD``. 
+    This allows the user to focus on few interesting subgroups depending on their dataset/goal. 
+    
+    Format: Different subgroups must be separated by space, 
+    and each sub-group must be a comma-separated list of class names defined in the meta data file. 
+    Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, 
+    and ideally just alphanumeric characters separated by underscores.
+     
+    Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes. 
+    
+    Default: ``'all'``, leading to inclusion of all available classes in a all-vs-all multi-class setting.
+    \n \n """)
+
+    help_text_metadata_file = textwrap.dedent("""
+    Abs path to file containing metadata for subjects to be included for analysis. 
+    
+    At the minimum, each subject should have an id per row followed by the class it belongs to.
+
+    E.g.
+    .. parsed-literal::
+    
+        sub001,control
+        sub002,control
+        sub003,disease
+        sub004,disease
+    
+    \n \n """)
+
+    help_text_feature_selection = textwrap.dedent("""Number of features to select as part of feature selection. 
+    Options:
+    
+         - 'tenth'
+         - 'sqrt'
+         - 'log2'
+         - 'all'
+    
+    Default: \'tenth\' of the number of samples in the training set. 
+    
+    For example, if your dataset has 90 samples, you chose 50 percent for training (default),  
+    then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. 
+    If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.
+    \n \n """)
+
+    help_text_atlas = textwrap.dedent("""
+    Name of the atlas to use for visualization. Default: fsaverage, if available.
+    \n \n """)
+    help_text_num_cpus = textwrap.dedent("""
+    Number of CPUs to use to parallelize CV repetitions. 
+    
+    Default : 4. 
+    
+    Number of CPUs will be capped at the number available on the machine if higher is requested.
+    \n \n """)
+
+    help_text_out_dir = textwrap.dedent("""
+    Output folder to store gathered features & results.
+    \n \n """)
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=True,
@@ -119,7 +194,7 @@ Default: \'tenth\' of the number of samples in the training set. For example, if
 
     parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
                         required=True,
-                        help="Output folder to store gathered features & results.")
+                        help=help_text_out_dir)
 
     parser.add_argument("-f", "--fs_subject_dir", action="store", dest="fs_subject_dir",
                         default=None,
