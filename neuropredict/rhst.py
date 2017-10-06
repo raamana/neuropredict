@@ -3,6 +3,7 @@ from __future__ import print_function
 __all__ = ['run', 'load_results', 'save_results']
 
 import os
+import sys
 import pickle
 import logging
 import warnings
@@ -12,7 +13,12 @@ from os.path import join as pjoin, exists as pexists, realpath
 from multiprocessing import Pool, Manager
 from functools import partial
 
+import multiprocessing
+logger = multiprocessing.log_to_stderr()
+logger.setLevel(logging.WARN)
+
 import numpy as np
+import sklearn
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
@@ -34,7 +40,8 @@ else:
 def eval_optimized_model_on_testset(train_fs, test_fs,
                                     label_order_in_conf_matrix=None,
                                     feat_sel_size=cfg.default_num_features_to_select,
-                                    train_perc=0.5):
+                                    train_perc=0.5,
+                                    exhaustive_search=True):
     """
     Optimize the classifier on the training set and return predictions on test set.
 
@@ -55,6 +62,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     train_perc : float
         Training set fraction to run the inner cross-validation.
 
+    exhaustive_search : bool
+        If False, grid search resolution will be reduced to speed up optimization.
+
     Returns
     -------
 
@@ -67,15 +77,21 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_labels()
 
     train_class_sizes = list(train_fs.class_sizes.values())
+
+    # TODO expose these options to user at cli
     # TODO look for ways to avoid building this every iter and every dataset.
-    pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features)
+    pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features,
+                                        exhaustive_search=exhaustive_search)
 
     best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
                                                                       param_grid, train_perc)
     # best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat, train_labels,
     #     param_grid['random_forest_clf__min_samples_leaf'], param_grid['random_forest_clf__max_features'])
 
-    _, best_fsr = best_pipeline.steps[0]  # assuming order in pipeline construction - step 0 : feature selector
+    # assuming order in pipeline construction :
+    #   - step 0 : preprocessign (robust scaling)
+    #   - step 1 : feature selector
+    _, best_fsr = best_pipeline.steps[1]
     _, best_clf = best_pipeline.steps[-1]  # the final step in an sklearn pipeline is always an estimator/classifier
 
     # could be useful to compute frequency of selection
@@ -138,9 +154,14 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
     gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
                       n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
 
+    # ignoring some not-so-critical warnings
     with warnings.catch_warnings():
         warnings.filterwarnings(action='once', category=UserWarning, module='joblib',
                                 message='Multiprocessing-backed parallel loops cannot be nested, setting n_jobs=1')
+        warnings.filterwarnings(action='once', category=UserWarning, message='Some inputs do not have OOB scores')
+        np.seterr(divide='ignore', invalid='ignore')
+        warnings.filterwarnings(action='once', category=RuntimeWarning, message='invalid value encountered in true_divide')
+
         gs.fit(train_data_mat, train_labels)
 
     return gs.best_estimator_, gs.best_params_
@@ -379,27 +400,110 @@ def load_results(results_file_path):
            accuracy_balanced, auc_weighted, positive_class
 
 
-def get_RandomForestClassifier(reduced_dim=None):
-    """ Returns the Random Forest classifier and its parameter grid. """
+def make_parameter_grid(estimator_name=None, named_ranges=None):
+    """
+        Builds a sklearn.pipeline compatible dict of named ranges,
+        given an list of tuples, wherein each element is (param_name, param_values).
+        Here, a param_name is the name of an estimator's parameter, and
+            param_values are an iterable of values for that parameter.
 
-    range_num_trees     = [10, 30, 100, 500]
-    split_criteria      = ['gini', 'entropy']
-    range_min_leafsize  = [1, 3, 5]
-    range_min_impurity  = np.arange(0., 0.41, 0.1)
+    Parameters
+    ----------
+    estimator_name : str
+        Valid python identifier to name the current step of the pipeline.
+        Example: estimator_name='random_forest_clf'
 
-    # if user supplied reduced_dim, it will be tried also. Default None --> all features.
-    range_max_features  = ['sqrt', 'log2', 0.05, 0.1, 0.25, 0.5, 0.75, reduced_dim]
+    named_ranges : list of tuples
+        List of tuples of size 2, wherein each element is (param_name, param_values).
+        Here, a param_name is the name of an estimator's parameter, and
+            param_values are an iterable of values for that parameter.
+
+        named_ranges = [('n_estimators', [50, 100, 500]),
+                        ('max_features', [10, 20, 50, 100]),
+                        ('min_samples_leaf', [3, 5, 10, 20])]
+
+    Returns
+    -------
+    param_grid : dict
+        An sklearn.pipeline compatible dict of named parameter ranges.
+
+    """
+
+    if named_ranges is None or estimator_name in [None, '']:
+        return None
+
+    prepend_param_name = lambda string: '{}__{}'.format(estimator_name, string)
+    param_grid = dict()
+    for param_name, param_values in named_ranges:
+        param_grid[prepend_param_name(param_name)] = param_values
+
+    return param_grid
+
+
+def add_new_params(old_grid, new_grid, old_name, new_name):
+    """
+    Adds new items (parameters) in-place to old dict (of parameters),
+    ensuring no overlap in new parameters with old parameters which prevents silent overwrite.
+
+    """
+
+    if new_grid:
+        new_params = set(new_grid.keys())
+        old_params = set(old_grid.keys())
+        if len(old_params.intersection(new_params)) > 0:
+            raise ValueError(
+                'Overlap in parameters between {} and {} of the chosen pipeline.'.format(old_name, new_name))
+
+        old_grid.update(new_grid)
+
+    return
+
+
+def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
+    """
+    Returns the Random Forest classifier and its parameter grid.
+
+    Parameters
+    ----------
+    reduced_dim : int
+        One of the dimensionalities to be tried.
+
+    exhaustive_search : bool
+        Option to use a lighter and much less exhaustive grid search to speed up optimization.
+        Parameter values will be chosen based on previous studies and "folk wisdom".
+        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+
+    Returns
+    -------
+
+    """
+    if exhaustive_search:
+        range_num_trees     = [50, 100, 500]
+        split_criteria      = ['gini', 'entropy']
+        range_min_leafsize  = [1, 3, 5]
+        range_min_impurity  = np.arange(0., 0.41, 0.1)
+
+        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        range_max_features  = ['sqrt', 'log2', 0.05, 0.1, 0.25, 0.5, 0.75, reduced_dim]
+    else:
+        range_num_trees = [250, ]
+        split_criteria = ['gini', ]
+        range_min_leafsize = [1, 3]
+        range_min_impurity = [0.1, 0.2]
+
+        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        range_max_features = ['sqrt', 0.25, reduced_dim]
 
     # name clf_model chosen to enable generic selection classifier later on
     # not optimizing over number of features to save time
     clf_name = 'random_forest_clf'
-    param_name = lambda string: '{}__{}'.format(clf_name, string)
-    param_grid = {param_name('n_estimators')    : range_num_trees,
-                  param_name('criterion')       : split_criteria,
-                  param_name('min_impurity_decrease') : range_min_impurity,
-                  param_name('min_samples_leaf'): range_min_leafsize,
-                  param_name('max_features')    : range_max_features,
-                  }
+    param_list_values = [('n_estimators',           range_num_trees),
+                         ('criterion',              split_criteria),
+                         ('min_impurity_decrease',  range_min_impurity),
+                         ('min_samples_leaf',       range_min_leafsize),
+                         ('max_features',           range_max_features),
+                        ]
+    param_grid = make_parameter_grid(clf_name, param_list_values)
 
     rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
 
@@ -407,7 +511,8 @@ def get_RandomForestClassifier(reduced_dim=None):
 
 
 def get_classifier(classifier_name='RandomForestClassifier',
-                   reduced_dim='all'):
+                   reduced_dim='all',
+                   exhaustive_search=True):
     """
     Returns the named classifier and its parameter grid.
 
@@ -418,6 +523,9 @@ def get_classifier(classifier_name='RandomForestClassifier',
 
     reduced_dim : int or str
         Reduced dimensionality, either an integer or "all", which defaults to using everything.
+
+    exhaustive_search : bool
+        If False, grid search resolution will be reduced to speed up optimization.
 
     Returns
     -------
@@ -431,7 +539,7 @@ def get_classifier(classifier_name='RandomForestClassifier',
     """
 
     if classifier_name.lower() in ['randomforestclassifier', ]:
-        clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim)
+        clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim, exhaustive_search)
     else:
         raise NotImplementedError('Invalid name or classifier not implemented.')
 
@@ -469,15 +577,45 @@ def get_feature_selector(feat_selector_name='variancethreshold',
     elif fs_name in ['variancethreshold', ]:
         feat_selector = VarianceThreshold(threshold=cfg.variance_threshold)
         fs_param_grid = None
+    elif fs_name in ['dummy']:
+        feat_selector = VarianceThreshold(threshold=0.5)
+        param_values = [('dummy1', [1, 2]), ('dummy2', [3, 4])]
+        fs_param_grid = make_parameter_grid(fs_name, param_values)
     else:
         raise NotImplementedError('Invalid name or feature selector not implemented.')
 
     return feat_selector, fs_name, fs_param_grid
 
 
+def get_preprocessor(preproc_name='RobustScaler'):
+    """
+    Returns a requested preprocessor
+    """
+
+    from sklearn.preprocessing import RobustScaler
+
+    approved_preprocessor_list = map(str.lower, dir(sklearn.preprocessing))
+
+    preproc_name = preproc_name.lower()
+    if preproc_name not in approved_preprocessor_list:
+        raise ValueError('chosen preprocessor not supported.')
+
+    if preproc_name in ['robustscaler']:
+        preproc = RobustScaler(with_centering=True, with_scaling=True, quantile_range=cfg.robust_scaler_iqr)
+        param_grid = None
+    else:
+        # TODO returning preprocessor blindly without any parameters
+        preproc = getattr(sklearn.preprocessing, preproc_name)
+        param_grid = None
+
+    return preproc, preproc_name, param_grid
+
+
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
+                 preprocessor_name='robustscaler',
+                 feat_selector_name='variancethreshold',
                  classifier_name='RandomForestClassifier',
-                 feat_selector_name='variancethreshold'):
+                 exhaustive_search=True):
     """
     Constructor for pipeline (feature selection followed by a classifier).
 
@@ -499,33 +637,36 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     feat_selector_name : str
         String referring to a valid scikit-learn feature selector.
 
+    preprocessor_name : str
+        String referring to a valid scikit-learn preprocessor 
+        (This can technically be another feature selector, although discourage).
+
+    exhaustive_search : bool
+        If False, grid search resolution will be reduced to speed up optimization.
+
     Returns
     -------
     pipeline : sklearn.pipeline.Pipeline
         Valid scikit learn pipeline.
     param_grid : dict
         Dict of named ranges to construct the parameter grid.
-        Grid contains ranges for parameters of both feature selector and classifier.
+        Grid contains ranges for parameters of all the steps, including preprocessor, feature selector and classifier.
 
     """
 
     reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
 
-    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim)
+    preproc, preproc_name, preproc_param_grid = get_preprocessor(preprocessor_name)
+    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim, exhaustive_search)
     feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name, reduced_dim)
 
-    param_grid = clf_param_grid
-    if fs_param_grid:  # None or empty dict both evaluate to False
-        fs_params = set(fs_param_grid.keys())
-        clf_params = set(param_grid.keys())
-        if len(fs_params.intersection(clf_params)) > 0:
-            # raising error to avoid silent overwrite
-            raise ValueError('Overlap in parameters betwen feature selector and the classifier. Remove it.')
+    # composite grid of parameters from all steps
+    param_grid = clf_param_grid.copy()
+    add_new_params(param_grid, preproc_param_grid, est_name, preproc_name)
+    add_new_params(param_grid, fs_param_grid, est_name, fs_name)
 
-        # dict gets extended due to lack of overlap in keys
-        param_grid.update(fs_param_grid)
-
-    steps = [(fs_name, feat_selector),
+    steps = [(preproc_name, preproc),
+             (fs_name, feat_selector),
              (est_name, estimator)]
     pipeline = Pipeline(steps)
 
@@ -536,7 +677,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         train_perc=0.8, num_repetitions=200,
         positive_class=None, sub_group=None,
         feat_sel_size=cfg.default_num_features_to_select,
-        num_procs=4):
+        num_procs=4, exhaustive_search=True):
     """
 
     Parameters
@@ -573,6 +714,9 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     num_procs : int
         Number of parallel processes to run to parallelize the repetitions of CV
+
+    exhaustive_search : bool
+        If False, grid search resolution will be reduced to speed up optimization.
 
     Returns
     -------
@@ -613,15 +757,15 @@ def run(dataset_path_file, method_names, out_results_dir,
     train_size_common, total_test_samples = determine_training_size(train_perc, class_sizes, num_classes)
 
     # the main parallel loop to crunch optimizations, predictions and evaluations
-    chunk_size = int(np.ceil(num_repetitions/num_procs))
+    # chunk_size = int(np.ceil(num_repetitions/num_procs))
     with Manager() as proxy_manager:
-        shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc, total_test_samples,
-                                         num_classes, num_features, label_set,
-                                         method_names, pos_class_index, out_results_dir])
+        shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
+                                            total_test_samples, num_classes, num_features, label_set,
+                                            method_names, pos_class_index, out_results_dir, exhaustive_search])
         partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
         with Pool(processes=num_procs) as pool:
-            cv_results = pool.map(partial_func_holdout, range(num_repetitions), chunk_size)
+            cv_results = pool.map(partial_func_holdout, range(num_repetitions))
 
     # re-assemble results into a convenient form
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
@@ -873,9 +1017,33 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    label_set, method_names, pos_class_index,
-                                   out_results_dir, rep_id=None):
-    """Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
-    and evaluations on the given test set. """
+                                   out_results_dir, exhaustive_search, rep_id=None):
+    """
+    Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
+    and evaluations on the given test set.
+
+    Parameters
+    ----------
+    datasets
+    train_size_common
+    feat_sel_size
+    train_perc
+    total_test_samples
+    num_classes
+    num_features_per_dataset
+    label_set
+    method_names
+    pos_class_index
+    out_results_dir
+    rep_id
+
+    exhaustive_search : bool
+        If False, grid search resolution will be reduced to speed up optimization.
+
+    Returns
+    -------
+
+    """
 
     common_ds = datasets[cfg.COMMON_DATASET_INDEX]
     num_datasets = len(datasets)
@@ -916,12 +1084,12 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
         test_fs = datasets[dd].get_subset(test_set)
 
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], true_test_labels, \
-        confmat, misclsfd_ids_this_run[dd], feature_importances[dd], best_params[dd] = \
+        conf_mat, misclsfd_ids_this_run[dd], feature_importances[dd], best_params[dd] = \
             eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc, feat_sel_size=feat_sel_size,
-                                            label_order_in_conf_matrix=label_set)
+                                            label_order_in_conf_matrix=label_set, exhaustive_search=exhaustive_search)
 
-        accuracy_balanced[dd] = balanced_accuracy(confmat)
-        confusion_matrix[:, :, dd] = confmat
+        accuracy_balanced[dd] = balanced_accuracy(conf_mat)
+        confusion_matrix[:, :, dd] = conf_mat
         print('balanced accuracy: {:.4f} '.format(accuracy_balanced[dd]), end='')
 
         if num_classes == 2:
@@ -931,7 +1099,9 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
                                              average='weighted')
             print('\t weighted AUC: {:.4f}'.format(auc_weighted[dd]), end='')
 
-        print('')
+        print('', flush=True)
+        sys.stdout.flush()
+        sys.stderr.flush()
 
     results_list = [pred_prob_per_class, pred_labels_per_rep_fs, true_test_labels, accuracy_balanced,
                     confusion_matrix, auc_weighted, feature_importances, best_params,

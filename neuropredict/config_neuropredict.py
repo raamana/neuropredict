@@ -9,6 +9,10 @@ feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
 variance_threshold = 0.001
 
+# defines quantile_range parameter for RobustScaler
+# http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
+robust_scaler_iqr = (5, 95)
+
 #Parameters specific to random forest classifier optimization
 NUM_TREES = 250
 NUM_TREES_RANGE = [250, 500]
