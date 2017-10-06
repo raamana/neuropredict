@@ -4,6 +4,6 @@ numpy==1.13.3
 sklearn==0.0
 nibabel==2.1.0
 pyradigm==0.4.1
-setuptools
+setuptools==36.5.0
 scipy
 matplotlib
