@@ -1,6 +1,6 @@
 numpy==1.13.3
 sklearn==0.0
-nibabel
+nibabel==2.1.0
 pyradigm
 setuptools
 scipy
