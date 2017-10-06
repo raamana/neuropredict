@@ -70,10 +70,10 @@ def make_random_MLdataset(max_num_classes = 20,
 @pytest.mark.workflow_slow
 def test_chance_classifier_binary():
 
-    max_num_classes = 4
+    max_num_classes = 3
     max_class_size = 40
     max_dim = 50
-    num_repetitions =  20
+    num_repetitions =  50
 
     # using a really small sample size for faster testing.
     rand_ds = make_random_MLdataset(max_num_classes=max_num_classes, stratified=True,
