@@ -295,17 +295,41 @@ def parse_args():
            positive_class, subgroups, feature_selection_size, num_procs
 
 
-def check_num_procs(num_procs=cfg.DEFAULT_NUM_PROCS):
+def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
     "Ensures num_procs is finite and <= available cpu count."
 
-    num_procs  = int(num_procs)
-    avail_cpu_count = cpu_count()
+    num_procs  = int(requested_num_procs)
+    avail_cpu_count = int(cpu_count())
+
+    def get_avail_slot_count(avail_cpu_count=avail_cpu_count):
+        "Method to query HPC-specific number of slots available."
+
+        from os import getenv
+
+        hpc_num_procs_spec = [('SGE', 'JOB_ID', 'NSLOTS', 'slots'),
+                              ('SLURM', 'SLURM_JOBID', 'SLURM_NPROCS', 'processors'),
+                              ('PBS', 'PBS_JOBID', 'PBS_NUM_PPN', 'processors per node')]
+
+        for hpc_env, id_jobid, var_slot_count, var_descr in hpc_num_procs_spec:
+            if getenv(id_jobid):
+                avail_cpu_count = int(getenv(var_slot_count, cpu_count()))
+                print('{} recognized, job set up with {} {}.'.format(hpc_env, avail_cpu_count, var_descr))
+
+        return avail_cpu_count
+
+
+    avail_cpu_count = get_avail_slot_count()
+
     if num_procs < 1 or not np.isfinite(num_procs) or num_procs is None:
-        num_procs = 1
-        print('Invalid value for num_procs. Using num_procs=1')
-    elif num_procs > avail_cpu_count:
-        print('# CPUs requested higher than available - choosing {}'.format(avail_cpu_count))
         num_procs = avail_cpu_count
+        print('Invalid value for num_procs.')
+
+    if num_procs > avail_cpu_count:
+        print('# CPUs requested higher than available {}'.format(avail_cpu_count))
+        num_procs = avail_cpu_count
+
+    print('num_procs --> Available : {}, Requested : {}, Using : {}'.format(avail_cpu_count, requested_num_procs, num_procs))
+    sys.stdout.flush()
 
     return num_procs
 

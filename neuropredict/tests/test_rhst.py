@@ -72,7 +72,7 @@ def test_chance_classifier_binary():
 
     max_num_classes = 4
     max_class_size = 40
-    max_dim = 10
+    max_dim = 50
     num_repetitions =  20
 
     # using a really small sample size for faster testing.
@@ -92,7 +92,8 @@ def test_chance_classifier_binary():
         lf.writelines('\n'.join([out_path, out_path2]))
 
     res_path = rhst.run(out_list, ['random1', 'another'], out_dir,
-                        train_perc=0.5, num_repetitions=num_repetitions)
+                        train_perc=0.5, num_repetitions=num_repetitions,
+                        num_procs=4, exhaustive_search=False)
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
