@@ -3,7 +3,7 @@ numpydoc==0.7.0
 numpy==1.13.3
 sklearn==0.0
 nibabel==2.1.0
-pyradigm
+pyradigm==0.4.1
 setuptools
 scipy
 matplotlib
