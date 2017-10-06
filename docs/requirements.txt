@@ -1,6 +1,6 @@
 sphinx-argparse==0.2.1
 numpydoc==0.7.0
-numpy
+numpy==1.13.3
 sklearn
 nibabel
 pyradigm
