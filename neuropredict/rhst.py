@@ -477,14 +477,15 @@ def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
     -------
 
     """
+
     if exhaustive_search:
-        range_num_trees     = [50, 100, 500]
+        range_num_trees     = [50, 500]
         split_criteria      = ['gini', 'entropy']
         range_min_leafsize  = [1, 3, 5]
-        range_min_impurity  = np.arange(0., 0.41, 0.1)
+        range_min_impurity  = [0.01, 0.1, 0.2] # np.arange(0., 0.41, 0.1)
 
         # if user supplied reduced_dim, it will be tried also. Default None --> all features.
-        range_max_features  = ['sqrt', 'log2', 0.05, 0.1, 0.25, 0.5, 0.75, reduced_dim]
+        range_max_features  = ['sqrt', 'log2', 0.25, reduced_dim]
     else:
         range_num_trees = [250, ]
         split_criteria = ['gini', ]
@@ -758,14 +759,23 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     # the main parallel loop to crunch optimizations, predictions and evaluations
     # chunk_size = int(np.ceil(num_repetitions/num_procs))
-    with Manager() as proxy_manager:
-        shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
-                                            total_test_samples, num_classes, num_features, label_set,
-                                            method_names, pos_class_index, out_results_dir, exhaustive_search])
-        partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
+    if num_procs > 1:
+        print('Parallelizing the repetitions of CV ...')
+        with Manager() as proxy_manager:
+            shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
+                                                total_test_samples, num_classes, num_features, label_set,
+                                                method_names, pos_class_index, out_results_dir, exhaustive_search])
+            partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
-        with Pool(processes=num_procs) as pool:
-            cv_results = pool.map(partial_func_holdout, range(num_repetitions))
+            with Pool(processes=num_procs) as pool:
+                cv_results = pool.map(partial_func_holdout, range(num_repetitions))
+    else:
+        # switching to regular sequential for loop
+        partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, train_size_common, feat_sel_size,
+                                       train_perc, total_test_samples, num_classes, num_features, label_set,
+                                       method_names, pos_class_index, out_results_dir, exhaustive_search)
+        cv_results = [ partial_func_holdout(rep_id=rep) for rep in range(num_repetitions) ]
+
 
     # re-assemble results into a convenient form
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, confusion_matrix, \
