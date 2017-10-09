@@ -500,7 +500,7 @@ def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
     clf_name = 'random_forest_clf'
     param_list_values = [('n_estimators',           range_num_trees),
                          ('criterion',              split_criteria),
-                         ('min_impurity_decrease',  range_min_impurity),
+                         #('min_impurity_decrease',  range_min_impurity), # ignoring this
                          ('min_samples_leaf',       range_min_leafsize),
                          ('max_features',           range_max_features),
                         ]
