@@ -9,14 +9,10 @@ neuropredict is part of a broader intiative to develop easy, comprehensice and s
 ## Overview
 ![roleofneuropredict](docs/role.png)
 
-
-Docs: http://neuropredict.readthedocs.io
-
-Installation : http://neuropredict.readthedocs.io/en/latest/installation.html
-
-Usage : http://neuropredict.readthedocs.io/en/latest/usage_cli.html
-
-Development : http://neuropredict.readthedocs.io/en/latest/development.html
-
-Guidelines for contributing: http://contribution-guide-org.readthedocs.io/
-
+|||
+|--:|---|
+| Docs: |  http://neuropredict.readthedocs.io |
+| Installation  | http://neuropredict.readthedocs.io/en/latest/installation.html  |
+|  Usage |   http://neuropredict.readthedocs.io/en/latest/usage_cli.html |
+|  Development |   http://neuropredict.readthedocs.io/en/latest/development.html |
+| Contributing | http://contribution-guide-org.readthedocs.io/ |
