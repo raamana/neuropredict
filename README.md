@@ -12,7 +12,7 @@ neuropredict is part of a broader intiative to develop easy, comprehensice and s
 |||
 |--:|---|
 | Docs: |  http://neuropredict.readthedocs.io |
-| Installation  | http://neuropredict.readthedocs.io/en/latest/installation.html  |
-|  Usage |   http://neuropredict.readthedocs.io/en/latest/usage_cli.html |
-|  Development |   http://neuropredict.readthedocs.io/en/latest/development.html |
+| Installation  | http://neuropredict.readthedocs.io/installation.html  |
+|  Usage |   http://neuropredict.readthedocs.io/usage_cli.html |
+|  Development |   http://neuropredict.readthedocs.io/development.html |
 | Contributing | http://contribution-guide-org.readthedocs.io/ |
