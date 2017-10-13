@@ -189,16 +189,13 @@ def get_parser():
     \n \n """)
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
-                        default=None, required=True,
-                        help=help_text_metadata_file)
+                        default=None, required=False, help=help_text_metadata_file)
 
-    parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
-                        required=True,
-                        help=help_text_out_dir)
+    parser.add_argument("-o", "--out_dir", action="store", dest="out_dir", required=False, help=help_text_out_dir,
+                        default=None )
 
     parser.add_argument("-f", "--fs_subject_dir", action="store", dest="fs_subject_dir",
-                        default=None,
-                        help=help_text_fs_dir)
+                        default=None, help=help_text_fs_dir)
 
     user_defined = parser.add_mutually_exclusive_group()
 
@@ -269,6 +266,8 @@ def organize_inputs(user_args):
     """
 
     atleast_one_feature_specified = False
+    # specifying pyradigm avoids the need for separate meta data file
+    pyradigm_supplied = False
     if not_unspecified(user_args.fs_subject_dir):
         fs_subject_dir = abspath(user_args.fs_subject_dir)
         if not pexists(fs_subject_dir):
@@ -296,12 +295,13 @@ def organize_inputs(user_args):
         user_feature_type = 'data_matrix'
 
     elif not_unspecified(user_args.pyradigm_paths):
-        user_feature_paths = list(map(abspath, user_args.pyradigm_paths))
+        user_feature_paths = list(map(realpath, user_args.pyradigm_paths))
         for pp in user_feature_paths:
             if not pexists(pp):
                 raise IOError("One of pyradigms specified does not exist:\n {}".format(pp))
 
         atleast_one_feature_specified = True
+        pyradigm_supplied = user_feature_paths[0]
         user_feature_type = 'pyradigm'
     else:
         user_feature_paths = None
@@ -315,7 +315,7 @@ def organize_inputs(user_args):
         raise ValueError('Atleast one method specifying features must be specified. '
                          'It can be a path(s) to pyradigm dataset, matrix file, user-defined folder or a Freesurfer subject directory.')
 
-    return user_feature_paths, user_feature_type, fs_subject_dir
+    return user_feature_paths, user_feature_type, fs_subject_dir, pyradigm_supplied
 
 
 def parse_args():
@@ -334,19 +334,33 @@ def parse_args():
     except:
         parser.exit(1)
 
-    # noinspection PyUnboundLocalVariable
-    meta_file = abspath(user_args.meta_file)
-    if not pexists(meta_file):
-        raise IOError("Meta data file doesn't exist.")
+    user_feature_paths, user_feature_type, fs_subject_dir, pyradigm_supplied = organize_inputs(user_args)
 
-    user_feature_paths, user_feature_type, fs_subject_dir = organize_inputs(user_args)
 
-    out_dir = realpath(user_args.out_dir)
+    if not pyradigm_supplied:
+        if user_args.meta_file is not None:
+            meta_file = abspath(user_args.meta_file)
+            if not pexists(meta_file):
+                raise IOError("Meta data file doesn't exist.")
+        else:
+            raise ValueError('Metadata file must be provided when not using pyradigm inputs.')
+
+        sample_ids, classes = get_metadata(meta_file)
+    else:
+        print('Using meta data from input pyradigm\n{}'.format(pyradigm_supplied))
+        sample_ids, classes = get_metadata_in_pyradigm(pyradigm_supplied)
+
+    if user_args.out_dir is not None:
+        out_dir = realpath(user_args.out_dir)
+    else:
+        out_dir = pjoin(realpath(os.getcwd()), 'neuropredict')
+
     if not pexists(out_dir):
         try:
             os.mkdir(out_dir)
         except:
             raise IOError('Output folder could not be created.')
+    print('Saving the results to \n{}'.format(out_dir))
 
     train_perc = np.float32(user_args.train_perc)
     if not ( 0.01 <= train_perc <= 0.99):
@@ -357,8 +371,6 @@ def parse_args():
         raise ValueError("Atleast 10 repetitions of CV is recommened.")
 
     num_procs = check_num_procs(user_args.num_procs)
-
-    sample_ids, classes = get_metadata(meta_file)
 
     class_set, subgroups, positive_class = validate_class_set(classes, user_args.sub_groups, user_args.positive_class)
 
@@ -434,6 +446,14 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
         raise ValueError('Invalid choise - Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
 
     return num_select
+
+
+def get_metadata_in_pyradigm(pyradigm_supplied):
+    "Returns sample IDs and their classes from a given pyradigm"
+
+    dataset = MLDataset(filepath=realpath(pyradigm_supplied))
+
+    return dataset.sample_ids, dataset.classes
 
 
 def get_metadata(path):
