@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 # following affects the maximum num of predictors to be tried in random forest
@@ -44,7 +44,7 @@ MISCLF_HIST_ANNOT_LINEWIDTH = 2
 
 COMMON_FIG_SIZE = [9, 9]
 CMAP_DATASETS = 'Paired'
-CMAP_CONFMATX = plt.cm.Blues
+CMAP_CONFMATX = 'Blues' # plt.cm.Blues
 
 
 CMAP_FEAT_IMP = 'hsv'
