@@ -41,7 +41,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
                                     label_order_in_conf_matrix=None,
                                     feat_sel_size=cfg.default_num_features_to_select,
                                     train_perc=0.5,
-                                    exhaustive_search=True):
+                                    grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Optimize the classifier on the training set and return predictions on test set.
 
@@ -62,8 +62,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     train_perc : float
         Training set fraction to run the inner cross-validation.
 
-    exhaustive_search : bool
-        If False, grid search resolution will be reduced to speed up optimization.
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
 
     Returns
     -------
@@ -81,7 +82,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     # TODO expose these options to user at cli
     # TODO look for ways to avoid building this every iter and every dataset.
     pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features,
-                                        exhaustive_search=exhaustive_search)
+                                        grid_search_level=grid_search_level)
 
     best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
                                                                       param_grid, train_perc)
@@ -459,7 +460,7 @@ def add_new_params(old_grid, new_grid, old_name, new_name):
     return
 
 
-def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
+def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the Random Forest classifier and its parameter grid.
 
@@ -468,9 +469,12 @@ def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
     reduced_dim : int
         One of the dimensionalities to be tried.
 
-    exhaustive_search : bool
-        Option to use a lighter and much less exhaustive grid search to speed up optimization.
-        Parameter values will be chosen based on previous studies and "folk wisdom".
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
         Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
 
     Returns
@@ -478,22 +482,26 @@ def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
 
     """
 
-    if exhaustive_search:
+    grid_search_level=grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
         range_num_trees     = [50, 500]
         split_criteria      = ['gini', 'entropy']
         range_min_leafsize  = [1, 3, 5]
         range_min_impurity  = [0.01, 0.1, 0.2] # np.arange(0., 0.41, 0.1)
 
         # if user supplied reduced_dim, it will be tried also. Default None --> all features.
-        range_max_features  = ['sqrt', 'log2', 0.25, reduced_dim]
-    else:
+        range_max_features  = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
+
+    elif grid_search_level in ['light']:
         range_num_trees = [250, ]
         split_criteria = ['gini', ]
-        range_min_leafsize = [1, 3]
-        range_min_impurity = [0.1, 0.2]
+        range_min_leafsize = [1, ]
+        range_min_impurity = [0.0, ]
 
-        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
         range_max_features = ['sqrt', 0.25, reduced_dim]
+
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
 
     # name clf_model chosen to enable generic selection classifier later on
     # not optimizing over number of features to save time
@@ -513,7 +521,7 @@ def get_RandomForestClassifier(reduced_dim=None, exhaustive_search=True):
 
 def get_classifier(classifier_name='RandomForestClassifier',
                    reduced_dim='all',
-                   exhaustive_search=True):
+                   grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the named classifier and its parameter grid.
 
@@ -525,8 +533,9 @@ def get_classifier(classifier_name='RandomForestClassifier',
     reduced_dim : int or str
         Reduced dimensionality, either an integer or "all", which defaults to using everything.
 
-    exhaustive_search : bool
-        If False, grid search resolution will be reduced to speed up optimization.
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
 
     Returns
     -------
@@ -540,7 +549,7 @@ def get_classifier(classifier_name='RandomForestClassifier',
     """
 
     if classifier_name.lower() in ['randomforestclassifier', ]:
-        clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim, exhaustive_search)
+        clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim, grid_search_level)
     else:
         raise NotImplementedError('Invalid name or classifier not implemented.')
 
@@ -616,7 +625,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
                  preprocessor_name='robustscaler',
                  feat_selector_name='variancethreshold',
                  classifier_name='RandomForestClassifier',
-                 exhaustive_search=True):
+                 grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Constructor for pipeline (feature selection followed by a classifier).
 
@@ -642,8 +651,9 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
         String referring to a valid scikit-learn preprocessor 
         (This can technically be another feature selector, although discourage).
 
-    exhaustive_search : bool
-        If False, grid search resolution will be reduced to speed up optimization.
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
 
     Returns
     -------
@@ -658,7 +668,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
 
     preproc, preproc_name, preproc_param_grid = get_preprocessor(preprocessor_name)
-    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim, exhaustive_search)
+    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim, grid_search_level)
     feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name, reduced_dim)
 
     # composite grid of parameters from all steps
@@ -678,7 +688,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         train_perc=0.8, num_repetitions=200,
         positive_class=None, sub_group=None,
         feat_sel_size=cfg.default_num_features_to_select,
-        num_procs=4, exhaustive_search=True):
+        num_procs=4, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
 
     Parameters
@@ -716,8 +726,9 @@ def run(dataset_path_file, method_names, out_results_dir,
     num_procs : int
         Number of parallel processes to run to parallelize the repetitions of CV
 
-    exhaustive_search : bool
-        If False, grid search resolution will be reduced to speed up optimization.
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
 
     Returns
     -------
@@ -741,7 +752,8 @@ def run(dataset_path_file, method_names, out_results_dir,
 
 
     dataset_paths, num_repetitions, num_procs, sub_group = check_params_rhst(dataset_path_file, out_results_dir,
-                                                                             num_repetitions, train_perc, sub_group, num_procs)
+                                                                             num_repetitions, train_perc, sub_group,
+                                                                             num_procs, grid_search_level)
 
     # loading datasets
     datasets = load_pyradigms(dataset_paths, sub_group)
@@ -764,7 +776,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         with Manager() as proxy_manager:
             shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
                                                 total_test_samples, num_classes, num_features, label_set,
-                                                method_names, pos_class_index, out_results_dir, exhaustive_search])
+                                                method_names, pos_class_index, out_results_dir, grid_search_level])
             partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
             with Pool(processes=num_procs) as pool:
@@ -773,7 +785,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         # switching to regular sequential for loop
         partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, train_size_common, feat_sel_size,
                                        train_perc, total_test_samples, num_classes, num_features, label_set,
-                                       method_names, pos_class_index, out_results_dir, exhaustive_search)
+                                       method_names, pos_class_index, out_results_dir, grid_search_level)
         cv_results = [ partial_func_holdout(rep_id=rep) for rep in range(num_repetitions) ]
 
 
@@ -797,7 +809,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     return out_results_path
 
 
-def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc, sub_groups, num_procs):
+def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc,
+                      sub_groups, num_procs, grid_search_level):
     """Validates inputs and returns paths to feature sets to load"""
 
     if not pexists(dataset_path_file):
@@ -833,6 +846,16 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
         sub_groups = [ group for group in sub_groups if group]
     # NOTE: here, we are not ensuring classes in all the subgroups actually exist in all datasets
     # that happens when loading data.
+
+    if grid_search_level.lower() not in cfg.GRIDSEARCH_LEVELS:
+        raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
+
+    # printing the chosen options
+    print('Training percentage      : {:.2}'.format(train_perc))
+    print('Number of CV repetitions : {}'.format(num_repetitions))
+    print('Level of grid search     : {}'.format(grid_search_level))
+    print('Number of processors     : {}'.format(num_procs))
+    print('Saving the results to \n{}'.format(out_results_dir))
 
     return dataset_paths, num_repetitions, num_procs, sub_groups
 
@@ -979,8 +1002,10 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
     num_classes = len(class_set)
 
     num_datasets = len(datasets)
+    remaining = set(range(num_datasets))
+    remaining.remove(common_ds_index)
     if num_datasets > 1:
-        for idx in range(1, num_datasets):
+        for idx in remaining:
             this_ds = datasets[idx]
             if num_samples != this_ds.num_samples:
                 raise ValueError("Number of samples in different datasets differ!")
@@ -1027,7 +1052,7 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    label_set, method_names, pos_class_index,
-                                   out_results_dir, exhaustive_search, rep_id=None):
+                                   out_results_dir, grid_search_level, rep_id=None):
     """
     Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
     and evaluations on the given test set.
@@ -1047,8 +1072,9 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
     out_results_dir
     rep_id
 
-    exhaustive_search : bool
-        If False, grid search resolution will be reduced to speed up optimization.
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
 
     Returns
     -------
@@ -1096,7 +1122,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], true_test_labels, \
         conf_mat, misclsfd_ids_this_run[dd], feature_importances[dd], best_params[dd] = \
             eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc, feat_sel_size=feat_sel_size,
-                                            label_order_in_conf_matrix=label_set, exhaustive_search=exhaustive_search)
+                                            label_order_in_conf_matrix=label_set, grid_search_level=grid_search_level)
 
         accuracy_balanced[dd] = balanced_accuracy(conf_mat)
         confusion_matrix[:, :, dd] = conf_mat
