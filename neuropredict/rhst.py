@@ -713,14 +713,14 @@ def run(dataset_path_file, method_names, out_results_dir,
     out_results_dir : str
         Path to output directory to save the cross validation results to.
 
-    train_perc : float, optional
+    train_perc : float or numpy.float, optional
         Percetange of subjects to train the classifier on.
         The percentage is applied to the size of the smallest class to estimate
         the number of subjects from each class to be reserved for training.
         The smallest class is chosen to avoid class-imbalance in the training set.
 
         Default: 0.8 (80%).
-    num_repetitions : int, optional
+    num_repetitions : int or numpy.int, optional
         Number of repetitions of cross-validation estimation. Default: 200.
 
     positive_class : str
@@ -1027,6 +1027,11 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
             if set(class_set) != set(this_ds.classes.values()):
                 raise ValueError("Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
                         set(class_set), set(this_ds.classes.values())))
+
+    # displaying info on what is common across datasets
+    common_ds.description = ' ' # this description is not reflective of all datasets
+    dash_line = '-'*25
+    print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'.format(line=dash_line, ds=common_ds))
 
     num_features = np.zeros(num_datasets).astype(np.int64)
     for idx in range(num_datasets):

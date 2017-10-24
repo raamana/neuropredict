@@ -353,7 +353,6 @@ def parse_args():
 
     user_feature_paths, user_feature_type, fs_subject_dir, pyradigm_supplied = organize_inputs(user_args)
 
-
     if not pyradigm_supplied:
         if user_args.meta_file is not None:
             meta_file = abspath(user_args.meta_file)
@@ -377,7 +376,7 @@ def parse_args():
             os.mkdir(out_dir)
         except:
             raise IOError('Output folder could not be created.')
-    print('Saving the results to \n{}'.format(out_dir))
+    # print('Saving the results to \n{}'.format(out_dir))
 
     train_perc = np.float32(user_args.train_perc)
     if not ( 0.01 <= train_perc <= 0.99):
