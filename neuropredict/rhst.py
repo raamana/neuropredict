@@ -152,8 +152,12 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
     "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
 
     inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0 - train_perc)
-    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
-                      n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
+    # gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
+    #                   n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
+
+    # not specifying n_jobs to avoid any kind of parallelism (joblib) from within sklearn
+    # to avoid potentially bad interactions with outer parallization with builtin multiprocessing library
+    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv)
 
     # ignoring some not-so-critical warnings
     with warnings.catch_warnings():
@@ -484,22 +488,29 @@ def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
 
     grid_search_level=grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
-        range_num_trees     = [50, 500]
+        range_num_trees     = [50, 120, 350, 500]
         split_criteria      = ['gini', 'entropy']
-        range_min_leafsize  = [1, 3, 5]
+        range_min_leafsize  = [1, 3, 5, 10, 20]
         range_min_impurity  = [0.01, 0.1, 0.2] # np.arange(0., 0.41, 0.1)
 
         # if user supplied reduced_dim, it will be tried also. Default None --> all features.
         range_max_features  = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
+        range_num_trees = [50, 250, ]
+        split_criteria = ['gini', ]
+        range_min_leafsize = [1, 5]
+        range_min_impurity = [0.0, 0.01]
+
+        range_max_features = ['sqrt', 0.25, reduced_dim]
+
+    elif grid_search_level in ['none']: # single point on the hyper-parameter grid
         range_num_trees = [250, ]
         split_criteria = ['gini', ]
         range_min_leafsize = [1, ]
         range_min_impurity = [0.0, ]
 
-        range_max_features = ['sqrt', 0.25, reduced_dim]
-
+        range_max_features = [reduced_dim]
     else:
         raise ValueError('Unrecognized option to set level of grid search.')
 
@@ -514,7 +525,7 @@ def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
                         ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
-    rfc = RandomForestClassifier(max_features=10, n_estimators=10, oob_score=True)
+    rfc = RandomForestClassifier(max_features=reduced_dim, n_estimators=max(range_num_trees), oob_score=True)
 
     return rfc, clf_name, param_grid
 
