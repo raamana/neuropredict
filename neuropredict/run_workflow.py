@@ -173,6 +173,18 @@ def get_parser():
     If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.
     \n \n """)
 
+    help_text_gs_level = textwrap.dedent("""
+    Flag to specify the level of grid search during hyper-parameter optimization on the training set.
+    Allowed options are : 'light' and 'exhaustive', in the order of how many values/values will be optimized. 
+    
+    More parameters and more values demand more resources and much longer time for optimization.
+    
+    The 'light' option tries to "folk wisdom" to try least number of values (no more than one or two),
+     for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization). 
+     The 'light' will be the fastest and should give a "rough idea" of predictive performance. 
+     The 'exhaustive' option will try to most parameter values for the most parameters that can be optimized.
+    """)
+
     help_text_atlas = textwrap.dedent("""
     Name of the atlas to use for visualization. Default: fsaverage, if available.
     \n \n """)
@@ -214,30 +226,35 @@ def get_parser():
                               default=None,
                               help=help_text_data_matrix)
 
-    parser.add_argument("-p", "--positive_class", action="store", dest="positive_class",
+    cv_args_group = parser.add_argument_group(title='Cross-validation',
+                                              description='Parameters related to training and optimization during cross-validation')
+    cv_args_group.add_argument("-p", "--positive_class", action="store", dest="positive_class",
                         default=None,
                         help=help_text_positive_class)
 
-    parser.add_argument("-t", "--train_perc", action="store", dest="train_perc",
+    cv_args_group.add_argument("-t", "--train_perc", action="store", dest="train_perc",
                         default=0.5,
                         help=help_text_train_perc)
 
-    parser.add_argument("-n", "--num_rep_cv", action="store", dest="num_rep_cv",
+    cv_args_group.add_argument("-n", "--num_rep_cv", action="store", dest="num_rep_cv",
                         default=200,
                         help=help_text_num_rep_cv)
 
-    parser.add_argument("-k", "--num_features_to_select", dest="num_features_to_select",
+    cv_args_group.add_argument("-k", "--num_features_to_select", dest="num_features_to_select",
                         action="store", default=cfg.default_num_features_to_select,
                         help=help_text_feature_selection)
+
+    cv_args_group.add_argument("-s", "--sub_groups", action="store", dest="sub_groups",
+                        nargs="*",
+                        default="all",
+                        help=help_text_sub_groups)
+
+    cv_args_group.add_argument("-g", "--gs_level", action="store", dest="gs_level",
+                        default="light", help=help_text_gs_level, choices=cfg.GRIDSEARCH_LEVELS)
 
     parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
                         default="fsaverage",
                         help=help_text_atlas)
-
-    parser.add_argument("-s", "--sub_groups", action="store", dest="sub_groups",
-                        nargs="*",
-                        default="all",
-                        help=help_text_sub_groups)
 
     parser.add_argument("-c", "--num_procs", action="store", dest="num_procs",
                         default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
@@ -376,10 +393,14 @@ def parse_args():
 
     feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
 
+    grid_search_level = user_args.gs_level.lower()
+    if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
+        raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
+
     return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
-           positive_class, subgroups, feature_selection_size, num_procs
+           positive_class, subgroups, feature_selection_size, num_procs, grid_search_level
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
@@ -415,7 +436,7 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
         print('# CPUs requested higher than available {}'.format(avail_cpu_count))
         num_procs = avail_cpu_count
 
-    print('num_procs --> Available : {}, Requested : {}, Using : {}'.format(avail_cpu_count, requested_num_procs, num_procs))
+    #print('num_procs --> Available : {}, Requested : {}, Using : {}'.format(avail_cpu_count, requested_num_procs, num_procs))
     sys.stdout.flush()
 
     return num_procs
@@ -578,7 +599,8 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method=None, f
     """
 
     if not callable(get_method):
-        raise ValueError("Supplied get_method is not callable! It must take in a path and return a vectorized feature set and labels.")
+        raise ValueError("Supplied get_method is not callable! "
+                         "It must take in a path and return a vectorized feature set and labels.")
 
     # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
@@ -612,7 +634,11 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method=None, f
 
     # save the dataset to disk to enable passing on multiple dataset(s)
     saved_path = realpath(pjoin(outdir, outname))
-    ds.save(saved_path)
+    try:
+        ds.save(saved_path)
+    except IOError as ioe:
+        print('Unable to save {} features to disk in folder:\n{}'.format(outname, outdir))
+        raise ioe
 
     return saved_path
 
@@ -1076,7 +1102,7 @@ def cli():
 
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-        feature_selection_size, num_procs = parse_args()
+        feature_selection_size, num_procs, grid_search_level = parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
@@ -1090,7 +1116,8 @@ def cli():
         results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
                                      positive_class=positive_class, sub_group=sub_group,
-                                     feat_sel_size=feature_selection_size, num_procs=num_procs)
+                                     feat_sel_size=feature_selection_size, num_procs=num_procs,
+                                     grid_search_level=grid_search_level)
 
         print('\nSaving the visualizations and results to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)

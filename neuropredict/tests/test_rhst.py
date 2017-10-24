@@ -93,7 +93,7 @@ def test_chance_classifier_binary():
 
     res_path = rhst.run(out_list, ['random1', 'another'], out_dir,
                         train_perc=0.5, num_repetitions=num_repetitions,
-                        num_procs=4, exhaustive_search=False)
+                        num_procs=4, grid_search_level='light')
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
