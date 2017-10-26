@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 from sys import version_info
+import shlex
 from os.path import join as pjoin, exists as pexists, realpath, dirname, abspath
 
 sys.dont_write_bytecode = True
@@ -17,7 +18,7 @@ if __name__ == '__main__' and __package__ is None:
 if version_info.major==2 and version_info.minor==7:
     from neuropredict import rhst, run_workflow
 elif version_info.major > 2:
-    from neuropredict import rhst, run_workflow
+    from neuropredict import rhst, run_workflow, cli
 else:
     raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
 
@@ -109,6 +110,14 @@ def test_chance_classifier_binary():
         raise ValueError('Chance accuracy estimated via repeated holdout CV to substantially differs from that based on class sizes : {}'.format(chance_acc))
 
 
+def test_versioning():
+    " ensures the CLI works. "
+
+    sys.argv = shlex.split('neuropredict -v')
+
+    cli()
+
 # res_path = pjoin(out_dir, 'rhst_results.pkl')
 # run_workflow.make_visualizations(res_path, out_dir)
-test_chance_classifier_binary()
+# test_chance_classifier_binary()
+test_versioning()

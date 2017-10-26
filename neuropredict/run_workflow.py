@@ -1,3 +1,7 @@
+"""
+neuropredict : easy and comprehensive predictive analysis.
+
+"""
 from __future__ import print_function
 
 __all__ = ['run', 'cli', 'get_parser']
@@ -21,11 +25,13 @@ from pyradigm import MLDataset
 
 if version_info.major > 2:
     # the order of import is very important to avoid circular imports
+    import neuropredict
+    from neuropredict import __version__
     from neuropredict import config_neuropredict as cfg
     from neuropredict import rhst, visualize, freesurfer, model_comparison
     from neuropredict.freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
 else:
-    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('neuropredict requires Python 3+.')
 
 
 def make_time_stamp():
@@ -38,7 +44,7 @@ def make_time_stamp():
 def not_unspecified(var):
     """ Checks for null values of a give variable! """
 
-    return var not in ['None', None, '']
+    return var not in ['None', 'none', None, '']
 
 
 def get_parser():
@@ -258,6 +264,9 @@ def get_parser():
 
     parser.add_argument("-c", "--num_procs", action="store", dest="num_procs",
                         default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
+
+    parser.add_argument('-v', '--version', action='version',
+                        version='%(prog)s {version}'.format(version=__version__))
 
     return parser
 
@@ -1118,7 +1127,7 @@ def cli():
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
                                      grid_search_level=grid_search_level)
 
-        print('\nSaving the visualizations and results to \n{}'.format(out_dir))
+        print('\n\nSaving the visualizations and results to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
 
 
