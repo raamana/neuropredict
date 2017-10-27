@@ -60,6 +60,9 @@ EXPORT_FORMAT = '%10.5f'
 
 INPUT_FILE_FORMATS = ['.npy', '.numpy', '.csv', '.txt']
 
+# API related defaults
+default_feature_type = 'list_of_pyradigm_paths'
+
 # when more than one feature set is given, which one to map everyone to
 COMMON_DATASET_INDEX = 0
 

@@ -182,7 +182,7 @@ def get_parser():
 
     help_text_gs_level = textwrap.dedent("""
     Flag to specify the level of grid search during hyper-parameter optimization on the training set.
-    Allowed options are : 'light' and 'exhaustive', in the order of how many values/values will be optimized. 
+    Allowed options are : 'none', 'light' and 'exhaustive', in the order of how many values/values will be optimized. 
     
     More parameters and more values demand more resources and much longer time for optimization.
     
@@ -1133,19 +1133,14 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
     return feature_dir, method_list
 
 
-def cli():
-    """
-    Main entry point.
-
-    """
-
-    subjects, classes, out_dir, user_feature_paths, user_feature_type, \
-        fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-        feature_selection_size, num_procs, grid_search_level = parse_args()
+def prepare_and_run(subjects, classes, out_dir,
+            user_feature_paths, user_feature_type, fs_subject_dir,
+            train_perc, num_rep_cv, positive_class,
+            sub_group_list, feature_selection_size, num_procs, grid_search_level ):
+    "Organizes the inputs and prepares them for CV"
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
-    # TODO need to be able to parallelize at subgroup- and method-level
     method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
@@ -1161,17 +1156,38 @@ def cli():
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
 
+    return
+
+
+def cli():
+    """
+    Main entry point.
+
+    """
+
+    subjects, classes, out_dir, user_feature_paths, user_feature_type, \
+        fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
+        feature_selection_size, num_procs, grid_search_level = parse_args()
+
+    prepare_and_run(subjects, classes, out_dir,
+                    user_feature_paths, user_feature_type, fs_subject_dir,
+                    train_perc, num_rep_cv, positive_class,
+                    sub_group_list, feature_selection_size, num_procs, grid_search_level)
 
     return
 
 
-def run(feature_sets, meta_data, output_dir,
+def run(feature_sets,
+        feature_type=cfg.default_feature_type,
+        meta_data=None,
+        output_dir=None,
         pipeline=None,
         train_perc=0.5,
         num_repetitions=200,
         positive_class=None,
         feat_sel_size=cfg.default_num_features_to_select,
         sub_groups='all',
+        grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
         num_procs=2):
     """
     Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.
@@ -1180,12 +1196,11 @@ def run(feature_sets, meta_data, output_dir,
 
     Parameters
     ----------
-    feature_sets : multiple
+    feature_sets : list
         The input can be specified in either of the following ways:
-
+            - list of paths to pyradigm datasets saved on disk
             - path to a file containing list of paths (each line containing path to a valid MLDataset)
-            - list of paths to MLDatasets saved on disk
-            - list of MLDatasets
+            - list of MLDatasets that are already loaded
             - list of tuples (to specify multiple features), each element containing (X, y) i.e. data and target labels
             - a single tuple containing (X, y) i.e. data and target labels
             - list of paths to CSV files, each containing one type of features.
@@ -1194,25 +1209,34 @@ def run(feature_sets, meta_data, output_dir,
             - all of them contain the same number of samples
             - each sample belongs to same class across all feature sets.
 
+    feature_type : str
+        String identifying the type of features as described above. It could be:
+        'list_of_pyradigm_paths', 'pyradigm_list',
+        'list_of_tuples', 'tuple', 'list_of_csv_paths'
+
     meta_data : multiple
         The meta data can be specified in either of the following ways:
 
             - a path to a meta data file (see :doc:`features` page)
             - a dict keyed in by sample IDs with values representing their classes.
-            - None, if meta data is already specified in ``feature_sets`` input.
+            - None, if meta data is already specified in ``feature_sets`` input (e.g. with pyradigms).
 
-    pipeline : object
-        A sciki-learn pipeline describing the sequence of steps. This is typically a set of feature selections or dimensionality reduction steps followed by an estimator (classifier).
+    pipeline : str or object
+        If a string, it identifying one of the implemented classifiers e.g. 'RandomForestClassifier' or 'ExtraTreesClassifier'
+        If an object, it must be a sciki-learn pipeline describing the sequence of steps.
+        This is typically a set of feature selections or dimensionality reduction steps followed by an estimator (classifier).
 
         See http://scikit-learn.org/stable/modules/pipeline.html#pipeline for more details.
 
-        Default: None, which leads to the selection of a Random Forest classifier with feature selection based on mutual information (top k = N_train/10 features).
+        Default: None, which leads to the selection of a Random Forest classifier,
+         with robust scaling, followed by removal of low variance features.
 
     method_names : list
         A list of names to denote the different feature sets
 
     out_results_dir : str
         Path to output directory to save the cross validation results to.
+        If not specified, a new directory named 'neuropredict' will be created in the current directory.
 
     train_perc : float, optional
         Percetange of subjects to train the classifier on.
@@ -1249,6 +1273,17 @@ def run(feature_sets, meta_data, output_dir,
 
         Default: ``'all'``, leading to inclusion of all available classes in a all-vs-all multi-class setting.
 
+    grid_search_level : str
+        Flag to specify the level of grid search during hyper-parameter optimization on the training set.
+        Allowed options are : 'none', 'light' and 'exhaustive', in the order of how many values/values will be optimized.
+
+        More parameters and more values demand more resources and much longer time for optimization.
+
+        The 'light' option tries to "folk wisdom" to try least number of values (no more than one or two),
+         for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).
+         The 'light' will be the fastest and should give a "rough idea" of predictive performance.
+         The 'exhaustive' option will try to most parameter values for the most parameters that can be optimized.
+
     Returns
     -------
     results_path : str
@@ -1259,7 +1294,6 @@ def run(feature_sets, meta_data, output_dir,
     raise NotImplementedError
 
     return
-
 
 if __name__ == '__main__':
     cli()
