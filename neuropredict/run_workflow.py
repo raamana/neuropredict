@@ -15,7 +15,10 @@ import traceback
 import warnings
 from collections import Counter
 from time import localtime, strftime
+
 import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
@@ -753,14 +756,6 @@ def make_visualizations(results_file_path, outdir):
     _, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
     confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class = \
         rhst.load_results(results_file_path)
-
-    if os.environ['DISPLAY'] is None:
-        try:
-            matplotlib.use('Agg')
-        except:
-            warnings.warn('DISPLAY is not set and a different backed could not be used. '
-                          'Skipping the generation of any visualizations.')
-            return
 
     if not pexists(outdir):
         try:

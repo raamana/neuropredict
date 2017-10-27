@@ -47,7 +47,7 @@ MISCLF_HIST_ANNOT_LINEWIDTH = 2
 
 COMMON_FIG_SIZE = [9, 9]
 CMAP_DATASETS = 'Dark2'
-CMAP_CONFMATX = 'RdYlGn' # 'Blues' # plt.cm.Blues
+CMAP_CONFMATX = 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
 
 violin_width = 0.6
 violin_bandwidth = 0.15
