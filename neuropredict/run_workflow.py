@@ -15,6 +15,7 @@ import traceback
 import warnings
 from collections import Counter
 from time import localtime, strftime
+import matplotlib
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
@@ -191,6 +192,13 @@ def get_parser():
      The 'exhaustive' option will try to most parameter values for the most parameters that can be optimized.
     """)
 
+    help_text_make_vis = textwrap.dedent("""
+    Option to make visualizations from existing results in the given path. 
+    This is helpful when neuropredict failed to generate result figures automatically 
+    e.g. on a HPC cluster, or another environment when DISPLAY is either not available.
+    
+    """)
+
     help_text_atlas = textwrap.dedent("""
     Name of the atlas to use for visualization. Default: fsaverage, if available.
     \n \n """)
@@ -258,14 +266,23 @@ def get_parser():
     cv_args_group.add_argument("-g", "--gs_level", action="store", dest="gs_level",
                         default="light", help=help_text_gs_level, choices=cfg.GRIDSEARCH_LEVELS)
 
-    parser.add_argument("-a", "--atlas", action="store", dest="atlasid",
+    vis_args = parser.add_argument_group(title='Visualization',
+                                         description='Parameters related to generating visualizations')
+
+    vis_args.add_argument("-z", "--make_vis", action="store", dest="make_vis",
+                        default=None, help=help_text_make_vis)
+
+    vis_args.add_argument("-a", "--atlas", action="store", dest="atlasid",
                         default="fsaverage",
                         help=help_text_atlas)
 
-    parser.add_argument("-c", "--num_procs", action="store", dest="num_procs",
+    comp_args = parser.add_argument_group(title='Computing',
+                                         description='Parameters related to computations/debugging')
+
+    comp_args.add_argument("-c", "--num_procs", action="store", dest="num_procs",
                         default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
 
-    parser.add_argument('-v', '--version', action='version',
+    comp_args.add_argument('-v', '--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
 
     return parser
@@ -359,6 +376,16 @@ def parse_args():
         user_args = parser.parse_args()
     except:
         parser.exit(1)
+
+    if len(sys.argv) == 3 and not_unspecified(user_args.make_vis):
+        out_dir  = realpath(user_args.make_vis)
+        res_path = pjoin(out_dir,cfg.file_name_results)
+        if pexists(out_dir) and pexists(res_path):
+            print('\n\nSaving the visualizations to \n{}'.format(out_dir))
+            make_visualizations(res_path, out_dir)
+            sys.exit(0)
+        else:
+            raise ValueError('Given folder does not exist, or has no results!')
 
     user_feature_paths, user_feature_type, fs_subject_dir, pyradigm_supplied = organize_inputs(user_args)
 
@@ -728,8 +755,12 @@ def make_visualizations(results_file_path, outdir):
         rhst.load_results(results_file_path)
 
     if os.environ['DISPLAY'] is None:
-        warnings.warn('DISPLAY is not set. Skipping the generation of any visualizations.')
-        return
+        try:
+            matplotlib.use('Agg')
+        except:
+            warnings.warn('DISPLAY is not set and a different backed could not be used. '
+                          'Skipping the generation of any visualizations.')
+            return
 
     if not pexists(outdir):
         try:
@@ -1127,7 +1158,7 @@ def cli():
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
                                      grid_search_level=grid_search_level)
 
-        print('\n\nSaving the visualizations and results to \n{}'.format(out_dir))
+        print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
 
 

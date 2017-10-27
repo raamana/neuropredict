@@ -75,7 +75,6 @@ def feature_importance_map(feat_imp,
         fig, ax_h = plt.subplots(figsize=[9, 12])
         ax = [ax_h] # to support indexing
 
-    fig.set_visible(False)
     for dd in range(num_datasets):
 
         num_features = feat_imp[dd].shape[1]
@@ -196,7 +195,6 @@ def confusion_matrices(cfmat_array, class_labels,
         # cfmat = 100 * np.around(cfmat, decimals=cfg.PRECISION_METRICS)
 
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
-        fig.set_visible(False)
 
         im = plt.imshow(avg_cfmat, interpolation='nearest', cmap=cmap)
         plt.title(method_names[dd])
@@ -312,7 +310,6 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
             misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
-    fig.set_visible(False)
     ax = fig.add_subplot(1, 1, 1)
 
     cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
@@ -378,7 +375,6 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
             misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
-    fig.set_visible(False)
     ax = fig.add_subplot(1, 1, 1)
 
     cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
@@ -443,7 +439,6 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     theta = 2 * np.pi * np.linspace(0, 1 -1.0/num_misclf_axes, num_misclf_axes)
 
     fig = plt.figure(figsize=[9, 9])
-    fig.set_visible(False)
     cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     ax = fig.add_subplot(1, 1, 1, projection='polar')
@@ -559,7 +554,6 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     else:
         fig, ax_h = plt.subplots(figsize=[12, 9])
 
-    fig.set_visible(False)
     for dd in range(num_datasets):
         # calculating percentage of most frequently misclassified subjects in each dataset
         most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh]
@@ -622,7 +616,6 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     method_ticks = 1.0 + np.arange(num_datasets)
 
     fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
-    fig.set_visible(False)
     line_coll = ax.violinplot(metric, widths=0.8, bw_method=0.2,
                               showmedians=True, showextrema=False,
                               positions=method_ticks)

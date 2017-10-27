@@ -117,7 +117,15 @@ def test_versioning():
 
     cli()
 
+def test_vis():
+    " ensures the CLI works. "
+
+    sys.argv = shlex.split('neuropredict --make_vis /u1/work/hpc3194/4RTNI/processed/graynet/thk_curv_sulc_area_nbins25_fsaverage_fwhm10/neuropredict_gridsearch_light/CN_PARK_PSP_CBS')
+
+    cli()
+
 # res_path = pjoin(out_dir, 'rhst_results.pkl')
 # run_workflow.make_visualizations(res_path, out_dir)
 # test_chance_classifier_binary()
-test_versioning()
+# test_versioning()
+test_vis()
