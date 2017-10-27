@@ -46,9 +46,11 @@ MISCLF_HIST_ALPHA = 0.7
 MISCLF_HIST_ANNOT_LINEWIDTH = 2
 
 COMMON_FIG_SIZE = [9, 9]
-CMAP_DATASETS = 'Paired'
-CMAP_CONFMATX = 'Blues' # plt.cm.Blues
+CMAP_DATASETS = 'Dark2'
+CMAP_CONFMATX = 'RdYlGn' # 'Blues' # plt.cm.Blues
 
+violin_width = 0.6
+violin_bandwidth = 0.15
 
 CMAP_FEAT_IMP = 'hsv'
 max_allowed_num_features_importance_map = 50

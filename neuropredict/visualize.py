@@ -616,7 +616,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     method_ticks = 1.0 + np.arange(num_datasets)
 
     fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
-    line_coll = ax.violinplot(metric, widths=0.8, bw_method=0.2,
+    line_coll = ax.violinplot(metric, widths=cfg.violin_width,
+                              bw_method=cfg.violin_bandwidth,
                               showmedians=True, showextrema=False,
                               positions=method_ticks)
 
@@ -624,8 +625,6 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     for cc, ln in enumerate(line_coll['bodies']):
         ln.set_facecolor(cmap(cc))
         ln.set_label(labels[cc])
-
-    plt.legend(loc=2, ncol=num_datasets)
 
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major')
@@ -635,9 +634,9 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     step_tick = 0.05
     ax.set_ylim(lower_lim, upper_lim)
 
-    ax.set_xticks(method_ticks)
     ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
-    ax.set_xticklabels(labels, rotation=45)  # 'vertical'
+    ax.set_xticks(method_ticks)
+    # ax.set_xticklabels(labels, rotation=45)  # 'vertical'
 
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
     # add a tick for chance accuracy and/or % of majority class
@@ -651,7 +650,12 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     # plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(metric_label, fontsize=16)
 
-    fig.tight_layout()
+    # putting legends outside the plot below.
+    fig.subplots_adjust(bottom=0.2)
+    leg = ax.legend(labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
+    # setting colors manually as plot has been through arbitray jumps
+    for ix, lh in enumerate(leg.legendHandles):
+        lh.set_color(cmap(ix))
 
     pp1 = PdfPages(output_path + '.pdf')
     pp1.savefig()
