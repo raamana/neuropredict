@@ -466,10 +466,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
-    leg = ax.legend(method_labels, ncol=3, loc=9, bbox_to_anchor=(0.5, -0.1))
-
-    # ax.legend(method_labels, loc=3, bbox_to_anchor=(box.x0, 1, 1., .1))
-    # leg = ax.legend()
+    leg = ax.legend(method_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
 
     # setting colors manually as plot has been through arbitray jumps
     for ix, lh in enumerate(leg.legendHandles):
@@ -642,6 +639,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     # add a tick for chance accuracy and/or % of majority class
     # given the classifier trained on stratified set, we must use the balanced version
     chance_acc = rhst.chance_accuracy(class_sizes, 'balanced')
+    chance_acc = np.round(chance_acc, cfg.PRECISION_METRICS)
     ytick_loc = np.append(ytick_loc, chance_acc)
 
     ax.set_yticks(ytick_loc)

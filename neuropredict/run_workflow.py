@@ -1160,6 +1160,8 @@ def cli():
 
     """
 
+    print('Running neuropredict {}'.format(__version__))
+
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
         feature_selection_size, num_procs, grid_search_level = parse_args()
