@@ -641,7 +641,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
 
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
     # add a tick for chance accuracy and/or % of majority class
-    chance_acc = rhst.chance_accuracy(class_sizes)
+    # given the classifier trained on stratified set, we must use the balanced version
+    chance_acc = rhst.chance_accuracy(class_sizes, 'balanced')
     ytick_loc = np.append(ytick_loc, chance_acc)
 
     ax.set_yticks(ytick_loc)

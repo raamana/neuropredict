@@ -27,14 +27,11 @@ from sklearn.pipeline import Pipeline
 
 from pyradigm import MLDataset
 
-if version_info.major == 2 and version_info.minor == 7:
-    import config_neuropredict as cfg
-    import run_workflow
-elif version_info.major > 2:
+if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
     from neuropredict import run_workflow
 else:
-    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('neuropredict requires Python 3+.')
 
 
 def eval_optimized_model_on_testset(train_fs, test_fs,
@@ -333,6 +330,8 @@ def chance_accuracy(class_sizes, method='imbalanced'):
     elif method in ['zero_rule', 'zeror' ]:
         # zero rule: fraction of largest class
         chance_acc = np.max(class_sizes) / num_samples
+    elif method in ['balanced', 'traditional']:
+        chance_acc = 1 / num_classes
     else:
         raise ValueError('Invalid choice of method to compute choice accuracy!')
 
@@ -738,6 +737,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         Number of parallel processes to run to parallelize the repetitions of CV
 
     grid_search_level : str
+        If 'none', no grid search will be performed, choosing parameters based on 'folk wisdom'.
         If 'light', grid search resolution will be reduced to speed up optimization.
         If 'exhaustive', most values for most parameters will be user for optimization.
 
@@ -747,20 +747,6 @@ def run(dataset_path_file, method_names, out_results_dir,
         Path to pickle file containing full set of CV results.
 
     """
-
-    # structure of this function
-    # load datasets
-    # validate each dataset
-    # ensure same number of subjects across all datasets
-    #        same number of features/subject in each dataset
-    #        same class set across all datasets
-    # re-map the labels (from 1 to n) to ensure numeric labels do not differ
-    # sort them if need be (not needed if MLDatasets)
-    # for rep 1 to N, for feat 1 to M,
-    #   run train/test/evaluate.
-    #   keep tab on misclassifications
-    # save results (comprehensive and reloadable manner)
-
 
     dataset_paths, num_repetitions, num_procs, sub_group = check_params_rhst(dataset_path_file, out_results_dir,
                                                                              num_repetitions, train_perc, sub_group,
@@ -1032,6 +1018,8 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
     common_ds.description = ' ' # this description is not reflective of all datasets
     dash_line = '-'*25
     print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'.format(line=dash_line, ds=common_ds))
+
+    print('Estimated chance accuracy : {}\n'.format(chance_accuracy(class_sizes, 'balanced')))
 
     num_features = np.zeros(num_datasets).astype(np.int64)
     for idx in range(num_datasets):
