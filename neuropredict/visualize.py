@@ -713,9 +713,12 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     # plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(metric_label, fontsize=16)
 
+    # numbered labels
+    numbered_labels = ['{} {}'.format(ix,lbl) for ix, lbl in enumerate(labels)]
+
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
-    leg = ax.legend(labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
+    leg = ax.legend(numbered_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
     # setting colors manually as plot has been through arbitray jumps
     for ix, lh in enumerate(leg.legendHandles):
         lh.set_color(cmap(ix))
