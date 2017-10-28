@@ -619,7 +619,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     for dd in range(num_datasets):
         # calculating percentage of most frequently misclassified subjects in each dataset
         most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh]
-        perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / num_samples
+        perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / len(perc_misclsfd[dd])
         this_method_label = "{} - {:.1f}% ".format(method_labels[dd], perc_most_freq_misclsfd)
         if dd == 0:
             this_method_label = this_method_label + 'most frequently misclassfied'
