@@ -17,7 +17,9 @@ from collections import Counter
 from time import localtime, strftime
 
 import matplotlib
-matplotlib.use('Agg')
+if os.environ['DISPLAY'] is None:
+    # Agg is purely interactive
+    matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 from sys import version_info
