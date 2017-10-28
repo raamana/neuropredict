@@ -9,6 +9,23 @@ feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
 variance_threshold = 0.001
 
+# # ------- feature importance -------
+
+violin_width = 0.6
+violin_bandwidth = 0.15
+
+CMAP_FEAT_IMP = 'hsv'
+max_allowed_num_features_importance_map = 10
+
+# Tree like estimators in sklearn return 0 for features that were never selected for training.
+importance_value_to_treated_as_not_selected = 0.0
+
+# to help bring up feature importances that can be very small in 4/5th decimal places
+large_constant_factor = 1e5
+
+# # ------- feature importance -------
+
+
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
 robust_scaler_iqr = (5, 95)
@@ -48,12 +65,6 @@ MISCLF_HIST_ANNOT_LINEWIDTH = 2
 COMMON_FIG_SIZE = [9, 9]
 CMAP_DATASETS = 'Dark2'
 CMAP_CONFMATX = 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
-
-violin_width = 0.6
-violin_bandwidth = 0.15
-
-CMAP_FEAT_IMP = 'hsv'
-max_allowed_num_features_importance_map = 50
 
 file_name_results = 'rhst_results.pkl'
 EXPORT_DIR_NAME = 'exported_results'

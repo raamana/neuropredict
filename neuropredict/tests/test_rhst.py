@@ -120,7 +120,7 @@ def test_versioning():
 def test_vis():
     " ensures the CLI works. "
 
-    sys.argv = shlex.split('neuropredict --make_vis /u1/work/hpc3194/4RTNI/processed/graynet/thk_curv_sulc_area_nbins25_fsaverage_fwhm10/neuropredict_gridsearch_light/CN_PARK_PSP_CBS')
+    sys.argv = shlex.split('neuropredict --make_vis {}'.format(out_dir))
 
     cli()
 

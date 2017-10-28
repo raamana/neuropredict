@@ -10,16 +10,16 @@ from sys import version_info
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 
-if version_info.major==2 and version_info.minor==7:
-    import config_neuropredict as cfg
-    import rhst
-elif version_info.major > 2:
+if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg, rhst
 else:
-    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('neuropredict requires Python 3+.')
+
+from sklearn.preprocessing import MinMaxScaler
 
 def feature_importance_map(feat_imp,
                            method_labels,
@@ -77,6 +77,11 @@ def feature_importance_map(feat_imp,
 
     for dd in range(num_datasets):
 
+        # scaler = MinMaxScaler(feature_range=(0,100))
+        # scaler.fit(feat_imp[dd])
+        # scaled_imp = scaler.transform(feat_imp[dd])
+        scaled_imp = feat_imp[dd]
+
         num_features = feat_imp[dd].shape[1]
         if feature_names is None:
             feat_labels = [ "f{}".format(ix) for ix in num_features]
@@ -85,28 +90,35 @@ def feature_importance_map(feat_imp,
             if len(feat_labels)<num_features:
                 raise ValueError('Insufficient number of feature labels.')
 
+        usable_imp, freq_sel, median_feat_imp, stdev_feat_imp, conf_interval = compute_median_std_feat_imp(scaled_imp)
+
         if num_features > cfg.max_allowed_num_features_importance_map:
             print('Too many (n={}) features detected for {}.\n'
                   'Showing only the top {} to make the map legible.\n'
                   'Use the exported results to plot your own feature importance maps.'.format(num_features,
                     method_labels[dd], cfg.max_allowed_num_features_importance_map))
-            median_feat_imp = np.nanmedian(feat_imp[dd], axis=0)
             sort_indices = np.argsort(median_feat_imp)[::-1] # ascending order, then reversing
-            selected_indices = sort_indices[:cfg.max_allowed_num_features_importance_map]
-            selected_feat_imp = feat_imp[dd][:,selected_indices]
-            selected_feat_names = feat_labels[selected_indices]
+            selected_idx_display = sort_indices[:cfg.max_allowed_num_features_importance_map]
+            usable_imp_display = [ usable_imp[ix] for ix in selected_idx_display ]
+            selected_feat_imp  = median_feat_imp[selected_idx_display]
+            selected_imp_stdev = stdev_feat_imp[selected_idx_display]
+            selected_conf_interval = conf_interval[selected_idx_display]
+            selected_feat_names = feat_labels[selected_idx_display]
             effective_num_features = cfg.max_allowed_num_features_importance_map
         else:
-            selected_feat_imp = feat_imp[dd]
+            usable_imp_display = usable_imp
+            selected_feat_imp = median_feat_imp
+            selected_imp_stdev= stdev_feat_imp
             selected_feat_names = feat_labels
             effective_num_features = num_features
 
         feat_ticks = range(effective_num_features)
 
         plt.sca(ax[dd])
+        # checking whether all features selected equal number of times (needed for violing pl
         # violin distribution or stick bar plot?
         if show_distr:
-            line_coll = ax[dd].violinplot(selected_feat_imp,
+            line_coll = ax[dd].violinplot(usable_imp_display,
                                           positions=feat_ticks,
                                           widths=0.8, bw_method=0.2,
                                           vert=False,
@@ -116,11 +128,9 @@ def feature_importance_map(feat_imp,
                 ln.set_facecolor(cmap(cc))
                 #ln.set_label(feat_labels[cc])
         else:
-            median_feat_imp = np.nanmedian(selected_feat_imp, axis=0)
-            stdev_feat_imp  = np.nanstd(selected_feat_imp, axis=0)
-            barwidth = 8.0 / effective_num_features
-            rects = ax[dd].barh(feat_ticks, median_feat_imp,
-                               height=barwidth, xerr=stdev_feat_imp)
+            barwidth = max(0.05, min(0.9, 8.0 / effective_num_features))
+            rects = ax[dd].barh(feat_ticks, selected_feat_imp,
+                               height=barwidth, xerr=selected_conf_interval)
 
         #plt.legend(loc=2, ncol=num_datasets)
 
@@ -132,6 +142,14 @@ def feature_importance_map(feat_imp,
         ax[dd].set_yticklabels(selected_feat_names) #, rotation=45)  # 'vertical'
         ax[dd].set_title(method_labels[dd])
 
+
+    # # computing xlim, as outliers can make them unreadable
+    # single_bag = list()
+    # for dd in range(num_datasets):
+    #     single_bag.extend(feat_imp[dd].flatten())
+    # xmin = np.percentile(single_bag,  1.0)
+    # xmax = np.percentile(single_bag, 99.9)
+    # ax[dd].set_xlim(xmin, xmax) # they sharex, so setting one will affect others.
 
     if num_datasets < len(ax):
         fig.delaxes(ax[-1])
@@ -147,6 +165,53 @@ def feature_importance_map(feat_imp,
     plt.close()
 
     return
+
+
+def mean_confidence_interval(data, confidence=0.95):
+    """Computes mean and CI
+
+    From: https://stackoverflow.com/questions/15033511/compute-a-confidence-interval-from-sample-data/
+
+    """
+
+    arr = 1.0*np.array(data, dtype=float)
+    n  = len(arr)
+    mu = np.mean(arr)
+    se = scipy.stats.sem(arr)
+    h  = se * scipy.stats.t._ppf((1+confidence)/2., n-1)
+
+    return mu, h
+
+
+def compute_median_std_feat_imp(imp, ignore_value=cfg.importance_value_to_treated_as_not_selected):
+    "Calculates the median/SD of feature importance, ignoring NaNs and zeros"
+
+    num_features = imp.shape[1]
+    usable_values = list()
+    freq_selection = list()
+    conf_interval = list()
+    median_values = list()
+    stdev_values = list()
+    for feat in range(num_features):
+        index_nan_or_0 = np.logical_or(np.isnan(imp[:, feat]),
+                                       np.isclose(0.0, imp[:, feat], rtol=1e-4, atol=1e-5))
+        index_usable = np.logical_not(index_nan_or_0)
+        this_feat_values = imp[index_usable, feat].flatten()
+        if len(this_feat_values) > 0:
+            usable_values.append(this_feat_values)
+            freq_selection.append(len(this_feat_values))
+            median_values.append(np.median(this_feat_values))
+            stdev_values.append(np.std(this_feat_values))
+            mean_, CI_sym = mean_confidence_interval(this_feat_values)
+            conf_interval.append(CI_sym)
+        else:  # never ever selected
+            usable_values.append(None)
+            freq_selection.append(0)
+            median_values.append(np.nan)
+            stdev_values.append(np.nan)
+            conf_interval.append(np.nan)
+
+    return usable_values, np.array(freq_selection), np.array(median_values), np.array(stdev_values), np.array(conf_interval)
 
 
 def confusion_matrices(cfmat_array, class_labels,
