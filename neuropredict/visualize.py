@@ -714,7 +714,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     plt.ylabel(metric_label, fontsize=16)
 
     # numbered labels
-    numbered_labels = ['{} {}'.format(ix,lbl) for ix, lbl in enumerate(labels)]
+    numbered_labels = ['{} {}'.format(ix,lbl) for ix, lbl in zip(method_ticks,labels)]
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
