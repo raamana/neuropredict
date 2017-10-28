@@ -17,7 +17,7 @@ from collections import Counter
 from time import localtime, strftime
 
 import matplotlib
-if 'DISPLAY' in os.environ['DISPLAY']:
+if 'DISPLAY' in os.environ:
     display = os.environ['DISPLAY']
     display_name, display_num = display.split(':')
     display_num = int(float(display_num))
