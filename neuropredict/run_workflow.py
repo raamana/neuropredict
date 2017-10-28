@@ -17,15 +17,16 @@ from collections import Counter
 from time import localtime, strftime
 
 import matplotlib
-display = os.environ['DISPLAY']
-if display is None:
-    # Agg is purely interactive
-    matplotlib.use('Agg')
-else:
+if 'DISPLAY' in os.environ['DISPLAY']:
+    display = os.environ['DISPLAY']
     display_name, display_num = display.split(':')
     display_num = int(float(display_num))
     if display_num != 0:
         matplotlib.use('Agg')
+else:
+    # Agg is purely interactive
+    matplotlib.use('Agg')
+    display = None
 
 import matplotlib.pyplot as plt
 from sys import version_info
