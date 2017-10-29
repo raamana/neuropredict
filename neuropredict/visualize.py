@@ -183,7 +183,9 @@ def mean_confidence_interval(data, confidence=0.95):
     return mu, h
 
 
-def compute_median_std_feat_imp(imp, ignore_value=cfg.importance_value_to_treated_as_not_selected):
+def compute_median_std_feat_imp(imp,
+                                ignore_value=cfg.importance_value_to_treated_as_not_selected,
+                                never_tested_value=cfg.importance_value_never_tested):
     "Calculates the median/SD of feature importance, ignoring NaNs and zeros"
 
     num_features = imp.shape[1]
@@ -194,7 +196,7 @@ def compute_median_std_feat_imp(imp, ignore_value=cfg.importance_value_to_treate
     stdev_values = list()
     for feat in range(num_features):
         index_nan_or_0 = np.logical_or(np.isnan(imp[:, feat]),
-                                       np.isclose(0.0, imp[:, feat], rtol=1e-4, atol=1e-5))
+                                       np.isclose(ignore_value, imp[:, feat], rtol=1e-4, atol=1e-5))
         index_usable = np.logical_not(index_nan_or_0)
         this_feat_values = imp[index_usable, feat].flatten()
         if len(this_feat_values) > 0:
@@ -207,9 +209,9 @@ def compute_median_std_feat_imp(imp, ignore_value=cfg.importance_value_to_treate
         else:  # never ever selected
             usable_values.append(None)
             freq_selection.append(0)
-            median_values.append(np.nan)
-            stdev_values.append(np.nan)
-            conf_interval.append(np.nan)
+            median_values.append(never_tested_value)
+            stdev_values.append(never_tested_value)
+            conf_interval.append(never_tested_value)
 
     return usable_values, np.array(freq_selection), np.array(median_values), np.array(stdev_values), np.array(conf_interval)
 

@@ -1,5 +1,5 @@
 # import matplotlib.pyplot as plt
-
+import numpy as np
 
 # following affects the maximum num of predictors to be tried in random forest
 PERC_PROB_ERROR_ALLOWED = 0.05
@@ -19,12 +19,21 @@ max_allowed_num_features_importance_map = 10
 
 # Tree like estimators in sklearn return 0 for features that were never selected for training.
 importance_value_to_treated_as_not_selected = 0.0
+# importance values are sorted by value (higher better), so we need to able discard them
+importance_value_never_tested = -np.Inf
 
 # to help bring up feature importances that can be very small in 4/5th decimal places
 large_constant_factor = 1e5
 
 # # ------- feature importance -------
 
+
+# # ------- classifier
+
+default_classifier = 'RandomForestClassifier'
+classifier_choices = ('RandomForestClassifier',
+                      'ExtraTreesClassifier',
+                      )
 
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
