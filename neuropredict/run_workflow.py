@@ -226,6 +226,15 @@ def get_parser():
     Output folder to store gathered features & results.
     \n \n """)
 
+    help_classifier = textwrap.dedent("""
+    
+    String specifying one of the implemented classifiers. 
+    (Classifiers are carefully chosen to allow for the comprehensive report provided by neuropredict).
+    
+    Default: 'RandomForestClassifier'
+    More options will be implemented in due course.
+    """)
+
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=False, help=help_text_metadata_file)
 
@@ -277,6 +286,13 @@ def get_parser():
 
     cv_args_group.add_argument("-g", "--gs_level", action="store", dest="gs_level",
                         default="light", help=help_text_gs_level, choices=cfg.GRIDSEARCH_LEVELS)
+
+    pipeline_group = parser.add_argument_group(title='Predictive Model',
+                                              description='Parameters related to pipeline comprising the predictive model')
+
+    pipeline_group.add_argument("-e", "--classifier", action="store", dest="classifier",
+                                default=cfg.default_classifier, help=help_classifier,
+                                choices=cfg.classifier_choices)
 
     vis_args = parser.add_argument_group(title='Visualization',
                                          description='Parameters related to generating visualizations')
@@ -444,10 +460,14 @@ def parse_args():
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
 
+    classifier = user_args.classifier.lower()
+
     return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
-           positive_class, subgroups, feature_selection_size, num_procs, grid_search_level
+           positive_class, subgroups, \
+           feature_selection_size, num_procs, \
+           grid_search_level, classifier
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
@@ -1068,7 +1088,7 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     return method_names, dataset_paths_file
 
 
-def uniq_combined_name(method_names, max_len=180, num_char_each_word=1):
+def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     "Function to produce a uniq, and not a long combined name. Recursive"
 
     re_delimiters_word = '_|; |, |\*|\n'
@@ -1138,9 +1158,10 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
 
 
 def prepare_and_run(subjects, classes, out_dir,
-            user_feature_paths, user_feature_type, fs_subject_dir,
-            train_perc, num_rep_cv, positive_class,
-            sub_group_list, feature_selection_size, num_procs, grid_search_level ):
+                    user_feature_paths, user_feature_type, fs_subject_dir,
+                    train_perc, num_rep_cv, positive_class,
+                    sub_group_list, feature_selection_size, num_procs,
+                    grid_search_level, classifier):
     "Organizes the inputs and prepares them for CV"
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
@@ -1155,7 +1176,8 @@ def prepare_and_run(subjects, classes, out_dir,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
                                      positive_class=positive_class, sub_group=sub_group,
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
-                                     grid_search_level=grid_search_level)
+                                     grid_search_level=grid_search_level,
+                                     classifier=classifier)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
@@ -1173,12 +1195,13 @@ def cli():
 
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-        feature_selection_size, num_procs, grid_search_level = parse_args()
+        feature_selection_size, num_procs, grid_search_level, classifier = parse_args()
 
     prepare_and_run(subjects, classes, out_dir,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size, num_procs, grid_search_level)
+                    sub_group_list, feature_selection_size, num_procs,
+                    grid_search_level, classifier)
 
     return
 

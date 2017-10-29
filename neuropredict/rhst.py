@@ -38,7 +38,8 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
                                     label_order_in_conf_matrix=None,
                                     feat_sel_size=cfg.default_num_features_to_select,
                                     train_perc=0.5,
-                                    grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+                                    grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
+                                    classifier=cfg.default_classifier):
     """
     Optimize the classifier on the training set and return predictions on test set.
 
@@ -63,6 +64,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
         If 'light', grid search resolution will be reduced to speed up optimization.
         If 'exhaustive', most values for most parameters will be user for optimization.
 
+    classifier : str
+        String identifying a scikit-learn classifier.
+
     Returns
     -------
 
@@ -78,8 +82,11 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     # TODO expose these options to user at cli
     # TODO look for ways to avoid building this every iter and every dataset.
-    pipeline, param_grid = get_pipeline(train_class_sizes, feat_sel_size, train_fs.num_features,
-                                        grid_search_level=grid_search_level)
+    pipeline, param_grid = get_pipeline(train_class_sizes,
+                                        feat_sel_size,
+                                        train_fs.num_features,
+                                        grid_search_level=grid_search_level,
+                                        classifier_name=classifier)
 
     best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
                                                                       param_grid, train_perc)
@@ -524,7 +531,10 @@ def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_
                         ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
-    rfc = ExtraTreesClassifier(max_features=reduced_dim, n_estimators=max(range_num_trees), oob_score=True)
+    rfc = ExtraTreesClassifier(max_features=reduced_dim,
+                               n_estimators=max(range_num_trees),
+                               oob_score=True,
+                               bootstrap=True)
 
     return rfc, clf_name, param_grid
 
@@ -595,7 +605,7 @@ def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
     return rfc, clf_name, param_grid
 
 
-def get_classifier(classifier_name='RandomForestClassifier',
+def get_classifier(classifier_name=cfg.default_classifier,
                    reduced_dim='all',
                    grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
@@ -624,8 +634,10 @@ def get_classifier(classifier_name='RandomForestClassifier',
 
     """
 
-    if classifier_name.lower() in ['randomforestclassifier', ]:
+    if classifier_name.lower() in ['randomforestclassifier', 'rfc']:
         clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim, grid_search_level)
+    elif classifier_name.lower() in ['extratreesclassifier', 'etc']:
+        clf, clf_name, param_grid = get_ExtraTreesClassifier(reduced_dim, grid_search_level)
     else:
         raise NotImplementedError('Invalid name or classifier not implemented.')
 
@@ -700,7 +712,7 @@ def get_preprocessor(preproc_name='RobustScaler'):
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
                  preprocessor_name='robustscaler',
                  feat_selector_name='variancethreshold',
-                 classifier_name='RandomForestClassifier',
+                 classifier_name=cfg.default_classifier,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Constructor for pipeline (feature selection followed by a classifier).
@@ -764,7 +776,9 @@ def run(dataset_path_file, method_names, out_results_dir,
         train_perc=0.8, num_repetitions=200,
         positive_class=None, sub_group=None,
         feat_sel_size=cfg.default_num_features_to_select,
-        num_procs=4, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+        num_procs=4,
+        grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
+        classifier=cfg.default_classifier):
     """
 
     Parameters
@@ -839,7 +853,8 @@ def run(dataset_path_file, method_names, out_results_dir,
         with Manager() as proxy_manager:
             shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
                                                 total_test_samples, num_classes, num_features, label_set,
-                                                method_names, pos_class_index, out_results_dir, grid_search_level])
+                                                method_names, pos_class_index, out_results_dir,
+                                                grid_search_level, classifier])
             partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
             with Pool(processes=num_procs) as pool:
@@ -848,7 +863,8 @@ def run(dataset_path_file, method_names, out_results_dir,
         # switching to regular sequential for loop
         partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, train_size_common, feat_sel_size,
                                        train_perc, total_test_samples, num_classes, num_features, label_set,
-                                       method_names, pos_class_index, out_results_dir, grid_search_level)
+                                       method_names, pos_class_index, out_results_dir, grid_search_level,
+                                       classifier)
         cv_results = [ partial_func_holdout(rep_id=rep) for rep in range(num_repetitions) ]
 
 
@@ -1122,7 +1138,7 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    label_set, method_names, pos_class_index,
-                                   out_results_dir, grid_search_level, rep_id=None):
+                                   out_results_dir, grid_search_level, classifier, rep_id=None):
     """
     Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
     and evaluations on the given test set.
@@ -1191,8 +1207,11 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
 
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], true_test_labels, \
         conf_mat, misclsfd_ids_this_run[dd], feature_importances[dd], best_params[dd] = \
-            eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc, feat_sel_size=feat_sel_size,
-                                            label_order_in_conf_matrix=label_set, grid_search_level=grid_search_level)
+            eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc,
+                                            feat_sel_size=feat_sel_size,
+                                            label_order_in_conf_matrix=label_set,
+                                            grid_search_level=grid_search_level,
+                                            classifier=classifier)
 
         accuracy_balanced[dd] = balanced_accuracy(conf_mat)
         confusion_matrix[:, :, dd] = conf_mat
