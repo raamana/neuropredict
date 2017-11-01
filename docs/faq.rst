@@ -8,12 +8,15 @@ Frequently Asked Questions
     * Aiming to interface directly with the outputs of various neuroimaging tools
     * **although the user could input arbitrary set of features (neuroimaging, astronomy, nutrition, phrama or otherwise).**
 
-* *What is your classification system?*
+* *What is your default classification system?*
 
-    * Predictive analysis is performed with Random Forest classifier (using scikit-learn's implementation)
+    * Predictive analysis [by default] is performed with Random Forest classifier (using scikit-learn's implementation), after some basic preprocessing comprising of [robust scaling](http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html) and [removal of low-variance features](http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html)
     * Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.
 
-* *Why random forests?*
+* *Can I use a different classifier? *
+    * Yes. User will have the ability to choose among various techniques offered by scikit-learn [already] and similar toolboxes [to be added].
+
+* *Why did you pick random forests to be the default classifier?*
 
     * Because they have consistently demonstrated top performance across multiple domains:
 
@@ -23,7 +26,7 @@ Frequently Asked Questions
 
 * *What are the options for my feature selection?*
 
-  * Currently ``neuropredict`` selects the top ``k = n_min/10`` features based on their variable importance, as computed by Random Forest classifier, where n_min = number of *training* samples in the *smallest* class. This choice helped alleviate class-imbalance problems as well as improve the robustness of the classifier.
+  * Currently ``neuropredict`` selects the top ``k = n_train/10`` features based on their variable importance, as computed by Random Forest classifier, where n_train = number of *training* samples. The value of `n_train` depends on the size of the smallest class in the dataset and is ``train_perc*n_smallest*n_C``. This choice helps alleviate class-imbalance problems as well as improve the robustness of the classifier.
     * We plan to implement offer more choices for feature selection in the near future, although the benefit of trying some arbitrary choice for feature selection method seems unclear. The overarching goals of ``neuropredict`` might help answer the current choice:
     * to enable novice predictive modeling users to get started easily and quickly,
     * provide a thorough estimate of *baseline* performance of their feature sets, instead of trying to find an arbitrary combination of predictive modeling tools to drive the numerical performance as high as possible.
