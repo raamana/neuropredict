@@ -90,7 +90,7 @@ def get_parser():
 
         --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/
 
-    Only one of ``--pyradigm_paths``, ``user_feature_paths`` and ``daa_matrix_path`` options can be specified.
+    Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` or ``arff_paths`` options can be specified.
     \n \n """)
 
     help_text_pyradigm_paths = textwrap.dedent("""
@@ -103,14 +103,14 @@ def get_parser():
     List of absolute paths to text files containing one matrix of size N x p  (num_samples x num_features).
 
     Each row in the data matrix file must represent data corresponding to sample in the same row
-
     of the meta data file (meta data file and data matrix must be in row-wise correspondence).
 
     Name of this file will be used to annotate the results and visualizations.
 
     E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``
 
-    Only one of ``--pyradigm_paths``, ``user_feature_paths`` and ``daa_matrix_path`` options can be specified.
+    Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` or ``arff_paths`` options can be specified.
+    
     File format could be
      - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with
         numpy.loadtxt(filepath, delimiter=',')
@@ -121,6 +121,17 @@ def get_parser():
 
      File format is inferred from its extension.
      \n \n """)
+
+    help_text_arff_paths = textwrap.dedent("""
+    List of paths to files saved in Weka's ARFF dataset format.
+    
+    Note: 
+     - this format does NOT allow IDs for each subject.
+     - given feature values are saved in text format, this can lead to large files with high-dimensional data, 
+        compared to numpy arrays saved to disk in binary format.
+    
+    More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html
+    \n \n """)
 
     help_text_positive_class = textwrap.dedent("""
     Name of the positive class (e.g. Alzheimers, MCI etc) to be used in calculation of area under the ROC curve.
@@ -244,7 +255,8 @@ def get_parser():
     parser.add_argument("-f", "--fs_subject_dir", action="store", dest="fs_subject_dir",
                         default=None, help=help_text_fs_dir)
 
-    user_defined = parser.add_mutually_exclusive_group()
+    user_defined = parser.add_argument_group(title='Input data and formats',
+                                             description='Only one of the following types can be specified.')
 
     user_defined.add_argument("-y", "--pyradigm_paths", action="store", dest="pyradigm_paths",
                               nargs='+',  # to allow for multiple features
@@ -260,6 +272,11 @@ def get_parser():
                               nargs='+',
                               default=None,
                               help=help_text_data_matrix)
+
+    user_defined.add_argument("-a", "--arff_paths", action="store", dest="arff_paths",
+                              nargs='+',
+                              default=None,
+                              help=help_text_arff_paths)
 
     cv_args_group = parser.add_argument_group(title='Cross-validation',
                                               description='Parameters related to training and optimization during cross-validation')
@@ -300,9 +317,9 @@ def get_parser():
     vis_args.add_argument("-z", "--make_vis", action="store", dest="make_vis",
                         default=None, help=help_text_make_vis)
 
-    vis_args.add_argument("-a", "--atlas", action="store", dest="atlasid",
-                        default="fsaverage",
-                        help=help_text_atlas)
+    # vis_args.add_argument("-a", "--atlas", action="store", dest="atlasid",
+    #                     default="fsaverage",
+    #                     help=help_text_atlas)
 
     comp_args = parser.add_argument_group(title='Computing',
                                          description='Parameters related to computations/debugging')
@@ -314,6 +331,17 @@ def get_parser():
                         version='%(prog)s {version}'.format(version=__version__))
 
     return parser
+
+
+def check_paths(paths, path_type=''):
+    "Converts path to absolute paths and ensures they all exist!"
+
+    abs_paths = list(map(realpath, paths))
+    for pp in abs_paths:
+        if not pexists(pp):
+            raise IOError("One of {} paths specified does not exist:\n {}".format(path_type, pp))
+
+    return abs_paths
 
 
 def organize_inputs(user_args):
@@ -338,7 +366,9 @@ def organize_inputs(user_args):
 
     atleast_one_feature_specified = False
     # specifying pyradigm avoids the need for separate meta data file
-    pyradigm_supplied = False
+    meta_data_supplied = False
+    meta_data_format = None
+
     if not_unspecified(user_args.fs_subject_dir):
         fs_subject_dir = abspath(user_args.fs_subject_dir)
         if not pexists(fs_subject_dir):
@@ -347,33 +377,38 @@ def organize_inputs(user_args):
     else:
         fs_subject_dir = None
 
-    if not_unspecified(user_args.user_feature_paths):
-        user_feature_paths = list(map(abspath, user_args.user_feature_paths))
-        for udir in user_feature_paths:
-            if not pexists(udir):
-                raise IOError("One of the user directories for features doesn't exist:\n {}".format(udir))
+    # ensuring only one type is specified
+    mutually_excl_formats = ['user_feature_paths', 'data_matrix_paths', 'pyradigm_paths', 'arff_paths']
+    not_none_count = 0
+    for format in mutually_excl_formats:
+        if not_unspecified(getattr(user_args, format)):
+            not_none_count = not_none_count + 1
+    if not_none_count > 1:
+        raise ValueError('Only one of the following formats can be specified:\n{}'.format(mutually_excl_formats))
 
+    if not_unspecified(user_args.user_feature_paths):
+        user_feature_paths = check_paths(user_args.user_feature_paths, path_type='user defined (dir_of_dirs)')
         atleast_one_feature_specified = True
         user_feature_type = 'dir_of_dirs'
 
     elif not_unspecified(user_args.data_matrix_paths):
-        user_feature_paths = list(map(abspath, user_args.data_matrix_paths))
-        for dm in user_feature_paths:
-            if not pexists(dm):
-                raise IOError("One of the data matrices specified does not exist:\n {}".format(dm))
-
+        user_feature_paths = check_paths(user_args.data_matrix_paths, path_type='data matrix')
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
 
     elif not_unspecified(user_args.pyradigm_paths):
-        user_feature_paths = list(map(realpath, user_args.pyradigm_paths))
-        for pp in user_feature_paths:
-            if not pexists(pp):
-                raise IOError("One of pyradigms specified does not exist:\n {}".format(pp))
-
+        user_feature_paths = check_paths(user_args.pyradigm_paths, path_type='pyradigm')
         atleast_one_feature_specified = True
-        pyradigm_supplied = user_feature_paths[0]
+        meta_data_supplied = user_feature_paths[0]
+        meta_data_format = 'pyradigm'
         user_feature_type = 'pyradigm'
+
+    elif not_unspecified(user_args.arff_paths):
+        user_feature_paths = check_paths(user_args.arff_paths, path_type='ARFF')
+        atleast_one_feature_specified = True
+        user_feature_type = 'arff'
+        meta_data_supplied = user_feature_paths[0]
+        meta_data_format = 'arff'
     else:
         user_feature_paths = None
         user_feature_type = None
@@ -386,7 +421,7 @@ def organize_inputs(user_args):
         raise ValueError('Atleast one method specifying features must be specified. '
                          'It can be a path(s) to pyradigm dataset, matrix file, user-defined folder or a Freesurfer subject directory.')
 
-    return user_feature_paths, user_feature_type, fs_subject_dir, pyradigm_supplied
+    return user_feature_paths, user_feature_type, fs_subject_dir, meta_data_supplied, meta_data_format
 
 
 def parse_args():
@@ -415,20 +450,20 @@ def parse_args():
         else:
             raise ValueError('Given folder does not exist, or has no results!')
 
-    user_feature_paths, user_feature_type, fs_subject_dir, pyradigm_supplied = organize_inputs(user_args)
+    user_feature_paths, user_feature_type, fs_subject_dir, meta_data_path, meta_data_format = organize_inputs(user_args)
 
-    if not pyradigm_supplied:
+    if not meta_data_path:
         if user_args.meta_file is not None:
             meta_file = abspath(user_args.meta_file)
             if not pexists(meta_file):
                 raise IOError("Meta data file doesn't exist.")
         else:
-            raise ValueError('Metadata file must be provided when not using pyradigm inputs.')
+            raise ValueError('Metadata file must be provided when not using pyradigm/ARFF inputs.')
 
         sample_ids, classes = get_metadata(meta_file)
     else:
-        print('Using meta data from input pyradigm\n{}'.format(pyradigm_supplied))
-        sample_ids, classes = get_metadata_in_pyradigm(pyradigm_supplied)
+        print('Using meta data from:\n{}'.format(meta_data_path))
+        sample_ids, classes = get_metadata_in_pyradigm(meta_data_path, meta_data_format)
 
     if user_args.out_dir is not None:
         out_dir = realpath(user_args.out_dir)
@@ -536,10 +571,17 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
     return num_select
 
 
-def get_metadata_in_pyradigm(pyradigm_supplied):
+def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
     "Returns sample IDs and their classes from a given pyradigm"
 
-    dataset = MLDataset(filepath=realpath(pyradigm_supplied))
+    meta_data_format = meta_data_format.lower()
+    if meta_data_format in ['pyradigm', 'mldataset']:
+        dataset = MLDataset(filepath=realpath(meta_data_supplied))
+    elif meta_data_format in ['arff', 'weka']:
+        dataset = MLDataset(arff_path=realpath(meta_data_supplied))
+    else:
+        raise NotImplementedError('Meta data format {} not implemented. '
+                                  'Only pyradigm and ARFF are supported.'.format(meta_data_format))
 
     return dataset.sample_ids, dataset.classes
 
@@ -632,6 +674,12 @@ def get_data_matrix(featpath):
 
 def get_pyradigm(feat_path):
     "Do-nothing reader of pyradigm."
+
+    return feat_path
+
+
+def get_arff(feat_path):
+    "Do-nothing reader for ARFF format."
 
     return feat_path
 
@@ -1047,20 +1095,43 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     for mm, cur_method in enumerate(method_list):
         if cur_method in [get_dir_of_dirs]:
             method_name = basename(feature_path[mm])
+
         elif cur_method in [get_data_matrix]:
             method_name = os.path.splitext(basename(feature_path[mm]))[0]
+
         elif cur_method in [get_pyradigm]:
-            loaded_dataset = MLDataset(feature_path[mm])
+
+            if feature_type in ['pyradigm']:
+                loaded_dataset = MLDataset(filepath=feature_path[mm])
+            else:
+                raise ValueError('Invalid state of the program!')
+
             if len(loaded_dataset.description) > 1:
                 method_name = loaded_dataset.description
             else:
                 method_name = basename(feature_path[mm])
+
             method_names.append(clean_str(method_name))
             if saved_dataset_matches(loaded_dataset, subjects, classes):
                 outpath_list.append(feature_path[mm])
                 continue
             else:
                 raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
+
+        elif cur_method in [get_arff]:
+
+            loaded_dataset = MLDataset(arff_path=feature_path[mm])
+            if len(loaded_dataset.description) > 1:
+                method_name = loaded_dataset.description
+            else:
+                method_name = basename(feature_path[mm])
+
+            method_names.append(clean_str(method_name))
+            out_name = make_dataset_filename(method_name)
+            outpath_dataset = pjoin(out_dir, out_name)
+            loaded_dataset.save(outpath_dataset)
+            outpath_list.append(outpath_dataset)
+            continue
         else:
             # adding an index for an even more unique identification
             # method_name = '{}_{}'.format(cur_method.__name__,mm)
@@ -1127,7 +1198,8 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
     freesurfer_readers = [aseg_stats_subcortical, aseg_stats_whole_brain]
     userdefined_readers = {'dir_of_dirs': get_dir_of_dirs,
                            'data_matrix': get_data_matrix,
-                           'pyradigm': get_pyradigm}
+                           'pyradigm': get_pyradigm,
+                           'arff': get_arff}
 
     feature_dir = list()
     method_list = list()

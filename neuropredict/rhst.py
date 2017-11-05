@@ -1101,7 +1101,7 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
     dash_line = '-'*25
     print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'.format(line=dash_line, ds=common_ds))
 
-    print('Estimated chance accuracy : {}\n'.format(chance_accuracy(class_sizes, 'balanced')))
+    print('Estimated chance accuracy : {:.3f}\n'.format(chance_accuracy(class_sizes, 'balanced')))
 
     num_features = np.zeros(num_datasets).astype(np.int64)
     for idx in range(num_datasets):

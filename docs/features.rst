@@ -2,13 +2,18 @@
 Input formats
 -------------
 
-Currently supported
+Currently supported:
+ * Arbitary/user-defined format (see below)
+ * `pyradigm`'s `MLDataset <http://pyradigm.readthedocs.io>`_
+ * Weka's `ARFF <https://www.cs.waikato.ac.nz/ml/weka/arff.html>`_
+
+
+Formats specific to neuroimaging:
 
  * Freesurfer
 
   * Subcortical volumes
   * Wholebrain Aseg stats
- * Arbitary/user-defined format (see below)
 
 
 In development (stay tuned)
@@ -29,7 +34,7 @@ Interfaces to Neuroimaging tools
 
 neuropredict is aimed at interfacing with popular feature extraction algorithms such as Freesurfer, FSL and others directly - see *Readers* section below. However, it allows an arbitray input of features that have already been extracted via user's own pipeline(s).
 
-Arbitray feature input
+Arbitrary feature input
 -------------------------
 
 For custom input:
