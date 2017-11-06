@@ -167,6 +167,14 @@ def test_vis():
     else:
         print('previously computed results not found in \n {}'.format(out_dir))
 
+def test_arff():
+
+    arff_path = realpath(pjoin(dirname(dirname(dirname(__file__))), # 3 levels up
+                               'example_datasets', 'arff', 'iris.arff'))
+    sys.argv = shlex.split('neuropredict -a {}'.format(arff_path))
+    cli()
+
+
 # res_path = pjoin(out_dir, 'rhst_results.pkl')
 # run_workflow.make_visualizations(res_path, out_dir)
 # test_chance_clf_binary_rfc()
@@ -176,3 +184,5 @@ def test_vis():
 # test_vis()
 
 # etc_debug()
+
+test_arff()
