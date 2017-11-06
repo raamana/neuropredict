@@ -11,6 +11,7 @@ from sys import version_info
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
+import matplotlib as mpl
 from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -109,6 +110,7 @@ def feature_importance_map(feat_imp,
             usable_imp_display = usable_imp
             selected_feat_imp = median_feat_imp
             selected_imp_stdev= stdev_feat_imp
+            selected_conf_interval=conf_interval
             selected_feat_names = feat_labels
             effective_num_features = num_features
 
@@ -509,40 +511,51 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     ax = fig.add_subplot(1, 1, 1, projection='polar')
+    # mpl.rcParams['lines.linewidth'] = cfg.LINE_WIDTH_LARGE
+
     # clock-wise
     ax.set_theta_direction(-1)
     # starting at top
     ax.set_theta_offset(np.pi / 2.0)
 
-    lw_polar = 2.5
     for dd in range(num_datasets):
-        ax.plot(theta, misclf_rate[dd,:], color= cmap(dd), linewidth=lw_polar)
+        ax.plot(theta, misclf_rate[dd,:], color= cmap(dd),
+                linewidth=cfg.LINE_WIDTH)
         # connecting the last axis to the first to close the loop
         ax.plot([theta[-1], theta[0]],
                 [misclf_rate[dd, -1], misclf_rate[dd, 0]],
-                color=cmap(dd), linewidth=lw_polar)
+                color=cmap(dd), linewidth=cfg.LINE_WIDTH)
 
-    ax.set_thetagrids(theta * 360/(2*np.pi),
+    lbl_handles = ax.set_thetagrids(theta * 360/(2*np.pi),
                       labels=misclf_ax_labels,
                       va = 'top',
-                      ha = 'center')
+                      ha = 'center',
+                      fontsize=cfg.FONT_SIZE)
 
+    ax.grid(linewidth=cfg.LINE_WIDTH)
     tick_perc = [ '{:.2f}%'.format(tt) for tt in ax.get_yticks() ]
-    ax.set_yticklabels(tick_perc)
+    ax.set_yticklabels(tick_perc, fontsize=cfg.FONT_SIZE)
     # ax.set_yticks(np.arange(100 / num_classes, 100, 10))
+    plt.tick_params(axis='both', which='major')
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
-    leg = ax.legend(method_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
+    leg = ax.legend(method_labels, ncol=2, loc=9,
+                    bbox_to_anchor=(0.5, -0.1))
 
     # setting colors manually as plot has been through arbitray jumps
     for ix, lh in enumerate(leg.legendHandles):
         lh.set_color(cmap(ix))
+    leg.set_frame_on(False)  # making leg background transparent
 
     fig.tight_layout()
 
     out_path.replace(' ', '_')
-    fig.savefig(out_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
+    # fig.savefig(out_path + '.png', transparent=True, dpi=300,
+    #             bbox_extra_artists=(leg,), bbox_inches='tight')
+
+    fig.savefig(out_path + '.pdf',
+                bbox_extra_artists=(leg,), bbox_inches='tight')
 
     # pp1 = PdfPages(out_path + '.pdf')
     # pp1.savefig()
@@ -691,7 +704,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
         ln.set_label(labels[cc])
 
     ax.tick_params(axis='both', which='major', labelsize=15)
-    ax.grid(axis='y', which='major')
+    ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH)
 
     lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), cfg.PRECISION_METRICS)
     upper_lim = np.round(np.min([ 1.01, metric.max() ]), cfg.PRECISION_METRICS)
@@ -713,7 +726,10 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ax.set_yticklabels(ytick_loc)
     plt.text(0.05, chance_acc, 'chance accuracy')
     # plt.xlabel(xlabel, fontsize=16)
-    plt.ylabel(metric_label, fontsize=16)
+    plt.ylabel(metric_label, fontsize=cfg.FONT_SIZE)
+
+    plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
+    # mpl.rcParams['lines.linewidth'] = cfg.LINE_WIDTH_LARGE
 
     # numbered labels
     numbered_labels = ['{} {}'.format(int(ix),lbl) for ix, lbl in zip(method_ticks,labels)]
@@ -725,9 +741,17 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     for ix, lh in enumerate(leg.legendHandles):
         lh.set_color(cmap(ix))
 
-    pp1 = PdfPages(output_path + '.pdf')
-    pp1.savefig()
-    pp1.close()
+    leg.set_frame_on(False) # making leg background transparent
+
+    # pp1 = PdfPages(output_path + '.pdf')
+    # pp1.savefig()
+    # pp1.close()
+
+    # fig.savefig(output_path + '.png', transparent=True, dpi=300,
+    #             bbox_extra_artists=(leg,), bbox_inches='tight')
+
+    fig.savefig(output_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
+
     plt.close()
 
     return
