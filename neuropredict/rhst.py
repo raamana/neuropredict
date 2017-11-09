@@ -830,7 +830,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     dataset_paths, num_repetitions, num_procs, sub_group = check_params_rhst(dataset_path_file, out_results_dir,
                                                                              num_repetitions, train_perc, sub_group,
-                                                                             num_procs, grid_search_level)
+                                                                             num_procs, grid_search_level, classifier)
 
     # loading datasets
     datasets = load_pyradigms(dataset_paths, sub_group)
@@ -889,7 +889,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
 
 def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc,
-                      sub_groups, num_procs, grid_search_level):
+                      sub_groups, num_procs, grid_search_level, classifier):
     """Validates inputs and returns paths to feature sets to load"""
 
     if not pexists(dataset_path_file):
@@ -929,12 +929,16 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
     if grid_search_level.lower() not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
 
+    if classifier.lower() not in cfg.classifier_choices:
+        raise ValueError('Classifier not recognized : {}\n Implemented: {}'.format(classifier, cfg.classifier_choices))
+
     # printing the chosen options
     print('Training percentage      : {:.2}'.format(train_perc))
     print('Number of CV repetitions : {}'.format(num_repetitions))
+    print('Classifier chosen        : {}'.format(classifier))
     print('Level of grid search     : {}'.format(grid_search_level))
     print('Number of processors     : {}'.format(num_procs))
-    print('Saving the results to \n{}'.format(out_results_dir))
+    print('Saving the results to \n  {}'.format(out_results_dir))
 
     return dataset_paths, num_repetitions, num_procs, sub_groups
 
@@ -1101,6 +1105,7 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
     dash_line = '-'*25
     print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'.format(line=dash_line, ds=common_ds))
 
+    # choosing 'balanced' or 1/n_c for chance accuracy as training set is stratified
     print('Estimated chance accuracy : {:.3f}\n'.format(chance_accuracy(class_sizes, 'balanced')))
 
     num_features = np.zeros(num_datasets).astype(np.int64)

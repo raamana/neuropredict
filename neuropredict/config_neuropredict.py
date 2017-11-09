@@ -31,9 +31,8 @@ large_constant_factor = 1e5
 # # ------- classifier
 
 default_classifier = 'RandomForestClassifier'
-classifier_choices = ('RandomForestClassifier',
-                      'ExtraTreesClassifier',
-                      )
+__classifier_CHOICES = ('RandomForestClassifier', 'ExtraTreesClassifier',)
+classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
