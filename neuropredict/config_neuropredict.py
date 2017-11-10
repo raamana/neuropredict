@@ -82,6 +82,7 @@ CMAP_DATASETS = 'Dark2'
 CMAP_CONFMATX = 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
 
 file_name_results = 'rhst_results.pkl'
+temp_prefix_rhst  = 'trial'
 EXPORT_DIR_NAME = 'exported_results'
 DELIMITER = ','
 EXPORT_FORMAT = '%10.5f'

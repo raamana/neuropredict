@@ -3,6 +3,7 @@ from __future__ import print_function
 __all__ = ['run', 'load_results', 'save_results']
 
 import os
+import re
 import sys
 import pickle
 import logging
@@ -373,6 +374,12 @@ def save_results(out_dir, dict_of_objects_to_save):
             pickle.dump(dict_of_objects_to_save, resfid)
     except:
         raise IOError('Error saving the results to disk!')
+    else:
+        # deleting temp results only when saving full results is successful
+        pattern = re.compile('{}_[0-9]+.pkl'.format(cfg.temp_prefix_rhst))
+        temp_files = [res_file for res_file in os.listdir(out_dir) if pattern.match(res_file) ]
+        for tf in temp_files:
+            os.remove(pjoin(out_dir,tf))
 
     return out_results_path
 
@@ -1237,7 +1244,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
                     confusion_matrix, auc_weighted, feature_importances, best_params,
                     misclsfd_ids_this_run, test_set]
 
-    out_path = pjoin(out_results_dir, 'trial_{}.pkl'.format(rep_proc_id))
+    out_path = pjoin(out_results_dir, '{}_{}.pkl'.format(cfg.temp_prefix_rhst, rep_proc_id))
     logging.info('results from rep {} saved to {}'.format(rep_proc_id, out_path))
     with open(out_path, 'bw') as of:
         pickle.dump(results_list, of)
@@ -1306,6 +1313,7 @@ def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, n
         if num_classes == 2:
             print("\t AUC {auc:2.2f}".format(auc=median_wtd_auc[dd]), end='')
 
+    print('')
     return
 
 
