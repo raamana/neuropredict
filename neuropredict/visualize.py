@@ -272,12 +272,11 @@ def confusion_matrices(cfmat_array, class_labels,
         plt.xticks(tick_marks, class_labels, rotation=45)
         plt.yticks(tick_marks, class_labels)
 
-        # trick from sklearn
-        thresh = 100.0 / num_classes  # cfmat.max() / 2.
+        thresh = np.percentile(avg_cfmat, 50)
         for i, j in itertools.product(range(num_classes), range(num_classes)):
             plt.text(j, i, "{:.{prec}f}%".format(avg_cfmat[i, j], prec=cfg.PRECISION_METRICS),
-                     horizontalalignment="center", fontsize=14,
-                     color="tomato" if avg_cfmat[i, j] > thresh else "teal")
+                     horizontalalignment="center", fontsize='large',
+                     color="blue" if avg_cfmat[i, j] > thresh else "yellow")
 
         plt.tight_layout()
         plt.ylabel('True class')
