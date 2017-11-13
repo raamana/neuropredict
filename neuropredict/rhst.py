@@ -13,11 +13,6 @@ from sys import version_info
 from os.path import join as pjoin, exists as pexists, realpath
 from multiprocessing import Pool, Manager
 from functools import partial
-
-import multiprocessing
-logger = multiprocessing.log_to_stderr()
-logger.setLevel(logging.WARN)
-
 import numpy as np
 import sklearn
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
@@ -856,7 +851,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     # the main parallel loop to crunch optimizations, predictions and evaluations
     # chunk_size = int(np.ceil(num_repetitions/num_procs))
     if num_procs > 1:
-        print('Parallelizing the repetitions of CV ...')
+        print('Parallelizing the repetitions of CV with {} processes ...'.format(num_procs))
         with Manager() as proxy_manager:
             shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
                                                 total_test_samples, num_classes, num_features, label_set,
