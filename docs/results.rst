@@ -11,5 +11,13 @@ All you need to do is take care of preprocessing and produce quality controlled 
 Results Interpretation
 ----------------------
 
-**TODO describe each output produced in detail**
 
+Comparison of misclassification rates
+-------------------------------------
+
+.. image:: results_interpretation.mcr_radar.png
+
+
+**under dev**
+
+*Stay tuned*
