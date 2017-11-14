@@ -294,19 +294,29 @@ def confusion_matrices(cfmat_array, class_labels,
 
 
 def mean_over_cv_trials(conf_mat_array, num_classes):
-    """Common method to average over different CV trials,
-    to ensure it is done over the right axis (the first one - axis=0, column 1) for all confusion matrix methods"""
+    """
+    Common method to average over different CV trials,
+        to ensure it is done over the right axis
+        (the first one - axis=0, column 1) for all confusion matrix methods.
+
+    """
+
+    if conf_mat_array.shape[1] != num_classes or \
+                    conf_mat_array.shape[2] != num_classes or \
+                    len(conf_mat_array.shape) != 3:
+        raise ValueError('Invalid shape of confusion matrix array! '
+                         'It must be num_rep x {nc} x {nc}'.format(num_classes))
 
     # can not expect nan's here; If so, its a bug somewhere else
-    avg_cfmat = np.mean(conf_mat_array[:, :, :], 0)
+    avg_cfmat = np.mean(conf_mat_array, axis=0)
 
     # percentage confusion relative to class size
     class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
-    avg_cfmat = np.divide(avg_cfmat, class_size_elementwise)
+    avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
     # making it human readable : 0-100%
-    avg_cfmat = 100 * np.around(avg_cfmat, decimals=cfg.PRECISION_METRICS)
+    avg_cfmat_perc100 = 100 * np.around(avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
 
-    return avg_cfmat
+    return avg_cfmat_perc100
 
 
 def compute_pairwise_misclf(cfmat_array):
@@ -325,13 +335,6 @@ def compute_pairwise_misclf(cfmat_array):
     for dd in range(num_datasets):
         # mean confusion over CV trials
         avg_cfmat[dd, :, :] = mean_over_cv_trials(cfmat_array[:, :, :, dd], num_classes)
-
-        # avg_cfmat[dd, :, :] = np.mean(cfmat_array[:, :, :, dd], 0)
-        # # percentage confusion relative to class size
-        # clsiz_elemwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat[dd, :, :], axis=1), num_classes, 1))
-        # avg_cfmat[dd, :, :] = np.divide(avg_cfmat[dd, :, :], clsiz_elemwise)
-        # # making it human readable : 0-100%
-        # avg_cfmat[dd, :, :] = 100 * np.around(avg_cfmat[dd, :, :], decimals=cfg.PRECISION_METRICS)
 
         count = 0
         for ii, jj in itertools.product(range(num_classes), range(num_classes)):
