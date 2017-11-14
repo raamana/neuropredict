@@ -26,6 +26,7 @@ from pyradigm import MLDataset
 if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
     from neuropredict import run_workflow
+    from neuropredict import compare
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -887,6 +888,9 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
 
+    # running
+    compare.pairwise(accuracy_balanced, method_names, out_results_dir, num_repetitions)
+
     return out_results_path
 
 
@@ -1220,6 +1224,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
                                             grid_search_level=grid_search_level,
                                             classifier=classifier)
 
+        # TODO new feature: add additional metrics such as PPV
         accuracy_balanced[dd] = balanced_accuracy(conf_mat)
         confusion_matrix[:, :, dd] = conf_mat
         print('balanced accuracy: {:.4f} '.format(accuracy_balanced[dd]), end='')

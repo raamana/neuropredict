@@ -41,7 +41,7 @@ if version_info.major > 2:
     import neuropredict
     from neuropredict import __version__
     from neuropredict import config_neuropredict as cfg
-    from neuropredict import rhst, visualize, freesurfer, model_comparison
+    from neuropredict import rhst, visualize, freesurfer, compare
     from neuropredict.freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
