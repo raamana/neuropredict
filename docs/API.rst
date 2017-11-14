@@ -20,7 +20,7 @@ Hence, it is recommended to follow :doc:`usage_cli`, although you can peek into 
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: model_comparison
+.. automodule:: compare
    :members:
    :undoc-members:
    :show-inheritance:
