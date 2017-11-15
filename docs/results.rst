@@ -23,7 +23,7 @@ The following visualization compares the predictive performance of four features
  - it is important to visualize the full distribution and not just the mean or median, as the distributions are typically wide and usually not normal.
  - to test whether a particular feature is statistically significantly better, a distribution for each feature is necessary to run statistical tests.
 
-.. image:: results_interpretation.balanced_accuracy.pdf
+.. image:: results_interpretation.balanced_accuracy.png
 
 
 Comparison of misclassification rates
