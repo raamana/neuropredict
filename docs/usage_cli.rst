@@ -2,7 +2,17 @@
 Usage and examples
 -----------------------
 
-The command line interface for graynet (preferred interface, given its target is HPC) is shown below. Check the bottom of this page for examples.
+The command line interface for neuropredict is strongly recommended (given its focus on batch processing multiple comparisons). If the installation was successful, options could be obtained by typing one of the following commands:
+
+.. code-block:: bash
+
+    neuropredict
+    neuropredict -h
+
+
+Those options are also shown below (may not always show up due to problems with software for auto generation of docs). Check the bottom of this page for examples.
+
+If you don't see the options below, click here :doc:`usage_manual`
 
 .. argparse::
    :module: neuropredict.run_workflow
@@ -10,6 +20,8 @@ The command line interface for graynet (preferred interface, given its target is
    :prog: neuropredict
    :nodefault:
    :nodefaultconst:
+
+If you don't see any command line usage info shown above, click here:
 
 A rough example of usage can be:
 
