@@ -72,14 +72,14 @@ def make_random_MLdataset(max_num_classes = 20,
 max_num_classes = 3
 max_class_size = 40
 max_dim = 50
-num_repetitions =  50
+num_repetitions =  20
 
 train_perc = 0.8
 red_dim = 'sqrt'
 classifier = 'extratreesclassifier'
 gs_level = 'none'
 
-num_procs = 8
+num_procs = 1
 
 
 # using a really small sample size for faster testing.
@@ -185,4 +185,4 @@ def test_arff():
 
 # etc_debug()
 
-test_arff()
+# test_arff()
