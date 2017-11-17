@@ -20,7 +20,8 @@ from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 from sklearn.feature_selection import mutual_info_classif, SelectKBest, VarianceThreshold
 from sklearn.pipeline import Pipeline
-
+import traceback
+import shutil
 from pyradigm import MLDataset
 
 if version_info.major > 2:
@@ -372,10 +373,7 @@ def save_results(out_dir, dict_of_objects_to_save):
         raise IOError('Error saving the results to disk!')
     else:
         # deleting temp results only when saving full results is successful
-        pattern = re.compile('{}_[0-9]+.pkl'.format(cfg.temp_prefix_rhst))
-        temp_files = [res_file for res_file in os.listdir(out_dir) if pattern.match(res_file) ]
-        for tf in temp_files:
-            os.remove(pjoin(out_dir,tf))
+        cleanup(out_dir)
 
     return out_results_path
 
@@ -888,9 +886,6 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
 
-    # running
-    compare.pairwise(accuracy_balanced, method_names, out_results_dir, num_repetitions)
-
     return out_results_path
 
 
@@ -1244,12 +1239,37 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
                     confusion_matrix, auc_weighted, feature_importances, best_params,
                     misclsfd_ids_this_run, test_set]
 
-    out_path = pjoin(out_results_dir, '{}_{}.pkl'.format(cfg.temp_prefix_rhst, rep_proc_id))
+    tmp_dir = get_temp_dir(out_results_dir)
+    out_path = pjoin(tmp_dir, '{}_{}.pkl'.format(cfg.temp_prefix_rhst, rep_proc_id))
     logging.info('results from rep {} saved to {}'.format(rep_proc_id, out_path))
     with open(out_path, 'bw') as of:
         pickle.dump(results_list, of)
 
     return results_list
+
+
+def get_temp_dir(out_results_dir):
+    "Scratch directory to save temporary results to"
+
+    tmp_dir = pjoin(out_results_dir, cfg.temp_results_dir)
+    if not pexists(tmp_dir):
+        os.mkdir(tmp_dir)
+
+    return tmp_dir
+
+
+def cleanup(out_dir):
+    "Helper to perform cleanup"
+
+    tmp_dir = get_temp_dir(out_dir)
+    try:
+        shutil.rmtree(tmp_dir)
+    except:
+        traceback.print_exc()
+        print('Unable to delete temporary folder at:\n\t{}\n'
+              'Remove it manually if you would like to save space.'.format(tmp_dir))
+
+    return
 
 
 def gather_results_across_trials(cv_results, common_ds, datasets, total_test_samples,
