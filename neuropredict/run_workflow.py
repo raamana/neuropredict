@@ -523,7 +523,7 @@ def parse_args():
            grid_search_level, classifier, feat_select_method
 
 
-def save_options(options_to_save, out_dir):
+def save_options(options_to_save, out_dir_in):
     "Helper to save chosen options"
 
     sample_ids, classes, out_dir, user_feature_paths, user_feature_type, fs_subject_dir, \
@@ -548,10 +548,10 @@ def save_options(options_to_save, out_dir):
         'out_dir'               : out_dir,}
 
     try:
-        with open(pjoin(out_dir, cfg.file_name_options), 'wb') as opt_file:
+        with open(pjoin(out_dir_in, cfg.file_name_options), 'wb') as opt_file:
             pickle.dump(user_options, opt_file)
     except:
-        raise IOError('Unable to save the options to\n {}'.format(out_dir))
+        raise IOError('Unable to save the options to\n {}'.format(out_dir_in))
 
     return
 
