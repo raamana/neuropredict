@@ -880,7 +880,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         feat_sel_size=cfg.default_num_features_to_select,
         num_procs=4,
         grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
-        classifier=cfg.default_classifier,
+        classifier_name=cfg.default_classifier,
         feat_select_method=cfg.default_feat_select_method):
     """
 
@@ -934,7 +934,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     dataset_paths, num_repetitions, num_procs, sub_group = check_params_rhst(dataset_path_file, out_results_dir,
                                                                              num_repetitions, train_perc, sub_group,
                                                                              num_procs, grid_search_level,
-                                                                             classifier, feat_select_method)
+                                                                             classifier_name, feat_select_method)
 
     # loading datasets
     datasets = load_pyradigms(dataset_paths, sub_group)
@@ -958,7 +958,7 @@ def run(dataset_path_file, method_names, out_results_dir,
             shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
                                                 total_test_samples, num_classes, num_features, label_set,
                                                 method_names, pos_class_index, out_results_dir,
-                                                grid_search_level, classifier, feat_select_method])
+                                                grid_search_level, classifier_name, feat_select_method])
             partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
             with Pool(processes=num_procs) as pool:
@@ -968,7 +968,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, train_size_common, feat_sel_size,
                                        train_perc, total_test_samples, num_classes, num_features, label_set,
                                        method_names, pos_class_index, out_results_dir, grid_search_level,
-                                       classifier, feat_select_method)
+                                       classifier_name, feat_select_method)
         cv_results = [ partial_func_holdout(rep_id=rep) for rep in range(num_repetitions) ]
 
 

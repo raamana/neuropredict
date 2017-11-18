@@ -1262,7 +1262,7 @@ def prepare_and_run(subjects, classes, out_dir,
                                      positive_class=positive_class, sub_group=sub_group,
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
                                      grid_search_level=grid_search_level,
-                                     classifier=classifier, feat_select_method=feat_select_method)
+                                     classifier_name=classifier, feat_select_method=feat_select_method)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
