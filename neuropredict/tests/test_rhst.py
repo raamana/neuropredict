@@ -112,7 +112,9 @@ def test_chance_clf_binary_rfc():
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
         best_params, feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_set, class_sizes, accuracy_balanced, auc_weighted, positive_class = rhst.load_results(res_path)
+        confusion_matrix, class_set, class_sizes, \
+        accuracy_balanced, auc_weighted, positive_class, \
+        classifier_name, feat_select_method= rhst.load_results(res_path)
 
     median_bal_acc = np.median(accuracy_balanced)
     # median_wtd_auc = np.median(auc_weighted)
@@ -135,7 +137,9 @@ def test_chance_clf_binary_etc():
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
         best_params, feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_set, class_sizes, accuracy_balanced, auc_weighted, positive_class = rhst.load_results(res_path)
+        confusion_matrix, class_set, class_sizes, \
+        accuracy_balanced, auc_weighted, positive_class, \
+        classifier_name, feat_select_method= rhst.load_results(res_path)
 
     median_bal_acc = np.median(accuracy_balanced)
     # median_wtd_auc = np.median(auc_weighted)

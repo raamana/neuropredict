@@ -843,8 +843,8 @@ def make_visualizations(results_file_path, outdir):
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
     pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
     _, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class = \
-        rhst.load_results(results_file_path)
+    confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class, \
+    classifier_name, feat_select_method = rhst.load_results(results_file_path)
 
     if not pexists(outdir):
         try:
@@ -905,7 +905,7 @@ def export_results_from_disk(results_file_path, out_dir):
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
         best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
         confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
-            rhst.load_results(results_file_path)
+        classifier_name, feat_select_method = rhst.load_results(results_file_path)
 
     locals_var_dict = locals()
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
