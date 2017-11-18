@@ -1,5 +1,12 @@
 # Change Log
 
+## 0.4.5
+
+ - new classifier : SVM
+ - new flag to choose a feature selection method
+ - user chosen options now saved to disk, to better handle complex interactions between options
+ - code clean up and faster tests
+
 ## 0.4.1
 
  - Parallelizing the main the CV loop, leading to great reduction in total time for report generation!
@@ -9,5 +16,5 @@
  - auto versioning!
  - Ability to read meta data from pyradigms or ARFF files, without having to specify that separately.
  - Dropping support for Python 2.7 :(
- 
-## 0.3.1 
+
+## 0.3.1
