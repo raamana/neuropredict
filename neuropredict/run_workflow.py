@@ -243,7 +243,14 @@ def get_parser():
     (Classifiers are carefully chosen to allow for the comprehensive report provided by neuropredict).
     
     Default: 'RandomForestClassifier'
-    More options will be implemented in due course.
+    
+    """)
+
+    help_feat_select_method = textwrap.dedent("""
+    Feature selection method to apply prior to training the classifier.
+    
+    Default: 'VarianceThreshold', removing features with 0.001 percent of lowest variance (zeros etc).
+    
     """)
 
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
@@ -306,6 +313,10 @@ def get_parser():
 
     pipeline_group = parser.add_argument_group(title='Predictive Model',
                                               description='Parameters related to pipeline comprising the predictive model')
+
+    pipeline_group.add_argument("-fs", "--feat_select_method", action="store", dest="feat_select_method",
+                                default=cfg.default_feat_select_method, help=help_feat_select_method,
+                                choices=cfg.feature_selection_choices)
 
     pipeline_group.add_argument("-e", "--classifier", action="store", dest="classifier",
                                 default=cfg.default_classifier, help=help_classifier,
@@ -496,13 +507,14 @@ def parse_args():
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
 
     classifier = user_args.classifier.lower()
+    feat_select_method = user_args.feat_select_method.lower()
 
     return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
            feature_selection_size, num_procs, \
-           grid_search_level, classifier
+           grid_search_level, classifier, feat_select_method
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
@@ -1233,7 +1245,7 @@ def prepare_and_run(subjects, classes, out_dir,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size, num_procs,
-                    grid_search_level, classifier):
+                    grid_search_level, classifier, feat_select_method):
     "Organizes the inputs and prepares them for CV"
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
@@ -1249,7 +1261,7 @@ def prepare_and_run(subjects, classes, out_dir,
                                      positive_class=positive_class, sub_group=sub_group,
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
                                      grid_search_level=grid_search_level,
-                                     classifier=classifier)
+                                     classifier=classifier, feat_select_method=feat_select_method)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
@@ -1265,14 +1277,14 @@ def cli():
 
     subjects, classes, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-        feature_selection_size, num_procs, grid_search_level, classifier = parse_args()
+        feature_selection_size, num_procs, grid_search_level, classifier, feat_select_method = parse_args()
 
     print('Running neuropredict {}'.format(__version__))
     prepare_and_run(subjects, classes, out_dir,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size, num_procs,
-                    grid_search_level, classifier)
+                    grid_search_level, classifier, feat_select_method)
 
     return
 
