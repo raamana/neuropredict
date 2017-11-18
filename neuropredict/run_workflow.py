@@ -486,7 +486,6 @@ def parse_args():
             os.mkdir(out_dir)
         except:
             raise IOError('Output folder could not be created.')
-    # print('Saving the results to \n{}'.format(out_dir))
 
     train_perc = np.float32(user_args.train_perc)
     if not ( 0.01 <= train_perc <= 0.99):
@@ -601,7 +600,6 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
         print('# CPUs requested higher than available {}'.format(avail_cpu_count))
         num_procs = avail_cpu_count
 
-    #print('num_procs --> Available : {}, Requested : {}, Using : {}'.format(avail_cpu_count, requested_num_procs, num_procs))
     sys.stdout.flush()
 
     return num_procs

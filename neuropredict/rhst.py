@@ -3,7 +3,6 @@ from __future__ import print_function
 __all__ = ['run', 'load_results', 'save_results']
 
 import os
-import re
 import sys
 import pickle
 import logging
@@ -65,6 +64,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     classifier_name : str
         String identifying a scikit-learn classifier.
+
+    feat_select_method : str
+        String identifying a valid scikit-learn feature selection method.
 
     Returns
     -------
@@ -1038,7 +1040,7 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     if feat_select_method.lower() not in cfg.feature_selection_choices:
         raise ValueError('Feature selection method not recognized: {}\n '
-                         'Implemented choices: {}'.format(feat_select_method, ))
+                         'Implemented choices: {}'.format(feat_select_method, cfg.feature_selection_choices))
 
     # printing the chosen options
     print('Training percentage      : {:.2}'.format(train_perc))
@@ -1424,7 +1426,7 @@ def summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, n
         warnings.filterwarnings(action='ignore', message='All-NaN slice encountered',
                                 module='numpy', category=RuntimeWarning)
 
-        # assuming the first column (axis=0) is over num_repititions
+        # assuming the first column (axis 0) is over num_repititions
         median_bal_acc = np.nanmedian(accuracy_balanced, axis=0)
         if num_classes == 2:
             median_wtd_auc = np.nanmedian(auc_weighted, axis=0)

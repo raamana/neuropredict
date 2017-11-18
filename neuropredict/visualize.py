@@ -11,7 +11,6 @@ from sys import version_info
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
-import matplotlib as mpl
 from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -20,7 +19,6 @@ if version_info.major > 2:
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
-from sklearn.preprocessing import MinMaxScaler
 
 def feature_importance_map(feat_imp,
                            method_labels,
@@ -78,9 +76,6 @@ def feature_importance_map(feat_imp,
 
     for dd in range(num_datasets):
 
-        # scaler = MinMaxScaler(feature_range=(0,100))
-        # scaler.fit(feat_imp[dd])
-        # scaled_imp = scaler.transform(feat_imp[dd])
         scaled_imp = feat_imp[dd]
 
         num_features = feat_imp[dd].shape[1]
@@ -134,8 +129,6 @@ def feature_importance_map(feat_imp,
             rects = ax[dd].barh(feat_ticks, selected_feat_imp,
                                height=barwidth, xerr=selected_conf_interval)
 
-        #plt.legend(loc=2, ncol=num_datasets)
-
         ax[dd].tick_params(axis='both', which='major', labelsize=10)
         ax[dd].grid(axis='x', which='major')
 
@@ -144,14 +137,6 @@ def feature_importance_map(feat_imp,
         ax[dd].set_yticklabels(selected_feat_names) #, rotation=45)  # 'vertical'
         ax[dd].set_title(method_labels[dd])
 
-
-    # # computing xlim, as outliers can make them unreadable
-    # single_bag = list()
-    # for dd in range(num_datasets):
-    #     single_bag.extend(feat_imp[dd].flatten())
-    # xmin = np.percentile(single_bag,  1.0)
-    # xmax = np.percentile(single_bag, 99.9)
-    # ax[dd].set_xlim(xmin, xmax) # they sharex, so setting one will affect others.
 
     if num_datasets < len(ax):
         fig.delaxes(ax[-1])
@@ -305,7 +290,7 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
                     conf_mat_array.shape[2] != num_classes or \
                     len(conf_mat_array.shape) != 3:
         raise ValueError('Invalid shape of confusion matrix array! '
-                         'It must be num_rep x {nc} x {nc}'.format(num_classes))
+                         'It must be num_rep x {nc} x {nc}'.format(nc=num_classes))
 
     # can not expect nan's here; If so, its a bug somewhere else
     avg_cfmat = np.mean(conf_mat_array, axis=0)
@@ -513,7 +498,6 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     ax = fig.add_subplot(1, 1, 1, projection='polar')
-    # mpl.rcParams['lines.linewidth'] = cfg.LINE_WIDTH_LARGE
 
     # clock-wise
     ax.set_theta_direction(-1)
@@ -558,10 +542,6 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
 
     fig.savefig(out_path + '.pdf',
                 bbox_extra_artists=(leg,), bbox_inches='tight')
-
-    # pp1 = PdfPages(out_path + '.pdf')
-    # pp1.savefig()
-    # pp1.close()
 
     plt.close()
 
@@ -645,7 +625,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         if num_datasets > 1 and separate_plots:
             ax_h = ax[dd]
             plt.sca(ax_h)
-            ax_h.hist(perc_misclsfd[dd].values(), num_bins)  # label = method_labels[dd]
+            ax_h.hist(perc_misclsfd[dd].values(), num_bins)
         else:
             # TODO smoother kde plots?
             ax_h.hist(list(perc_misclsfd[dd].values()), num_bins,
@@ -727,11 +707,9 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
     plt.text(0.05, chance_acc, 'chance accuracy')
-    # plt.xlabel(xlabel, fontsize=16)
     plt.ylabel(metric_label, fontsize=cfg.FONT_SIZE)
 
     plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
-    # mpl.rcParams['lines.linewidth'] = cfg.LINE_WIDTH_LARGE
 
     # numbered labels
     numbered_labels = ['{} {}'.format(int(ix),lbl) for ix, lbl in zip(method_ticks,labels)]
@@ -744,10 +722,6 @@ def metric_distribution(metric, labels, output_path, class_sizes,
         lh.set_color(cmap(ix))
 
     leg.set_frame_on(False) # making leg background transparent
-
-    # pp1 = PdfPages(output_path + '.pdf')
-    # pp1.savefig()
-    # pp1.close()
 
     # fig.savefig(output_path + '.png', transparent=True, dpi=300,
     #             bbox_extra_artists=(leg,), bbox_inches='tight')
