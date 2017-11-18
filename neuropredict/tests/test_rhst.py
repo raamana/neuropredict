@@ -16,16 +16,14 @@ if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
-if version_info.major==2 and version_info.minor==7:
-    from neuropredict import rhst, run_workflow
-elif version_info.major > 2:
-    from neuropredict import rhst, run_workflow, cli
+if version_info.major > 2:
+    from neuropredict import rhst, run_workflow, cli, config_neuropredict as cfg
 else:
-    raise NotImplementedError('neuropredict supports only 2.7 or Python 3+. Upgrade to Python 3+ is recommended.')
+    raise NotImplementedError('neuropredict supports only Python 3+.')
 
 feat_generator = np.random.randn
 
-out_dir = os.path.abspath('../tests')
+out_dir = os.path.abspath('../tests/scratch')
 if not pexists(out_dir):
     os.makedirs(out_dir)
 
@@ -72,12 +70,15 @@ def make_random_MLdataset(max_num_classes = 20,
 max_num_classes = 3
 max_class_size = 40
 max_dim = 50
-num_repetitions =  20
+num_repetitions =  50
 
-train_perc = 0.8
+train_perc = 0.5
 red_dim = 'sqrt'
-classifier = 'extratreesclassifier'
+classifier = 'svm' # 'extratreesclassifier'
+fs_method = 'variancethreshold' # 'selectkbest_f_classif'
 gs_level = 'none'
+
+eps_chance_acc=0.05
 
 num_procs = 1
 
@@ -100,53 +101,34 @@ with open(ds_path_list, 'w') as lf:
 
 method_names = ['random1', 'another']
 
-def test_chance_clf_binary_rfc():
+def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes):
+
+    chance_acc = rhst.chance_accuracy(class_sizes)
+    median_bal_acc = np.median(accuracy_balanced, axis=0)
+    for ma  in median_bal_acc:
+        if abs(ma - chance_acc) > eps_chance_acc:
+            raise ValueError('Chance accuracy estimated via repeated holdout CV {} '
+                             'substantially differs from that based on class sizes : {}'.format(median_bal_acc, chance_acc))
+
+
+def test_chance_clf_binary_svm():
 
     global ds_path_list, method_names, out_dir, num_repetitions, gs_level, train_perc, num_procs
 
-    res_path = rhst.run(ds_path_list, method_names, out_dir,
-                        train_perc=train_perc, num_repetitions=num_repetitions,
-                        num_procs=num_procs, grid_search_level=gs_level)
+    sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path, out_path2,
+                                train_perc, num_repetitions, num_procs, gs_level, out_dir, classifier, fs_method))
+    cli()
 
+    out_results_path = pjoin(out_dir, cfg.file_name_results)
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
         pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
         best_params, feature_importances_rf, feature_names, \
         num_times_misclfd, num_times_tested, \
         confusion_matrix, class_set, class_sizes, \
         accuracy_balanced, auc_weighted, positive_class, \
-        classifier_name, feat_select_method= rhst.load_results(res_path)
+        classifier_name, feat_select_method= rhst.load_results(out_results_path)
 
-    median_bal_acc = np.median(accuracy_balanced)
-    # median_wtd_auc = np.median(auc_weighted)
-    chance_acc = rhst.chance_accuracy(class_sizes)
-
-    if abs(median_bal_acc-chance_acc) > chance_acc:
-        raise ValueError('Chance accuracy estimated via repeated holdout CV to substantially differs from that based on class sizes : {}'.format(chance_acc))
-
-
-def test_chance_clf_binary_etc():
-
-    global ds_path_list, method_names, out_dir, num_repetitions, gs_level, train_perc, num_procs
-
-    res_path = rhst.run(ds_path_list, method_names, out_dir,
-                        train_perc=train_perc, num_repetitions=num_repetitions,
-                        num_procs=num_procs, grid_search_level=gs_level,
-                        classifier='extratreesclassifier')
-
-    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_params, feature_importances_rf, feature_names, \
-        num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_set, class_sizes, \
-        accuracy_balanced, auc_weighted, positive_class, \
-        classifier_name, feat_select_method= rhst.load_results(res_path)
-
-    median_bal_acc = np.median(accuracy_balanced)
-    # median_wtd_auc = np.median(auc_weighted)
-    chance_acc = rhst.chance_accuracy(class_sizes)
-
-    if abs(median_bal_acc-chance_acc) > chance_acc:
-        raise ValueError('Chance accuracy estimated via repeated holdout CV to substantially differs from that based on class sizes : {}'.format(chance_acc))
+    raise_if_median_differs_from_chance(accuracy_balanced, class_sizes)
 
 
 def test_versioning():
@@ -181,8 +163,9 @@ def test_arff():
 
 # res_path = pjoin(out_dir, 'rhst_results.pkl')
 # run_workflow.make_visualizations(res_path, out_dir)
-# test_chance_clf_binary_rfc()
-# test_chance_clf_binary_etc()
+# test_chance_clf_default()
+# test_chance_clf_binary_extratrees()
+test_chance_clf_binary_svm()
 
 # test_versioning()
 # test_vis()
