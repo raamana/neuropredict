@@ -111,7 +111,10 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     # TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
     # The order of the classes corresponds to that in the attribute best_model.classes_.
-    pred_prob = best_pipeline.predict_proba(test_data_mat)
+    if hasattr(best_pipeline, 'predict_proba'):
+        pred_prob = best_pipeline.predict_proba(test_data_mat)
+    else:
+        pred_prob = None
 
     conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_conf_matrix)
 
