@@ -18,7 +18,7 @@ import sklearn
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
-from sklearn.feature_selection import mutual_info_classif, SelectKBest, VarianceThreshold
+from sklearn.feature_selection import mutual_info_classif, f_classif, SelectKBest, VarianceThreshold
 from sklearn.pipeline import Pipeline
 import traceback
 import shutil
@@ -37,7 +37,8 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
                                     feat_sel_size=cfg.default_num_features_to_select,
                                     train_perc=0.5,
                                     grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
-                                    classifier=cfg.default_classifier):
+                                    classifier_name=cfg.default_classifier,
+                                    feat_select_method=cfg.default_feat_select_method):
     """
     Optimize the classifier on the training set and return predictions on test set.
 
@@ -62,7 +63,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
         If 'light', grid search resolution will be reduced to speed up optimization.
         If 'exhaustive', most values for most parameters will be user for optimization.
 
-    classifier : str
+    classifier_name : str
         String identifying a scikit-learn classifier.
 
     Returns
@@ -84,7 +85,8 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
                                         feat_sel_size,
                                         train_fs.num_features,
                                         grid_search_level=grid_search_level,
-                                        classifier_name=classifier)
+                                        classifier_name=classifier_name,
+                                        feat_selector_name=feat_select_method)
 
     best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
                                                                       param_grid, train_perc)
@@ -652,6 +654,8 @@ def get_classifier(classifier_name=cfg.default_classifier,
         clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim, grid_search_level)
     elif classifier_name.lower() in ['extratreesclassifier', 'etc']:
         clf, clf_name, param_grid = get_ExtraTreesClassifier(reduced_dim, grid_search_level)
+    elif classifier_name.lower() in ['svm', 'supportvectormachine']:
+        clf, clf_name, param_grid = get_svc(reduced_dim, grid_search_level)
     else:
         raise NotImplementedError('Invalid name or classifier not implemented.')
 
@@ -685,14 +689,18 @@ def get_feature_selector(feat_selector_name='variancethreshold',
     if fs_name in ['selectkbest_mutual_info_classif', ]:
         # no param optimization for feat selector for now.
         feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
+        # TODO optimize the num features to select as part of grid search
         fs_param_grid = None
+
+    if fs_name in ['selectkbest_f_classif', ]:
+        # no param optimization for feat selector for now.
+        feat_selector = SelectKBest(score_func=f_classif, k=reduced_dim)
+        fs_param_grid = None
+
     elif fs_name in ['variancethreshold', ]:
         feat_selector = VarianceThreshold(threshold=cfg.variance_threshold)
         fs_param_grid = None
-    elif fs_name in ['dummy']:
-        feat_selector = VarianceThreshold(threshold=0.5)
-        param_values = [('dummy1', [1, 2]), ('dummy2', [3, 4])]
-        fs_param_grid = make_parameter_grid(fs_name, param_values)
+
     else:
         raise NotImplementedError('Invalid name or feature selector not implemented.')
 
@@ -725,7 +733,7 @@ def get_preprocessor(preproc_name='RobustScaler'):
 
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
                  preprocessor_name='robustscaler',
-                 feat_selector_name='variancethreshold',
+                 feat_selector_name=cfg.default_feat_select_method,
                  classifier_name=cfg.default_classifier,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
@@ -792,7 +800,8 @@ def run(dataset_path_file, method_names, out_results_dir,
         feat_sel_size=cfg.default_num_features_to_select,
         num_procs=4,
         grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
-        classifier=cfg.default_classifier):
+        classifier=cfg.default_classifier,
+        feat_select_method=cfg.default_feat_select_method):
     """
 
     Parameters
@@ -844,7 +853,8 @@ def run(dataset_path_file, method_names, out_results_dir,
 
     dataset_paths, num_repetitions, num_procs, sub_group = check_params_rhst(dataset_path_file, out_results_dir,
                                                                              num_repetitions, train_perc, sub_group,
-                                                                             num_procs, grid_search_level, classifier)
+                                                                             num_procs, grid_search_level,
+                                                                             classifier, feat_select_method)
 
     # loading datasets
     datasets = load_pyradigms(dataset_paths, sub_group)
@@ -868,7 +878,7 @@ def run(dataset_path_file, method_names, out_results_dir,
             shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
                                                 total_test_samples, num_classes, num_features, label_set,
                                                 method_names, pos_class_index, out_results_dir,
-                                                grid_search_level, classifier])
+                                                grid_search_level, classifier, feat_select_method])
             partial_func_holdout = partial(holdout_trial_compare_datasets, *shared_inputs)
 
             with Pool(processes=num_procs) as pool:
@@ -878,7 +888,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, train_size_common, feat_sel_size,
                                        train_perc, total_test_samples, num_classes, num_features, label_set,
                                        method_names, pos_class_index, out_results_dir, grid_search_level,
-                                       classifier)
+                                       classifier, feat_select_method)
         cv_results = [ partial_func_holdout(rep_id=rep) for rep in range(num_repetitions) ]
 
 
@@ -903,7 +913,7 @@ def run(dataset_path_file, method_names, out_results_dir,
 
 
 def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc,
-                      sub_groups, num_procs, grid_search_level, classifier):
+                      sub_groups, num_procs, grid_search_level, classifier, feat_select_method):
     """Validates inputs and returns paths to feature sets to load"""
 
     if not pexists(dataset_path_file):
@@ -946,10 +956,15 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
     if classifier.lower() not in cfg.classifier_choices:
         raise ValueError('Classifier not recognized : {}\n Implemented: {}'.format(classifier, cfg.classifier_choices))
 
+    if feat_select_method.lower() not in cfg.feature_selection_choices:
+        raise ValueError('Feature selection method not recognized: {}\n '
+                         'Implemented choices: {}'.format(feat_select_method, ))
+
     # printing the chosen options
     print('Training percentage      : {:.2}'.format(train_perc))
     print('Number of CV repetitions : {}'.format(num_repetitions))
     print('Classifier chosen        : {}'.format(classifier))
+    print('Feature selection chosen : {}'.format(feat_select_method))
     print('Level of grid search     : {}'.format(grid_search_level))
     print('Number of processors     : {}'.format(num_procs))
     print('Saving the results to \n  {}'.format(out_results_dir))
@@ -1157,7 +1172,8 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    label_set, method_names, pos_class_index,
-                                   out_results_dir, grid_search_level, classifier, rep_id=None):
+                                   out_results_dir, grid_search_level,
+                                   classifier_name, feat_select_method, rep_id=None):
     """
     Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
     and evaluations on the given test set.
@@ -1230,7 +1246,7 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
                                             feat_sel_size=feat_sel_size,
                                             label_order_in_conf_matrix=label_set,
                                             grid_search_level=grid_search_level,
-                                            classifier=classifier)
+                                            classifier_name=classifier_name, feat_select_method=feat_select_method)
 
         # TODO new feature: add additional metrics such as PPV
         accuracy_balanced[dd] = balanced_accuracy(conf_mat)
