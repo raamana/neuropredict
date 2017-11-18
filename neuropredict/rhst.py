@@ -103,9 +103,8 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_pipeline.predict(test_data_mat)
 
-    feat_importance = np.full(train_fs.num_features, np.nan)
-    if hasattr(best_clf, 'feature_importances_'):
-        feat_importance[index_selected_features] = best_clf.feature_importances_
+    feat_importance = get_feature_importance(classifier_name, best_clf,
+                                             train_fs.num_features, index_selected_features)
 
     # TODO NOW test if the gathering of prob data is consistent across multiple calls to this method
     #   perhaps by controlling the class order in input
@@ -119,6 +118,20 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     return pred_prob, pred_test_labels, true_test_labels, \
            conf_mat, misclsfd_samples, \
            feat_importance, best_params
+
+
+def get_feature_importance(clf_name, clf, num_features, index_selected_features, fill_value=np.nan):
+    "Extracts the feature importance of input features, if available."
+
+    attr_importance = {'randomforestclassifier' : 'feature_importances_',
+                       'extratreesclassifier': 'feature_importances_',
+                       'svm' : 'coef_'}
+
+    feat_importance = np.full(num_features, fill_value)
+    if hasattr(clf, attr_importance[clf_name]):
+        feat_importance[index_selected_features] = getattr(clf, attr_importance[clf_name])
+
+    return feat_importance
 
 
 def optimize_RF_via_training_oob_score(train_data_mat, train_labels, range_min_leafsize, range_num_predictors):
