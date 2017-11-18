@@ -39,6 +39,9 @@ feature_selection_choices = [ fsm.lower() for fsm in __feat_sel_CHOICES]
 default_classifier = 'RandomForestClassifier'
 default_feat_select_method = 'VarianceThreshold'
 
+__clfs_with_feature_importance = ('RandomForestClassifier', 'ExtraTreesClassifier', 'LinearSVM')
+clfs_with_feature_importance = [ clf.lower() for clf in __clfs_with_feature_importance]
+
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
 robust_scaler_iqr = (5, 95)

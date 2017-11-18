@@ -897,6 +897,8 @@ def make_visualizations(results_file_path, outdir):
     confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class, \
     classifier_name, feat_select_method = rhst.load_results(results_file_path)
 
+    user_options = load_options(outdir)
+
     if not pexists(outdir):
         try:
             os.mkdir(outdir)
@@ -919,8 +921,11 @@ def make_visualizations(results_file_path, outdir):
             visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix, class_order, method_names,
                                                                   cmp_misclf_fig_path)
 
-        featimp_fig_path = pjoin(outdir, 'feature_importance')
-        visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
+        if user_options['classifier_name'].lower() in cfg.clfs_with_feature_importance:
+            featimp_fig_path = pjoin(outdir, 'feature_importance')
+            visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
+        else:
+            print('\nCurrent predictive model does not provide feature importance values. Skipping them.')
 
         misclf_out_path = pjoin(outdir, 'misclassified_subjects')
         visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
@@ -1003,6 +1008,7 @@ def export_results(dict_to_save, out_dir):
     # TODO think about how to export predictive probability per class per CV rep
     # pred_prob_per_class
 
+    user_options = load_options(out_dir)
     print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'.format(msg1=msg1, msg2=msg2))
 
     print('')
@@ -1036,13 +1042,18 @@ def export_results(dict_to_save, out_dir):
         print_aligned_msg('misclassfiication rates', 'Done.')
 
         # feature importance
-        for mm in range(num_datasets):
-            featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
-            np.savetxt(featimp_path,
-                       feature_importances_rf[mm],
-                       fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
-                       header=','.join(feature_names[mm]))
-        print_aligned_msg('feature importance values', 'Done.')
+        if user_options['classifier_name'].lower() in cfg.clfs_with_feature_importance:
+            for mm in range(num_datasets):
+                featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
+                np.savetxt(featimp_path,
+                           feature_importances_rf[mm],
+                           fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
+                           header=','.join(feature_names[mm]))
+            print_aligned_msg('feature importance values', 'Done.')
+
+        else:
+            print_aligned_msg('feature importance values', 'Skipped.')
+            print('\tCurrent predictive model does not provide them.')
 
         # subject-wise misclf frequencies
         perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
