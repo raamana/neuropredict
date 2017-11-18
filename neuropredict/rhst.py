@@ -555,6 +555,83 @@ def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_
     return rfc, clf_name, param_grid
 
 
+def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+    """
+    Returns the SVM classifier and its parameter grid.
+
+    Parameters
+    ----------
+    reduced_dim : int
+        One of the dimensionalities to be tried.
+
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
+        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+
+    Returns
+    -------
+
+    """
+
+    grid_search_level=grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
+        range_penalty = np.power(10.0, range(-3,6))
+        range_kernel  = ['linear', 'poly', 'rbf']
+        range_degree  = [0.01, 0.1, 0.2]
+        range_gamma   = ['auto', ]
+        range_gamma.extend(np.power(2.0, range(-5,5)))
+        range_coef0 = np.sort(np.hstack((np.arange(-100, 101, 50),
+                                         np.arange(-1.0, 1.01, 0.25))))
+
+
+        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        range_max_features  = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
+
+    elif grid_search_level in ['light']:
+        range_penalty = np.power(10.0, range(-3,6, 3))
+        range_kernel  = ['rbf']
+        range_gamma   = ['auto', ]
+        range_gamma.extend(np.power(2.0, range(-5,5, 3)))
+        range_coef0 = np.sort(np.hstack((np.arange(-50, 101, 100),
+                                         np.arange(-0.5, 1.01, 1.0))))
+
+        range_max_features = ['sqrt', 0.25, reduced_dim]
+
+        # setting for sake of completeness, although this will be ignored
+        range_degree = [None, ]
+
+    elif grid_search_level in ['none']: # single point on the hyper-parameter grid
+        range_penalty = [10.0, ]
+        range_kernel  = ['rbf']
+        range_gamma   = ['auto', ]
+        range_coef0   = [0.0, ]
+
+        range_max_features = [reduced_dim]
+
+        # setting for sake of completeness, although this will be ignored
+        range_degree = [0, ]
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
+
+    clf_name = 'svc'
+    param_list_values = [('C',      range_penalty),
+                         ('kernel', range_kernel),
+                         ('degree', range_degree),
+                         ('gamma',  range_gamma),
+                         ('coef0',  range_coef0),
+                        ]
+    param_grid = make_parameter_grid(clf_name, param_list_values)
+
+    from sklearn.svm import SVC
+    clf = SVC(probability=True)
+
+    return clf, clf_name, param_grid
+
+
 def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the Random Forest classifier and its parameter grid.
