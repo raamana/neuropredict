@@ -69,7 +69,7 @@ def make_random_MLdataset(max_num_classes = 20,
 
 max_num_classes = 3
 max_class_size = 40
-max_dim = 100
+max_dim = 1000
 num_repetitions =  100
 
 train_perc = 0.5
@@ -157,7 +157,8 @@ def test_arff():
 
     arff_path = realpath(pjoin(dirname(dirname(dirname(__file__))), # 3 levels up
                                'example_datasets', 'arff', 'iris.arff'))
-    sys.argv = shlex.split('neuropredict -a {}'.format(arff_path))
+    sys.argv = shlex.split('neuropredict -a {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(arff_path,
+                    train_perc, num_repetitions, num_procs, gs_level, out_dir, classifier, fs_method))
     cli()
 
 
