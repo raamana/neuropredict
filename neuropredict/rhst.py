@@ -586,7 +586,7 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     if grid_search_level in ['exhaustive']:
         range_penalty = np.power(10.0, range(-3,6))
         range_kernel  = ['linear', 'poly', 'rbf']
-        range_degree  = [0.01, 0.1, 0.2]
+        range_degree  = [1, 2, 3]
         range_gamma   = ['auto', ]
         range_gamma.extend(np.power(2.0, range(-5,5)))
         range_coef0 = np.sort(np.hstack((np.arange(-100, 101, 50),
@@ -607,7 +607,7 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
         range_max_features = ['sqrt', 0.25, reduced_dim]
 
         # setting for sake of completeness, although this will be ignored
-        range_degree = [None, ]
+        range_degree = [1, ]
 
     elif grid_search_level in ['none']: # single point on the hyper-parameter grid
         range_penalty = [10.0, ]
