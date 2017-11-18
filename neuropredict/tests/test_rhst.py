@@ -69,8 +69,8 @@ def make_random_MLdataset(max_num_classes = 20,
 
 max_num_classes = 3
 max_class_size = 40
-max_dim = 50
-num_repetitions =  50
+max_dim = 100
+num_repetitions =  100
 
 train_perc = 0.5
 red_dim = 'sqrt'
