@@ -415,8 +415,8 @@ def load_results(results_file_path):
             best_params, feature_importances_rf, \
             feature_names, num_times_misclfd, num_times_tested, \
             confusion_matrix, class_set, class_sizes, accuracy_balanced, \
-            auc_weighted, positive_class = [results_dict.get(var_name) for var_name in
-                                            cfg.rhst_data_variables_to_persist]
+            auc_weighted, positive_class, classifier_name, feat_select_method = \
+                [results_dict.get(var_name) for var_name in cfg.rhst_data_variables_to_persist]
 
     except:
         raise IOError('Error loading the saved results from \n{}'.format(results_file_path))
@@ -427,7 +427,7 @@ def load_results(results_file_path):
            best_params, feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
            confusion_matrix, class_set, class_sizes, \
-           accuracy_balanced, auc_weighted, positive_class
+           accuracy_balanced, auc_weighted, positive_class, classifier_name, feat_select_method
 
 
 def make_parameter_grid(estimator_name=None, named_ranges=None):
