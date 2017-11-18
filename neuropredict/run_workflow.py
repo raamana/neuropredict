@@ -952,18 +952,19 @@ def export_results(dict_to_save, out_dir):
     # TODO think about how to export predictive probability per class per CV rep
     # pred_prob_per_class
 
+    print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'.format(msg1=msg1, msg2=msg2))
+
     print('')
     try:
-        print('Exporting accuracy distribution ..', end='')
+        # accuracy
         balacc_path = pjoin(exp_dir, 'balanced_accuracy.csv')
         np.savetxt(balacc_path, accuracy_balanced,
                    delimiter=cfg.DELIMITER,
                    fmt=cfg.EXPORT_FORMAT,
                    header=','.join(method_names))
+        print_aligned_msg('accuracy distribution', 'Done.')
 
-        print('Done.')
-
-        print('Exporting confusion matrices ..', end='')
+        # conf mat
         cfmat_reshaped = np.reshape(confusion_matrix, [num_classes * num_classes, num_rep_cv, num_datasets])
         for mm in range(num_datasets):
             confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
@@ -971,9 +972,9 @@ def export_results(dict_to_save, out_dir):
                        cfmat_reshaped[:, :, mm].T,  # NOTICE the transpose
                        delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
                        comments='shape of confusion matrix: num_repetitions x num_classes^2')
-        print('Done.')
+        print_aligned_msg('confusion matrices', 'Done.')
 
-        print('Exporting misclassfiication rates ..', end='')
+        # misclassfiication rates
         avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
         num_datasets = misclf_rate.shape[0]
         for mm in range(num_datasets):
@@ -981,18 +982,18 @@ def export_results(dict_to_save, out_dir):
             np.savetxt(cmp_misclf_path,
                        misclf_rate[mm, :],
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
-        print('Done.')
+        print_aligned_msg('misclassfiication rates', 'Done.')
 
-        print('Exporting feature importance values ..', end='')
+        # feature importance
         for mm in range(num_datasets):
             featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
             np.savetxt(featimp_path,
                        feature_importances_rf[mm],
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
                        header=','.join(feature_names[mm]))
-        print('Done.')
+        print_aligned_msg('feature importance values', 'Done.')
 
-        print('Exporting subject-wise misclassification frequencies ..', end='')
+        # subject-wise misclf frequencies
         perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
         for mm in range(num_datasets):
             subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
@@ -1000,7 +1001,7 @@ def export_results(dict_to_save, out_dir):
             with open(subwise_misclf_path, 'w') as smf:
                 for sid, val in perc_misclsfd[mm].items():
                     smf.write('{}{}{}\n'.format(sid, cfg.DELIMITER, val))
-        print('Done.')
+        print_aligned_msg('subject-wise misclf frequencies', 'Done.')
 
     except:
         traceback.print_exc()
