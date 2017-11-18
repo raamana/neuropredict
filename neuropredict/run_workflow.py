@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
 from multiprocessing import cpu_count
-
+import pickle
 import numpy as np
 from pyradigm import MLDataset
 
@@ -509,12 +509,63 @@ def parse_args():
     classifier = user_args.classifier.lower()
     feat_select_method = user_args.feat_select_method.lower()
 
+    # saving the validated and expanded values to disk for later use.
+    options_to_save = [sample_ids, classes, out_dir, user_feature_paths, user_feature_type, fs_subject_dir,
+                       train_perc, num_rep_cv, positive_class, subgroups, feature_selection_size, num_procs,
+                       grid_search_level, classifier, feat_select_method]
+    save_options(options_to_save, out_dir)
+
     return sample_ids, classes, out_dir, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
            feature_selection_size, num_procs, \
            grid_search_level, classifier, feat_select_method
+
+
+def save_options(options_to_save, out_dir):
+    "Helper to save chosen options"
+
+    sample_ids, classes, out_dir, user_feature_paths, user_feature_type, fs_subject_dir, \
+        train_perc, num_rep_cv, positive_class, subgroups, feature_selection_size, num_procs, \
+        grid_search_level, classifier_name, feat_select_method = options_to_save
+
+    user_options = {
+        'sample_ids'            : sample_ids,
+        'classes'               : classes,
+        'classifier_name'       : classifier_name,
+        'feat_select_method'    : feat_select_method,
+        'gs_level'              : grid_search_level,
+        'feature_selection_size': feature_selection_size,
+        'num_procs'             : num_procs,
+        'num_rep_cv'            : num_rep_cv,
+        'positive_class'        : positive_class,
+        'sub_groups'            : subgroups,
+        'train_perc'            : train_perc,
+        'fs_subject_dir'        : fs_subject_dir,
+        'user_feature_type'     : user_feature_type,
+        'user_feature_paths'    : user_feature_paths,
+        'out_dir'               : out_dir,}
+
+    try:
+        with open(pjoin(out_dir, cfg.file_name_options), 'wb') as opt_file:
+            pickle.dump(user_options, opt_file)
+    except:
+        raise IOError('Unable to save the options to\n {}'.format(out_dir))
+
+    return
+
+
+def load_options(out_dir):
+    "Helper to load the saved options"
+
+    try:
+        with open(pjoin(out_dir, cfg.file_name_options), 'rb') as opt_file:
+            user_options = pickle.load(opt_file)
+    except:
+        raise IOError('Unable to load the options from\n {}'.format(out_dir))
+
+    return user_options
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
