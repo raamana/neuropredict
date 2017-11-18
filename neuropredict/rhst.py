@@ -1361,8 +1361,7 @@ def get_temp_dir(out_results_dir):
     "Scratch directory to save temporary results to"
 
     tmp_dir = pjoin(out_results_dir, cfg.temp_results_dir)
-    if not pexists(tmp_dir):
-        os.mkdir(tmp_dir)
+    os.makedirs(tmp_dir, exist_ok=True)
 
     return tmp_dir
 
