@@ -774,7 +774,7 @@ def get_feature_selector(feat_selector_name='variancethreshold',
         # TODO optimize the num features to select as part of grid search
         fs_param_grid = None
 
-    if fs_name in ['selectkbest_f_classif', ]:
+    elif fs_name in ['selectkbest_f_classif', ]:
         # no param optimization for feat selector for now.
         feat_selector = SelectKBest(score_func=f_classif, k=reduced_dim)
         fs_param_grid = None
