@@ -131,6 +131,23 @@ def test_chance_clf_binary_svm():
     raise_if_median_differs_from_chance(accuracy_balanced, class_sizes)
 
 
+def test_each_combination_works():
+    "Ensures each of combination of feature selection and classifier works."
+
+    nrep = 10
+    gsl = 'none' # to speed up the process
+    for clf_name in cfg.classifier_choices:
+        for fs_name in cfg.feature_selection_choices:
+            try:
+                cli_str = 'neuropredict -y {} -t {} -n {} -c {} -o {}  -e {} -fs {} -g {} '.format(out_path,
+                            train_perc, nrep, num_procs, out_dir, clf_name, fs_name, gsl)
+                sys.argv = shlex.split(cli_str)
+                cli()
+            except:
+                print(' ---> combination failed: {} {}'.format(clf_name, fs_name))
+                raise
+
+
 def test_versioning():
     " ensures the CLI works. "
 
