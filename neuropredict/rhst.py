@@ -986,7 +986,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
     out_results_path = save_results(out_results_dir, dict_to_save)
 
-    report_best_params(best_params, out_results_dir)
+    report_best_params(best_params, method_names, out_results_dir)
 
     # exporting the results right away, without waiting for figures
     run_workflow.export_results(dict_to_save, out_results_dir)
@@ -996,32 +996,33 @@ def run(dataset_path_file, method_names, out_results_dir,
     return out_results_path
 
 
-def report_best_params(best_params, out_dir):
+def report_best_params(best_params, method_names, out_dir):
     "Prints out the most frequently selected parameter values and saves them to disk."
 
-    param_names = list()
-    first_rep = best_params[0]
-    num_steps = len(first_rep)
+    # best_params : list of num_reps elements, each a list of num_datasets dictionaries
     num_reps = len(best_params)
-    for step in range(num_steps):
-        param_names.extend(list(first_rep[step].keys()))
+    param_names = list(best_params[0][0].keys())
 
     # building a list of best values (from each rep) for each parameter
-    param_values = { param : list() for param in param_names }
+    param_values = {label : dict() for label in method_names}
     for rep in range(num_reps):
-        for step in range(num_steps):
-            for param in best_params[rep][step]:
-                param_values[param].append(best_params[rep][step][param])
+        for ds, label in enumerate(method_names):
+            param_values[label] = {param: list() for param in param_names}
+            for param in best_params[rep][ds]:
+                param_values[label][param].append(best_params[rep][ds][param])
 
     # finding frequent values and printing them
     print('\nThe most frequently selected parameter values are: ')
-    most_freq_values = dict()
+    most_freq_values = {label : dict() for label in method_names}
     maxwidth = 2 + max([len(p) for p in param_names])
-    for param in param_names:
-        pcounter = Counter(param_values[param])
-        # most_common returns a list of tuples, with value and its frequency
-        most_freq_values[param] = pcounter.most_common(1)[0][0] #
-        print('{:{mw}} : {}'.format(param, most_freq_values[param], mw=maxwidth))
+    for ds, label in enumerate(method_names):
+        print('  For feature set {} : {}'.format(ds, label))
+        for param in param_names:
+            pcounter = Counter(param_values[label][param])
+            # most_common returns a list of tuples, with value and its frequency
+            most_freq_values[label][param] = pcounter.most_common(1)[0][0]
+            print('    {:{mw}} : {}'.format(param, most_freq_values[label][param], mw=maxwidth))
+        print('')
 
     # saving them
     try:
