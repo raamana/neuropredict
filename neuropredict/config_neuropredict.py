@@ -91,6 +91,7 @@ CMAP_CONFMATX = 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
 
 file_name_results = 'rhst_results.pkl'
 file_name_options = 'options_neuropredict.pkl'
+output_dir_default = 'neuropredict_results'
 temp_results_dir = 'temp_scratch_neuropredict'
 temp_prefix_rhst  = 'trial'
 EXPORT_DIR_NAME = 'exported_results'

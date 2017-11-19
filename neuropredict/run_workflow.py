@@ -479,7 +479,7 @@ def parse_args():
     if user_args.out_dir is not None:
         out_dir = realpath(user_args.out_dir)
     else:
-        out_dir = pjoin(realpath(os.getcwd()), 'neuropredict')
+        out_dir = pjoin(realpath(os.getcwd()), cfg.output_dir_default)
 
     if not pexists(out_dir):
         try:
