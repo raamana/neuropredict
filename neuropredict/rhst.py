@@ -986,12 +986,52 @@ def run(dataset_path_file, method_names, out_results_dir,
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
     out_results_path = save_results(out_results_dir, dict_to_save)
 
+    report_best_params(best_params, out_results_dir)
+
     # exporting the results right away, without waiting for figures
     run_workflow.export_results(dict_to_save, out_results_dir)
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
 
     return out_results_path
+
+
+def report_best_params(best_params, out_dir):
+    "Prints out the most frequently selected parameter values and saves them to disk."
+
+    param_names = list()
+    first_rep = best_params[0]
+    num_steps = len(first_rep)
+    num_reps = len(best_params)
+    for step in range(num_steps):
+        param_names.extend(list(first_rep[step].keys()))
+
+    # building a list of best values (from each rep) for each parameter
+    param_values = { param : list() for param in param_names }
+    for rep in range(num_reps):
+        for step in range(num_steps):
+            for param in best_params[rep][step]:
+                param_values[param].append(best_params[rep][step][param])
+
+    # finding frequent values and printing them
+    print('\nThe most frequently selected parameter values are: ')
+    most_freq_values = dict()
+    maxwidth = 2 + max([len(p) for p in param_names])
+    for param in param_names:
+        pcounter = Counter(param_values[param])
+        # most_common returns a list of tuples, with value and its frequency
+        most_freq_values[param] = pcounter.most_common(1)[0][0] #
+        print('{:{mw}} : {}'.format(param, most_freq_values[param], mw=maxwidth))
+
+    # saving them
+    try:
+        out_results_path = pjoin(out_dir, cfg.file_name_best_param_values)
+        with open(out_results_path, 'wb') as resfid:
+            pickle.dump(most_freq_values, resfid)
+    except:
+        raise IOError('Error saving the results to disk!')
+
+    return
 
 
 def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc,
