@@ -18,6 +18,7 @@ if __name__ == '__main__' and __package__ is None:
 
 if version_info.major > 2:
     from neuropredict import rhst, cli, config_neuropredict as cfg
+    from neuropredict.utils import chance_accuracy
 else:
     raise NotImplementedError('neuropredict supports only Python 3+.')
 
@@ -89,9 +90,11 @@ rand_ds = make_random_MLdataset(max_num_classes=max_num_classes, stratified=True
 
 out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
 rand_two_class = rand_ds.get_class(rand_ds.class_set[0:3])
+rand_two_class.description = 'random_1'
 rand_two_class.save(out_path)
 
 rand_ds2 = rand_ds # make_random_MLdataset(max_num_classes=max_num_classes, stratified=True, max_class_size = max_class_size, max_dim = max_dim)
+rand_ds2.description = 'random_2'
 out_path2 = os.path.join(out_dir, 'two_classes_random_features_another.pkl')
 rand_ds2.save(out_path2)
 
@@ -103,7 +106,7 @@ method_names = ['random1', 'another']
 
 def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes):
 
-    chance_acc = rhst.chance_accuracy(class_sizes)
+    chance_acc = chance_accuracy(class_sizes)
     median_bal_acc = np.median(accuracy_balanced, axis=0)
     for ma  in median_bal_acc:
         if abs(ma - chance_acc) > eps_chance_acc:
