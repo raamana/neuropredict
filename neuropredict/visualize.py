@@ -16,6 +16,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg, rhst
+    from neuropredict.utils import chance_accuracy
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -700,7 +701,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
     # add a tick for chance accuracy and/or % of majority class
     # given the classifier trained on stratified set, we must use the balanced version
-    chance_acc = rhst.chance_accuracy(class_sizes, 'balanced')
+    chance_acc = chance_accuracy(class_sizes, 'balanced')
     chance_acc = np.round(chance_acc, cfg.PRECISION_METRICS)
     ytick_loc = np.append(ytick_loc, chance_acc)
 

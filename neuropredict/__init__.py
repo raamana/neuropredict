@@ -1,5 +1,6 @@
 
 __all__ = ['run_workflow', 'rhst', 'visualize', 'freesurfer', 'cli',
+           'utils', 'algorithms', 'reports', 'io',
            'config_neuropredict', 'compare', '__version__']
 
 __author__ = 'Pradeep Reddy Raamana, PhD'

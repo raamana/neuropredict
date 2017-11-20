@@ -9,12 +9,9 @@ __all__ = ['run', 'cli', 'get_parser']
 import argparse
 import os
 import sys
-import re
 import textwrap
 import traceback
 import warnings
-from collections import Counter
-from time import localtime, strftime
 
 import matplotlib
 if 'DISPLAY' in os.environ:
@@ -30,34 +27,22 @@ else:
 
 import matplotlib.pyplot as plt
 from sys import version_info
-from os.path import join as pjoin, exists as pexists, abspath, realpath, dirname, basename
-from multiprocessing import cpu_count
-import pickle
+from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 import numpy as np
 from pyradigm import MLDataset
 
 if version_info.major > 2:
     # the order of import is very important to avoid circular imports
-    import neuropredict
     from neuropredict import __version__
     from neuropredict import config_neuropredict as cfg
-    from neuropredict import rhst, visualize, freesurfer, compare
+    from neuropredict import rhst, visualize
     from neuropredict.freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
+    from neuropredict.io import get_metadata, get_features, get_metadata_in_pyradigm, \
+        get_data_matrix, get_dir_of_dirs, get_pyradigm, get_arff, saved_dataset_matches
+    from neuropredict.utils import check_paths, uniq_combined_name, check_num_procs, \
+        save_options, load_options, validate_feature_selection_size, make_dataset_filename, not_unspecified
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
-
-
-def make_time_stamp():
-    "Returns a timestamp string."
-
-    # just by the hour
-    return strftime('%Y%m%d-T%H', localtime())
-
-
-def not_unspecified(var):
-    """ Checks for null values of a give variable! """
-
-    return var not in ['None', 'none', None, '']
 
 
 def get_parser():
@@ -328,10 +313,6 @@ def get_parser():
     vis_args.add_argument("-z", "--make_vis", action="store", dest="make_vis",
                         default=None, help=help_text_make_vis)
 
-    # vis_args.add_argument("-a", "--atlas", action="store", dest="atlasid",
-    #                     default="fsaverage",
-    #                     help=help_text_atlas)
-
     comp_args = parser.add_argument_group(title='Computing',
                                          description='Parameters related to computations/debugging')
 
@@ -342,17 +323,6 @@ def get_parser():
                         version='%(prog)s {version}'.format(version=__version__))
 
     return parser
-
-
-def check_paths(paths, path_type=''):
-    "Converts path to absolute paths and ensures they all exist!"
-
-    abs_paths = list(map(realpath, paths))
-    for pp in abs_paths:
-        if not pexists(pp):
-            raise IOError("One of {} paths specified does not exist:\n {}".format(path_type, pp))
-
-    return abs_paths
 
 
 def organize_inputs(user_args):
@@ -522,359 +492,6 @@ def parse_args():
            grid_search_level, classifier, feat_select_method
 
 
-def save_options(options_to_save, out_dir_in):
-    "Helper to save chosen options"
-
-    sample_ids, classes, out_dir, user_feature_paths, user_feature_type, fs_subject_dir, \
-        train_perc, num_rep_cv, positive_class, subgroups, feature_selection_size, num_procs, \
-        grid_search_level, classifier_name, feat_select_method = options_to_save
-
-    user_options = {
-        'sample_ids'            : sample_ids,
-        'classes'               : classes,
-        'classifier_name'       : classifier_name,
-        'feat_select_method'    : feat_select_method,
-        'gs_level'              : grid_search_level,
-        'feature_selection_size': feature_selection_size,
-        'num_procs'             : num_procs,
-        'num_rep_cv'            : num_rep_cv,
-        'positive_class'        : positive_class,
-        'sub_groups'            : subgroups,
-        'train_perc'            : train_perc,
-        'fs_subject_dir'        : fs_subject_dir,
-        'user_feature_type'     : user_feature_type,
-        'user_feature_paths'    : user_feature_paths,
-        'out_dir'               : out_dir,}
-
-    try:
-        with open(pjoin(out_dir_in, cfg.file_name_options), 'wb') as opt_file:
-            pickle.dump(user_options, opt_file)
-    except:
-        raise IOError('Unable to save the options to\n {}'.format(out_dir_in))
-
-    return
-
-
-def load_options(out_dir):
-    "Helper to load the saved options"
-
-    try:
-        with open(pjoin(out_dir, cfg.file_name_options), 'rb') as opt_file:
-            user_options = pickle.load(opt_file)
-    except:
-        raise IOError('Unable to load the options from\n {}'.format(out_dir))
-
-    return user_options
-
-
-def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
-    "Ensures num_procs is finite and <= available cpu count."
-
-    num_procs  = int(requested_num_procs)
-    avail_cpu_count = int(cpu_count())
-
-    def get_avail_slot_count(avail_cpu_count=avail_cpu_count):
-        "Method to query HPC-specific number of slots available."
-
-        from os import getenv
-
-        hpc_num_procs_spec = [('SGE',   'JOB_ID',      'NSLOTS',        'slots'),
-                              ('SLURM', 'SLURM_JOBID', 'SLURM_NPROCS',  'processors'),
-                              ('PBS',   'PBS_JOBID',   'PBS_NUM_PPN',   'processors per node')]
-
-        for hpc_env, id_jobid, var_slot_count, var_descr in hpc_num_procs_spec:
-            if getenv(id_jobid):
-                avail_cpu_count = int(getenv(var_slot_count, cpu_count()))
-                print('{} recognized, job set up with {} {}.'.format(hpc_env, avail_cpu_count, var_descr))
-
-        return avail_cpu_count
-
-
-    avail_cpu_count = get_avail_slot_count()
-
-    if num_procs < 1 or not np.isfinite(num_procs) or num_procs is None:
-        num_procs = avail_cpu_count
-        print('Invalid value for num_procs.')
-
-    if num_procs > avail_cpu_count:
-        print('# CPUs requested higher than available {}'.format(avail_cpu_count))
-        num_procs = avail_cpu_count
-
-    sys.stdout.flush()
-
-    return num_procs
-
-
-def validate_feature_selection_size(feature_select_method, dim_in_data=None):
-    """
-    Ensures method chosen for the type of computation for the size of reduced dimensionality.
-
-    Parameters
-    ----------
-    feature_select_method
-    dim_in_data
-
-    Returns
-    -------
-
-    """
-
-    if feature_select_method.lower() in cfg.feature_selection_size_methods:
-        num_select = feature_select_method
-    elif feature_select_method.isdigit():
-        num_select = np.int64(feature_select_method)
-        if not 0 < num_select < np.Inf:
-            raise UnboundLocalError('feature selection size out of bounds.\n'
-                                    'Must be > 0 and < {}'.format(np.Inf))
-    else:
-        raise ValueError('Invalid choise - Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
-
-    return num_select
-
-
-def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
-    "Returns sample IDs and their classes from a given pyradigm"
-
-    meta_data_format = meta_data_format.lower()
-    if meta_data_format in ['pyradigm', 'mldataset']:
-        dataset = MLDataset(filepath=realpath(meta_data_supplied))
-    elif meta_data_format in ['arff', 'weka']:
-        dataset = MLDataset(arff_path=realpath(meta_data_supplied))
-    else:
-        raise NotImplementedError('Meta data format {} not implemented. '
-                                  'Only pyradigm and ARFF are supported.'.format(meta_data_format))
-
-    return dataset.sample_ids, dataset.classes
-
-
-def get_metadata(path):
-    """
-    Populates the dataset dictionary with subject ids and classes
-
-    Currently supports the following per line: subjectid,class
-    Future plans to include demographics data: subjectid,class,age,sex,education
-
-    Returns
-    -------
-    sample_ids : list of str
-        list of strings identifying the sample ids
-    classes : dict
-        dict of class labels for each id in the sample_ids
-
-    """
-
-    meta = np.genfromtxt(path, dtype=str, delimiter=cfg.DELIMITER)
-
-    sample_ids = list(meta[:, 0])
-    # checking for duplicates
-    if len(set(sample_ids)) < len(sample_ids):
-        duplicates = [sample for sample, count in Counter(sample_ids).items() if count > 1]
-        raise ValueError('Duplicate sample ids found!\n{}\nRemove duplicates and rerun.'.format(duplicates))
-
-    classes = dict(zip(sample_ids, meta[:, 1]))
-
-    return sample_ids, classes
-
-
-def get_dir_of_dirs(featdir, subjid):
-    """
-    Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a
-    separate folder for each subject with a file called features.txt with one number per line.
-
-    Parameters
-    ----------
-    featdir : str
-        Path to in the input directory
-    subjid : str
-        Subject id (name of the subfolder in the featdir identifying the subject)
-
-    Returns
-    -------
-    data : ndarray
-        vector of features for the given subject
-    feat_names : list of str
-        names of each feature
-        Currently None.
-    """
-
-    feat_names = None
-    featfile = pjoin(featdir, subjid, 'features.txt')
-
-    try:
-        data = np.genfromtxt(featfile)
-    except:
-        raise IOError('Unable to load features from \n{}'.format(featfile))
-
-    # the following ensures an array is returned even when data is a single scalar,
-    # for which len() is not defined (which is needed for pyradigm to find dimensionality
-    # order='F' (column-major) is chosen to as input is expected to be in a single column
-    data = data.flatten(order='F')
-
-    return data, feat_names
-
-
-def get_data_matrix(featpath):
-    "Returns ndarray from data matrix stored in a file"
-
-    file_ext = os.path.splitext(featpath)[1].lower()
-    try:
-        if file_ext in ['.npy', '.numpy']:
-            matrix = np.load(featpath)
-        elif file_ext in ['.csv', '.txt']:
-            matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
-        else:
-            raise ValueError(
-                'Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
-    except IOError:
-        raise IOError('Unable to load the data matrix from disk.')
-    except:
-        raise
-
-    return matrix
-
-
-def get_pyradigm(feat_path):
-    "Do-nothing reader of pyradigm."
-
-    return feat_path
-
-
-def get_arff(feat_path):
-    "Do-nothing reader for ARFF format."
-
-    return feat_path
-
-
-def get_features(subjects, classes, featdir, outdir, outname, get_method=None, feature_type='dir_of_dris'):
-    """
-    Populates the pyradigm data structure with features from a given method.
-
-    Parameters
-    ----------
-    subjects : list or ndarray
-        List of subject IDs
-    classes : dict
-        dict of class labels keyed in by subject id
-    featdir : str
-        Path to input directory to read the features from
-    outdir : str
-        Path to output directory to save the gathered features to.
-    outname : str
-        Name of the feature set
-    get_method : callable
-        Callable that takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
-        with an optional array of names for each feature.
-    feature_type : str
-        Identifier of data organization for features.
-
-    Returns
-    -------
-    saved_path : str
-        Path where the features have been saved to as an MLDataset
-
-    """
-
-    if not callable(get_method):
-        raise ValueError("Supplied get_method is not callable! "
-                         "It must take in a path and return a vectorized feature set and labels.")
-
-    # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
-    class_set = set(classes.values())
-    class_labels = dict()
-    for idx, cls in enumerate(class_set):
-        class_labels[cls] = idx
-
-    ids_excluded = list()
-
-    if feature_type == 'data_matrix':
-        data_matrix = get_data_matrix(featdir)
-
-    ds = MLDataset()
-    for subjid in subjects:
-        try:
-            if feature_type == 'data_matrix':
-                data = data_matrix[subjects.index(subjid), :]
-                feat_names = None
-            else:
-                data, feat_names = get_method(featdir, subjid)
-
-            ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
-        except:
-            ids_excluded.append(subjid)
-            traceback.print_exc()
-            warnings.warn("Features for {} via {} method could not be read or added. "
-                          "Excluding it.".format(subjid, get_method.__name__))
-
-    # warning for if failed to extract features even for one subject
-    alert_failed_feature_extraction(len(ids_excluded), ds.num_samples, len(subjects))
-
-    # save the dataset to disk to enable passing on multiple dataset(s)
-    saved_path = realpath(pjoin(outdir, outname))
-    try:
-        ds.save(saved_path)
-    except IOError as ioe:
-        print('Unable to save {} features to disk in folder:\n{}'.format(outname, outdir))
-        raise ioe
-
-    return saved_path
-
-
-def alert_failed_feature_extraction(num_excluded, num_read, total_num):
-    "Alerts user of failed feature extraction and get permission to proceed."
-
-    allowed_to_proceed = True
-    if num_excluded > 0:
-        warnings.warn('Features for {} / {} subjects could not be read. '.format(num_excluded, total_num))
-        user_confirmation = input("Would you like to proceed?  y / [N] : ")
-        if user_confirmation.lower() not in ['y', 'yes', 'ye']:
-            print('Stopping. \n'
-                  'Rerun after completing the feature extraction for all subjects '
-                  'or exclude failed subjects..')
-            allowed_to_proceed = False  # unnecessary
-            sys.exit(1)
-        print(' Proceeding with only {} subjects.'.format(num_read))
-
-    return allowed_to_proceed
-
-
-def saved_dataset_matches(dataset_spec, subjects, classes):
-    """
-    Checks if the dataset on disk contains requested samples with the same classes
-
-    Returns True only if the path to dataset exists, is not empy,
-    contains the same number of samples, same sample ids and classes as in meta data!
-
-    Parameters
-    ----------
-    dataset_spec : MLDataset or str
-        dataset object, or path to one.
-    subjects : list
-        sample ids
-    classes : dict
-        class ids keyed in by sample ids
-
-    Returns
-    -------
-    bool
-
-    """
-
-    if isinstance(dataset_spec, str):
-        if (not pexists(dataset_spec)) or (os.path.getsize(dataset_spec) <= 0):
-            return False
-        else:
-            ds = MLDataset(dataset_spec)
-    elif isinstance(dataset_spec, MLDataset):
-        ds = dataset_spec
-    else:
-        raise ValueError('Input must be a path or MLDataset.')
-
-    if set(ds.class_set) != set(classes.values()) or set(ds.sample_ids) != set(subjects):
-        return False
-    else:
-        return True
-
-
 def make_visualizations(results_file_path, outdir):
     """
     Produces the performance visualizations/comparisons from the cross-validation results.
@@ -937,139 +554,6 @@ def make_visualizations(results_file_path, outdir):
     return
 
 
-def export_results_from_disk(results_file_path, out_dir):
-    """
-    Exports the results to simpler CSV format for use in other packages!
-
-    Parameters
-    ----------
-    results_file_path : str
-        Path to a pickle file containing all the relevant results
-
-    out_dir : str
-        Path to save the results to
-
-    Returns
-    -------
-    None
-
-    """
-
-    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
-        classifier_name, feat_select_method = rhst.load_results(results_file_path)
-
-    locals_var_dict = locals()
-    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
-    export_results(dict_to_save, out_dir)
-
-    return
-
-
-def export_results(dict_to_save, out_dir):
-    """
-    Exports the results to simpler CSV format for use in other packages!
-
-    Parameters
-    ----------
-    dict_to_save : dict
-        Containing all the relevant results
-
-    out_dir : str
-        Path to save the results to.
-
-    Returns
-    -------
-    None
-
-    """
-
-    confusion_matrix        = dict_to_save['confusion_matrix']
-    accuracy_balanced       = dict_to_save['accuracy_balanced']
-    method_names            = dict_to_save['method_names']
-    feature_importances_rf  = dict_to_save['feature_importances_rf']
-    feature_names           = dict_to_save['feature_names']
-    num_times_misclfd       = dict_to_save['num_times_misclfd']
-    num_times_tested        = dict_to_save['num_times_tested']
-
-    num_rep_cv   = confusion_matrix.shape[0]
-    num_datasets = confusion_matrix.shape[3]
-    num_classes  = confusion_matrix.shape[2]
-
-    # separating CSVs from the PDFs
-    exp_dir = pjoin(out_dir, cfg.EXPORT_DIR_NAME)
-    if not pexists(exp_dir):
-        os.mkdir(exp_dir)
-
-    # TODO think about how to export predictive probability per class per CV rep
-    # pred_prob_per_class
-
-    user_options = load_options(out_dir)
-    print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'.format(msg1=msg1, msg2=msg2))
-
-    print('')
-    try:
-        # accuracy
-        balacc_path = pjoin(exp_dir, 'balanced_accuracy.csv')
-        np.savetxt(balacc_path, accuracy_balanced,
-                   delimiter=cfg.DELIMITER,
-                   fmt=cfg.EXPORT_FORMAT,
-                   header=','.join(method_names))
-        print_aligned_msg('accuracy distribution', 'Done.')
-
-        # conf mat
-        cfmat_reshaped = np.reshape(confusion_matrix, [num_classes * num_classes, num_rep_cv, num_datasets])
-        for mm in range(num_datasets):
-            confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
-            np.savetxt(confmat_path,
-                       cfmat_reshaped[:, :, mm].T,  # NOTICE the transpose
-                       delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
-                       comments='shape of confusion matrix: num_repetitions x num_classes^2')
-        print_aligned_msg('confusion matrices', 'Done.')
-
-        # misclassfiication rates
-        avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
-        num_datasets = misclf_rate.shape[0]
-        for mm in range(num_datasets):
-            cmp_misclf_path = pjoin(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
-            np.savetxt(cmp_misclf_path,
-                       misclf_rate[mm, :],
-                       fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
-        print_aligned_msg('misclassfiication rates', 'Done.')
-
-        # feature importance
-        if user_options['classifier_name'].lower() in cfg.clfs_with_feature_importance:
-            for mm in range(num_datasets):
-                featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
-                np.savetxt(featimp_path,
-                           feature_importances_rf[mm],
-                           fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
-                           header=','.join(feature_names[mm]))
-            print_aligned_msg('feature importance values', 'Done.')
-
-        else:
-            print_aligned_msg('feature importance values', 'Skipped.')
-            print('\tCurrent predictive model does not provide them.')
-
-        # subject-wise misclf frequencies
-        perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
-        for mm in range(num_datasets):
-            subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
-            # TODO there must be a more elegant way to write dict to CSV
-            with open(subwise_misclf_path, 'w') as smf:
-                for sid, val in perc_misclsfd[mm].items():
-                    smf.write('{}{}{}\n'.format(sid, cfg.DELIMITER, val))
-        print_aligned_msg('subject-wise misclf frequencies', 'Done.')
-
-    except:
-        traceback.print_exc()
-        raise IOError('Unable to export the results to CSV files.')
-
-    return
-
-
 def validate_class_set(classes, subgroups, positive_class=None):
     "Ensures class names are valid and sub-groups exist."
 
@@ -1120,14 +604,6 @@ def validate_class_set(classes, subgroups, positive_class=None):
             print('Positive class inferred for AUC calculation: {}'.format(positive_class))
 
     return class_set, sub_group_list, positive_class
-
-
-def make_dataset_filename(method_name):
-    "File name constructor."
-
-    file_name = 'consolidated_{}_{}.MLDataset.pkl'.format(method_name, make_time_stamp())
-
-    return file_name
 
 
 def import_datasets(method_list, out_dir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
@@ -1231,23 +707,6 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
 
     return method_names, dataset_paths_file
 
-
-def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
-    "Function to produce a uniq, and not a long combined name. Recursive"
-
-    re_delimiters_word = '_|; |, |\*|\n'
-    combined_name = '_'.join(method_names)
-    # depending on number and lengths of method_names, this can get very long
-    if len(combined_name) > max_len:
-        first_letters = list()
-        for mname in method_names:
-            first_letters.append(''.join([word[:num_char_each_word] for word in re.split(re_delimiters_word, mname)]))
-        combined_name = '_'.join(first_letters)
-
-        if len(combined_name) > max_len:
-            combined_name = uniq_combined_name(first_letters)
-
-    return combined_name
 
 
 def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_of_dirs'):
