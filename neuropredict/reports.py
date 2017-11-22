@@ -10,7 +10,7 @@ from neuropredict import config_neuropredict as cfg
 from neuropredict import visualize, rhst
 from neuropredict.utils import load_options
 
-def export_results(dict_to_save, out_dir):
+def export_results(dict_to_save, out_dir, options_path):
     """
     Exports the results to simpler CSV format for use in other packages!
 
@@ -48,7 +48,7 @@ def export_results(dict_to_save, out_dir):
     # TODO think about how to export predictive probability per class per CV rep
     # pred_prob_per_class
 
-    user_options = load_options(out_dir)
+    user_options = load_options(out_dir, options_path)
     print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'.format(msg1=msg1, msg2=msg2))
 
     print('')
@@ -151,7 +151,7 @@ def report_best_params(best_params, method_names, out_dir):
     return
 
 
-def export_results_from_disk(results_file_path, out_dir):
+def export_results_from_disk(results_file_path, out_dir, options_path):
     """
     Exports the results to simpler CSV format for use in other packages!
 
@@ -177,6 +177,6 @@ def export_results_from_disk(results_file_path, out_dir):
 
     locals_var_dict = locals()
     dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
-    export_results(dict_to_save, out_dir)
+    export_results(dict_to_save, out_dir, options_path)
 
     return

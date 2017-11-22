@@ -241,19 +241,27 @@ def save_options(options_to_save, out_dir_in):
         'out_dir'               : out_dir,}
 
     try:
-        with open(pjoin(out_dir_in, cfg.file_name_options), 'wb') as opt_file:
+        options_path = pjoin(out_dir_in, cfg.file_name_options)
+        with open(options_path, 'wb') as opt_file:
             pickle.dump(user_options, opt_file)
     except:
         raise IOError('Unable to save the options to\n {}'.format(out_dir_in))
 
-    return
+    return options_path
 
 
-def load_options(out_dir):
+def load_options(out_dir, options_path=None):
     "Helper to load the saved options"
 
+
+    if options_path is None:
+        options_path = pjoin(out_dir, cfg.file_name_options)
+
+    if not pexists(options_path):
+        raise ValueError('Invalid path to options file provided.')
+
     try:
-        with open(pjoin(out_dir, cfg.file_name_options), 'rb') as opt_file:
+        with open(options_path, 'rb') as opt_file:
             user_options = pickle.load(opt_file)
     except:
         raise IOError('Unable to load the options from\n {}'.format(out_dir))

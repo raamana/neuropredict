@@ -482,9 +482,9 @@ def parse_args():
     options_to_save = [sample_ids, classes, out_dir, user_feature_paths, user_feature_type, fs_subject_dir,
                        train_perc, num_rep_cv, positive_class, subgroups, feature_selection_size, num_procs,
                        grid_search_level, classifier, feat_select_method]
-    save_options(options_to_save, out_dir)
+    options_path = save_options(options_to_save, out_dir)
 
-    return sample_ids, classes, out_dir, \
+    return sample_ids, classes, out_dir, options_path, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
@@ -492,7 +492,7 @@ def parse_args():
            grid_search_level, classifier, feat_select_method
 
 
-def make_visualizations(results_file_path, outdir):
+def make_visualizations(results_file_path, out_dir, options_path):
     """
     Produces the performance visualizations/comparisons from the cross-validation results.
 
@@ -512,7 +512,7 @@ def make_visualizations(results_file_path, outdir):
     confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class, \
     classifier_name, feat_select_method = rhst.load_results(results_file_path)
 
-    user_options = load_options(outdir)
+    user_options = load_options(out_dir, options_path)
 
     if not pexists(outdir):
         try:
@@ -762,6 +762,7 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
 
 
 def prepare_and_run(subjects, classes, out_dir,
+def prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size, num_procs,
@@ -782,9 +783,13 @@ def prepare_and_run(subjects, classes, out_dir,
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
                                      grid_search_level=grid_search_level,
                                      classifier_name=classifier, feat_select_method=feat_select_method)
+                                     classifier_name=classifier, feat_select_method=feat_select_method,
+                                     options_path=options_path)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         make_visualizations(results_file_path, out_dir)
+        make_visualizations(results_file_path, out_dir_sg, options_path)
+        print('\n')
 
     return
 
@@ -795,12 +800,12 @@ def cli():
 
     """
 
-    subjects, classes, out_dir, user_feature_paths, user_feature_type, \
+    subjects, classes, out_dir, options_path, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
         feature_selection_size, num_procs, grid_search_level, classifier, feat_select_method = parse_args()
 
     print('Running neuropredict {}'.format(__version__))
-    prepare_and_run(subjects, classes, out_dir,
+    prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size, num_procs,

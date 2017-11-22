@@ -238,7 +238,8 @@ def run(dataset_path_file, method_names, out_results_dir,
         num_procs=4,
         grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
         classifier_name=cfg.default_classifier,
-        feat_select_method=cfg.default_feat_select_method):
+        feat_select_method=cfg.default_feat_select_method,
+        options_path=None):
     """
 
     Parameters
@@ -280,6 +281,9 @@ def run(dataset_path_file, method_names, out_results_dir,
         If 'none', no grid search will be performed, choosing parameters based on 'folk wisdom'.
         If 'light', grid search resolution will be reduced to speed up optimization.
         If 'exhaustive', most values for most parameters will be user for optimization.
+
+    options_path : str
+        Path to a pickle file which contains the all user chosen options.
 
     Returns
     -------
@@ -343,7 +347,7 @@ def run(dataset_path_file, method_names, out_results_dir,
     report_best_params(best_params, method_names, out_results_dir)
 
     # exporting the results right away, without waiting for figures
-    export_results(dict_to_save, out_results_dir)
+    export_results(dict_to_save, out_results_dir, options_path)
 
     summarize_perf(accuracy_balanced, auc_weighted, method_names, num_classes, num_datasets)
 
