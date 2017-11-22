@@ -39,7 +39,7 @@ if version_info.major > 2:
     from neuropredict.freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
     from neuropredict.io import get_metadata, get_features, get_metadata_in_pyradigm, \
         get_data_matrix, get_dir_of_dirs, get_pyradigm, get_arff, saved_dataset_matches
-    from neuropredict.utils import check_paths, uniq_combined_name, check_num_procs, \
+    from neuropredict.utils import check_paths, uniq_combined_name, check_num_procs, sub_group_identifier, \
         save_options, load_options, validate_feature_selection_size, make_dataset_filename, not_unspecified
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
@@ -288,7 +288,7 @@ def get_parser():
                         action="store", default=cfg.default_num_features_to_select,
                         help=help_text_feature_selection)
 
-    cv_args_group.add_argument("-s", "--sub_groups", action="store", dest="sub_groups",
+    cv_args_group.add_argument("-sg", "--sub_groups", action="store", dest="sub_groups",
                         nargs="*",
                         default="all",
                         help=help_text_sub_groups)
@@ -557,7 +557,7 @@ def make_visualizations(results_file_path, out_dir, options_path):
 def validate_class_set(classes, subgroups, positive_class=None):
     "Ensures class names are valid and sub-groups exist."
 
-    class_set = set(classes.values())
+    class_set = list(set(classes.values()))
 
     sub_group_list = list()
     if subgroups != 'all':
@@ -777,17 +777,16 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
     # iterating through the given set of subgroups
     for sub_group in sub_group_list:
         print('{}\nProcessing subgroup : {}\n{}'.format('-'*80, sub_group, '-'*80))
-        results_file_path = rhst.run(dataset_paths_file, method_names, out_dir,
+        out_dir_sg = pjoin(out_dir, sub_group_identifier(sub_group))
+        results_file_path = rhst.run(dataset_paths_file, method_names, out_dir_sg,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
                                      positive_class=positive_class, sub_group=sub_group,
                                      feat_sel_size=feature_selection_size, num_procs=num_procs,
                                      grid_search_level=grid_search_level,
-                                     classifier_name=classifier, feat_select_method=feat_select_method)
                                      classifier_name=classifier, feat_select_method=feat_select_method,
                                      options_path=options_path)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
-        make_visualizations(results_file_path, out_dir)
         make_visualizations(results_file_path, out_dir_sg, options_path)
         print('\n')
 

@@ -9,6 +9,8 @@ from os.path import join as pjoin, exists as pexists, realpath
 from multiprocessing import cpu_count
 from time import localtime, strftime
 
+__re_delimiters_word = '_|:|; |, |\*|\n'
+
 def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc,
                       sub_groups, num_procs, grid_search_level, classifier, feat_select_method):
     """Validates inputs and returns paths to feature sets to load"""
@@ -310,19 +312,28 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
 def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     "Function to produce a uniq, and not a long combined name. Recursive"
 
-    re_delimiters_word = '_|; |, |\*|\n'
     combined_name = '_'.join(method_names)
     # depending on number and lengths of method_names, this can get very long
     if len(combined_name) > max_len:
         first_letters = list()
         for mname in method_names:
-            first_letters.append(''.join([word[:num_char_each_word] for word in re.split(re_delimiters_word, mname)]))
+            first_letters.append(''.join([word[:num_char_each_word] for word in re.split(__re_delimiters_word, mname)]))
         combined_name = '_'.join(first_letters)
 
         if len(combined_name) > max_len:
             combined_name = uniq_combined_name(first_letters)
 
     return combined_name
+
+
+def sub_group_identifier(group_names):
+    "Constructs clean identifier to refer to a group of classes. Names will be sorted to allow for reproducibility."
+
+    group_names.sort()
+    words = [ word for group in group_names for word in re.split(__re_delimiters_word, group) if word ]
+    identifier = '_'.join(words)
+
+    return identifier
 
 
 def make_dataset_filename(method_name):
