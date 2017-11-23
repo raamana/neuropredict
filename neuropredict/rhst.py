@@ -80,7 +80,6 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     train_class_sizes = list(train_fs.class_sizes.values())
 
-    # TODO expose these options to user at cli
     # TODO look for ways to avoid building this every iter and every dataset.
     pipeline, param_grid = get_pipeline(train_class_sizes,
                                         feat_sel_size,
@@ -545,8 +544,6 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
         print('balanced accuracy: {:.4f} '.format(accuracy_balanced[dd]), end='')
 
         if num_classes == 2:
-            # TODO FIX auc calculation flipped
-            # TODO store fpr and tpr per trial, and provide the user to option to vizualize the average if they wish
             auc_weighted[dd] = roc_auc_score(true_test_labels, pred_prob_per_class[dd, :, pos_class_index],
                                              average='weighted')
             print('\t weighted AUC: {:.4f}'.format(auc_weighted[dd]), end='')

@@ -501,7 +501,7 @@ def make_visualizations(results_file_path, out_dir, options_path):
     results_file_path : str
         Path to file containing results produced by `rhst`
 
-    outdir : str
+    out_dir : str
         Path to a folder to store results.
 
     """
@@ -514,22 +514,22 @@ def make_visualizations(results_file_path, out_dir, options_path):
 
     user_options = load_options(out_dir, options_path)
 
-    if not pexists(outdir):
+    if not pexists(out_dir):
         try:
-            os.mkdir(outdir)
+            os.mkdir(out_dir)
         except:
             raise IOError('Can not create output folder.')
 
     try:
 
-        balacc_fig_path = pjoin(outdir, 'balanced_accuracy')
+        balacc_fig_path = pjoin(out_dir, 'balanced_accuracy')
         visualize.metric_distribution(accuracy_balanced, method_names, balacc_fig_path,
                                       class_sizes, num_classes, "Balanced Accuracy")
 
-        confmat_fig_path = pjoin(outdir, 'confusion_matrix')
+        confmat_fig_path = pjoin(out_dir, 'confusion_matrix')
         visualize.confusion_matrices(confusion_matrix, class_order, method_names, confmat_fig_path)
 
-        cmp_misclf_fig_path = pjoin(outdir, 'compare_misclf_rates')
+        cmp_misclf_fig_path = pjoin(out_dir, 'compare_misclf_rates')
         if num_classes > 2:
             visualize.compare_misclf_pairwise(confusion_matrix, class_order, method_names, cmp_misclf_fig_path)
         elif num_classes == 2:
@@ -537,12 +537,12 @@ def make_visualizations(results_file_path, out_dir, options_path):
                                                                   cmp_misclf_fig_path)
 
         if user_options['classifier_name'].lower() in cfg.clfs_with_feature_importance:
-            featimp_fig_path = pjoin(outdir, 'feature_importance')
+            featimp_fig_path = pjoin(out_dir, 'feature_importance')
             visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
         else:
             print('\nCurrent predictive model does not provide feature importance values. Skipping them.')
 
-        misclf_out_path = pjoin(outdir, 'misclassified_subjects')
+        misclf_out_path = pjoin(out_dir, 'misclassified_subjects')
         visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_names, misclf_out_path)
     except:
         traceback.print_exc()
@@ -761,7 +761,6 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
     return feature_dir, method_list
 
 
-def prepare_and_run(subjects, classes, out_dir,
 def prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
