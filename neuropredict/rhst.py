@@ -24,7 +24,8 @@ if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
     from neuropredict.algorithms import get_pipeline, get_feature_importance
     from neuropredict.reports import report_best_params, export_results
-    from neuropredict.utils import check_feature_sets_are_comparable, check_params_rhst, balanced_accuracy
+    from neuropredict.utils import check_feature_sets_are_comparable, check_params_rhst, balanced_accuracy, \
+        load_options, sub_group_identifier
     from neuropredict.io import load_pyradigms
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
@@ -197,6 +198,24 @@ def save_results(out_dir, dict_of_objects_to_save):
         cleanup(out_dir)
 
     return out_results_path
+
+
+def load_results_from_folder(results_folder):
+    """
+
+    Given a base output folder, possibly containing results for multiple sub-groups,
+        returns a dictionary of results, keyed in by sub group identifier.
+
+    """
+
+    results = dict()
+    options = load_options(results_folder)
+    for sg  in options['sub_groups']:
+        sg_id = sub_group_identifier(sg)
+        results_file_path = pjoin(results_folder, sg_id, cfg.file_name_results)
+        results[sg_id] = load_results(results_file_path)
+
+    return results
 
 
 def load_results(results_file_path):
