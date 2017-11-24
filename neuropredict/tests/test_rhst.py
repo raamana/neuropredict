@@ -122,14 +122,9 @@ def test_chance_clf_binary_svm():
                                 train_perc, num_repetitions, num_procs, gs_level, out_dir, classifier, fs_method))
     cli()
 
-    out_results_path = pjoin(out_dir, cfg.file_name_results)
-    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_params, feature_importances_rf, feature_names, \
-        num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_set, class_sizes, \
-        accuracy_balanced, auc_weighted, positive_class, \
-        classifier_name, feat_select_method= rhst.load_results(out_results_path)
+    cv_results = rhst.load_results_from_folder(out_dir)
+    for sg, result in cv_results.items():
+        raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'])
 
     raise_if_median_differs_from_chance(accuracy_balanced, class_sizes)
 
