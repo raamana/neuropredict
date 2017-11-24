@@ -68,8 +68,8 @@ def make_random_MLdataset(max_num_classes = 20,
     return ds
 
 
-max_num_classes = 3
-max_class_size = 40
+max_num_classes = 10
+max_class_size = 50
 max_dim = 1000
 num_repetitions =  100
 
@@ -88,6 +88,9 @@ num_procs = 1
 rand_ds = make_random_MLdataset(max_num_classes=max_num_classes, stratified=True,
     max_class_size = max_class_size, max_dim = max_dim)
 
+out_path_multiclass = os.path.join(out_dir, 'multiclass_random_features.pkl')
+rand_ds.save(out_path_multiclass)
+
 out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
 rand_two_class = rand_ds.get_class(rand_ds.class_set[0:3])
 rand_two_class.description = 'random_1'
@@ -105,13 +108,14 @@ with open(ds_path_list, 'w') as lf:
 method_names = ['random1', 'another']
 
 def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes):
+    "Check if the performance is close to chance. Generic method that works for multi-class too!"
 
     chance_acc = chance_accuracy(class_sizes)
     median_bal_acc = np.median(accuracy_balanced, axis=0)
     for ma  in median_bal_acc:
+        print('Chance accuracy expected: {} -- Estimated via CV:  {}'.format(median_bal_acc, chance_acc))
         if abs(ma - chance_acc) > eps_chance_acc:
-            raise ValueError('Chance accuracy estimated via repeated holdout CV {} '
-                             'substantially differs from that based on class sizes : {}'.format(median_bal_acc, chance_acc))
+            raise ValueError('they substantially differ!')
 
 
 def test_chance_clf_binary_svm():
@@ -126,7 +130,20 @@ def test_chance_clf_binary_svm():
     for sg, result in cv_results.items():
         raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'])
 
-    raise_if_median_differs_from_chance(accuracy_balanced, class_sizes)
+
+def test_chance_multiclass():
+
+    global ds_path_list, method_names, out_dir, num_repetitions, gs_level, train_perc, num_procs
+
+    clf = 'randomforestclassifier'
+    fs_method = 'variancethreshold'
+    sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path_multiclass,
+                                train_perc, num_repetitions, num_procs, gs_level, out_dir, clf, fs_method))
+    cli()
+
+    cv_results = rhst.load_results_from_folder(out_dir)
+    for sg, result in cv_results.items():
+        raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'])
 
 
 def test_each_combination_works():
@@ -181,8 +198,8 @@ def test_arff():
 # run_workflow.make_visualizations(res_path, out_dir)
 # test_chance_clf_default()
 # test_chance_clf_binary_extratrees()
-test_chance_clf_binary_svm()
-
+# test_chance_clf_binary_svm()
+test_chance_multiclass()
 # test_versioning()
 # test_vis()
 
