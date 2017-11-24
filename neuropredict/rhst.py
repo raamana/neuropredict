@@ -210,9 +210,11 @@ def load_results_from_folder(results_folder):
 
     results = dict()
     options = load_options(results_folder)
-    for sg  in options['sub_groups']:
+    for sg in options['sub_groups']:
         sg_id = sub_group_identifier(sg)
         results_file_path = pjoin(results_folder, sg_id, cfg.file_name_results)
+        if not pexists(results_file_path) or os.path.getsize(results_file_path) <= 0:
+            raise IOError('Results file for sub group {} does not exist or is empty!'.format(sg_id))
         results[sg_id] = load_results(results_file_path)
 
     return results
