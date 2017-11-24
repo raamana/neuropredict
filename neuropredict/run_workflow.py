@@ -277,11 +277,11 @@ def get_parser():
                         help=help_text_positive_class)
 
     cv_args_group.add_argument("-t", "--train_perc", action="store", dest="train_perc",
-                        default=0.5,
+                        default=cfg.default_train_perc,
                         help=help_text_train_perc)
 
     cv_args_group.add_argument("-n", "--num_rep_cv", action="store", dest="num_rep_cv",
-                        default=200,
+                        default=cfg.default_num_repetitions,
                         help=help_text_num_rep_cv)
 
     cv_args_group.add_argument("-k", "--num_features_to_select", dest="num_features_to_select",

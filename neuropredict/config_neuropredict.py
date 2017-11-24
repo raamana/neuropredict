@@ -55,6 +55,10 @@ NUM_PREDICTORS_STEP = 2
 MAX_MIN_LEAFSIZE = 5
 LEAF_SIZE_STEP = 2
 
+# CV
+default_num_repetitions=200
+default_train_perc = 0.5
+
 # model optimization
 INNER_CV_NUM_SPLITS = 10
 INNER_CV_TRAIN_PERC = 0.8
