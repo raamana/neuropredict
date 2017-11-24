@@ -215,9 +215,25 @@ def load_results_from_folder(results_folder):
         results_file_path = pjoin(results_folder, sg_id, cfg.file_name_results)
         if not pexists(results_file_path) or os.path.getsize(results_file_path) <= 0:
             raise IOError('Results file for sub group {} does not exist or is empty!'.format(sg_id))
-        results[sg_id] = load_results(results_file_path)
+        results[sg_id] = load_results_dict(results_file_path)
 
     return results
+
+
+def load_results_dict(results_file_path):
+    "Loads the results serialized by RHsT."
+    # TODO need to standardize what needs to saved/read back
+
+    if not pexists(results_file_path) or os.path.getsize(results_file_path) <= 0:
+        raise IOError("Results file to be loaded doesn't exist, or empty!")
+
+    try:
+        with open(results_file_path, 'rb') as rf:
+            results_dict = pickle.load(rf)
+    except:
+        raise IOError('Error loading the saved results from \n{}'.format(results_file_path))
+
+    return results_dict
 
 
 def load_results(results_file_path):

@@ -506,11 +506,19 @@ def make_visualizations(results_file_path, out_dir, options_path):
 
     """
 
-    dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-    _, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
-    confusion_matrix, class_order, class_sizes, accuracy_balanced, _, positive_class, \
-    classifier_name, feat_select_method = rhst.load_results(results_file_path)
+    results_dict = rhst.load_results_dict(results_file_path)
+
+    # using shorter names for readability
+    accuracy_balanced       = results_dict['accuracy_balanced']
+    method_names            = results_dict['method_names']
+    num_classes             = results_dict['num_classes']
+    class_sizes             = results_dict['class_sizes']
+    confusion_matrix        = results_dict['confusion_matrix']
+    class_order             = results_dict['class_set']
+    feature_importances_rf  = results_dict['feature_importances_rf']
+    feature_names           = results_dict['feature_names']
+    num_times_misclfd       = results_dict['num_times_misclfd']
+    num_times_tested        = results_dict['num_times_tested']
 
     user_options = load_options(out_dir, options_path)
 
