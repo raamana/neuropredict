@@ -15,7 +15,7 @@ from functools import partial
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_auc_score
-from sklearn.model_selection import GridSearchCV, ShuffleSplit
+from sklearn.model_selection import GridSearchCV, ShuffleSplit, RepeatedKFold
 import traceback
 import shutil
 from pyradigm import MLDataset
@@ -157,7 +157,10 @@ def optimize_RF_via_training_oob_score(train_data_mat, train_labels, range_min_l
 def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels, param_grid, train_perc):
     "Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters."
 
+    # TODO perhaps k-fold is a better inner CV, which guarantees full use of training set with fewer repeats?
     inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS, train_size=train_perc, test_size=1.0 - train_perc)
+    # inner_cv = RepeatedKFold(n_splits=cfg.INNER_CV_NUM_FOLDS, n_repeats=cfg.INNER_CV_NUM_REPEATS)
+
     # gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
     #                   n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
 

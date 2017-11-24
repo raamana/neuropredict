@@ -60,6 +60,10 @@ INNER_CV_NUM_SPLITS = 10
 INNER_CV_TRAIN_PERC = 0.8
 INNER_CV_TEST_PERC = 0.2
 
+# when k-fold is chosen to be inner cv
+INNER_CV_NUM_FOLDS = 5
+INNER_CV_NUM_REPEATS = 5
+
 # parallelization is now achieved at the repetitions level.
 DEFAULT_NUM_PROCS = 4
 GRIDSEARCH_PRE_DISPATCH = 1
