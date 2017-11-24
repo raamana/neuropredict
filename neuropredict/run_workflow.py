@@ -522,12 +522,6 @@ def make_visualizations(results_file_path, out_dir, options_path):
 
     user_options = load_options(out_dir, options_path)
 
-    if not pexists(out_dir):
-        try:
-            os.mkdir(out_dir)
-        except:
-            raise IOError('Can not create output folder.')
-
     try:
 
         balacc_fig_path = pjoin(out_dir, 'balanced_accuracy')
