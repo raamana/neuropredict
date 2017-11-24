@@ -143,6 +143,9 @@ def chance_accuracy(class_sizes, method='imbalanced'):
 
     """
 
+    if not isinstance(class_sizes, np.ndarray):
+        class_sizes = np.array(class_sizes)
+
     num_classes = len(class_sizes)
     num_samples = sum(class_sizes)
     # # the following is wrong if imbalance is present
