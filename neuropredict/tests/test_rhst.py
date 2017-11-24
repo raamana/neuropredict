@@ -38,16 +38,19 @@ def make_random_MLdataset(max_num_classes = 20,
                           stratified = True):
     "Generates a random MLDataset for use in testing."
 
+    smallest = 10
+    max_class_size = max(smallest, max_class_size)
+    largest = max(50, max_class_size)
+    largest = max(smallest+3,largest)
+
     num_classes = np.random.randint(2, max_num_classes, 1)
     if type(num_classes) == np.ndarray:
         num_classes = num_classes[0]
     if not stratified:
-        class_sizes = np.random.random_integers(min(50, max_class_size),
-                                                max(50, max_class_size),
+        class_sizes = np.random.random_integers(smallest, largest,
                                                 size=[num_classes, 1])
     else:
-        class_sizes = np.repeat(np.random.randint(min(50, max_class_size),
-                                                  max(50, max_class_size)),
+        class_sizes = np.repeat(np.random.randint(smallest, largest),
                                                   num_classes)
 
     num_features = np.random.randint(min(3, max_dim), max(3, max_dim), 1)[0]
@@ -69,9 +72,9 @@ def make_random_MLdataset(max_num_classes = 20,
 
 
 max_num_classes = 10
-max_class_size = 50
-max_dim = 1000
-num_repetitions =  100
+max_class_size = 40
+max_dim = 100
+num_repetitions = 20
 
 train_perc = 0.5
 red_dim = 'sqrt'
@@ -137,8 +140,10 @@ def test_chance_multiclass():
 
     clf = 'randomforestclassifier'
     fs_method = 'variancethreshold'
+    nrep = 20
+    gsl = 'none'  # to speed up the process
     sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path_multiclass,
-                                train_perc, num_repetitions, num_procs, gs_level, out_dir, clf, fs_method))
+                                train_perc, nrep, num_procs, gsl, out_dir, clf, fs_method))
     cli()
 
     cv_results = rhst.load_results_from_folder(out_dir)
