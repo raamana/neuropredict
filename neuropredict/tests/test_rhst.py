@@ -17,6 +17,7 @@ if __name__ == '__main__' and __package__ is None:
     sys.path.append(parent_dir)
 
 if version_info.major > 2:
+    import neuropredict
     from neuropredict import rhst, cli, config_neuropredict as cfg
     from neuropredict.utils import chance_accuracy
 else:
@@ -75,14 +76,13 @@ max_num_classes = 10
 max_class_size = 40
 max_dim = 100
 num_repetitions = 20
+min_rep_per_class = 10
 
 train_perc = 0.5
 red_dim = 'sqrt'
 classifier = 'svm' # 'extratreesclassifier'
 fs_method = 'variancethreshold' # 'selectkbest_f_classif'
 gs_level = 'none'
-
-eps_chance_acc=0.05
 
 num_procs = 1
 
@@ -110,13 +110,25 @@ with open(ds_path_list, 'w') as lf:
 
 method_names = ['random1', 'another']
 
-def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes):
+# deciding on tolerances for chance accuracy
+total_num_classes = rand_ds.num_classes
+
+eps_chance_acc_binary =0.05
+eps_chance_acc = max(0.02, 0.1 / total_num_classes)
+
+
+def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes,
+                                        eps_chance_acc=None):
     "Check if the performance is close to chance. Generic method that works for multi-class too!"
+
+    if eps_chance_acc is None:
+        total_num_classes = len(class_sizes)
+        eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
     chance_acc = chance_accuracy(class_sizes)
     median_bal_acc = np.median(accuracy_balanced, axis=0)
     for ma  in median_bal_acc:
-        print('Chance accuracy expected: {} -- Estimated via CV:  {}'.format(median_bal_acc, chance_acc))
+        print('Chance accuracy expected: {} -- Estimated via CV:  {}'.format(chance_acc, median_bal_acc))
         if abs(ma - chance_acc) > eps_chance_acc:
             raise ValueError('they substantially differ!')
 
@@ -126,12 +138,15 @@ def test_chance_clf_binary_svm():
     global ds_path_list, method_names, out_dir, num_repetitions, gs_level, train_perc, num_procs
 
     sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path, out_path2,
-                                train_perc, num_repetitions, num_procs, gs_level, out_dir, classifier, fs_method))
+                                train_perc, min_rep_per_class*rand_ds2.num_classes, num_procs, gs_level,
+                                out_dir, classifier, fs_method))
     cli()
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'])
+        raise_if_median_differs_from_chance(result['accuracy_balanced'],
+                                            result['class_sizes'],
+                                            eps_chance_acc_binary)
 
 
 def test_chance_multiclass():
@@ -140,7 +155,7 @@ def test_chance_multiclass():
 
     clf = 'randomforestclassifier'
     fs_method = 'variancethreshold'
-    nrep = 20
+    nrep = total_num_classes*min_rep_per_class
     gsl = 'none'  # to speed up the process
     sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path_multiclass,
                                 train_perc, nrep, num_procs, gsl, out_dir, clf, fs_method))
@@ -148,7 +163,7 @@ def test_chance_multiclass():
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'])
+        raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc)
 
 
 def test_each_combination_works():
