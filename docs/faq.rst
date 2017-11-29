@@ -69,7 +69,10 @@ Frequently Asked Questions
 
 * *Can I compare an arbitrary set of my own custom-designed features?*
 
-  * Yes. The -u option allows you to supply arbitrary set of paths to user's own custom features e.g. ``-u /myproject/awsome-new-idea-v2.0 /project-B/DTI_FA_Method1 /sideproject/resting-dynamic-fc /prevproject/resting-dynamic-fc-competingmethod``
+  * Yes. The -u option allows you to supply arbitrary set of paths to user's own custom features e.g.
+
+    * ``-u /myproject/awsome-new-idea-v2.0 /project-B/DTI_FA_Method1``
+    * ``-u /sideproject/resting-dynamic-fc /prevproject/resting-dynamic-fc-competingmethod``
 
 
 * *Can I combine ``-f`` option with ``-u`` to compare my own features with that of Freesurfer or other supported software?*

@@ -3,7 +3,9 @@ Input formats
 -------------
 
 Currently supported:
+
  * Arbitary/user-defined format (see below)
+ * CSV files (with samples along rows and features along columns)
  * `pyradigm`'s `MLDataset <http://pyradigm.readthedocs.io>`_
  * Weka's `ARFF <https://www.cs.waikato.ac.nz/ml/weka/arff.html>`_
 

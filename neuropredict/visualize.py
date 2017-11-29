@@ -16,6 +16,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg, rhst
+    from neuropredict.utils import chance_accuracy
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -65,7 +66,6 @@ def feature_importance_map(feat_imp,
     num_datasets = len(feat_imp)
 
     if num_datasets > 1:
-        # TODO show no more than 4 subplots per figure.
         fig, ax = plt.subplots(num_datasets, 1,
                                sharex=True,
                                figsize=[9, 12])
@@ -581,14 +581,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     def annnotate_plots(ax_h):
         "Adds axes labels and helpful highlights"
 
-        highlight_thresh50 = 0.5
-        highlight_thresh75 = 0.75
-
         cur_ylim = ax_h.get_ylim()
-        # line50, = ax_h.plot([highlight_thresh50, highlight_thresh50],
-        #                     cur_ylim, 'k', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
-        # line75, = ax_h.plot([highlight_thresh75, highlight_thresh75],
-        #                     cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
         line_thresh, = ax_h.plot([count_thresh, count_thresh],
                             cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
         ax_h.set_ylim(cur_ylim)
@@ -627,7 +620,6 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
             plt.sca(ax_h)
             ax_h.hist(perc_misclsfd[dd].values(), num_bins)
         else:
-            # TODO smoother kde plots?
             ax_h.hist(list(perc_misclsfd[dd].values()), num_bins,
                       histtype = 'stepfilled', alpha = cfg.MISCLF_HIST_ALPHA,
                       label = this_method_label)
@@ -700,7 +692,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
     # add a tick for chance accuracy and/or % of majority class
     # given the classifier trained on stratified set, we must use the balanced version
-    chance_acc = rhst.chance_accuracy(class_sizes, 'balanced')
+    chance_acc = chance_accuracy(class_sizes, 'balanced')
     chance_acc = np.round(chance_acc, cfg.PRECISION_METRICS)
     ytick_loc = np.append(ytick_loc, chance_acc)
 
@@ -731,14 +723,6 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     plt.close()
 
     return
-
-
-def stat_comparison(clf_results):
-    "Non-parametric statistical comparison of different feature sets"
-
-    # TODO later: as the implementation will need significant testing!
-
-    pass
 
 
 if __name__ == '__main__':

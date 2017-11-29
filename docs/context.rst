@@ -10,9 +10,11 @@ Conducting a machine learning study (to assess the predictive utility of differe
 
 And, that's the complex burden neuropredict is designed to eliminate.
 
-All you would need to provide are
- - your features and
- - which samples belong to what classes,
+All you would need to provide are:
+
+ - your features for each sample and
+ - which classes these samples belong to,
+
  and neuropredict
 
  - produces an easy to read report (see below),

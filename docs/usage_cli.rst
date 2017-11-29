@@ -12,7 +12,7 @@ The command line interface for neuropredict is strongly recommended (given its f
 
 Those options are also shown below (may not always show up due to problems with software for auto generation of docs). Check the bottom of this page for examples.
 
-If you don't see the options below, click here :doc:`usage_manual`
+If you don't see the command line options listed below, go to :doc:`usage_manual` page.
 
 .. argparse::
    :module: neuropredict.run_workflow
@@ -21,7 +21,7 @@ If you don't see the options below, click here :doc:`usage_manual`
    :nodefault:
    :nodefaultconst:
 
-If you don't see any command line usage info shown above, click here:
+If you don't see any command line usage info shown above, go to :doc:`usage_manual` page.
 
 A rough example of usage can be:
 

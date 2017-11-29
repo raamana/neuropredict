@@ -4,7 +4,7 @@ Installation
 
 This package could easily be installed via:
 
-``pip install neuropredict``
+``pip install -U neuropredict``
 
 
 Requirements
