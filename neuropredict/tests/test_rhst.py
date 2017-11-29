@@ -99,10 +99,10 @@ rand_two_class = rand_ds.get_class(rand_ds.class_set[0:3])
 rand_two_class.description = 'random_1'
 rand_two_class.save(out_path)
 
-rand_ds2 = rand_ds # make_random_MLdataset(max_num_classes=max_num_classes, stratified=True, max_class_size = max_class_size, max_dim = max_dim)
-rand_ds2.description = 'random_2'
+# making another copy to a different path with different description
+rand_two_class.description = 'random_2'
 out_path2 = os.path.join(out_dir, 'two_classes_random_features_another.pkl')
-rand_ds2.save(out_path2)
+rand_two_class.save(out_path2)
 
 ds_path_list = os.path.join(out_dir, 'same_data_two_classes_list_datasets.txt')
 with open(ds_path_list, 'w') as lf:
@@ -117,8 +117,8 @@ eps_chance_acc_binary =0.05
 eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
 
-def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes,
-                                        eps_chance_acc=None):
+def raise_if_mean_differs_from_chance(accuracy_balanced, class_sizes,
+                                      eps_chance_acc=None):
     "Check if the performance is close to chance. Generic method that works for multi-class too!"
 
     if eps_chance_acc is None:
@@ -126,11 +126,12 @@ def raise_if_median_differs_from_chance(accuracy_balanced, class_sizes,
         eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
     chance_acc = chance_accuracy(class_sizes)
-    median_bal_acc = np.median(accuracy_balanced, axis=0)
-    for ma  in median_bal_acc:
-        print('Chance accuracy expected: {} -- Estimated via CV:  {}'.format(chance_acc, median_bal_acc))
+    # chance calculation expects "average", not median
+    mean_bal_acc = np.mean(accuracy_balanced, axis=0)
+    for ma  in mean_bal_acc:
+        print('Chance accuracy expected: {} -- Estimated via CV:  {}'.format(chance_acc, ma))
         if abs(ma - chance_acc) > eps_chance_acc:
-            raise ValueError('they substantially differ!')
+            raise ValueError('they substantially differ by more than {:.4f}!'.format(eps_chance_acc))
 
 
 def test_chance_clf_binary_svm():
@@ -138,15 +139,15 @@ def test_chance_clf_binary_svm():
     global ds_path_list, method_names, out_dir, num_repetitions, gs_level, train_perc, num_procs
 
     sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path, out_path2,
-                                train_perc, min_rep_per_class*rand_ds2.num_classes, num_procs, gs_level,
+                                train_perc, min_rep_per_class*rand_two_class.num_classes, num_procs, gs_level,
                                 out_dir, classifier, fs_method))
     cli()
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_median_differs_from_chance(result['accuracy_balanced'],
-                                            result['class_sizes'],
-                                            eps_chance_acc_binary)
+        raise_if_mean_differs_from_chance(result['accuracy_balanced'],
+                                          result['class_sizes'],
+                                          eps_chance_acc_binary)
 
 
 def test_chance_multiclass():
@@ -163,7 +164,7 @@ def test_chance_multiclass():
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_median_differs_from_chance(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc)
+        raise_if_mean_differs_from_chance(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc)
 
 
 def test_each_combination_works():
@@ -218,8 +219,8 @@ def test_arff():
 # run_workflow.make_visualizations(res_path, out_dir)
 # test_chance_clf_default()
 # test_chance_clf_binary_extratrees()
-# test_chance_clf_binary_svm()
-test_chance_multiclass()
+test_chance_clf_binary_svm()
+# test_chance_multiclass()
 # test_versioning()
 # test_vis()
 
