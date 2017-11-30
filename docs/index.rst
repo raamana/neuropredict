@@ -24,6 +24,7 @@ Welcome to neuropredict's documentation!
 
    about
    context
+   longterm
    installation
    usage_cli
    features
