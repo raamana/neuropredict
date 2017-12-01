@@ -77,6 +77,10 @@ def feature_importance_map(feat_imp,
     for dd in range(num_datasets):
 
         scaled_imp = feat_imp[dd]
+        # some models do not provide importance values
+        if np.all(np.isnan(scaled_imp.flatten())):
+            print('unusable feature importance values for {} : all NaNs!\n Skipping it.'.format(method_labels[dd]))
+            continue
 
         num_features = feat_imp[dd].shape[1]
         if feature_names is None:

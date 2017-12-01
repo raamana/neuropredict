@@ -492,7 +492,7 @@ def parse_args():
            grid_search_level, classifier, feat_select_method
 
 
-def make_visualizations(results_file_path, out_dir, options_path):
+def make_visualizations(results_file_path, out_dir, options_path=None):
     """
     Produces the performance visualizations/comparisons from the cross-validation results.
 
@@ -520,7 +520,15 @@ def make_visualizations(results_file_path, out_dir, options_path):
     num_times_misclfd       = results_dict['num_times_misclfd']
     num_times_tested        = results_dict['num_times_tested']
 
-    user_options = load_options(out_dir, options_path)
+    feature_importances_available = True
+    if options_path is not None:
+        user_options = load_options(out_dir, options_path)
+        if user_options['classifier_name'].lower() not in cfg.clfs_with_feature_importance:
+            feature_importances_available = False
+    else:
+        # check if the all values are NaN
+        unusable = [ np.all(np.isnan(method_fi.flatten())) for method_fi in feature_importances_rf ]
+        feature_importances_available = not np.all(unusable)
 
     try:
 
@@ -538,7 +546,7 @@ def make_visualizations(results_file_path, out_dir, options_path):
             visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix, class_order, method_names,
                                                                   cmp_misclf_fig_path)
 
-        if user_options['classifier_name'].lower() in cfg.clfs_with_feature_importance:
+        if feature_importances_available:
             featimp_fig_path = pjoin(out_dir, 'feature_importance')
             visualize.feature_importance_map(feature_importances_rf, method_names, featimp_fig_path, feature_names)
         else:
