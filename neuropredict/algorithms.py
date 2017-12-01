@@ -239,6 +239,7 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
 
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
+        #TODO try pruning values based on their processing time/redundancy
         range_penalty = np.power(10.0, range(-3, 6))
         range_kernel = ['linear', 'poly', 'rbf']
         range_degree = [1, 2, 3]

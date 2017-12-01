@@ -42,8 +42,7 @@ def export_results(dict_to_save, out_dir, options_path):
 
     # separating CSVs from the PDFs
     exp_dir = pjoin(out_dir, cfg.EXPORT_DIR_NAME)
-    if not pexists(exp_dir):
-        os.mkdir(exp_dir)
+    os.makedirs(exp_dir, exist_ok=True)
 
     # TODO think about how to export predictive probability per class per CV rep
     # pred_prob_per_class

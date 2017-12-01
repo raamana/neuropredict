@@ -451,11 +451,10 @@ def parse_args():
     else:
         out_dir = pjoin(realpath(os.getcwd()), cfg.output_dir_default)
 
-    if not pexists(out_dir):
-        try:
-            os.mkdir(out_dir)
-        except:
-            raise IOError('Output folder could not be created.')
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+    except:
+        raise IOError('Output folder could not be created.')
 
     train_perc = np.float32(user_args.train_perc)
     if not ( 0.01 <= train_perc <= 0.99):

@@ -25,8 +25,7 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     try:
         out_results_dir = realpath(out_results_dir)
-        if not pexists(out_results_dir):
-            os.mkdir(out_results_dir)
+        os.makedirs(out_results_dir, exist_ok=True)
     except:
         raise IOError('Error in checking or creating output directiory. Ensure write permissions!')
 
