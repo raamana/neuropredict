@@ -4,6 +4,7 @@ from neuropredict import config_neuropredict as cfg
 import sklearn
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import mutual_info_classif, f_classif, SelectKBest, VarianceThreshold
 from sklearn.pipeline import Pipeline
 
@@ -144,6 +145,66 @@ def add_new_params(old_grid, new_grid, old_name, new_name):
         old_grid.update(new_grid)
 
     return
+
+
+def get_DecisionTreeClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+    """
+    Returns the Random Forest classifier and its parameter grid.
+
+    Parameters
+    ----------
+    reduced_dim : int
+        One of the dimensionalities to be tried.
+
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be user for optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
+        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+
+    Returns
+    -------
+
+    """
+
+    grid_search_level = grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
+        splitter_strategies = ['best', 'random']
+        split_criteria = ['gini', 'entropy']
+        range_min_leafsize = [1, 3, 5, 10, 20]
+
+        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
+
+    elif grid_search_level in ['light']:
+        splitter_strategies = ['best', 'random']
+        split_criteria = ['gini', ]
+        range_min_leafsize = [1, 5]
+        range_max_features = ['sqrt', 0.25, reduced_dim]
+
+    elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
+        splitter_strategies = ['best',]
+        split_criteria = ['gini', ]
+        range_min_leafsize = [1, ]
+        range_max_features = [reduced_dim]
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
+
+    # name clf_model chosen to enable generic selection classifier later on
+    # not optimizing over number of features to save time
+    clf_name = 'decision_tree_clf'
+    param_list_values = [('criterion', split_criteria),
+                         ('splitter', splitter_strategies),
+                         ('min_samples_leaf', range_min_leafsize),
+                         ('max_features', range_max_features),
+                         ]
+    param_grid = make_parameter_grid(clf_name, param_list_values)
+
+    dtc = DecisionTreeClassifier(max_features=reduced_dim)
+
+    return dtc, clf_name, param_grid
 
 
 def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
@@ -387,14 +448,17 @@ def get_classifier(classifier_name=cfg.default_classifier,
 
     """
 
-    if classifier_name.lower() in ['randomforestclassifier', 'rfc']:
-        clf, clf_name, param_grid = get_RandomForestClassifier(reduced_dim, grid_search_level)
-    elif classifier_name.lower() in ['extratreesclassifier', 'etc']:
-        clf, clf_name, param_grid = get_ExtraTreesClassifier(reduced_dim, grid_search_level)
-    elif classifier_name.lower() in ['svm', 'supportvectormachine']:
-        clf, clf_name, param_grid = get_svc(reduced_dim, grid_search_level)
-    else:
+    classifier_name = classifier_name.lower()
+    map_to_method = dict(randomforestclassifier=get_RandomForestClassifier,
+                         extratreesclassifier=get_ExtraTreesClassifier,
+                         decisiontreeclassifier=get_DecisionTreeClassifier,
+                         svm=get_svc)
+
+    if classifier_name not in map_to_method:
         raise NotImplementedError('Invalid name or classifier not implemented.')
+
+    clf_builder = map_to_method[classifier_name]
+    clf, clf_name, param_grid = clf_builder(reduced_dim, grid_search_level)
 
     return clf, clf_name, param_grid
 
@@ -536,6 +600,7 @@ def get_feature_importance(clf_name, clf, num_features, index_selected_features,
 
     attr_importance = {'randomforestclassifier': 'feature_importances_',
                        'extratreesclassifier'  : 'feature_importances_',
+                       'decisiontreeclassifier': 'feature_importances_',
                        'svm'                   : 'coef_'}
 
     feat_importance = np.full(num_features, fill_value)

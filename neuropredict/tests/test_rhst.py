@@ -76,7 +76,7 @@ max_num_classes = 10
 max_class_size = 40
 max_dim = 100
 num_repetitions = 20
-min_rep_per_class = 10
+min_rep_per_class = 20
 
 train_perc = 0.5
 red_dim = 'sqrt'
@@ -223,7 +223,5 @@ test_chance_clf_binary_svm()
 # test_chance_multiclass()
 # test_versioning()
 # test_vis()
-
 # etc_debug()
-
 # test_arff()
