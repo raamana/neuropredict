@@ -32,6 +32,7 @@ Welcome to neuropredict's documentation!
    faq
    implementation
    API
+   citation
 
 
 Indices and tables
