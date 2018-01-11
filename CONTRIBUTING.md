@@ -10,7 +10,7 @@ This is a relatively new project (less than an year old) with an exciting roadma
    * write unit tests or property tests to assert its advertised functionality
    * testing delivery/installation system to ensure it works as advertised on several platforms
  * **More documentation**
-   * improve docs on how to use neuropredict 
+   * write examples for each type of usage
    * write more docs on results produced
    * improve docs on how to use the results
    * write docs on how not to use the results
