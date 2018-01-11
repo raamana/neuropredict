@@ -22,7 +22,7 @@ On a more detailed level,
 
 
  - Docs:   http://neuropredict.readthedocs.io 
- - Contributing : http://contribution-guide-org.readthedocs.io 
+ - Contributors welcome [here](CONTRIBUTING.md) with these [guidelines](http://contribution-guide-org.readthedocs.io). Thanks.
 
 
 ## Long term goals
