@@ -12,19 +12,7 @@ import sys
 import textwrap
 import traceback
 import warnings
-
 import matplotlib
-if 'DISPLAY' in os.environ:
-    display = os.environ['DISPLAY']
-    display_name, display_num = display.split(':')
-    display_num = int(float(display_num))
-    if display_num != 0:
-        matplotlib.use('Agg')
-else:
-    # Agg is purely interactive
-    matplotlib.use('Agg')
-    display = None
-
 import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
