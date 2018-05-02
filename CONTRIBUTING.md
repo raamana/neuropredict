@@ -22,6 +22,7 @@ This is a relatively new project (less than an year old) with an exciting roadma
      * interface to run neuropredict over web or on a browser (like a service)
  * **New features**
    * propose interesting and new use cases that neuropredict could support to further multiply its value
+   * integrate Keras to offer support for CNNs and other variants
  * **Better software engineering**
    * building an API-like interface for programmatic access for advanced users
    * improving code base in terms of modularity
