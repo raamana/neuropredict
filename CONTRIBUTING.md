@@ -23,6 +23,7 @@ This is a relatively new project (less than an year old) with an exciting roadma
  * **New features**
    * propose interesting and new use cases that neuropredict could support to further multiply its value
    * integrate Keras to offer support for CNNs and other variants
+   * Also, take a look at [open issues](https://github.com/raamana/neuropredict/issues)
  * **Better software engineering**
    * building an API-like interface for programmatic access for advanced users
    * improving code base in terms of modularity
