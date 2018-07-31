@@ -5,6 +5,7 @@ import re
 import pickle
 from neuropredict import config_neuropredict as cfg
 import numpy as np
+import os.path
 from os.path import join as pjoin, exists as pexists, realpath
 from multiprocessing import cpu_count
 from time import localtime, strftime
