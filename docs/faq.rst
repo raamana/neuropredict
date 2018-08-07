@@ -78,6 +78,6 @@ Frequently Asked Questions
 * *Can I combine ``-f`` option with ``-u`` to compare my own features with that of Freesurfer or other supported software?*
 
   * Absolutely.
-  * While ``-f`` option allows specifying only 1 freesurfer folder, it can be combined with ``-u`` which can take arbitray number of custom features.
+  * While ``-f`` option allows specifying only 1 freesurfer folder, it can be combined with ``-u`` which can take arbitrary number of custom features.
 
 

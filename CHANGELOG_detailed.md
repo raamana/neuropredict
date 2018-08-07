@@ -222,7 +222,7 @@ Changelog
 - Tests succeed in python 2.7/3.6 according to PyCharm - lets see about
   CI. [Pradeep Reddy Raamana]
 - Merge remote-tracking branch 'origin/master' [Pradeep Reddy Raamana]
-- Better description refering to subplots [skip ci] [Pradeep Reddy
+- Better description referring to subplots [skip ci] [Pradeep Reddy
   Raamana]
 - Markdown typo [skip ci] [Pradeep Reddy Raamana]
 - Answering why neuropredict [skip ci] [Pradeep Reddy Raamana]

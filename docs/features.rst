@@ -4,7 +4,7 @@ Input formats
 
 Currently supported:
 
- * Arbitary/user-defined format (see below)
+ * Arbitrary/user-defined format (see below)
  * CSV files (with samples along rows and features along columns)
  * `pyradigm`'s `MLDataset <http://pyradigm.readthedocs.io>`_
  * Weka's `ARFF <https://www.cs.waikato.ac.nz/ml/weka/arff.html>`_
@@ -34,7 +34,7 @@ In development (stay tuned)
 Interfaces to Neuroimaging tools
 --------------------------------
 
-neuropredict is aimed at interfacing with popular feature extraction algorithms such as Freesurfer, FSL and others directly - see *Readers* section below. However, it allows an arbitray input of features that have already been extracted via user's own pipeline(s).
+neuropredict is aimed at interfacing with popular feature extraction algorithms such as Freesurfer, FSL and others directly - see *Readers* section below. However, it allows an arbitrary input of features that have already been extracted via user's own pipeline(s).
 
 Arbitrary feature input
 -------------------------

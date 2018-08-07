@@ -293,7 +293,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         Path to output directory to save the cross validation results to.
 
     train_perc : float or numpy.float, optional
-        Percetange of subjects to train the classifier on.
+        Percentages of subjects to train the classifier on.
         The percentage is applied to the size of the smallest class to estimate
         the number of subjects from each class to be reserved for training.
         The smallest class is chosen to avoid class-imbalance in the training set.

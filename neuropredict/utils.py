@@ -31,7 +31,7 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     num_repetitions = int(num_repetitions)
     if not np.isfinite(num_repetitions):
-        raise ValueError("Infinite number of repetitions is not recommened!")
+        raise ValueError("Infinite number of repetitions is not recommend!")
 
     if num_repetitions <= 1:
         raise ValueError("More than 1 repetition is necessary!")

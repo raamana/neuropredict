@@ -450,7 +450,7 @@ def parse_args():
 
     num_rep_cv = np.int64(user_args.num_rep_cv)
     if num_rep_cv < 10:
-        raise ValueError("Atleast 10 repetitions of CV is recommened.")
+        raise ValueError("Atleast 10 repetitions of CV is recommend.")
 
     num_procs = check_num_procs(user_args.num_procs)
 
@@ -871,7 +871,7 @@ def run(feature_sets,
         If not specified, a new directory named 'neuropredict' will be created in the current directory.
 
     train_perc : float, optional
-        Percetange of subjects to train the classifier on.
+        Percentages of subjects to train the classifier on.
         The percentage is applied to the size of the smallest class to estimate
         the number of subjects from each class to be reserved for training.
         The smallest class is chosen to avoid class-imbalance in the training set.
