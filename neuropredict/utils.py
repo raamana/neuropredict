@@ -339,6 +339,12 @@ def sub_group_identifier(group_names):
     return identifier
 
 
+def make_numeric_labels(class_set):
+    """Generates numeric labels (to feed external tools) for a given set of strings"""
+
+    return { cls : idx for idx, cls in enumerate(class_set) }
+
+
 def make_dataset_filename(method_name):
     "File name constructor."
 

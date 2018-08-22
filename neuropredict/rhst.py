@@ -25,7 +25,7 @@ if version_info.major > 2:
     from neuropredict.algorithms import get_pipeline, get_feature_importance
     from neuropredict.reports import report_best_params, export_results
     from neuropredict.utils import check_feature_sets_are_comparable, check_params_rhst, balanced_accuracy, \
-        load_options, sub_group_identifier
+        load_options, sub_group_identifier, make_numeric_labels
     from neuropredict.io import load_pyradigms
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
@@ -474,9 +474,7 @@ def get_pretty_print_options(method_names, num_datasets):
 def remap_labels(datasets, common_ds, class_set, positive_class=None):
     """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
 
-    remapped_class_labels = dict()
-    for idx, cls in enumerate(class_set):
-        remapped_class_labels[cls] = idx
+    numeric_labels = make_numeric_labels(class_set)
 
     # finding the numeric label for positive class
     # label will also be in the index into the arrays over classes due to construction above
@@ -488,7 +486,7 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
 
     labels_with_correspondence = dict()
     for subid in common_ds.sample_ids:
-        labels_with_correspondence[subid] = remapped_class_labels[common_ds.classes[subid]]
+        labels_with_correspondence[subid] = numeric_labels[common_ds.classes[subid]]
 
     for idx in range(len(datasets)):
         datasets[idx].labels = labels_with_correspondence
