@@ -144,7 +144,8 @@ eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 def raise_if_mean_differs_from(accuracy_balanced,
                                class_sizes,
                                reference_level=None,
-                               eps_chance_acc=None):
+                               eps_chance_acc=None,
+                               method_descr=''):
     "Check if the performance is close to chance. Generic method that works for multi-class too!"
 
     if eps_chance_acc is None:
@@ -159,7 +160,8 @@ def raise_if_mean_differs_from(accuracy_balanced,
     # chance calculation expects "average", not median
     mean_bal_acc = np.mean(accuracy_balanced, axis=0)
     for ma  in mean_bal_acc:
-        print('reference level accuracy expected: {} -- Estimated via CV:  {}'.format(reference_level, ma))
+        print('for {}, reference level accuracy expected: {} '
+              '-- Estimated via CV:  {}'.format(method_descr, reference_level, ma))
         if abs(ma - reference_level) > eps_chance_acc:
             raise ValueError('they substantially differ by more than {:.4f}!'.format(eps_chance_acc))
 
@@ -227,7 +229,8 @@ def test_chance_multiclass():
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_mean_differs_from(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc)
+        raise_if_mean_differs_from(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc,
+                                   method_descr='{} {} gsl {}'.format(fs_method, clf, gsl))
 
 
 def test_each_combination_works():
