@@ -104,9 +104,9 @@ min_rep_per_class = 20
 
 train_perc = 0.5
 red_dim = 'sqrt'
-classifier = 'svm' # 'extratreesclassifier'
+classifier = 'randomforestclassifier' # 'svm' # 'extratreesclassifier'
 fs_method = 'variancethreshold' # 'selectkbest_f_classif'
-gs_level = 'light'
+gs_level = 'none' # 'light'
 
 num_procs = 1
 
@@ -193,13 +193,16 @@ def test_separable_100perc():
     os.makedirs(out_dir_sep, exist_ok=True)
     separable_ds.save(out_path_sep)
 
-    sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} -o {} '
-                           '-e {} -fs {}'.format(out_path_sep,
-                                                 train_perc,
-                                                 50,
-                                                 num_procs, gs_level,
-                                                 out_dir_sep, 'randomforestclassifier', fs_method))
-    cli()
+    nrep = 10
+    gsl = 'none' # to speed up the process
+    for clf_name in cfg.classifier_choices:
+        for fs_name in cfg.feature_selection_choices:
+
+            cli_str = 'neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {} ' \
+                      ''.format(out_path_sep, train_perc, nrep, 1, gsl, out_dir_sep,
+                                clf_name, fs_name)
+            sys.argv = shlex.split(cli_str)
+            cli()
 
             cv_results = rhst.load_results_from_folder(out_dir_sep)
             for sg, result in cv_results.items():
