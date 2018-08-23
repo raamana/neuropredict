@@ -532,7 +532,8 @@ def get_classifier(classifier_name=cfg.default_classifier,
     map_to_method = dict(randomforestclassifier=get_RandomForestClassifier,
                          extratreesclassifier=get_ExtraTreesClassifier,
                          decisiontreeclassifier=get_DecisionTreeClassifier,
-                         svm=get_svc)
+                         svm=get_svc,
+                         xgboost=get_xgboost)
 
     if classifier_name not in map_to_method:
         raise NotImplementedError('Invalid name or classifier not implemented.')
@@ -681,7 +682,8 @@ def get_feature_importance(clf_name, clf, num_features, index_selected_features,
     attr_importance = {'randomforestclassifier': 'feature_importances_',
                        'extratreesclassifier'  : 'feature_importances_',
                        'decisiontreeclassifier': 'feature_importances_',
-                       'svm'                   : 'coef_'}
+                       'svm'                   : 'coef_',
+                       'xgboost'               : 'feature_importances_',}
 
     feat_importance = np.full(num_features, fill_value)
     if hasattr(clf, attr_importance[clf_name]):
