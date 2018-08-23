@@ -75,20 +75,23 @@ def make_random_MLdataset(max_num_classes = 20,
     return ds
 
 
-def make_fully_separable_classes(max_class_size = 50,
-                          max_dim = 100,
-                          stratified = True):
+def make_fully_separable_classes(max_class_size = 50, max_dim = 100):
 
-    temp_ds = make_random_MLdataset(max_num_classes=2, stratified=True,
-                                    max_class_size=max_class_size, max_dim=max_dim)
+    from sklearn.datasets import make_blobs
+
+    random_center = np.random.rand(max_dim)
+    cluster_std = 1.5
+    centers =  [random_center, random_center+cluster_std*6]
+    blobs_X, blobs_y = make_blobs(n_samples=max_class_size, n_features=max_dim,
+                      centers=centers, cluster_std=cluster_std)
+
+    unique_labels = np.unique(blobs_y)
+    class_ids = { lbl : str(lbl) for lbl in unique_labels }
 
     new_ds = MLDataset()
-    for index, cls in enumerate(temp_ds.class_set):
-        for sub in temp_ds.sample_ids_in_class(cls):
-            # forcing a clean linear separation
-            # TODO generate the entire class at once!
-            new_features = temp_ds[sub]*500*(index+1)
-            new_ds.add_sample(sub, new_features, label=temp_ds.labels[sub], class_id=cls)
+    for index, row in enumerate(blobs_X):
+            new_ds.add_sample('sub{}'.format(index), row, label=blobs_y[index],
+                              class_id=class_ids[blobs_y[index]])
 
     return new_ds
 
@@ -182,8 +185,8 @@ def test_chance_clf_binary_svm():
 def test_separable_100perc():
     """Test to ensure fully separable classes lead to close to perfect classification!"""
 
-    separable_ds = make_fully_separable_classes(max_class_size=1000,
-                                                max_dim=10)
+    separable_ds = make_fully_separable_classes(max_class_size=100,
+                                                max_dim=np.random.randint(2, max_dim))
     separable_ds.description = 'fully_separable_dataset'
     out_path_sep = os.path.join(out_dir, 'two_separable_classes.pkl')
     out_dir_sep = os.path.join(out_dir, 'fully_separable_test')
@@ -198,12 +201,13 @@ def test_separable_100perc():
                                                  out_dir_sep, 'randomforestclassifier', fs_method))
     cli()
 
-    cv_results = rhst.load_results_from_folder(out_dir_sep)
-    for sg, result in cv_results.items():
-        raise_if_mean_differs_from(result['accuracy_balanced'],
-                                   result['class_sizes'],
-                                   reference_level=1.0, # comparing to perfect
-                                   eps_chance_acc=0.5)
+            cv_results = rhst.load_results_from_folder(out_dir_sep)
+            for sg, result in cv_results.items():
+                raise_if_mean_differs_from(result['accuracy_balanced'],
+                                           result['class_sizes'],
+                                           reference_level=1.0,  # comparing to perfect
+                                           eps_chance_acc=0.5,
+                                           method_descr='{} {}'.format(fs_name, clf_name))
 
 
 def test_chance_multiclass():
