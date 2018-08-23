@@ -697,8 +697,10 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     # add a tick for chance accuracy and/or % of majority class
     # given the classifier trained on stratified set, we must use the balanced version
     chance_acc = chance_accuracy(class_sizes, 'balanced')
+
+    # rounding to ensure improved labels
     chance_acc = np.round(chance_acc, cfg.PRECISION_METRICS)
-    ytick_loc = np.append(ytick_loc, chance_acc)
+    ytick_loc = np.round(np.append(ytick_loc, chance_acc), cfg.PRECISION_METRICS)
 
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)

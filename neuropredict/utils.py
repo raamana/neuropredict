@@ -5,6 +5,7 @@ import re
 import pickle
 from neuropredict import config_neuropredict as cfg
 import numpy as np
+import os.path
 from os.path import join as pjoin, exists as pexists, realpath
 from multiprocessing import cpu_count
 from time import localtime, strftime
@@ -194,7 +195,7 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
         from os import getenv
 
         hpc_num_procs_spec = [('SGE',   'JOB_ID',      'NSLOTS',        'slots'),
-                              ('SLURM', 'SLURM_JOBID', 'SLURM_NPROCS',  'processors'),
+                              ('SLURM', 'SLURM_JOBID', 'SLURM_CPUS_PER_TASK',  'processors'),
                               ('PBS',   'PBS_JOBID',   'PBS_NUM_PPN',   'processors per node')]
 
         for hpc_env, id_jobid, var_slot_count, var_descr in hpc_num_procs_spec:

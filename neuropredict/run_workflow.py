@@ -770,9 +770,14 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
     method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
+    print('Requested processing for the following subgroups:'
+          '\n{}\n'.format('\n'.join([','.join(sg) for sg in sub_group_list])))
+
     # iterating through the given set of subgroups
-    for sub_group in sub_group_list:
-        print('{}\nProcessing subgroup : {}\n{}'.format('-'*80, sub_group, '-'*80))
+    num_sg = len(sub_group_list)
+    for sgi, sub_group in enumerate(sub_group_list):
+        print('{}\nProcessing subgroup : {} ({}/{})'
+              '\n{}'.format('-'*80, ','.join(sub_group), sgi+1, num_sg, '-'*80))
         out_dir_sg = pjoin(out_dir, sub_group_identifier(sub_group))
         results_file_path = rhst.run(dataset_paths_file, method_names, out_dir_sg,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
