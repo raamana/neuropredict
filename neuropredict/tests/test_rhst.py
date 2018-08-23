@@ -1,23 +1,22 @@
 
-import numpy as np
 import os
+import shlex
 import sys
 from sys import version_info
-import shlex
-from os.path import join as pjoin, exists as pexists, realpath, dirname, abspath
+
+import numpy as np
+from os.path import abspath, dirname, exists as pexists, join as pjoin, realpath
 
 sys.dont_write_bytecode = True
 
 from pyradigm import MLDataset
-import pytest
-from pytest import raises, warns
+from pytest import raises
 
 if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
 if version_info.major > 2:
-    import neuropredict
     from neuropredict import rhst, cli, config_neuropredict as cfg
     from neuropredict.utils import chance_accuracy
 else:
@@ -44,7 +43,11 @@ def make_random_MLdataset(max_num_classes = 20,
     largest = max(50, max_class_size)
     largest = max(smallest+3,largest)
 
-    num_classes = np.random.randint(2, max_num_classes, 1)
+    if max_num_classes != 2:
+        num_classes = np.random.randint(2, max_num_classes, 1)
+    else:
+        num_classes = 2
+
     if type(num_classes) == np.ndarray:
         num_classes = num_classes[0]
     if not stratified:
@@ -72,6 +75,24 @@ def make_random_MLdataset(max_num_classes = 20,
     return ds
 
 
+def make_fully_separable_classes(max_class_size = 50,
+                          max_dim = 100,
+                          stratified = True):
+
+    temp_ds = make_random_MLdataset(max_num_classes=2, stratified=True,
+                                    max_class_size=max_class_size, max_dim=max_dim)
+
+    new_ds = MLDataset()
+    for index, cls in enumerate(temp_ds.class_set):
+        for sub in temp_ds.sample_ids_in_class(cls):
+            # forcing a clean linear separation
+            # TODO generate the entire class at once!
+            new_features = temp_ds[sub]*500*(index+1)
+            new_ds.add_sample(sub, new_features, label=temp_ds.labels[sub], class_id=cls)
+
+    return new_ds
+
+
 max_num_classes = 10
 max_class_size = 40
 max_dim = 100
@@ -82,7 +103,7 @@ train_perc = 0.5
 red_dim = 'sqrt'
 classifier = 'svm' # 'extratreesclassifier'
 fs_method = 'variancethreshold' # 'selectkbest_f_classif'
-gs_level = 'none'
+gs_level = 'light'
 
 num_procs = 1
 
@@ -96,8 +117,8 @@ rand_ds.save(out_path_multiclass)
 
 out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
 rand_two_class = rand_ds.get_class(rand_ds.class_set[0:3])
-rand_two_class.description = 'random_1'
 rand_two_class.save(out_path)
+rand_two_class.description = 'random_1'
 
 # making another copy to a different path with different description
 rand_two_class.description = 'random_2'
@@ -117,20 +138,26 @@ eps_chance_acc_binary =0.05
 eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
 
-def raise_if_mean_differs_from_chance(accuracy_balanced, class_sizes,
-                                      eps_chance_acc=None):
+def raise_if_mean_differs_from(accuracy_balanced,
+                               class_sizes,
+                               reference_level=None,
+                               eps_chance_acc=None):
     "Check if the performance is close to chance. Generic method that works for multi-class too!"
 
     if eps_chance_acc is None:
         total_num_classes = len(class_sizes)
         eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
-    chance_acc = chance_accuracy(class_sizes)
+    if reference_level is None:
+        reference_level = chance_accuracy(class_sizes)
+    elif not 0.0 < reference_level <= 1.0:
+        raise ValueError('invalid reference_level: must be in (0, 1]')
+
     # chance calculation expects "average", not median
     mean_bal_acc = np.mean(accuracy_balanced, axis=0)
     for ma  in mean_bal_acc:
-        print('Chance accuracy expected: {} -- Estimated via CV:  {}'.format(chance_acc, ma))
-        if abs(ma - chance_acc) > eps_chance_acc:
+        print('reference level accuracy expected: {} -- Estimated via CV:  {}'.format(reference_level, ma))
+        if abs(ma - reference_level) > eps_chance_acc:
             raise ValueError('they substantially differ by more than {:.4f}!'.format(eps_chance_acc))
 
 
@@ -138,16 +165,45 @@ def test_chance_clf_binary_svm():
 
     global ds_path_list, method_names, out_dir, num_repetitions, gs_level, train_perc, num_procs
 
-    sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(out_path, out_path2,
-                                train_perc, min_rep_per_class*rand_two_class.num_classes, num_procs, gs_level,
+    sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} '
+                           '-e {} -fs {}'.format(out_path, out_path2,
+                                train_perc, min_rep_per_class*rand_two_class.num_classes,
+                                                 num_procs, gs_level,
                                 out_dir, classifier, fs_method))
     cli()
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_mean_differs_from_chance(result['accuracy_balanced'],
-                                          result['class_sizes'],
-                                          eps_chance_acc_binary)
+        raise_if_mean_differs_from(result['accuracy_balanced'],
+                                   result['class_sizes'],
+                                   eps_chance_acc=eps_chance_acc_binary)
+
+
+def test_separable_100perc():
+    """Test to ensure fully separable classes lead to close to perfect classification!"""
+
+    separable_ds = make_fully_separable_classes(max_class_size=1000,
+                                                max_dim=10)
+    separable_ds.description = 'fully_separable_dataset'
+    out_path_sep = os.path.join(out_dir, 'two_separable_classes.pkl')
+    out_dir_sep = os.path.join(out_dir, 'fully_separable_test')
+    os.makedirs(out_dir_sep, exist_ok=True)
+    separable_ds.save(out_path_sep)
+
+    sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} -o {} '
+                           '-e {} -fs {}'.format(out_path_sep,
+                                                 train_perc,
+                                                 50,
+                                                 num_procs, gs_level,
+                                                 out_dir_sep, 'randomforestclassifier', fs_method))
+    cli()
+
+    cv_results = rhst.load_results_from_folder(out_dir_sep)
+    for sg, result in cv_results.items():
+        raise_if_mean_differs_from(result['accuracy_balanced'],
+                                   result['class_sizes'],
+                                   reference_level=1.0, # comparing to perfect
+                                   eps_chance_acc=0.5)
 
 
 def test_chance_multiclass():
@@ -164,7 +220,7 @@ def test_chance_multiclass():
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_mean_differs_from_chance(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc)
+        raise_if_mean_differs_from(result['accuracy_balanced'], result['class_sizes'], eps_chance_acc)
 
 
 def test_each_combination_works():
@@ -219,7 +275,8 @@ def test_arff():
 # run_workflow.make_visualizations(res_path, out_dir)
 # test_chance_clf_default()
 # test_chance_clf_binary_extratrees()
-test_chance_clf_binary_svm()
+# test_chance_clf_binary_svm()
+test_separable_100perc()
 # test_chance_multiclass()
 # test_versioning()
 # test_vis()
