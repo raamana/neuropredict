@@ -770,6 +770,9 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
     method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
                                                        feature_dir, user_feature_type)
 
+    print('Requested processing for the following subgroups:'
+          '\n{}\n'.format('\n'.join([','.join(sg) for sg in sub_group_list])))
+
     # iterating through the given set of subgroups
     for sub_group in sub_group_list:
         print('{}\nProcessing subgroup : {}\n{}'.format('-'*80, sub_group, '-'*80))
