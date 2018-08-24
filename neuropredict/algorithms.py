@@ -449,6 +449,7 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_max_depth = [2, 6, 10]
         # range_min_child_weight = []
         range_gamma = [0, 3, 5, 10]
+        range_subsample = [0.5, 0.75, 1.0]
 
         range_colsample_bytree = [0.6, 0.8, 1.0]
         range_learning_rate = [0.15, 0.3, 0.5]
@@ -459,6 +460,7 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_max_depth = [2, 6]
         # range_min_child_weight = []
         range_gamma = [0, 3, ]
+        range_subsample = [0.5, 1.0]
 
         range_colsample_bytree = [0.6, 0.8, 1.0]
         range_learning_rate = [0.15, 0.3, ]
@@ -469,6 +471,7 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_max_depth = [2, ]
         # range_min_child_weight = []
         range_gamma = [0, ]
+        range_subsample = [1.0, ]
 
         range_colsample_bytree = [1.0, ]
         range_learning_rate = [0.15,]
@@ -481,10 +484,11 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
     # not optimizing over number of features to save time
     clf_name = 'xgboost_clf'
     param_list_values = [('max_depth', range_max_depth),
-                         ('gamma', range_gamma),
-                         ('num_feature', range_num_feature),
-                         ('colsample_bytree', range_colsample_bytree),
                          ('learning_rate', range_learning_rate),
+                         ('gamma', range_gamma),
+                         ('colsample_bytree', range_colsample_bytree),
+                         ('subsample', range_subsample),
+                         ('num_feature', range_num_feature),
                          ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
