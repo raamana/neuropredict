@@ -1,0 +1,8 @@
+numpy
+sklearn
+nibabel
+pyradigm
+setuptools
+scipy
+matplotlib
+xgboost
