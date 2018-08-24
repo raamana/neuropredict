@@ -83,7 +83,7 @@ def check_classifier(clf_name=cfg.default_classifier):
         try:
             from importlib import import_module
             import_module(clf_name)
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             raise ImportError('choosing classifier {} requires installation of '
                               'another package. Try running\n'
                               'pip install -U {} '
