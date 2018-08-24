@@ -474,7 +474,7 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_subsample = [1.0, ]
 
         range_colsample_bytree = [1.0, ]
-        range_learning_rate = [0.15,]
+        range_learning_rate = [0.3,]
 
         range_num_feature = [reduced_dim]
     else:
