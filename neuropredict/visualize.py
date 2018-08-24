@@ -682,7 +682,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
         ln.set_label(labels[cc])
 
     ax.tick_params(axis='both', which='major', labelsize=15)
-    ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH)
+    ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
 
     lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), cfg.PRECISION_METRICS)
     upper_lim = np.round(np.min([ 1.01, metric.max() ]), cfg.PRECISION_METRICS)
