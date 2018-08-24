@@ -198,9 +198,7 @@ def balanced_accuracy(confmat):
     for cc in range(num_classes):
         indiv_class_acc[cc] = confmat[cc, cc] / np.sum(confmat[cc, :])
 
-    bal_acc = np.mean(indiv_class_acc)
-
-    return bal_acc
+    return np.mean(indiv_class_acc)
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
