@@ -117,7 +117,8 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     else:
         pred_prob = None
 
-    conf_mat = confusion_matrix(true_test_labels, pred_test_labels, label_order_in_conf_matrix)
+    conf_mat = confusion_matrix(true_test_labels, pred_test_labels,
+                                labels=label_order_in_conf_matrix)
 
     misclsfd_samples = test_sample_ids[true_test_labels != pred_test_labels]
 
