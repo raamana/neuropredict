@@ -40,3 +40,6 @@ And neuropredicting.
 Check the :doc:`usage_cli` and :doc:`features` pages, and let me know your comments.
 
 Thanks for checking out. Your feedback will be appreciated.
+
+
+----------

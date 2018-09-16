@@ -7,6 +7,7 @@ This package could easily be installed via pip (package manager for Python):
 ``pip install -U neuropredict``
 
 If you do not have python or pip installed, please follow the links below for instructions on installing them:
+
  - Python: https://www.python.org/downloads/ (pip comes packaged with Python)
  - Windows users:
  
@@ -24,3 +25,6 @@ Requirements
  - setuptools
  - scipy
  - matplotlib
+
+
+----------

@@ -19,7 +19,9 @@ Frequently Asked Questions
 
 
 * *Can I use a different classifier?*
-    * Yes. User will have the ability to choose among various techniques offered by scikit-learn [already] and similar toolboxes [to be added].
+
+    * Yes. User can choose among few techniques offered by scikit-learn and similar toolboxes [to be added].
+    * `Let me know <http://github.com/raamana/neuropredict/issues/new>`_ if you would like something that's not already integrated. As long as it is implemented in python, we will integrate it.
 
 
 * *Why did you pick random forests to be the default classifier?*
@@ -80,4 +82,4 @@ Frequently Asked Questions
   * Absolutely.
   * While ``-f`` option allows specifying only 1 freesurfer folder, it can be combined with ``-u`` which can take arbitray number of custom features.
 
-
+----------

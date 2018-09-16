@@ -82,6 +82,7 @@ def get_parser():
     E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``
     
     File format could be
+    
      - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with
         numpy.loadtxt(filepath, delimiter=',')
         or
@@ -96,9 +97,9 @@ def get_parser():
     List of paths to files saved in Weka's ARFF dataset format.
     
     Note: 
+    
      - this format does NOT allow IDs for each subject.
-     - given feature values are saved in text format, this can lead to large files with high-dimensional data, 
-        compared to numpy arrays saved to disk in binary format.
+     - given feature values are saved in text format, this can lead to large files with high-dimensional data, compared to numpy arrays saved to disk in binary format.
     
     More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html
     \n \n """)
@@ -159,6 +160,7 @@ def get_parser():
     \n \n """)
 
     help_text_feature_selection = textwrap.dedent("""Number of features to select as part of feature selection.
+    
     Options:
 
          - 'tenth'
@@ -180,9 +182,9 @@ def get_parser():
     More parameters and more values demand more resources and much longer time for optimization.
     
     The 'light' option tries to "folk wisdom" to try least number of values (no more than one or two),
-     for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization). 
-     The 'light' will be the fastest and should give a "rough idea" of predictive performance. 
-     The 'exhaustive' option will try to most parameter values for the most parameters that can be optimized.
+    for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).  
+    The 'light' will be the fastest and should give a "rough idea" of predictive performance. 
+    The 'exhaustive' option will try to most parameter values for the most parameters that can be optimized.
     """)
 
     help_text_make_vis = textwrap.dedent("""
