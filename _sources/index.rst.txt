@@ -18,9 +18,10 @@ neuropredict
 .. image:: https://badge.fury.io/py/neuropredict.svg
    :target: https://badge.fury.io/py/neuropredict
 
+
+
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
 
    about
    context
@@ -47,3 +48,5 @@ Indices and tables
 
    This website uses a modified version of the ``sphinx_bernard_theme`` from https://sphinx-themes.org
 
+
+----------

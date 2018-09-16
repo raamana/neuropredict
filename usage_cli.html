@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Usage &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+        <title>Usage &mdash; neuropredict 0.4.8 documentation</title>
 
         <meta charset="utf-8" />
         <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
@@ -14,7 +14,7 @@
         <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT       : './',
-            VERSION        : '0.4.7+59.g49987e2.dirty',
+            VERSION        : '0.4.8',
             COLLAPSE_INDEX : false,
             FILE_SUFFIX    : '.html',
             HAS_SOURCE     : true
@@ -41,8 +41,7 @@
                     
 
                     
-                        <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
+                        <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
@@ -180,9 +179,9 @@ For example,</p>
 of the meta data file (meta data file and data matrix must be in row-wise correspondence).</p>
 <p>Name of this file will be used to annotate the results and visualizations.</p>
 <p>E.g. <a href="#id1"><span class="problematic" id="id2">``</span></a>–data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``</p>
-<dl class="last docutils">
-<dt>File format could be</dt>
-<dd><ul class="first simple">
+<p>File format could be</p>
+<blockquote class="last">
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt>a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with</dt>
 <dd>numpy.loadtxt(filepath, delimiter=’,’)
@@ -192,26 +191,20 @@ or</dd>
 <li>a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath).</li>
 </ul>
 <p>One could use <code class="docutils literal"><span class="pre">numpy.savetxt(data_array,</span> <span class="pre">delimiter=',')</span></code> or <code class="docutils literal"><span class="pre">numpy.save(data_array)</span></code> to save features.</p>
-<p class="last">File format is inferred from its extension.</p>
-</dd>
-</dl>
+<p>File format is inferred from its extension.</p>
+</div></blockquote>
 </td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd>-a, --arff_paths</kbd></td>
 </tr>
 <tr><td>&#160;</td><td><p class="first">List of paths to files saved in Weka’s ARFF dataset format.</p>
-<dl class="docutils">
-<dt>Note:</dt>
-<dd><ul class="first last simple">
+<p>Note:</p>
+<blockquote>
+<div><ul class="simple">
 <li>this format does NOT allow IDs for each subject.</li>
-<li><dl class="first docutils">
-<dt>given feature values are saved in text format, this can lead to large files with high-dimensional data,</dt>
-<dd>compared to numpy arrays saved to disk in binary format.</dd>
-</dl>
-</li>
+<li>given feature values are saved in text format, this can lead to large files with high-dimensional data, compared to numpy arrays saved to disk in binary format.</li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <p class="last">More info: <a class="reference external" href="https://www.cs.waikato.ac.nz/ml/weka/arff.html">https://www.cs.waikato.ac.nz/ml/weka/arff.html</a></p>
 </td></tr>
 </tbody>
@@ -248,9 +241,9 @@ If sample size is small, or class imbalance is high, choose 0.8.</p>
 <tr><td class="option-group" colspan="2">
 <kbd>-k, --num_features_to_select</kbd></td>
 </tr>
-<tr><td>&#160;</td><td><dl class="first last docutils">
-<dt>Number of features to select as part of feature selection.</dt>
-<dd><p class="first">Options:</p>
+<tr><td>&#160;</td><td><p class="first">Number of features to select as part of feature selection.</p>
+<blockquote class="last">
+<div><p>Options:</p>
 <blockquote>
 <div><ul class="simple">
 <li>‘tenth’</li>
@@ -260,11 +253,10 @@ If sample size is small, or class imbalance is high, choose 0.8.</p>
 </ul>
 </div></blockquote>
 <p>Default: ‘tenth’ of the number of samples in the training set.</p>
-<p class="last">For example, if your dataset has 90 samples, you chose 50 percent for training (default),
+<p>For example, if your dataset has 90 samples, you chose 50 percent for training (default),
 then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining.
 If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.</p>
-</dd>
-</dl>
+</div></blockquote>
 </td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd>-sg, --sub_groups</kbd></td>
@@ -287,12 +279,10 @@ and ideally just alphanumeric characters separated by underscores.</p>
 <p>Flag to specify the level of grid search during hyper-parameter optimization on the training set.
 Allowed options are : ‘none’, ‘light’ and ‘exhaustive’, in the order of how many values/values will be optimized.</p>
 <p>More parameters and more values demand more resources and much longer time for optimization.</p>
-<dl class="last docutils">
-<dt>The ‘light’ option tries to “folk wisdom” to try least number of values (no more than one or two),</dt>
-<dd>for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).
+<p class="last">The ‘light’ option tries to “folk wisdom” to try least number of values (no more than one or two),
+for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).
 The ‘light’ will be the fastest and should give a “rough idea” of predictive performance.
-The ‘exhaustive’ option will try to most parameter values for the most parameters that can be optimized.</dd>
-</dl>
+The ‘exhaustive’ option will try to most parameter values for the most parameters that can be optimized.</p>
 </td></tr>
 </tbody>
 </table>
@@ -357,6 +347,7 @@ e.g. on a HPC cluster, or another environment when DISPLAY is either not availab
 </tbody>
 </table>
 </div>
+<hr class="docutils" />
 </div>
 
 

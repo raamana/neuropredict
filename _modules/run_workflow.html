@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>run_workflow &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+        <title>run_workflow &mdash; neuropredict 0.4.8 documentation</title>
 
         <meta charset="utf-8" />
         <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
@@ -14,7 +14,7 @@
         <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT       : '../',
-            VERSION        : '0.4.7+59.g49987e2.dirty',
+            VERSION        : '0.4.8',
             COLLAPSE_INDEX : false,
             FILE_SUFFIX    : '.html',
             HAS_SOURCE     : true
@@ -41,8 +41,7 @@
                     
 
                     
-                        <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+                        <ul>
 <li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../context.html">Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../context.html#predictive-analysis">Predictive analysis</a></li>
@@ -172,6 +171,7 @@
 <span class="s2">    E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``</span>
 <span class="s2">    </span>
 <span class="s2">    File format could be</span>
+<span class="s2">    </span>
 <span class="s2">     - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with</span>
 <span class="s2">        numpy.loadtxt(filepath, delimiter=&#39;,&#39;)</span>
 <span class="s2">        or</span>
@@ -186,9 +186,9 @@
 <span class="s2">    List of paths to files saved in Weka&#39;s ARFF dataset format.</span>
 <span class="s2">    </span>
 <span class="s2">    Note: </span>
+<span class="s2">    </span>
 <span class="s2">     - this format does NOT allow IDs for each subject.</span>
-<span class="s2">     - given feature values are saved in text format, this can lead to large files with high-dimensional data, </span>
-<span class="s2">        compared to numpy arrays saved to disk in binary format.</span>
+<span class="s2">     - given feature values are saved in text format, this can lead to large files with high-dimensional data, compared to numpy arrays saved to disk in binary format.</span>
 <span class="s2">    </span>
 <span class="s2">    More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html</span>
 <span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
@@ -249,6 +249,7 @@
 <span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
 
     <span class="n">help_text_feature_selection</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Number of features to select as part of feature selection.</span>
+<span class="s2">    </span>
 <span class="s2">    Options:</span>
 
 <span class="s2">         - &#39;tenth&#39;</span>
@@ -270,9 +271,9 @@
 <span class="s2">    More parameters and more values demand more resources and much longer time for optimization.</span>
 <span class="s2">    </span>
 <span class="s2">    The &#39;light&#39; option tries to &quot;folk wisdom&quot; to try least number of values (no more than one or two),</span>
-<span class="s2">     for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization). </span>
-<span class="s2">     The &#39;light&#39; will be the fastest and should give a &quot;rough idea&quot; of predictive performance. </span>
-<span class="s2">     The &#39;exhaustive&#39; option will try to most parameter values for the most parameters that can be optimized.</span>
+<span class="s2">    for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).  </span>
+<span class="s2">    The &#39;light&#39; will be the fastest and should give a &quot;rough idea&quot; of predictive performance. </span>
+<span class="s2">    The &#39;exhaustive&#39; option will try to most parameter values for the most parameters that can be optimized.</span>
 <span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
 
     <span class="n">help_text_make_vis</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>

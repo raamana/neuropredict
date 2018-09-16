@@ -6,7 +6,9 @@ Neuropredict is here to remove those barriers and make your life easier!
 
 All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below).
 
-.. image:: composite_flyer.001.png
+.. image:: composite_outputs.png
+  :width: 700
+
 
 The report consists of
 
@@ -76,14 +78,16 @@ The following visualization compares the predictive performance of four features
  - to test whether a particular feature is statistically significantly better, a distribution for each feature is necessary to run statistical tests.
 
 .. image:: results_interpretation.balanced_accuracy.png
+  :width: 700
 
 
 Comparison of misclassification rates
 -------------------------------------
 
 .. image:: results_interpretation.mcr_radar.png
+  :width: 700
 
 
-**under dev**
+**These docs will be futher improved soon. Stay tuned!**
 
-*Stay tuned*
+

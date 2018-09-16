@@ -42,6 +42,7 @@ Arbitrary feature input
 For custom input:
 
 * the user needs to save the features in a single folder for all subjects (let's call it ``/project/myawsomepipeline`` )
+
     * specify it with --userdefined /project/myawsomepipeline
 * within which, features for each subject in a separate folder (named after its id specified in the meta data file)
 * in a file called ``features.txt``. The ``features.txt`` file must contain a single floating point number per line (see below - its not comma separated),
@@ -98,3 +99,6 @@ The example for a dataset with 2 controls and 2 disease sujects with 5 features 
     0.115903893374
     0.503297862357
     0.564961631104
+
+
+----------

@@ -21,3 +21,6 @@ All you would need to provide are:
  - along with well-packaged export of performance metrics (for sharing and posthoc comparison)
 
 .. image:: role.png
+    :width: 700
+
+----------

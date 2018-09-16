@@ -37,6 +37,7 @@ Where the ``meta_data.csv`` file specifies which subject belongs to which class.
 and `neuropredict` will produce the figures similar to the following:
 
 .. image:: composite_outputs.png
+    :width: 700
 
 The higher resolution PDFs are included in the `docs <docs/results_vis>`_ folder.
 
@@ -100,4 +101,6 @@ You can choose values for many other parameters, and specify the features in few
     pyradigm is a python class (data structure) aimed to ease your ML workflow - check it out here: `pyradigm.readthedocs.io <http://pyradigm.readthedocs.io>`_
 
 
+
+----------
 

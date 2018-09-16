@@ -12,7 +12,7 @@ bibtex entry for the citations:
 
 .. code-block:: bash
 
-    @misc{pradeep_reddy_raamana_2017_1058993,
+    @misc{Raamana1058993neuropredict,
       author       = {Pradeep Reddy Raamana},
       title        = {{neuropredict: easy machine learning and
                        standardized predictive analysis of biomarkers}},
@@ -35,3 +35,5 @@ bibtex entry for the citations:
         author  ={Reddy Raamana, Pradeep and C. Strother, Stephen},
         year    ={2017}
     }
+
+----------
