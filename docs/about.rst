@@ -11,12 +11,13 @@ The aim of neuropredict is to automatically assess the predictive power of diffe
 On a high level,
 
 .. image:: high_level_flow.png
+    :width: 700
 
 
 On a more detailed level,
 
 .. image:: role.png
-
+    :width: 700
 
 
 ``neuropredict`` sounds similar (on the surface) to other software available, such as scikit-learn (which is used underneath), however our aim here is to lower the barriers as much as possible, or remove them altogether and make machine learning seamless! For example,

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to neuropredict's documentation!
+neuropredict
 ========================================
 
 .. image:: https://travis-ci.org/raamana/neuropredict.svg?branch=master
@@ -27,11 +27,11 @@ Welcome to neuropredict's documentation!
    longterm
    installation
    usage_cli
+   examples
    features
    results
    faq
    implementation
-   API
    citation
 
 
@@ -41,3 +41,9 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. note::
+
+   This website uses a modified version of the ``sphinx_bernard_theme`` from https://sphinx-themes.org
+

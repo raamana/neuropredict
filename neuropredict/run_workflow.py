@@ -63,8 +63,6 @@ def get_parser():
     .. parsed-literal::
 
         --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/
-
-    Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` or ``arff_paths`` options can be specified.
     \n \n """)
 
     help_text_pyradigm_paths = textwrap.dedent("""
@@ -82,8 +80,6 @@ def get_parser():
     Name of this file will be used to annotate the results and visualizations.
 
     E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``
-
-    Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` or ``arff_paths`` options can be specified.
     
     File format could be
      - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with
@@ -237,7 +233,11 @@ def get_parser():
                         default=None, help=help_text_fs_dir)
 
     user_defined = parser.add_argument_group(title='Input data and formats',
-                                             description='Only one of the following types can be specified.')
+                                             description='Only one of ``--pyradigm_paths``, '
+                                                         '``--user_feature_paths``, '
+                                                         '``--data_matrix_path`` or '
+                                                         '``--arff_paths`` options '
+                                                         'can be specified.')
 
     user_defined.add_argument("-y", "--pyradigm_paths", action="store", dest="pyradigm_paths",
                               nargs='+',  # to allow for multiple features
