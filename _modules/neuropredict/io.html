@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.io &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.io</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">pjoin</span><span class="p">,</span> <span class="n">exists</span> <span class="k">as</span> <span class="n">pexists</span><span class="p">,</span> <span class="n">realpath</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+<span class="kn">from</span> <span class="nn">pyradigm</span> <span class="k">import</span> <span class="n">MLDataset</span>
+
+<div class="viewcode-block" id="get_metadata_in_pyradigm"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_metadata_in_pyradigm">[docs]</a><span class="k">def</span> <span class="nf">get_metadata_in_pyradigm</span><span class="p">(</span><span class="n">meta_data_supplied</span><span class="p">,</span> <span class="n">meta_data_format</span><span class="o">=</span><span class="s1">&#39;pyradigm&#39;</span><span class="p">):</span>
+    <span class="s2">&quot;Returns sample IDs and their classes from a given pyradigm&quot;</span>
+
+    <span class="n">meta_data_format</span> <span class="o">=</span> <span class="n">meta_data_format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">meta_data_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pyradigm&#39;</span><span class="p">,</span> <span class="s1">&#39;mldataset&#39;</span><span class="p">]:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">realpath</span><span class="p">(</span><span class="n">meta_data_supplied</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">meta_data_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;arff&#39;</span><span class="p">,</span> <span class="s1">&#39;weka&#39;</span><span class="p">]:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span><span class="n">arff_path</span><span class="o">=</span><span class="n">realpath</span><span class="p">(</span><span class="n">meta_data_supplied</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Meta data format </span><span class="si">{}</span><span class="s1"> not implemented. &#39;</span>
+                                  <span class="s1">&#39;Only pyradigm and ARFF are supported.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">meta_data_format</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dataset</span><span class="o">.</span><span class="n">sample_ids</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">classes</span></div>
+
+
+<div class="viewcode-block" id="get_metadata"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_metadata">[docs]</a><span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Populates the dataset dictionary with subject ids and classes</span>
+
+<span class="sd">    Currently supports the following per line: subjectid,class</span>
+<span class="sd">    Future plans to include demographics data: subjectid,class,age,sex,education</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sample_ids : list of str</span>
+<span class="sd">        list of strings identifying the sample ids</span>
+<span class="sd">    classes : dict</span>
+<span class="sd">        dict of class labels for each id in the sample_ids</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">meta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">)</span>
+
+    <span class="n">sample_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">meta</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="c1"># checking for duplicates</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">sample_ids</span><span class="p">))</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_ids</span><span class="p">):</span>
+        <span class="n">duplicates</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample</span> <span class="k">for</span> <span class="n">sample</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">Counter</span><span class="p">(</span><span class="n">sample_ids</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Duplicate sample ids found!</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">Remove duplicates and rerun.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">duplicates</span><span class="p">))</span>
+
+    <span class="n">classes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">sample_ids</span><span class="p">,</span> <span class="n">meta</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">sample_ids</span><span class="p">,</span> <span class="n">classes</span></div>
+
+
+<div class="viewcode-block" id="get_dir_of_dirs"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_dir_of_dirs">[docs]</a><span class="k">def</span> <span class="nf">get_dir_of_dirs</span><span class="p">(</span><span class="n">featdir</span><span class="p">,</span> <span class="n">subjid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a</span>
+<span class="sd">    separate folder for each subject with a file called features.txt with one number per line.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    featdir : str</span>
+<span class="sd">        Path to in the input directory</span>
+<span class="sd">    subjid : str</span>
+<span class="sd">        Subject id (name of the subfolder in the featdir identifying the subject)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : ndarray</span>
+<span class="sd">        vector of features for the given subject</span>
+<span class="sd">    feat_names : list of str</span>
+<span class="sd">        names of each feature</span>
+<span class="sd">        Currently None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">feat_names</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">featfile</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">featdir</span><span class="p">,</span> <span class="n">subjid</span><span class="p">,</span> <span class="s1">&#39;features.txt&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">featfile</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Unable to load features from </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">featfile</span><span class="p">))</span>
+
+    <span class="c1"># the following ensures an array is returned even when data is a single scalar,</span>
+    <span class="c1"># for which len() is not defined (which is needed for pyradigm to find dimensionality</span>
+    <span class="c1"># order=&#39;F&#39; (column-major) is chosen to as input is expected to be in a single column</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">feat_names</span></div>
+
+
+<div class="viewcode-block" id="get_data_matrix"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_data_matrix">[docs]</a><span class="k">def</span> <span class="nf">get_data_matrix</span><span class="p">(</span><span class="n">featpath</span><span class="p">):</span>
+    <span class="s2">&quot;Returns ndarray from data matrix stored in a file&quot;</span>
+
+    <span class="n">file_ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">featpath</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_ext</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.npy&#39;</span><span class="p">,</span> <span class="s1">&#39;.numpy&#39;</span><span class="p">]:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">featpath</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">file_ext</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;.txt&#39;</span><span class="p">]:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">featpath</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Invalid or empty file extension : </span><span class="si">{}</span><span class="se">\n</span><span class="s1"> Allowed: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_ext</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">INPUT_FILE_FORMATS</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Unable to load the data matrix from disk.&#39;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+    <span class="k">return</span> <span class="n">matrix</span></div>
+
+
+<div class="viewcode-block" id="get_pyradigm"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_pyradigm">[docs]</a><span class="k">def</span> <span class="nf">get_pyradigm</span><span class="p">(</span><span class="n">feat_path</span><span class="p">):</span>
+    <span class="s2">&quot;Do-nothing reader of pyradigm.&quot;</span>
+
+    <span class="k">return</span> <span class="n">feat_path</span></div>
+
+
+<div class="viewcode-block" id="get_arff"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_arff">[docs]</a><span class="k">def</span> <span class="nf">get_arff</span><span class="p">(</span><span class="n">feat_path</span><span class="p">):</span>
+    <span class="s2">&quot;Do-nothing reader for ARFF format.&quot;</span>
+
+    <span class="k">return</span> <span class="n">feat_path</span></div>
+
+
+<div class="viewcode-block" id="get_features"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.get_features">[docs]</a><span class="k">def</span> <span class="nf">get_features</span><span class="p">(</span><span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">featdir</span><span class="p">,</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">outname</span><span class="p">,</span> <span class="n">get_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">=</span><span class="s1">&#39;dir_of_dris&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Populates the pyradigm data structure with features from a given method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subjects : list or ndarray</span>
+<span class="sd">        List of subject IDs</span>
+<span class="sd">    classes : dict</span>
+<span class="sd">        dict of class labels keyed in by subject id</span>
+<span class="sd">    featdir : str</span>
+<span class="sd">        Path to input directory to read the features from</span>
+<span class="sd">    outdir : str</span>
+<span class="sd">        Path to output directory to save the gathered features to.</span>
+<span class="sd">    outname : str</span>
+<span class="sd">        Name of the feature set</span>
+<span class="sd">    get_method : callable</span>
+<span class="sd">        Callable that takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),</span>
+<span class="sd">        with an optional array of names for each feature.</span>
+<span class="sd">    feature_type : str</span>
+<span class="sd">        Identifier of data organization for features.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    saved_path : str</span>
+<span class="sd">        Path where the features have been saved to as an MLDataset</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">get_method</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Supplied get_method is not callable! &quot;</span>
+                         <span class="s2">&quot;It must take in a path and return a vectorized feature set and labels.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># generating an unique numeric label for each class (sorted in order of their appearance in metadata file)</span>
+    <span class="n">class_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">class_labels</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_set</span><span class="p">):</span>
+        <span class="n">class_labels</span><span class="p">[</span><span class="bp">cls</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx</span>
+
+    <span class="n">ids_excluded</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;data_matrix&#39;</span><span class="p">:</span>
+        <span class="n">data_matrix</span> <span class="o">=</span> <span class="n">get_data_matrix</span><span class="p">(</span><span class="n">featdir</span><span class="p">)</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">subjid</span> <span class="ow">in</span> <span class="n">subjects</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s1">&#39;data_matrix&#39;</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data_matrix</span><span class="p">[</span><span class="n">subjects</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">subjid</span><span class="p">),</span> <span class="p">:]</span>
+                <span class="n">feat_names</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">,</span> <span class="n">feat_names</span> <span class="o">=</span> <span class="n">get_method</span><span class="p">(</span><span class="n">featdir</span><span class="p">,</span> <span class="n">subjid</span><span class="p">)</span>
+
+            <span class="n">ds</span><span class="o">.</span><span class="n">add_sample</span><span class="p">(</span><span class="n">subjid</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">[</span><span class="n">classes</span><span class="p">[</span><span class="n">subjid</span><span class="p">]],</span> <span class="n">classes</span><span class="p">[</span><span class="n">subjid</span><span class="p">],</span> <span class="n">feat_names</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">ids_excluded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subjid</span><span class="p">)</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Features for </span><span class="si">{}</span><span class="s2"> via </span><span class="si">{}</span><span class="s2"> method could not be read or added. &quot;</span>
+                          <span class="s2">&quot;Excluding it.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subjid</span><span class="p">,</span> <span class="n">get_method</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+    <span class="c1"># warning for if failed to extract features even for one subject</span>
+    <span class="n">alert_failed_feature_extraction</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ids_excluded</span><span class="p">),</span> <span class="n">ds</span><span class="o">.</span><span class="n">num_samples</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subjects</span><span class="p">))</span>
+
+    <span class="c1"># save the dataset to disk to enable passing on multiple dataset(s)</span>
+    <span class="n">saved_path</span> <span class="o">=</span> <span class="n">realpath</span><span class="p">(</span><span class="n">pjoin</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">outname</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ds</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">saved_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">ioe</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Unable to save </span><span class="si">{}</span><span class="s1"> features to disk in folder:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">outname</span><span class="p">,</span> <span class="n">outdir</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">ioe</span>
+
+    <span class="k">return</span> <span class="n">saved_path</span></div>
+
+
+<div class="viewcode-block" id="alert_failed_feature_extraction"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.alert_failed_feature_extraction">[docs]</a><span class="k">def</span> <span class="nf">alert_failed_feature_extraction</span><span class="p">(</span><span class="n">num_excluded</span><span class="p">,</span> <span class="n">num_read</span><span class="p">,</span> <span class="n">total_num</span><span class="p">):</span>
+    <span class="s2">&quot;Alerts user of failed feature extraction and get permission to proceed.&quot;</span>
+
+    <span class="n">allowed_to_proceed</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">num_excluded</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Features for </span><span class="si">{}</span><span class="s1"> / </span><span class="si">{}</span><span class="s1"> subjects could not be read. &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_excluded</span><span class="p">,</span> <span class="n">total_num</span><span class="p">))</span>
+        <span class="n">user_confirmation</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Would you like to proceed?  y / [N] : &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_confirmation</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span> <span class="s1">&#39;ye&#39;</span><span class="p">]:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Stopping. </span><span class="se">\n</span><span class="s1">&#39;</span>
+                  <span class="s1">&#39;Rerun after completing the feature extraction for all subjects &#39;</span>
+                  <span class="s1">&#39;or exclude failed subjects..&#39;</span><span class="p">)</span>
+            <span class="n">allowed_to_proceed</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># unnecessary</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; Proceeding with only </span><span class="si">{}</span><span class="s1"> subjects.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_read</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">allowed_to_proceed</span></div>
+
+
+<div class="viewcode-block" id="saved_dataset_matches"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.saved_dataset_matches">[docs]</a><span class="k">def</span> <span class="nf">saved_dataset_matches</span><span class="p">(</span><span class="n">dataset_spec</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if the dataset on disk contains requested samples with the same classes</span>
+
+<span class="sd">    Returns True only if the path to dataset exists, is not empy,</span>
+<span class="sd">    contains the same number of samples, same sample ids and classes as in meta data!</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset_spec : MLDataset or str</span>
+<span class="sd">        dataset object, or path to one.</span>
+<span class="sd">    subjects : list</span>
+<span class="sd">        sample ids</span>
+<span class="sd">    classes : dict</span>
+<span class="sd">        class ids keyed in by sample ids</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset_spec</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">dataset_spec</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">dataset_spec</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span><span class="n">dataset_spec</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset_spec</span><span class="p">,</span> <span class="n">MLDataset</span><span class="p">):</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">dataset_spec</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input must be a path or MLDataset.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">class_set</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">sample_ids</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">subjects</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="load_pyradigms"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.io.load_pyradigms">[docs]</a><span class="k">def</span> <span class="nf">load_pyradigms</span><span class="p">(</span><span class="n">dataset_paths</span><span class="p">,</span> <span class="n">sub_group</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads in a list of datasets in pyradigm format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset_paths : iterable</span>
+<span class="sd">        List of paths to pyradigm dataset</span>
+
+<span class="sd">    sub_group : iterable</span>
+<span class="sd">        subset of classes to return. Default: return all classes.</span>
+<span class="sd">        If sub_group is specified, returns only that subset of classes for all datasets.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If all the datasets do not contain the request subset of classes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">sub_group</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sub_group</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sub_group</span><span class="p">)</span>
+
+    <span class="c1"># loading datasets</span>
+    <span class="n">datasets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">dataset_paths</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Dataset @ </span><span class="si">{}</span><span class="s2"> does not exist.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># there is an internal validation of dataset</span>
+            <span class="n">ds_in</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset @ </span><span class="si">{}</span><span class="s2"> is not a valid MLDataset!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fp</span><span class="p">))</span>
+            <span class="k">raise</span>
+
+        <span class="n">class_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">ds_in</span><span class="o">.</span><span class="n">class_set</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sub_group</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">sub_group</span> <span class="o">==</span> <span class="n">class_set</span><span class="p">:</span>
+            <span class="n">ds_out</span> <span class="o">=</span> <span class="n">ds_in</span>
+        <span class="k">elif</span> <span class="n">sub_group</span> <span class="o">&lt;</span> <span class="n">class_set</span><span class="p">:</span> <span class="c1"># &lt; on sets is an issubset operation</span>
+            <span class="n">ds_out</span> <span class="o">=</span> <span class="n">ds_in</span><span class="o">.</span><span class="n">get_class</span><span class="p">(</span><span class="n">sub_group</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;One or more classes in </span><span class="si">{}</span><span class="s1"> does not exist in</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub_group</span><span class="p">,</span> <span class="n">fp</span><span class="p">))</span>
+
+        <span class="c1"># add the valid dataset to list</span>
+        <span class="n">datasets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ds_out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">datasets</span></div>
+
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>

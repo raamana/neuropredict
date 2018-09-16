@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.experiment &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.experiment</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+
+<div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.experiment.Experiment">[docs]</a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class defining an neuropredict experiment to be run.</span>
+
+<span class="sd">    Encapsulates all the details necessary for execution,</span>
+<span class="sd">        hence easing the save/load/decide workflow.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">sample_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">train_perc</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_train_perc</span><span class="p">,</span>
+                 <span class="n">classifier_name</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_classifier</span><span class="p">,</span>
+                 <span class="n">feat_select_method</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_feat_select_method</span><span class="p">,</span>
+                 <span class="n">grid_search_level</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVEL_DEFAULT</span><span class="p">,</span>
+                 <span class="n">feature_selection_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_num_features_to_select</span><span class="p">,</span>
+                 <span class="n">num_procs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DEFAULT_NUM_PROCS</span><span class="p">,</span>
+                 <span class="n">num_rep_cv</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_num_repetitions</span><span class="p">,</span>
+                 <span class="n">positive_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sub_groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">fs_subject_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">user_feature_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">user_feature_paths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+
+        <span class="k">pass</span></div>
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>

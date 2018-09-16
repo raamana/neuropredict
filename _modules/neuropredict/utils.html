@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.utils &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.utils</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">pjoin</span><span class="p">,</span> <span class="n">exists</span> <span class="k">as</span> <span class="n">pexists</span><span class="p">,</span> <span class="n">realpath</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">cpu_count</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="k">import</span> <span class="n">localtime</span><span class="p">,</span> <span class="n">strftime</span>
+
+<span class="n">__re_delimiters_word</span> <span class="o">=</span> <span class="s1">&#39;_|:|; |, |\*|</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+<div class="viewcode-block" id="check_params_rhst"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.check_params_rhst">[docs]</a><span class="k">def</span> <span class="nf">check_params_rhst</span><span class="p">(</span><span class="n">dataset_path_file</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span>
+                      <span class="n">sub_groups</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span>
+                      <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validates inputs and returns paths to feature sets to load&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">dataset_path_file</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;File containing dataset paths does not exist.&quot;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dataset_path_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dpf</span><span class="p">:</span>
+        <span class="n">dataset_paths</span> <span class="o">=</span> <span class="n">dpf</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="c1"># removing duplicates</span>
+        <span class="n">dataset_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dataset_paths</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out_results_dir</span> <span class="o">=</span> <span class="n">realpath</span><span class="p">(</span><span class="n">out_results_dir</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_results_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error in checking or creating output directiory. Ensure write permissions!&#39;</span><span class="p">)</span>
+
+    <span class="n">num_repetitions</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_repetitions</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">num_repetitions</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Infinite number of repetitions is not recommened!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">num_repetitions</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;More than 1 repetition is necessary!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.01</span> <span class="o">&lt;=</span> <span class="n">train_perc</span> <span class="o">&lt;=</span> <span class="mf">0.99</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Training percentage </span><span class="si">{}</span><span class="s2"> out of bounds &quot;</span>
+                         <span class="s2">&quot;- must be &gt; 0.01 and &lt; 0.99&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_perc</span><span class="p">))</span>
+
+    <span class="n">num_procs</span> <span class="o">=</span> <span class="n">check_num_procs</span><span class="p">(</span><span class="n">num_procs</span><span class="p">)</span>
+
+    <span class="c1"># removing empty elements</span>
+    <span class="k">if</span> <span class="n">sub_groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sub_groups</span> <span class="o">=</span> <span class="p">[</span> <span class="n">group</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">sub_groups</span> <span class="k">if</span> <span class="n">group</span><span class="p">]</span>
+    <span class="c1"># NOTE: here, we are not ensuring classes in all the subgroups actually exist in all datasets</span>
+    <span class="c1"># that happens when loading data.</span>
+
+    <span class="k">if</span> <span class="n">grid_search_level</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVELS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unrecognized level of grid search. Valid choices: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVELS</span><span class="p">))</span>
+
+    <span class="n">classifier_name</span> <span class="o">=</span> <span class="n">check_classifier</span><span class="p">(</span><span class="n">classifier_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">feat_select_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">feature_selection_choices</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Feature selection method not recognized: </span><span class="si">{}</span><span class="se">\n</span><span class="s1"> &#39;</span>
+                         <span class="s1">&#39;Implemented choices: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feat_select_method</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">feature_selection_choices</span><span class="p">))</span>
+
+    <span class="c1"># printing the chosen options</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training percentage      : </span><span class="si">{:.2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_perc</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of CV repetitions : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_repetitions</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Classifier chosen        : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">classifier_name</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Feature selection chosen : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feat_select_method</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Level of grid search     : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grid_search_level</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Number of processors     : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_procs</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Saving the results to </span><span class="se">\n</span><span class="s1">  </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_results_dir</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dataset_paths</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> <span class="n">sub_groups</span></div>
+
+
+<div class="viewcode-block" id="check_classifier"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.check_classifier">[docs]</a><span class="k">def</span> <span class="nf">check_classifier</span><span class="p">(</span><span class="n">clf_name</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_classifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validates the classifier choice, and ensures necessary modules are installed.&quot;&quot;&quot;</span>
+
+    <span class="n">clf_name</span> <span class="o">=</span> <span class="n">clf_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">clf_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">classifier_choices</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Classifier not recognized : </span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;Choose one of: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clf_name</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">classifier_choices</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">clf_name</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">additional_modules_reqd</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">importlib</span> <span class="k">import</span> <span class="n">import_module</span>
+            <span class="n">import_module</span><span class="p">(</span><span class="n">clf_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s1">&#39;choosing classifier </span><span class="si">{}</span><span class="s1"> requires installation of &#39;</span>
+                              <span class="s1">&#39;another package. Try running</span><span class="se">\n</span><span class="s1">&#39;</span>
+                              <span class="s1">&#39;pip install -U </span><span class="si">{}</span><span class="s1"> &#39;</span>
+                              <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">clf_name</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">additional_modules_reqd</span><span class="p">[</span><span class="n">clf_name</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">clf_name</span></div>
+
+
+<div class="viewcode-block" id="check_feature_sets_are_comparable"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.check_feature_sets_are_comparable">[docs]</a><span class="k">def</span> <span class="nf">check_feature_sets_are_comparable</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">common_ds_index</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_DATASET_INDEX</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Validating all the datasets are comparable e.g. with same samples and classes.&quot;&quot;&quot;</span>
+
+    <span class="c1"># looking into the first dataset</span>
+    <span class="n">common_ds</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">common_ds_index</span><span class="p">]</span>
+    <span class="n">class_set</span><span class="p">,</span> <span class="n">label_set_in_ds</span><span class="p">,</span> <span class="n">class_sizes</span> <span class="o">=</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">summarize_classes</span><span class="p">()</span>
+    <span class="c1"># below code turns the labels numeric regardless of dataset</span>
+    <span class="n">label_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label_set_in_ds</span><span class="p">)))</span>
+
+    <span class="n">common_samples</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">common_ds</span><span class="o">.</span><span class="n">sample_ids</span><span class="p">)</span>
+
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">num_samples</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_set</span><span class="p">)</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">))</span>
+    <span class="n">remaining</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">common_ds_index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">remaining</span><span class="p">:</span>
+            <span class="n">this_ds</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">num_samples</span> <span class="o">!=</span> <span class="n">this_ds</span><span class="o">.</span><span class="n">num_samples</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Number of samples in different datasets differ!&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">common_samples</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">this_ds</span><span class="o">.</span><span class="n">sample_ids</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sample IDs differ across atleast two datasets!</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                 <span class="s2">&quot;All datasets must have the same set of samples, &quot;</span>
+                                 <span class="s2">&quot;even if the dimensionality of individual feature set changes.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">class_set</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">this_ds</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Classes differ among datasets! </span><span class="se">\n</span><span class="s2"> One dataset: </span><span class="si">{}</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> Another: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="nb">set</span><span class="p">(</span><span class="n">class_set</span><span class="p">),</span> <span class="nb">set</span><span class="p">(</span><span class="n">this_ds</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+
+    <span class="c1"># displaying info on what is common across datasets</span>
+    <span class="n">common_ds</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span> <span class="c1"># this description is not reflective of all datasets</span>
+    <span class="n">dash_line</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">25</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{line}</span><span class="se">\n</span><span class="s1">All datasets contain:</span><span class="se">\n</span><span class="s1">{ds:full}</span><span class="se">\n</span><span class="si">{line}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="o">=</span><span class="n">dash_line</span><span class="p">,</span> <span class="n">ds</span><span class="o">=</span><span class="n">common_ds</span><span class="p">))</span>
+
+    <span class="c1"># choosing &#39;balanced&#39; or 1/n_c for chance accuracy as training set is stratified</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Estimated chance accuracy : </span><span class="si">{:.3f}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chance_accuracy</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">,</span> <span class="s1">&#39;balanced&#39;</span><span class="p">)))</span>
+
+    <span class="n">num_features</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="n">num_features</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">num_features</span>
+
+    <span class="k">return</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">label_set</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_features</span></div>
+
+
+<div class="viewcode-block" id="chance_accuracy"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.chance_accuracy">[docs]</a><span class="k">def</span> <span class="nf">chance_accuracy</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;imbalanced&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the chance accuracy for a given set of classes with varying sizes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    class_sizes : list</span>
+<span class="sd">        List of sizes of the classes.</span>
+
+<span class="sd">    method : str</span>
+<span class="sd">        Type of method to use to compute the chance accuracy. Two options:</span>
+
+<span class="sd">            - `imbalanced` : uses the proportions of all classes [Default]</span>
+<span class="sd">            - `zero_rule`  : uses the so called Zero Rule (fraction of majority class)</span>
+
+<span class="sd">        Both methods return similar results, with Zero Rule erring on the side higher chance accuracy.</span>
+
+<span class="sd">    Useful discussion at `stackexchange.com &lt;https://stats.stackexchange.com/questions/148149/what-is-the-chance-level-accuracy-in-unbalanced-classification-problems&gt;`_</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    chance_acc : float</span>
+<span class="sd">        Accuracy of purely random/chance classifier on this particular dataset.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">class_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">)</span>
+
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">)</span>
+    <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">)</span>
+    <span class="c1"># # the following is wrong if imbalance is present</span>
+    <span class="c1"># chance_acc = 1.0 / num_classes</span>
+
+    <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;imbalanced&#39;</span><span class="p">,</span> <span class="p">]:</span>
+        <span class="n">chance_acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">class_sizes</span> <span class="o">/</span> <span class="n">num_samples</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;zero_rule&#39;</span><span class="p">,</span> <span class="s1">&#39;zeror&#39;</span> <span class="p">]:</span>
+        <span class="c1"># zero rule: fraction of largest class</span>
+        <span class="n">chance_acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_samples</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;balanced&#39;</span><span class="p">,</span> <span class="s1">&#39;traditional&#39;</span><span class="p">]:</span>
+        <span class="n">chance_acc</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">num_classes</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid choice of method to compute choice accuracy!&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chance_acc</span></div>
+
+
+<div class="viewcode-block" id="balanced_accuracy"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.balanced_accuracy">[docs]</a><span class="k">def</span> <span class="nf">balanced_accuracy</span><span class="p">(</span><span class="n">confmat</span><span class="p">):</span>
+    <span class="s2">&quot;Computes the balanced accuracy in a given confusion matrix!&quot;</span>
+
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">confmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">!=</span> <span class="n">confmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;given confusion matrix is not square!&quot;</span><span class="p">)</span>
+
+    <span class="n">confmat</span> <span class="o">=</span> <span class="n">confmat</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="n">indiv_class_acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_classes</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">):</span>
+        <span class="n">indiv_class_acc</span><span class="p">[</span><span class="n">cc</span><span class="p">]</span> <span class="o">=</span> <span class="n">confmat</span><span class="p">[</span><span class="n">cc</span><span class="p">,</span> <span class="n">cc</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">confmat</span><span class="p">[</span><span class="n">cc</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">indiv_class_acc</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="check_num_procs"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.check_num_procs">[docs]</a><span class="k">def</span> <span class="nf">check_num_procs</span><span class="p">(</span><span class="n">requested_num_procs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DEFAULT_NUM_PROCS</span><span class="p">):</span>
+    <span class="s2">&quot;Ensures num_procs is finite and &lt;= available cpu count.&quot;</span>
+
+    <span class="n">num_procs</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">requested_num_procs</span><span class="p">)</span>
+    <span class="n">avail_cpu_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cpu_count</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">get_avail_slot_count</span><span class="p">(</span><span class="n">avail_cpu_count</span><span class="o">=</span><span class="n">avail_cpu_count</span><span class="p">):</span>
+        <span class="s2">&quot;Method to query HPC-specific number of slots available.&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">getenv</span>
+
+        <span class="n">hpc_num_procs_spec</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;SGE&#39;</span><span class="p">,</span>   <span class="s1">&#39;JOB_ID&#39;</span><span class="p">,</span>      <span class="s1">&#39;NSLOTS&#39;</span><span class="p">,</span>        <span class="s1">&#39;slots&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;SLURM&#39;</span><span class="p">,</span> <span class="s1">&#39;SLURM_JOBID&#39;</span><span class="p">,</span> <span class="s1">&#39;SLURM_CPUS_PER_TASK&#39;</span><span class="p">,</span>  <span class="s1">&#39;processors&#39;</span><span class="p">),</span>
+                              <span class="p">(</span><span class="s1">&#39;PBS&#39;</span><span class="p">,</span>   <span class="s1">&#39;PBS_JOBID&#39;</span><span class="p">,</span>   <span class="s1">&#39;PBS_NUM_PPN&#39;</span><span class="p">,</span>   <span class="s1">&#39;processors per node&#39;</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">hpc_env</span><span class="p">,</span> <span class="n">id_jobid</span><span class="p">,</span> <span class="n">var_slot_count</span><span class="p">,</span> <span class="n">var_descr</span> <span class="ow">in</span> <span class="n">hpc_num_procs_spec</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">getenv</span><span class="p">(</span><span class="n">id_jobid</span><span class="p">):</span>
+                <span class="n">avail_cpu_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">getenv</span><span class="p">(</span><span class="n">var_slot_count</span><span class="p">,</span> <span class="n">cpu_count</span><span class="p">()))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> recognized, job set up with </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hpc_env</span><span class="p">,</span> <span class="n">avail_cpu_count</span><span class="p">,</span> <span class="n">var_descr</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">avail_cpu_count</span>
+
+
+    <span class="n">avail_cpu_count</span> <span class="o">=</span> <span class="n">get_avail_slot_count</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">num_procs</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">num_procs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">num_procs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_procs</span> <span class="o">=</span> <span class="n">avail_cpu_count</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Invalid value for num_procs.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">num_procs</span> <span class="o">&gt;</span> <span class="n">avail_cpu_count</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;# CPUs requested higher than available </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">avail_cpu_count</span><span class="p">))</span>
+        <span class="n">num_procs</span> <span class="o">=</span> <span class="n">avail_cpu_count</span>
+
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">num_procs</span></div>
+
+
+<div class="viewcode-block" id="save_options"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.save_options">[docs]</a><span class="k">def</span> <span class="nf">save_options</span><span class="p">(</span><span class="n">options_to_save</span><span class="p">,</span> <span class="n">out_dir_in</span><span class="p">):</span>
+    <span class="s2">&quot;Helper to save chosen options&quot;</span>
+
+    <span class="n">sample_ids</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span> \
+        <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">subgroups</span><span class="p">,</span> <span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> \
+        <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span> <span class="o">=</span> <span class="n">options_to_save</span>
+
+    <span class="n">user_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;sample_ids&#39;</span>            <span class="p">:</span> <span class="n">sample_ids</span><span class="p">,</span>
+        <span class="s1">&#39;classes&#39;</span>               <span class="p">:</span> <span class="n">classes</span><span class="p">,</span>
+        <span class="s1">&#39;classifier_name&#39;</span>       <span class="p">:</span> <span class="n">classifier_name</span><span class="p">,</span>
+        <span class="s1">&#39;feat_select_method&#39;</span>    <span class="p">:</span> <span class="n">feat_select_method</span><span class="p">,</span>
+        <span class="s1">&#39;gs_level&#39;</span>              <span class="p">:</span> <span class="n">grid_search_level</span><span class="p">,</span>
+        <span class="s1">&#39;feature_selection_size&#39;</span><span class="p">:</span> <span class="n">feature_selection_size</span><span class="p">,</span>
+        <span class="s1">&#39;num_procs&#39;</span>             <span class="p">:</span> <span class="n">num_procs</span><span class="p">,</span>
+        <span class="s1">&#39;num_rep_cv&#39;</span>            <span class="p">:</span> <span class="n">num_rep_cv</span><span class="p">,</span>
+        <span class="s1">&#39;positive_class&#39;</span>        <span class="p">:</span> <span class="n">positive_class</span><span class="p">,</span>
+        <span class="s1">&#39;sub_groups&#39;</span>            <span class="p">:</span> <span class="n">subgroups</span><span class="p">,</span>
+        <span class="s1">&#39;train_perc&#39;</span>            <span class="p">:</span> <span class="n">train_perc</span><span class="p">,</span>
+        <span class="s1">&#39;fs_subject_dir&#39;</span>        <span class="p">:</span> <span class="n">fs_subject_dir</span><span class="p">,</span>
+        <span class="s1">&#39;user_feature_type&#39;</span>     <span class="p">:</span> <span class="n">user_feature_type</span><span class="p">,</span>
+        <span class="s1">&#39;user_feature_paths&#39;</span>    <span class="p">:</span> <span class="n">user_feature_paths</span><span class="p">,</span>
+        <span class="s1">&#39;out_dir&#39;</span>               <span class="p">:</span> <span class="n">out_dir</span><span class="p">,}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">options_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir_in</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">file_name_options</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">options_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">opt_file</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">user_options</span><span class="p">,</span> <span class="n">opt_file</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Unable to save the options to</span><span class="se">\n</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_dir_in</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">options_path</span></div>
+
+
+<div class="viewcode-block" id="load_options"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.load_options">[docs]</a><span class="k">def</span> <span class="nf">load_options</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="s2">&quot;Helper to load the saved options&quot;</span>
+
+
+    <span class="k">if</span> <span class="n">options_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">options_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">file_name_options</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">options_path</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid path to options file provided.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">options_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">opt_file</span><span class="p">:</span>
+            <span class="n">user_options</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">opt_file</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Unable to load the options from</span><span class="se">\n</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_dir</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">user_options</span></div>
+
+
+<div class="viewcode-block" id="check_paths"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.check_paths">[docs]</a><span class="k">def</span> <span class="nf">check_paths</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">path_type</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="s2">&quot;Converts path to absolute paths and ensures they all exist!&quot;</span>
+
+    <span class="n">abs_paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">realpath</span><span class="p">,</span> <span class="n">paths</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">abs_paths</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">pp</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;One of </span><span class="si">{}</span><span class="s2"> paths specified does not exist:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_type</span><span class="p">,</span> <span class="n">pp</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">abs_paths</span></div>
+
+
+<div class="viewcode-block" id="validate_feature_selection_size"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.validate_feature_selection_size">[docs]</a><span class="k">def</span> <span class="nf">validate_feature_selection_size</span><span class="p">(</span><span class="n">feature_select_method</span><span class="p">,</span> <span class="n">dim_in_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensures method chosen for the type of computation for the size of reduced dimensionality.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    feature_select_method</span>
+<span class="sd">    dim_in_data</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">feature_select_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">feature_selection_size_methods</span><span class="p">:</span>
+        <span class="n">num_select</span> <span class="o">=</span> <span class="n">feature_select_method</span>
+    <span class="k">elif</span> <span class="n">feature_select_method</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="n">num_select</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">feature_select_method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">num_select</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">Inf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">UnboundLocalError</span><span class="p">(</span><span class="s1">&#39;feature selection size out of bounds.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                                    <span class="s1">&#39;Must be &gt; 0 and &lt; </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">Inf</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid choise - Choose an integer or one of </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">feature_selection_size_methods</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">num_select</span></div>
+
+
+<div class="viewcode-block" id="uniq_combined_name"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.uniq_combined_name">[docs]</a><span class="k">def</span> <span class="nf">uniq_combined_name</span><span class="p">(</span><span class="n">method_names</span><span class="p">,</span> <span class="n">max_len</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">num_char_each_word</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="s2">&quot;Function to produce a uniq, and not a long combined name. Recursive&quot;</span>
+
+    <span class="n">combined_name</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">method_names</span><span class="p">)</span>
+    <span class="c1"># depending on number and lengths of method_names, this can get very long</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">:</span>
+        <span class="n">first_letters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">mname</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">:</span>
+            <span class="n">first_letters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">word</span><span class="p">[:</span><span class="n">num_char_each_word</span><span class="p">]</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">__re_delimiters_word</span><span class="p">,</span> <span class="n">mname</span><span class="p">)]))</span>
+        <span class="n">combined_name</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">first_letters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">combined_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">:</span>
+            <span class="n">combined_name</span> <span class="o">=</span> <span class="n">uniq_combined_name</span><span class="p">(</span><span class="n">first_letters</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">combined_name</span></div>
+
+
+<div class="viewcode-block" id="sub_group_identifier"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.sub_group_identifier">[docs]</a><span class="k">def</span> <span class="nf">sub_group_identifier</span><span class="p">(</span><span class="n">group_names</span><span class="p">):</span>
+    <span class="s2">&quot;Constructs clean identifier to refer to a group of classes. Names will be sorted to allow for reproducibility.&quot;</span>
+
+    <span class="n">group_names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span> <span class="n">word</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">group_names</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">__re_delimiters_word</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span> <span class="k">if</span> <span class="n">word</span> <span class="p">]</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">identifier</span></div>
+
+
+<div class="viewcode-block" id="make_numeric_labels"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.make_numeric_labels">[docs]</a><span class="k">def</span> <span class="nf">make_numeric_labels</span><span class="p">(</span><span class="n">class_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates numeric labels (to feed external tools) for a given set of strings&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="p">{</span> <span class="bp">cls</span> <span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_set</span><span class="p">)</span> <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="make_dataset_filename"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.make_dataset_filename">[docs]</a><span class="k">def</span> <span class="nf">make_dataset_filename</span><span class="p">(</span><span class="n">method_name</span><span class="p">):</span>
+    <span class="s2">&quot;File name constructor.&quot;</span>
+
+    <span class="n">file_name</span> <span class="o">=</span> <span class="s1">&#39;consolidated_</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">.MLDataset.pkl&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_name</span><span class="p">,</span> <span class="n">make_time_stamp</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">file_name</span></div>
+
+
+<div class="viewcode-block" id="make_time_stamp"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.make_time_stamp">[docs]</a><span class="k">def</span> <span class="nf">make_time_stamp</span><span class="p">():</span>
+    <span class="s2">&quot;Returns a timestamp string.&quot;</span>
+
+    <span class="c1"># just by the hour</span>
+    <span class="k">return</span> <span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">-T%H&#39;</span><span class="p">,</span> <span class="n">localtime</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="not_unspecified"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.utils.not_unspecified">[docs]</a><span class="k">def</span> <span class="nf">not_unspecified</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Checks for null values of a give variable! &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span></div>
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>

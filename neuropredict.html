@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict package &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="_static/favicon.ico" />
+
+        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : './',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <div class="section" id="neuropredict-package">
+<h1>neuropredict package<a class="headerlink" href="#neuropredict-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-neuropredict.algorithms">
+<span id="neuropredict-algorithms-module"></span><h2>neuropredict.algorithms module<a class="headerlink" href="#module-neuropredict.algorithms" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.algorithms.get_pipeline">
+<code class="descclassname">neuropredict.algorithms.</code><code class="descname">get_pipeline</code><span class="sig-paren">(</span><em>train_class_sizes</em>, <em>feat_sel_size</em>, <em>num_features</em>, <em>preprocessor_name='robustscaler'</em>, <em>feat_selector_name='VarianceThreshold'</em>, <em>classifier_name='RandomForestClassifier'</em>, <em>grid_search_level='none'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/algorithms.html#get_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.algorithms.get_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor for pipeline (feature selection followed by a classifier).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>train_class_sizes</strong> : list</p>
+<blockquote>
+<div><p>sizes of different classes in the training set, to estimate the reduced dimensionality.</p>
+</div></blockquote>
+<p><strong>feat_sel_size</strong> : str or int</p>
+<blockquote>
+<div><p>Method specify the method to estimate the reduced dimensionality.
+Choices : integer, or one of the methods in [‘sqrt’, ‘tenth’, ‘log2’, ‘all’]</p>
+</div></blockquote>
+<p><strong>num_features</strong> : int</p>
+<blockquote>
+<div><p>Number of features in the training set.</p>
+</div></blockquote>
+<p><strong>classifier_name</strong> : str</p>
+<blockquote>
+<div><p>String referring to a valid scikit-learn classifier.</p>
+</div></blockquote>
+<p><strong>feat_selector_name</strong> : str</p>
+<blockquote>
+<div><p>String referring to a valid scikit-learn feature selector.</p>
+</div></blockquote>
+<p><strong>preprocessor_name</strong> : str</p>
+<blockquote>
+<div><p>String referring to a valid scikit-learn preprocessor
+(This can technically be another feature selector, although discourage).</p>
+</div></blockquote>
+<p><strong>grid_search_level</strong> : str</p>
+<blockquote>
+<div><p>If ‘light’, grid search resolution will be reduced to speed up optimization.
+If ‘exhaustive’, most values for most parameters will be user for optimization.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>pipeline</strong> : sklearn.pipeline.Pipeline</p>
+<blockquote>
+<div><p>Valid scikit learn pipeline.</p>
+</div></blockquote>
+<p><strong>param_grid</strong> : dict</p>
+<blockquote class="last">
+<div><p>Dict of named ranges to construct the parameter grid.
+Grid contains ranges for parameters of all the steps, including preprocessor, feature selector and classifier.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.algorithms.get_feature_importance">
+<code class="descclassname">neuropredict.algorithms.</code><code class="descname">get_feature_importance</code><span class="sig-paren">(</span><em>clf_name</em>, <em>clf</em>, <em>num_features</em>, <em>index_selected_features</em>, <em>fill_value=nan</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/algorithms.html#get_feature_importance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.algorithms.get_feature_importance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the feature importance of input features, if available.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.compare">
+<span id="neuropredict-compare-module"></span><h2>neuropredict.compare module<a class="headerlink" href="#module-neuropredict.compare" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.compare.check_if_better">
+<code class="descclassname">neuropredict.compare.</code><code class="descname">check_if_better</code><span class="sig-paren">(</span><em>rank_one</em>, <em>rank_two</em>, <em>critical_dist</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/compare.html#check_if_better"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.compare.check_if_better" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether rank1 is greater than rank2 by at least critical dist</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.compare.compute_critical_dist">
+<code class="descclassname">neuropredict.compare.</code><code class="descname">compute_critical_dist</code><span class="sig-paren">(</span><em>ranks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/compare.html#compute_critical_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.compare.compute_critical_dist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.compare.pairwise">
+<code class="descclassname">neuropredict.compare.</code><code class="descname">pairwise</code><span class="sig-paren">(</span><em>accuracy_balanced</em>, <em>method_names</em>, <em>out_results_dir</em>, <em>num_repetitions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/compare.html#pairwise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.compare.pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Produces a matrix of pair-wise significance tests,</dt>
+<dd><p class="first">where each cell [i, j] answers the question:
+is method i significantly better than method j?</p>
+<p class="last">The result would be based on a test of choice.
+The default test would be non-parametric Friedman test.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.compare.vertical_nemenyi_plot">
+<code class="descclassname">neuropredict.compare.</code><code class="descname">vertical_nemenyi_plot</code><span class="sig-paren">(</span><em>data</em>, <em>num_reps</em>, <em>alpha=0.05</em>, <em>cmap=&lt;matplotlib.colors.LinearSegmentedColormap object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/compare.html#vertical_nemenyi_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.compare.vertical_nemenyi_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vertical Nemenyi plot to compare model ranks and show differences.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.config_neuropredict">
+<span id="neuropredict-config-neuropredict-module"></span><h2>neuropredict.config_neuropredict module<a class="headerlink" href="#module-neuropredict.config_neuropredict" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-neuropredict.experiment">
+<span id="neuropredict-experiment-module"></span><h2>neuropredict.experiment module<a class="headerlink" href="#module-neuropredict.experiment" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropredict.experiment.Experiment">
+<em class="property">class </em><code class="descclassname">neuropredict.experiment.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>sample_ids=None</em>, <em>classes=None</em>, <em>train_perc=0.5</em>, <em>classifier_name='RandomForestClassifier'</em>, <em>feat_select_method='VarianceThreshold'</em>, <em>grid_search_level='none'</em>, <em>feature_selection_size='tenth'</em>, <em>num_procs=4</em>, <em>num_rep_cv=200</em>, <em>positive_class=None</em>, <em>sub_groups=None</em>, <em>fs_subject_dir=None</em>, <em>user_feature_type=None</em>, <em>user_feature_paths=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Class defining an neuropredict experiment to be run.</p>
+<dl class="docutils">
+<dt>Encapsulates all the details necessary for execution,</dt>
+<dd>hence easing the save/load/decide workflow.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.freesurfer">
+<span id="neuropredict-freesurfer-module"></span><h2>neuropredict.freesurfer module<a class="headerlink" href="#module-neuropredict.freesurfer" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.freesurfer.aseg_stats_subcortical">
+<code class="descclassname">neuropredict.freesurfer.</code><code class="descname">aseg_stats_subcortical</code><span class="sig-paren">(</span><em>fspath</em>, <em>subjid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/freesurfer.html#aseg_stats_subcortical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.freesurfer.aseg_stats_subcortical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the subcortical volumes found in stats/aseg.stats.</p>
+<p>Equivalent of load_fs_segstats.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.freesurfer.aseg_stats_whole_brain">
+<code class="descclassname">neuropredict.freesurfer.</code><code class="descname">aseg_stats_whole_brain</code><span class="sig-paren">(</span><em>fspath</em>, <em>subjid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/freesurfer.html#aseg_stats_whole_brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.freesurfer.aseg_stats_whole_brain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a feature set of whole brain volumes found in Freesurfer output: subid/stats/aseg.stats</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.io">
+<span id="neuropredict-io-module"></span><h2>neuropredict.io module<a class="headerlink" href="#module-neuropredict.io" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.io.alert_failed_feature_extraction">
+<code class="descclassname">neuropredict.io.</code><code class="descname">alert_failed_feature_extraction</code><span class="sig-paren">(</span><em>num_excluded</em>, <em>num_read</em>, <em>total_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#alert_failed_feature_extraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.alert_failed_feature_extraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alerts user of failed feature extraction and get permission to proceed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_arff">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_arff</code><span class="sig-paren">(</span><em>feat_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_arff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_arff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do-nothing reader for ARFF format.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_data_matrix">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_data_matrix</code><span class="sig-paren">(</span><em>featpath</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_data_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_data_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns ndarray from data matrix stored in a file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_dir_of_dirs">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_dir_of_dirs</code><span class="sig-paren">(</span><em>featdir</em>, <em>subjid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_dir_of_dirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_dir_of_dirs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a
+separate folder for each subject with a file called features.txt with one number per line.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>featdir</strong> : str</p>
+<blockquote>
+<div><p>Path to in the input directory</p>
+</div></blockquote>
+<p><strong>subjid</strong> : str</p>
+<blockquote>
+<div><p>Subject id (name of the subfolder in the featdir identifying the subject)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data</strong> : ndarray</p>
+<blockquote>
+<div><p>vector of features for the given subject</p>
+</div></blockquote>
+<p><strong>feat_names</strong> : list of str</p>
+<blockquote class="last">
+<div><p>names of each feature
+Currently None.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_features">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_features</code><span class="sig-paren">(</span><em>subjects</em>, <em>classes</em>, <em>featdir</em>, <em>outdir</em>, <em>outname</em>, <em>get_method=None</em>, <em>feature_type='dir_of_dris'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_features"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populates the pyradigm data structure with features from a given method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>subjects</strong> : list or ndarray</p>
+<blockquote>
+<div><p>List of subject IDs</p>
+</div></blockquote>
+<p><strong>classes</strong> : dict</p>
+<blockquote>
+<div><p>dict of class labels keyed in by subject id</p>
+</div></blockquote>
+<p><strong>featdir</strong> : str</p>
+<blockquote>
+<div><p>Path to input directory to read the features from</p>
+</div></blockquote>
+<p><strong>outdir</strong> : str</p>
+<blockquote>
+<div><p>Path to output directory to save the gathered features to.</p>
+</div></blockquote>
+<p><strong>outname</strong> : str</p>
+<blockquote>
+<div><p>Name of the feature set</p>
+</div></blockquote>
+<p><strong>get_method</strong> : callable</p>
+<blockquote>
+<div><p>Callable that takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
+with an optional array of names for each feature.</p>
+</div></blockquote>
+<p><strong>feature_type</strong> : str</p>
+<blockquote>
+<div><p>Identifier of data organization for features.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>saved_path</strong> : str</p>
+<blockquote class="last">
+<div><p>Path where the features have been saved to as an MLDataset</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_metadata">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_metadata</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populates the dataset dictionary with subject ids and classes</p>
+<p>Currently supports the following per line: subjectid,class
+Future plans to include demographics data: subjectid,class,age,sex,education</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sample_ids</strong> : list of str</p>
+<blockquote>
+<div><p>list of strings identifying the sample ids</p>
+</div></blockquote>
+<p><strong>classes</strong> : dict</p>
+<blockquote class="last">
+<div><p>dict of class labels for each id in the sample_ids</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_metadata_in_pyradigm">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_metadata_in_pyradigm</code><span class="sig-paren">(</span><em>meta_data_supplied</em>, <em>meta_data_format='pyradigm'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_metadata_in_pyradigm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_metadata_in_pyradigm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns sample IDs and their classes from a given pyradigm</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.get_pyradigm">
+<code class="descclassname">neuropredict.io.</code><code class="descname">get_pyradigm</code><span class="sig-paren">(</span><em>feat_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#get_pyradigm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.get_pyradigm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do-nothing reader of pyradigm.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.load_pyradigms">
+<code class="descclassname">neuropredict.io.</code><code class="descname">load_pyradigms</code><span class="sig-paren">(</span><em>dataset_paths</em>, <em>sub_group=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#load_pyradigms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.load_pyradigms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads in a list of datasets in pyradigm format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dataset_paths</strong> : iterable</p>
+<blockquote>
+<div><p>List of paths to pyradigm dataset</p>
+</div></blockquote>
+<p><strong>sub_group</strong> : iterable</p>
+<blockquote>
+<div><p>subset of classes to return. Default: return all classes.
+If sub_group is specified, returns only that subset of classes for all datasets.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ValueError</strong></p>
+<blockquote class="last">
+<div><p>If all the datasets do not contain the request subset of classes.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.io.saved_dataset_matches">
+<code class="descclassname">neuropredict.io.</code><code class="descname">saved_dataset_matches</code><span class="sig-paren">(</span><em>dataset_spec</em>, <em>subjects</em>, <em>classes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/io.html#saved_dataset_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.io.saved_dataset_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the dataset on disk contains requested samples with the same classes</p>
+<p>Returns True only if the path to dataset exists, is not empy,
+contains the same number of samples, same sample ids and classes as in meta data!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dataset_spec</strong> : MLDataset or str</p>
+<blockquote>
+<div><p>dataset object, or path to one.</p>
+</div></blockquote>
+<p><strong>subjects</strong> : list</p>
+<blockquote>
+<div><p>sample ids</p>
+</div></blockquote>
+<p><strong>classes</strong> : dict</p>
+<blockquote>
+<div><p>class ids keyed in by sample ids</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="neuropredict-neural-networks-module">
+<h2>neuropredict.neural_networks module<a class="headerlink" href="#neuropredict-neural-networks-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-neuropredict.reports">
+<span id="neuropredict-reports-module"></span><h2>neuropredict.reports module<a class="headerlink" href="#module-neuropredict.reports" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.reports.export_results">
+<code class="descclassname">neuropredict.reports.</code><code class="descname">export_results</code><span class="sig-paren">(</span><em>dict_to_save</em>, <em>out_dir</em>, <em>options_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/reports.html#export_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.reports.export_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports the results to simpler CSV format for use in other packages!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dict_to_save</strong> : dict</p>
+<blockquote>
+<div><p>Containing all the relevant results</p>
+</div></blockquote>
+<p><strong>out_dir</strong> : str</p>
+<blockquote>
+<div><p>Path to save the results to.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.reports.export_results_from_disk">
+<code class="descclassname">neuropredict.reports.</code><code class="descname">export_results_from_disk</code><span class="sig-paren">(</span><em>results_file_path</em>, <em>out_dir</em>, <em>options_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/reports.html#export_results_from_disk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.reports.export_results_from_disk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports the results to simpler CSV format for use in other packages!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>results_file_path</strong> : str</p>
+<blockquote>
+<div><p>Path to a pickle file containing all the relevant results</p>
+</div></blockquote>
+<p><strong>out_dir</strong> : str</p>
+<blockquote>
+<div><p>Path to save the results to</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.reports.report_best_params">
+<code class="descclassname">neuropredict.reports.</code><code class="descname">report_best_params</code><span class="sig-paren">(</span><em>best_params</em>, <em>method_names</em>, <em>out_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/reports.html#report_best_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.reports.report_best_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out the most frequently selected parameter values and saves them to disk.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.results">
+<span id="neuropredict-results-module"></span><h2>neuropredict.results module<a class="headerlink" href="#module-neuropredict.results" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="neuropredict.results.Results">
+<em class="property">class </em><code class="descclassname">neuropredict.results.</code><code class="descname">Results</code><span class="sig-paren">(</span><em>pipeline_set=None</em>, <em>metric_set=None</em>, <em>feature_names=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/results.html#Results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.results.Results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Class to contains full set of results for a given experiment.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="2%" />
+<col width="98%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><strong>pipeline_set</strong></td>
+<td>(list of sklearn pipelines) sklearn pipelines allows a sequence of preprocessing, feature selection and estimators to realize the full power of ML techniques for your problem. Currently only one pipeline is supported. The need for and utility of implementing multiple pipelines is being contemplated.  metric_set : dict Contains the set of the metrics evaluating the predictive performance of the model. The most common metric is classification accuracy, and other metrics available are: balanced_accuracy : most generically applicable, with experiments with class imbalance and in multi-class experiments. AUC (when the classification task is binary),  probabilities : dict Contains predictive probabilities (predicted by the estimator) from which the metrics (above) were derived from. Note this may not always be available, and often is slower than otherwise.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="neuropredict.results.Results.add_result">
+<code class="descname">add_result</code><span class="sig-paren">(</span><em>metric_data=None</em>, <em>probabilities=None</em>, <em>test_labels_predicted=None</em>, <em>test_labels_true=None</em>, <em>confusion_matrices=None</em>, <em>best_params=None</em>, <em>feature_importance=None</em>, <em>num_times_misclassified=None</em>, <em>num_times_tested=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/results.html#Results.add_result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.results.Results.add_result" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Method to populate the Results class with predictions/accuracies,</dt>
+<dd>coming from different repetitions of CV.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="neuropredict.results.Results.export">
+<code class="descname">export</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/results.html#Results.export"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.results.Results.export" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to export the results to different formats (e.g. CSV)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="neuropredict.results.Results.load">
+<code class="descname">load</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/results.html#Results.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.results.Results.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to load previously saved results e.g. to redo visualizations</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="neuropredict.results.Results.save">
+<code class="descname">save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/results.html#Results.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.results.Results.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to persist the results to disk.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.rhst">
+<span id="neuropredict-rhst-module"></span><h2>neuropredict.rhst module<a class="headerlink" href="#module-neuropredict.rhst" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.rhst.run">
+<code class="descclassname">neuropredict.rhst.</code><code class="descname">run</code><span class="sig-paren">(</span><em>dataset_path_file</em>, <em>method_names</em>, <em>out_results_dir</em>, <em>train_perc=0.8</em>, <em>num_repetitions=200</em>, <em>positive_class=None</em>, <em>sub_group=None</em>, <em>feat_sel_size='tenth'</em>, <em>num_procs=4</em>, <em>grid_search_level='none'</em>, <em>classifier_name='RandomForestClassifier'</em>, <em>feat_select_method='VarianceThreshold'</em>, <em>options_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/rhst.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.rhst.run" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dataset_path_file</strong> : str</p>
+<blockquote>
+<div><p>path to file containing list of paths (each containing a valid MLDataset).</p>
+</div></blockquote>
+<p><strong>method_names</strong> : list</p>
+<blockquote>
+<div><p>A list of names to denote the different feature extraction methods</p>
+</div></blockquote>
+<p><strong>out_results_dir</strong> : str</p>
+<blockquote>
+<div><p>Path to output directory to save the cross validation results to.</p>
+</div></blockquote>
+<p><strong>train_perc</strong> : float or numpy.float, optional</p>
+<blockquote>
+<div><p>Percetange of subjects to train the classifier on.
+The percentage is applied to the size of the smallest class to estimate
+the number of subjects from each class to be reserved for training.
+The smallest class is chosen to avoid class-imbalance in the training set.</p>
+<p>Default: 0.8 (80%).</p>
+</div></blockquote>
+<p><strong>num_repetitions</strong> : int or numpy.int, optional</p>
+<blockquote>
+<div><p>Number of repetitions of cross-validation estimation. Default: 200.</p>
+</div></blockquote>
+<p><strong>positive_class</strong> : str</p>
+<blockquote>
+<div><p>Name of the class to be treated as positive in calculation of AUC</p>
+</div></blockquote>
+<p><strong>feat_sel_size</strong> : str or int</p>
+<blockquote>
+<div><p>Number of features to retain after feature selection.
+Must be a method (tenth or square root of the size of smallest class in training set,</p>
+<blockquote>
+<div><p>or a finite integer smaller than the data dimensionality.</p>
+</div></blockquote>
+</div></blockquote>
+<p><strong>sub_group</strong> : list</p>
+<blockquote>
+<div><p>List of classes to focus on for classification. Default: all classes available.</p>
+</div></blockquote>
+<p><strong>num_procs</strong> : int</p>
+<blockquote>
+<div><p>Number of parallel processes to run to parallelize the repetitions of CV</p>
+</div></blockquote>
+<p><strong>grid_search_level</strong> : str</p>
+<blockquote>
+<div><p>If ‘none’, no grid search will be performed, choosing parameters based on ‘folk wisdom’.
+If ‘light’, grid search resolution will be reduced to speed up optimization.
+If ‘exhaustive’, most values for most parameters will be user for optimization.</p>
+</div></blockquote>
+<p><strong>options_path</strong> : str</p>
+<blockquote>
+<div><p>Path to a pickle file which contains the all user chosen options.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>results_path</strong> : str</p>
+<blockquote class="last">
+<div><p>Path to pickle file containing full set of CV results.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.rhst.load_results">
+<code class="descclassname">neuropredict.rhst.</code><code class="descname">load_results</code><span class="sig-paren">(</span><em>results_file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/rhst.html#load_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.rhst.load_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the results serialized by RHsT.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.rhst.save_results">
+<code class="descclassname">neuropredict.rhst.</code><code class="descname">save_results</code><span class="sig-paren">(</span><em>out_dir</em>, <em>dict_of_objects_to_save</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/rhst.html#save_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.rhst.save_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes the results to disk.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.run_workflow">
+<span id="neuropredict-run-workflow-module"></span><h2>neuropredict.run_workflow module<a class="headerlink" href="#module-neuropredict.run_workflow" title="Permalink to this headline">¶</a></h2>
+<p>neuropredict : easy and comprehensive predictive analysis.</p>
+<dl class="function">
+<dt id="neuropredict.run_workflow.run">
+<code class="descclassname">neuropredict.run_workflow.</code><code class="descname">run</code><span class="sig-paren">(</span><em>feature_sets</em>, <em>feature_type='list_of_pyradigm_paths'</em>, <em>meta_data=None</em>, <em>output_dir=None</em>, <em>pipeline=None</em>, <em>train_perc=0.5</em>, <em>num_repetitions=200</em>, <em>positive_class=None</em>, <em>feat_sel_size='tenth'</em>, <em>sub_groups='all'</em>, <em>grid_search_level='none'</em>, <em>num_procs=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/run_workflow.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.run_workflow.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.</p>
+<p>Main entry point for API access.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>feature_sets</strong> : list</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>The input can be specified in either of the following ways:</dt>
+<dd><ul class="first simple">
+<li>list of paths to pyradigm datasets saved on disk</li>
+<li>path to a file containing list of paths (each line containing path to a valid MLDataset)</li>
+<li>list of MLDatasets that are already loaded</li>
+<li>list of tuples (to specify multiple features), each element containing (X, y) i.e. data and target labels</li>
+<li>a single tuple containing (X, y) i.e. data and target labels</li>
+<li>list of paths to CSV files, each containing one type of features.</li>
+</ul>
+<p class="last">When specifying multiple sets of input features, ensure:
+- all of them contain the same number of samples
+- each sample belongs to same class across all feature sets.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>feature_type</strong> : str</p>
+<blockquote>
+<div><p>String identifying the type of features as described above. It could be:
+‘list_of_pyradigm_paths’, ‘pyradigm_list’,
+‘list_of_tuples’, ‘tuple’, ‘list_of_csv_paths’</p>
+</div></blockquote>
+<p><strong>meta_data</strong> : multiple</p>
+<blockquote>
+<div><p>The meta data can be specified in either of the following ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>a path to a meta data file (see <a class="reference internal" href="features.html"><span class="doc">Input formats</span></a> page)</li>
+<li>a dict keyed in by sample IDs with values representing their classes.</li>
+<li>None, if meta data is already specified in <code class="docutils literal"><span class="pre">feature_sets</span></code> input (e.g. with pyradigms).</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<p><strong>pipeline</strong> : str or object</p>
+<blockquote>
+<div><p>If a string, it identifying one of the implemented classifiers e.g. ‘RandomForestClassifier’ or ‘ExtraTreesClassifier’
+If an object, it must be a sciki-learn pipeline describing the sequence of steps.
+This is typically a set of feature selections or dimensionality reduction steps followed by an estimator (classifier).</p>
+<p>See <a class="reference external" href="http://scikit-learn.org/stable/modules/pipeline.html#pipeline">http://scikit-learn.org/stable/modules/pipeline.html#pipeline</a> for more details.</p>
+<dl class="docutils">
+<dt>Default: None, which leads to the selection of a Random Forest classifier,</dt>
+<dd><p class="first last">with robust scaling, followed by removal of low variance features.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>method_names</strong> : list</p>
+<blockquote>
+<div><p>A list of names to denote the different feature sets</p>
+</div></blockquote>
+<p><strong>out_results_dir</strong> : str</p>
+<blockquote>
+<div><p>Path to output directory to save the cross validation results to.
+If not specified, a new directory named ‘neuropredict’ will be created in the current directory.</p>
+</div></blockquote>
+<p><strong>train_perc</strong> : float, optional</p>
+<blockquote>
+<div><p>Percetange of subjects to train the classifier on.
+The percentage is applied to the size of the smallest class to estimate
+the number of subjects from each class to be reserved for training.
+The smallest class is chosen to avoid class-imbalance in the training set.
+Default: 0.8 (80%).</p>
+</div></blockquote>
+<p><strong>positive_class</strong> : str</p>
+<blockquote>
+<div><p>Name of the class to be treated as positive in calculation of AUC</p>
+</div></blockquote>
+<p><strong>feat_sel_size</strong> : str or int</p>
+<blockquote>
+<div><p>Number of features to select as part of feature selection. Options:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li>‘tenth’</li>
+<li>‘sqrt’</li>
+<li>‘log2’</li>
+<li>‘all’</li>
+</ul>
+</div></blockquote>
+<p>Default: ‘tenth’ of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.</p>
+</div></blockquote>
+</div></blockquote>
+<p><strong>num_repetitions</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of repetitions of cross-validation estimation. Default: 200.</p>
+</div></blockquote>
+<p><strong>num_procs</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of CPUs to use to parallelize CV repetitions.</p>
+<p>Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested.</p>
+</div></blockquote>
+<p><strong>sub_groups</strong> : list</p>
+<blockquote>
+<div><p>This option allows the user to study different combinations of classes in a multi-class (N&gt;2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied separately with the following flag <code class="docutils literal"><span class="pre">--sub_groups</span> <span class="pre">CN,FTD</span> <span class="pre">CN,AD</span></code>. This allows the user to focus on few interesting subgroups depending on their dataset/goal.</p>
+<p>Format: Different subgroups must be separated by space, and each sub-group must be a comma-separated list of class names defined in the meta data file. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes.</p>
+<p>Default: <code class="docutils literal"><span class="pre">'all'</span></code>, leading to inclusion of all available classes in a all-vs-all multi-class setting.</p>
+</div></blockquote>
+<p><strong>grid_search_level</strong> : str</p>
+<blockquote>
+<div><p>Flag to specify the level of grid search during hyper-parameter optimization on the training set.
+Allowed options are : ‘none’, ‘light’ and ‘exhaustive’, in the order of how many values/values will be optimized.</p>
+<p>More parameters and more values demand more resources and much longer time for optimization.</p>
+<dl class="docutils">
+<dt>The ‘light’ option tries to “folk wisdom” to try least number of values (no more than one or two),</dt>
+<dd><p class="first last">for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).
+The ‘light’ will be the fastest and should give a “rough idea” of predictive performance.
+The ‘exhaustive’ option will try to most parameter values for the most parameters that can be optimized.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>results_path</strong> : str</p>
+<blockquote class="last">
+<div><p>Path to pickle file containing full set of CV results.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.run_workflow.cli">
+<code class="descclassname">neuropredict.run_workflow.</code><code class="descname">cli</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/run_workflow.html#cli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.run_workflow.cli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main entry point.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.run_workflow.get_parser">
+<code class="descclassname">neuropredict.run_workflow.</code><code class="descname">get_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/run_workflow.html#get_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.run_workflow.get_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser to specify arguments and their defaults.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.utils">
+<span id="neuropredict-utils-module"></span><h2>neuropredict.utils module<a class="headerlink" href="#module-neuropredict.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.utils.balanced_accuracy">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">balanced_accuracy</code><span class="sig-paren">(</span><em>confmat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#balanced_accuracy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.balanced_accuracy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the balanced accuracy in a given confusion matrix!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.chance_accuracy">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">chance_accuracy</code><span class="sig-paren">(</span><em>class_sizes</em>, <em>method='imbalanced'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#chance_accuracy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.chance_accuracy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the chance accuracy for a given set of classes with varying sizes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>class_sizes</strong> : list</p>
+<blockquote>
+<div><p>List of sizes of the classes.</p>
+</div></blockquote>
+<p><strong>method</strong> : str</p>
+<blockquote>
+<div><p>Type of method to use to compute the chance accuracy. Two options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>imbalanced</cite> : uses the proportions of all classes [Default]</li>
+<li><cite>zero_rule</cite>  : uses the so called Zero Rule (fraction of majority class)</li>
+</ul>
+</div></blockquote>
+<p>Both methods return similar results, with Zero Rule erring on the side higher chance accuracy.</p>
+</div></blockquote>
+<p><strong>Useful discussion at `stackexchange.com &lt;https://stats.stackexchange.com/questions/148149/what-is-the-chance-level-accuracy-in-unbalanced-classification-problems&gt;`_</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>chance_acc</strong> : float</p>
+<blockquote class="last">
+<div><p>Accuracy of purely random/chance classifier on this particular dataset.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.check_classifier">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">check_classifier</code><span class="sig-paren">(</span><em>clf_name='RandomForestClassifier'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#check_classifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.check_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates the classifier choice, and ensures necessary modules are installed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.check_feature_sets_are_comparable">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">check_feature_sets_are_comparable</code><span class="sig-paren">(</span><em>datasets</em>, <em>common_ds_index=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#check_feature_sets_are_comparable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.check_feature_sets_are_comparable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validating all the datasets are comparable e.g. with same samples and classes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.check_num_procs">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">check_num_procs</code><span class="sig-paren">(</span><em>requested_num_procs=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#check_num_procs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.check_num_procs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensures num_procs is finite and &lt;= available cpu count.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.check_params_rhst">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">check_params_rhst</code><span class="sig-paren">(</span><em>dataset_path_file</em>, <em>out_results_dir</em>, <em>num_repetitions</em>, <em>train_perc</em>, <em>sub_groups</em>, <em>num_procs</em>, <em>grid_search_level</em>, <em>classifier_name</em>, <em>feat_select_method</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#check_params_rhst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.check_params_rhst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates inputs and returns paths to feature sets to load</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.check_paths">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">check_paths</code><span class="sig-paren">(</span><em>paths</em>, <em>path_type=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#check_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.check_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts path to absolute paths and ensures they all exist!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.load_options">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">load_options</code><span class="sig-paren">(</span><em>out_dir</em>, <em>options_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#load_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.load_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper to load the saved options</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.make_dataset_filename">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">make_dataset_filename</code><span class="sig-paren">(</span><em>method_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#make_dataset_filename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.make_dataset_filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>File name constructor.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.make_numeric_labels">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">make_numeric_labels</code><span class="sig-paren">(</span><em>class_set</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#make_numeric_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.make_numeric_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates numeric labels (to feed external tools) for a given set of strings</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.make_time_stamp">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">make_time_stamp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#make_time_stamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.make_time_stamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a timestamp string.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.not_unspecified">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">not_unspecified</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#not_unspecified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.not_unspecified" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for null values of a give variable!</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.save_options">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">save_options</code><span class="sig-paren">(</span><em>options_to_save</em>, <em>out_dir_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#save_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.save_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper to save chosen options</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.sub_group_identifier">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">sub_group_identifier</code><span class="sig-paren">(</span><em>group_names</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#sub_group_identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.sub_group_identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs clean identifier to refer to a group of classes. Names will be sorted to allow for reproducibility.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.uniq_combined_name">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">uniq_combined_name</code><span class="sig-paren">(</span><em>method_names</em>, <em>max_len=50</em>, <em>num_char_each_word=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#uniq_combined_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.uniq_combined_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to produce a uniq, and not a long combined name. Recursive</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.utils.validate_feature_selection_size">
+<code class="descclassname">neuropredict.utils.</code><code class="descname">validate_feature_selection_size</code><span class="sig-paren">(</span><em>feature_select_method</em>, <em>dim_in_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/utils.html#validate_feature_selection_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.utils.validate_feature_selection_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensures method chosen for the type of computation for the size of reduced dimensionality.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>feature_select_method</strong></p>
+<p class="last"><strong>dim_in_data</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict.visualize">
+<span id="neuropredict-visualize-module"></span><h2>neuropredict.visualize module<a class="headerlink" href="#module-neuropredict.visualize" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.visualize.feature_importance_map">
+<code class="descclassname">neuropredict.visualize.</code><code class="descname">feature_importance_map</code><span class="sig-paren">(</span><em>feat_imp</em>, <em>method_labels</em>, <em>base_output_path</em>, <em>feature_names=None</em>, <em>show_distr=False</em>, <em>plot_title='feature importance'</em>, <em>show_all=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/visualize.html#feature_importance_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.visualize.feature_importance_map" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Generates a map/barplot of feature importance.</div></blockquote>
+<dl class="docutils">
+<dt>feat_imp must be a list of length num_datasets,</dt>
+<dd>each an ndarray of size [num_repetitions,num_features[idx]]
+where num_features[idx] refers to the dimensionality of n-th dataset.</dd>
+</dl>
+<p>metho_names must be a list of strings of the same length as feat_imp.
+feature_names must be a list (of ndarrays of strings) same size as feat_imp,</p>
+<blockquote>
+<div>each element being another list of labels corresponding to num_features[idx].</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>feat_imp</strong> : list</p>
+<blockquote>
+<div><p>List of numpy arrays, each of length num_features</p>
+</div></blockquote>
+<p><strong>method_labels</strong> : list</p>
+<blockquote>
+<div><p>List of names for each method (or feature set).</p>
+</div></blockquote>
+<p><strong>base_output_path</strong> : str</p>
+<p><strong>feature_names</strong> : list</p>
+<blockquote>
+<div><p>List of names for each feature.</p>
+</div></blockquote>
+<p><strong>show_distr</strong> : bool</p>
+<blockquote>
+<div><p>plots the distribution (over different trials of cross-validation)
+of feature importance for each feature.</p>
+</div></blockquote>
+<p><strong>plot_title</strong> : str</p>
+<blockquote>
+<div><p>Title of the importance map figure.</p>
+</div></blockquote>
+<p><strong>show_all</strong> : bool</p>
+<blockquote class="last">
+<div><p>If true, this will attempt to show the importance values for all the features. 
+Be advised if you have more than 50 features, the figure would illegible.
+The default is to show only few important features (ranked by their median importance), when there is more than 25 features.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.visualize.confusion_matrices">
+<code class="descclassname">neuropredict.visualize.</code><code class="descname">confusion_matrices</code><span class="sig-paren">(</span><em>cfmat_array</em>, <em>class_labels</em>, <em>method_names</em>, <em>base_output_path</em>, <em>cmap='viridis'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/visualize.html#confusion_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.visualize.confusion_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display routine for the confusion matrix.
+Entries in confusin matrix can be turned into percentages with <cite>display_perc=True</cite>.</p>
+<p>Use a separate method to iteratve over multiple datasets.
+confusion_matrix dime: [num_classes, num_classes, num_repetitions, num_datasets]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cfmat_array</strong></p>
+<p><strong>class_labels</strong></p>
+<p><strong>method_names</strong></p>
+<p><strong>base_output_path</strong></p>
+<p class="last"><strong>cmap</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.visualize.freq_hist_misclassifications">
+<code class="descclassname">neuropredict.visualize.</code><code class="descname">freq_hist_misclassifications</code><span class="sig-paren">(</span><em>num_times_misclfd</em>, <em>num_times_tested</em>, <em>method_labels</em>, <em>outpath</em>, <em>separate_plots=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/visualize.html#freq_hist_misclassifications"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.visualize.freq_hist_misclassifications" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary of most/least frequently misclassified subjects for further analysis</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.visualize.metric_distribution">
+<code class="descclassname">neuropredict.visualize.</code><code class="descname">metric_distribution</code><span class="sig-paren">(</span><em>metric</em>, <em>labels</em>, <em>output_path</em>, <em>class_sizes</em>, <em>num_classes=2</em>, <em>metric_label='balanced accuracy'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/visualize.html#metric_distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.visualize.metric_distribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distribution plots of various metrics such as balanced accuracy!</p>
+<p>metric is expected to be ndarray of size [num_repetitions, num_datasets]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.visualize.compare_misclf_pairwise_parallel_coord_plot">
+<code class="descclassname">neuropredict.visualize.</code><code class="descname">compare_misclf_pairwise_parallel_coord_plot</code><span class="sig-paren">(</span><em>cfmat_array</em>, <em>class_labels</em>, <em>method_labels</em>, <em>out_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/visualize.html#compare_misclf_pairwise_parallel_coord_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.visualize.compare_misclf_pairwise_parallel_coord_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a parallel coordinate plot (unravelling the cobweb plot) 
+comparing the the misclassfication rate of all feature sets 
+for different pairwise classifications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cfmat_array</strong></p>
+<p><strong>class_labels</strong></p>
+<p><strong>method_labels</strong></p>
+<p class="last"><strong>out_path</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="neuropredict.visualize.compare_misclf_pairwise">
+<code class="descclassname">neuropredict.visualize.</code><code class="descname">compare_misclf_pairwise</code><span class="sig-paren">(</span><em>cfmat_array</em>, <em>class_labels</em>, <em>method_labels</em>, <em>out_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/visualize.html#compare_misclf_pairwise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.visualize.compare_misclf_pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
+classifications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cfmat_array</strong></p>
+<p><strong>class_labels</strong></p>
+<p><strong>method_labels</strong></p>
+<p class="last"><strong>out_path</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-neuropredict">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-neuropredict" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="neuropredict.cli">
+<code class="descclassname">neuropredict.</code><code class="descname">cli</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/neuropredict/run_workflow.html#cli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#neuropredict.cli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main entry point.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="_static/jquery.js"></script>
+            <script type="text/javascript" src="_static/underscore.js"></script>
+            <script type="text/javascript" src="_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/bernard.js"></script>
+    </body>
+</html>

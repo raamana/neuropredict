@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Examples &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="_static/favicon.ico" />
+
+        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : './',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
+<p>If your features are collected into a <code class="docutils literal"><span class="pre">features.csv</span></code> file (each row is a subject, with features along the columns), running neuropredict is as simple as:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>neuropredict -m /project/meta_data.csv -d /project/features.csv
+</pre></div>
+</div>
+<p>Where the <code class="docutils literal"><span class="pre">meta_data.csv</span></code> file specifies which subject belongs to which class. For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">3071</span><span class="p">,</span><span class="n">controls</span>
+<span class="mi">3069</span><span class="p">,</span><span class="n">controls</span>
+<span class="mi">3064</span><span class="p">,</span><span class="n">controls</span>
+<span class="mi">3063</span><span class="p">,</span><span class="n">controls</span>
+<span class="mi">3057</span><span class="p">,</span><span class="n">controls</span>
+<span class="mi">5004</span><span class="p">,</span><span class="n">disease_one</span>
+<span class="mi">5074</span><span class="p">,</span><span class="n">disease_one</span>
+<span class="mi">5077</span><span class="p">,</span><span class="n">disease_one</span>
+<span class="mi">5001</span><span class="p">,</span><span class="n">disease_one</span>
+<span class="mi">5002</span><span class="p">,</span><span class="n">disease_one</span>
+<span class="mi">5003</span><span class="p">,</span><span class="n">disease_one</span>
+<span class="mi">5000</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5006</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5013</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5014</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5016</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5018</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5019</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5021</span><span class="p">,</span><span class="n">other_disease</span>
+<span class="mi">5022</span><span class="p">,</span><span class="n">other_disease</span>
+</pre></div>
+</div>
+<p>and <cite>neuropredict</cite> will produce the figures similar to the following:</p>
+<img alt="_images/composite_outputs.png" src="_images/composite_outputs.png" />
+<p>The higher resolution PDFs are included in the <a class="reference external" href="docs/results_vis">docs</a> folder.</p>
+<p>In addition to the figures, the data underlying the figures is also exported in the form of multiple separate <code class="docutils literal"><span class="pre">CSV</span></code> files to the <code class="docutils literal"><span class="pre">exported_results</span></code> folder under the chosen output directory.</p>
+<p>You can choose values for many other parameters, and specify the features in few other formats. For examples, when using <code class="docutils literal"><span class="pre">pyradigm</span></code> as in the input format and choosing <code class="docutils literal"><span class="pre">train_perc</span></code> to be 75% and the repeating the CV 250 times, the typical output on the command line would look something like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>neuropredict -y /project/*.MLDataset.pkl -m /project/meta_FourClasses.csv -o /project/predictions -t 0.75 -n 250
+
+Requested features for analysis:
+get_pyradigm from chebyshev.MLDataset.pkl
+get_pyradigm from chebyshev_neg.MLDataset.pkl
+get_pyradigm from chi_square.MLDataset.pkl
+get_pyradigm from correlate_1.MLDataset.pkl
+get_pyradigm from correlate.MLDataset.pkl
+get_pyradigm from cosine_1.MLDataset.pkl
+get_pyradigm from cosine_2.MLDataset.pkl
+get_pyradigm from cosine_alt.MLDataset.pkl
+get_pyradigm from cosine.MLDataset.pkl
+get_pyradigm from euclidean.MLDataset.pkl
+get_pyradigm from fidelity_based.MLDataset.pkl
+Different classes in the training set are stratified to match the smallest class!
+
+ CV repetition   0
+     feature   0      weight_chebyshev : balanced accuracy: 0.3018
+     feature   1  weight_chebyshev_neg : balanced accuracy: 0.2917
+     feature   2     weight_chi_square : balanced accuracy: 0.2603
+     feature   3    weight_correlate_1 : balanced accuracy: 0.3271
+     feature   4      weight_correlate : balanced accuracy: 0.3647
+     feature   5       weight_cosine_1 : balanced accuracy: 0.3202
+     feature   6       weight_cosine_2 : balanced accuracy: 0.2869
+     feature   7     weight_cosine_alt : balanced accuracy: 0.3656
+     feature   8         weight_cosine : balanced accuracy: 0.3197
+     feature   9      weight_euclidean : balanced accuracy: 0.2579
+     feature  10 weight_fidelity_based : balanced accuracy: 0.1190
+
+ CV repetition   1
+     feature   0      weight_chebyshev : balanced accuracy: 0.3416
+     feature   1  weight_chebyshev_neg : balanced accuracy: 0.3761
+     feature   2     weight_chi_square : balanced accuracy: 0.3748
+     feature   3    weight_correlate_1 : balanced accuracy: 0.3397
+     feature   4      weight_correlate : balanced accuracy: 0.4087
+     feature   5       weight_cosine_1 : balanced accuracy: 0.3074
+     feature   6       weight_cosine_2 : balanced accuracy: 0.4059
+     feature   7     weight_cosine_alt : balanced accuracy: 0.3658
+     feature   8         weight_cosine : balanced accuracy: 0.3290
+     feature   9      weight_euclidean : balanced accuracy: 0.2662
+     feature  10 weight_fidelity_based : balanced accuracy: 0.2090
+
+ CV repetition   2
+ . . . .
+ . . . .
+ . . . .
+ CV repetition   n
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">pyradigm is a python class (data structure) aimed to ease your ML workflow - check it out here: <a class="reference external" href="http://pyradigm.readthedocs.io">pyradigm.readthedocs.io</a></p>
+</div>
+</div>
+
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="_static/jquery.js"></script>
+            <script type="text/javascript" src="_static/underscore.js"></script>
+            <script type="text/javascript" src="_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/bernard.js"></script>
+    </body>
+</html>

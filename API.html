@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>API Reference &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="_static/favicon.ico" />
+
+        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : './',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <div class="section" id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<p>neuropredict (designed with the goal of not needing the user to code) is designed primarily be working on the command line.
+Hence, it is recommended to follow <a class="reference internal" href="usage_cli.html"><span class="doc">Usage</span></a>, although you can peek into its internal API and provide us with any feedback you may have.</p>
+<span class="target" id="module-run_workflow"></span><p>neuropredict : easy and comprehensive predictive analysis.</p>
+<dl class="function">
+<dt id="run_workflow.run">
+<code class="descclassname">run_workflow.</code><code class="descname">run</code><span class="sig-paren">(</span><em>feature_sets</em>, <em>feature_type='list_of_pyradigm_paths'</em>, <em>meta_data=None</em>, <em>output_dir=None</em>, <em>pipeline=None</em>, <em>train_perc=0.5</em>, <em>num_repetitions=200</em>, <em>positive_class=None</em>, <em>feat_sel_size='tenth'</em>, <em>sub_groups='all'</em>, <em>grid_search_level='none'</em>, <em>num_procs=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_workflow.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_workflow.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.</p>
+<p>Main entry point for API access.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>feature_sets</strong> : list</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>The input can be specified in either of the following ways:</dt>
+<dd><ul class="first simple">
+<li>list of paths to pyradigm datasets saved on disk</li>
+<li>path to a file containing list of paths (each line containing path to a valid MLDataset)</li>
+<li>list of MLDatasets that are already loaded</li>
+<li>list of tuples (to specify multiple features), each element containing (X, y) i.e. data and target labels</li>
+<li>a single tuple containing (X, y) i.e. data and target labels</li>
+<li>list of paths to CSV files, each containing one type of features.</li>
+</ul>
+<p class="last">When specifying multiple sets of input features, ensure:
+- all of them contain the same number of samples
+- each sample belongs to same class across all feature sets.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>feature_type</strong> : str</p>
+<blockquote>
+<div><p>String identifying the type of features as described above. It could be:
+‘list_of_pyradigm_paths’, ‘pyradigm_list’,
+‘list_of_tuples’, ‘tuple’, ‘list_of_csv_paths’</p>
+</div></blockquote>
+<p><strong>meta_data</strong> : multiple</p>
+<blockquote>
+<div><p>The meta data can be specified in either of the following ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>a path to a meta data file (see <a class="reference internal" href="features.html"><span class="doc">Input formats</span></a> page)</li>
+<li>a dict keyed in by sample IDs with values representing their classes.</li>
+<li>None, if meta data is already specified in <code class="docutils literal"><span class="pre">feature_sets</span></code> input (e.g. with pyradigms).</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
+<p><strong>pipeline</strong> : str or object</p>
+<blockquote>
+<div><p>If a string, it identifying one of the implemented classifiers e.g. ‘RandomForestClassifier’ or ‘ExtraTreesClassifier’
+If an object, it must be a sciki-learn pipeline describing the sequence of steps.
+This is typically a set of feature selections or dimensionality reduction steps followed by an estimator (classifier).</p>
+<p>See <a class="reference external" href="http://scikit-learn.org/stable/modules/pipeline.html#pipeline">http://scikit-learn.org/stable/modules/pipeline.html#pipeline</a> for more details.</p>
+<dl class="docutils">
+<dt>Default: None, which leads to the selection of a Random Forest classifier,</dt>
+<dd><p class="first last">with robust scaling, followed by removal of low variance features.</p>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>method_names</strong> : list</p>
+<blockquote>
+<div><p>A list of names to denote the different feature sets</p>
+</div></blockquote>
+<p><strong>out_results_dir</strong> : str</p>
+<blockquote>
+<div><p>Path to output directory to save the cross validation results to.
+If not specified, a new directory named ‘neuropredict’ will be created in the current directory.</p>
+</div></blockquote>
+<p><strong>train_perc</strong> : float, optional</p>
+<blockquote>
+<div><p>Percetange of subjects to train the classifier on.
+The percentage is applied to the size of the smallest class to estimate
+the number of subjects from each class to be reserved for training.
+The smallest class is chosen to avoid class-imbalance in the training set.
+Default: 0.8 (80%).</p>
+</div></blockquote>
+<p><strong>positive_class</strong> : str</p>
+<blockquote>
+<div><p>Name of the class to be treated as positive in calculation of AUC</p>
+</div></blockquote>
+<p><strong>feat_sel_size</strong> : str or int</p>
+<blockquote>
+<div><p>Number of features to select as part of feature selection. Options:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li>‘tenth’</li>
+<li>‘sqrt’</li>
+<li>‘log2’</li>
+<li>‘all’</li>
+</ul>
+</div></blockquote>
+<p>Default: ‘tenth’ of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.</p>
+</div></blockquote>
+</div></blockquote>
+<p><strong>num_repetitions</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of repetitions of cross-validation estimation. Default: 200.</p>
+</div></blockquote>
+<p><strong>num_procs</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of CPUs to use to parallelize CV repetitions.</p>
+<p>Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested.</p>
+</div></blockquote>
+<p><strong>sub_groups</strong> : list</p>
+<blockquote>
+<div><p>This option allows the user to study different combinations of classes in a multi-class (N&gt;2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied separately with the following flag <code class="docutils literal"><span class="pre">--sub_groups</span> <span class="pre">CN,FTD</span> <span class="pre">CN,AD</span></code>. This allows the user to focus on few interesting subgroups depending on their dataset/goal.</p>
+<p>Format: Different subgroups must be separated by space, and each sub-group must be a comma-separated list of class names defined in the meta data file. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes.</p>
+<p>Default: <code class="docutils literal"><span class="pre">'all'</span></code>, leading to inclusion of all available classes in a all-vs-all multi-class setting.</p>
+</div></blockquote>
+<p><strong>grid_search_level</strong> : str</p>
+<blockquote>
+<div><p>Flag to specify the level of grid search during hyper-parameter optimization on the training set.
+Allowed options are : ‘none’, ‘light’ and ‘exhaustive’, in the order of how many values/values will be optimized.</p>
+<p>More parameters and more values demand more resources and much longer time for optimization.</p>
+<dl class="docutils">
+<dt>The ‘light’ option tries to “folk wisdom” to try least number of values (no more than one or two),</dt>
+<dd><p class="first last">for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).
+The ‘light’ will be the fastest and should give a “rough idea” of predictive performance.
+The ‘exhaustive’ option will try to most parameter values for the most parameters that can be optimized.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>results_path</strong> : str</p>
+<blockquote class="last">
+<div><p>Path to pickle file containing full set of CV results.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="run_workflow.cli">
+<code class="descclassname">run_workflow.</code><code class="descname">cli</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_workflow.html#cli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_workflow.cli" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main entry point.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="run_workflow.get_parser">
+<code class="descclassname">run_workflow.</code><code class="descname">get_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_workflow.html#get_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_workflow.get_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parser to specify arguments and their defaults.</p>
+</dd></dl>
+
+<span class="target" id="module-rhst"></span><dl class="function">
+<dt id="rhst.run">
+<code class="descclassname">rhst.</code><code class="descname">run</code><span class="sig-paren">(</span><em>dataset_path_file</em>, <em>method_names</em>, <em>out_results_dir</em>, <em>train_perc=0.8</em>, <em>num_repetitions=200</em>, <em>positive_class=None</em>, <em>sub_group=None</em>, <em>feat_sel_size='tenth'</em>, <em>num_procs=4</em>, <em>grid_search_level='none'</em>, <em>classifier_name='RandomForestClassifier'</em>, <em>feat_select_method='VarianceThreshold'</em>, <em>options_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rhst.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rhst.run" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dataset_path_file</strong> : str</p>
+<blockquote>
+<div><p>path to file containing list of paths (each containing a valid MLDataset).</p>
+</div></blockquote>
+<p><strong>method_names</strong> : list</p>
+<blockquote>
+<div><p>A list of names to denote the different feature extraction methods</p>
+</div></blockquote>
+<p><strong>out_results_dir</strong> : str</p>
+<blockquote>
+<div><p>Path to output directory to save the cross validation results to.</p>
+</div></blockquote>
+<p><strong>train_perc</strong> : float or numpy.float, optional</p>
+<blockquote>
+<div><p>Percetange of subjects to train the classifier on.
+The percentage is applied to the size of the smallest class to estimate
+the number of subjects from each class to be reserved for training.
+The smallest class is chosen to avoid class-imbalance in the training set.</p>
+<p>Default: 0.8 (80%).</p>
+</div></blockquote>
+<p><strong>num_repetitions</strong> : int or numpy.int, optional</p>
+<blockquote>
+<div><p>Number of repetitions of cross-validation estimation. Default: 200.</p>
+</div></blockquote>
+<p><strong>positive_class</strong> : str</p>
+<blockquote>
+<div><p>Name of the class to be treated as positive in calculation of AUC</p>
+</div></blockquote>
+<p><strong>feat_sel_size</strong> : str or int</p>
+<blockquote>
+<div><p>Number of features to retain after feature selection.
+Must be a method (tenth or square root of the size of smallest class in training set,</p>
+<blockquote>
+<div><p>or a finite integer smaller than the data dimensionality.</p>
+</div></blockquote>
+</div></blockquote>
+<p><strong>sub_group</strong> : list</p>
+<blockquote>
+<div><p>List of classes to focus on for classification. Default: all classes available.</p>
+</div></blockquote>
+<p><strong>num_procs</strong> : int</p>
+<blockquote>
+<div><p>Number of parallel processes to run to parallelize the repetitions of CV</p>
+</div></blockquote>
+<p><strong>grid_search_level</strong> : str</p>
+<blockquote>
+<div><p>If ‘none’, no grid search will be performed, choosing parameters based on ‘folk wisdom’.
+If ‘light’, grid search resolution will be reduced to speed up optimization.
+If ‘exhaustive’, most values for most parameters will be user for optimization.</p>
+</div></blockquote>
+<p><strong>options_path</strong> : str</p>
+<blockquote>
+<div><p>Path to a pickle file which contains the all user chosen options.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>results_path</strong> : str</p>
+<blockquote class="last">
+<div><p>Path to pickle file containing full set of CV results.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rhst.load_results">
+<code class="descclassname">rhst.</code><code class="descname">load_results</code><span class="sig-paren">(</span><em>results_file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rhst.html#load_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rhst.load_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the results serialized by RHsT.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="rhst.save_results">
+<code class="descclassname">rhst.</code><code class="descname">save_results</code><span class="sig-paren">(</span><em>out_dir</em>, <em>dict_of_objects_to_save</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rhst.html#save_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rhst.save_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serializes the results to disk.</p>
+</dd></dl>
+
+<span class="target" id="module-visualize"></span><dl class="function">
+<dt id="visualize.feature_importance_map">
+<code class="descclassname">visualize.</code><code class="descname">feature_importance_map</code><span class="sig-paren">(</span><em>feat_imp</em>, <em>method_labels</em>, <em>base_output_path</em>, <em>feature_names=None</em>, <em>show_distr=False</em>, <em>plot_title='feature importance'</em>, <em>show_all=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#feature_importance_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.feature_importance_map" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Generates a map/barplot of feature importance.</div></blockquote>
+<dl class="docutils">
+<dt>feat_imp must be a list of length num_datasets,</dt>
+<dd>each an ndarray of size [num_repetitions,num_features[idx]]
+where num_features[idx] refers to the dimensionality of n-th dataset.</dd>
+</dl>
+<p>metho_names must be a list of strings of the same length as feat_imp.
+feature_names must be a list (of ndarrays of strings) same size as feat_imp,</p>
+<blockquote>
+<div>each element being another list of labels corresponding to num_features[idx].</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>feat_imp</strong> : list</p>
+<blockquote>
+<div><p>List of numpy arrays, each of length num_features</p>
+</div></blockquote>
+<p><strong>method_labels</strong> : list</p>
+<blockquote>
+<div><p>List of names for each method (or feature set).</p>
+</div></blockquote>
+<p><strong>base_output_path</strong> : str</p>
+<p><strong>feature_names</strong> : list</p>
+<blockquote>
+<div><p>List of names for each feature.</p>
+</div></blockquote>
+<p><strong>show_distr</strong> : bool</p>
+<blockquote>
+<div><p>plots the distribution (over different trials of cross-validation)
+of feature importance for each feature.</p>
+</div></blockquote>
+<p><strong>plot_title</strong> : str</p>
+<blockquote>
+<div><p>Title of the importance map figure.</p>
+</div></blockquote>
+<p><strong>show_all</strong> : bool</p>
+<blockquote class="last">
+<div><p>If true, this will attempt to show the importance values for all the features. 
+Be advised if you have more than 50 features, the figure would illegible.
+The default is to show only few important features (ranked by their median importance), when there is more than 25 features.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualize.confusion_matrices">
+<code class="descclassname">visualize.</code><code class="descname">confusion_matrices</code><span class="sig-paren">(</span><em>cfmat_array</em>, <em>class_labels</em>, <em>method_names</em>, <em>base_output_path</em>, <em>cmap='viridis'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#confusion_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.confusion_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display routine for the confusion matrix.
+Entries in confusin matrix can be turned into percentages with <cite>display_perc=True</cite>.</p>
+<p>Use a separate method to iteratve over multiple datasets.
+confusion_matrix dime: [num_classes, num_classes, num_repetitions, num_datasets]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cfmat_array</strong></p>
+<p><strong>class_labels</strong></p>
+<p><strong>method_names</strong></p>
+<p><strong>base_output_path</strong></p>
+<p class="last"><strong>cmap</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualize.freq_hist_misclassifications">
+<code class="descclassname">visualize.</code><code class="descname">freq_hist_misclassifications</code><span class="sig-paren">(</span><em>num_times_misclfd</em>, <em>num_times_tested</em>, <em>method_labels</em>, <em>outpath</em>, <em>separate_plots=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#freq_hist_misclassifications"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.freq_hist_misclassifications" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary of most/least frequently misclassified subjects for further analysis</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualize.metric_distribution">
+<code class="descclassname">visualize.</code><code class="descname">metric_distribution</code><span class="sig-paren">(</span><em>metric</em>, <em>labels</em>, <em>output_path</em>, <em>class_sizes</em>, <em>num_classes=2</em>, <em>metric_label='balanced accuracy'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#metric_distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.metric_distribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Distribution plots of various metrics such as balanced accuracy!</p>
+<p>metric is expected to be ndarray of size [num_repetitions, num_datasets]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualize.compare_misclf_pairwise_parallel_coord_plot">
+<code class="descclassname">visualize.</code><code class="descname">compare_misclf_pairwise_parallel_coord_plot</code><span class="sig-paren">(</span><em>cfmat_array</em>, <em>class_labels</em>, <em>method_labels</em>, <em>out_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#compare_misclf_pairwise_parallel_coord_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.compare_misclf_pairwise_parallel_coord_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a parallel coordinate plot (unravelling the cobweb plot) 
+comparing the the misclassfication rate of all feature sets 
+for different pairwise classifications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cfmat_array</strong></p>
+<p><strong>class_labels</strong></p>
+<p><strong>method_labels</strong></p>
+<p class="last"><strong>out_path</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="visualize.compare_misclf_pairwise">
+<code class="descclassname">visualize.</code><code class="descname">compare_misclf_pairwise</code><span class="sig-paren">(</span><em>cfmat_array</em>, <em>class_labels</em>, <em>method_labels</em>, <em>out_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#compare_misclf_pairwise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.compare_misclf_pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
+classifications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cfmat_array</strong></p>
+<p><strong>class_labels</strong></p>
+<p><strong>method_labels</strong></p>
+<p class="last"><strong>out_path</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-compare"></span><dl class="function">
+<dt id="compare.check_if_better">
+<code class="descclassname">compare.</code><code class="descname">check_if_better</code><span class="sig-paren">(</span><em>rank_one</em>, <em>rank_two</em>, <em>critical_dist</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare.html#check_if_better"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compare.check_if_better" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether rank1 is greater than rank2 by at least critical dist</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="compare.compute_critical_dist">
+<code class="descclassname">compare.</code><code class="descname">compute_critical_dist</code><span class="sig-paren">(</span><em>ranks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare.html#compute_critical_dist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compare.compute_critical_dist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="compare.pairwise">
+<code class="descclassname">compare.</code><code class="descname">pairwise</code><span class="sig-paren">(</span><em>accuracy_balanced</em>, <em>method_names</em>, <em>out_results_dir</em>, <em>num_repetitions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare.html#pairwise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compare.pairwise" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Produces a matrix of pair-wise significance tests,</dt>
+<dd><p class="first">where each cell [i, j] answers the question:
+is method i significantly better than method j?</p>
+<p class="last">The result would be based on a test of choice.
+The default test would be non-parametric Friedman test.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="compare.vertical_nemenyi_plot">
+<code class="descclassname">compare.</code><code class="descname">vertical_nemenyi_plot</code><span class="sig-paren">(</span><em>data</em>, <em>num_reps</em>, <em>alpha=0.05</em>, <em>cmap=&lt;matplotlib.colors.LinearSegmentedColormap object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare.html#vertical_nemenyi_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compare.vertical_nemenyi_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vertical Nemenyi plot to compare model ranks and show differences.</p>
+</dd></dl>
+
+<span class="target" id="module-freesurfer"></span><dl class="function">
+<dt id="freesurfer.aseg_stats_subcortical">
+<code class="descclassname">freesurfer.</code><code class="descname">aseg_stats_subcortical</code><span class="sig-paren">(</span><em>fspath</em>, <em>subjid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/freesurfer.html#aseg_stats_subcortical"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesurfer.aseg_stats_subcortical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the subcortical volumes found in stats/aseg.stats.</p>
+<p>Equivalent of load_fs_segstats.m</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="freesurfer.aseg_stats_whole_brain">
+<code class="descclassname">freesurfer.</code><code class="descname">aseg_stats_whole_brain</code><span class="sig-paren">(</span><em>fspath</em>, <em>subjid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/freesurfer.html#aseg_stats_whole_brain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#freesurfer.aseg_stats_whole_brain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a feature set of whole brain volumes found in Freesurfer output: subid/stats/aseg.stats</p>
+</dd></dl>
+
+</div>
+
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="_static/jquery.js"></script>
+            <script type="text/javascript" src="_static/underscore.js"></script>
+            <script type="text/javascript" src="_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/bernard.js"></script>
+    </body>
+</html>

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>visualize &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for visualize</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;feature_importance_map&#39;</span><span class="p">,</span> <span class="s1">&#39;confusion_matrices&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;freq_hist_misclassifications&#39;</span><span class="p">,</span> <span class="s1">&#39;metric_distribution&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;compare_misclf_pairwise_parallel_coord_plot&#39;</span><span class="p">,</span> <span class="s1">&#39;compare_misclf_pairwise&#39;</span><span class="p">,</span> <span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">version_info</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">cm</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_pdf</span> <span class="k">import</span> <span class="n">PdfPages</span>
+
+<span class="k">if</span> <span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">rhst</span>
+    <span class="kn">from</span> <span class="nn">neuropredict.utils</span> <span class="k">import</span> <span class="n">chance_accuracy</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;neuropredict requires Python 3+.&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="feature_importance_map"><a class="viewcode-back" href="../API.html#visualize.feature_importance_map">[docs]</a><span class="k">def</span> <span class="nf">feature_importance_map</span><span class="p">(</span><span class="n">feat_imp</span><span class="p">,</span>
+                           <span class="n">method_labels</span><span class="p">,</span>
+                           <span class="n">base_output_path</span><span class="p">,</span>
+                           <span class="n">feature_names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                           <span class="n">show_distr</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                           <span class="n">plot_title</span> <span class="o">=</span> <span class="s1">&#39;feature importance&#39;</span><span class="p">,</span>
+                           <span class="n">show_all</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a map/barplot of feature importance.</span>
+
+<span class="sd">    feat_imp must be a list of length num_datasets,</span>
+<span class="sd">        each an ndarray of size [num_repetitions,num_features[idx]]</span>
+<span class="sd">        where num_features[idx] refers to the dimensionality of n-th dataset.</span>
+
+<span class="sd">    metho_names must be a list of strings of the same length as feat_imp.</span>
+<span class="sd">    feature_names must be a list (of ndarrays of strings) same size as feat_imp,</span>
+<span class="sd">        each element being another list of labels corresponding to num_features[idx].</span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    feat_imp : list</span>
+<span class="sd">        List of numpy arrays, each of length num_features</span>
+<span class="sd">    method_labels : list</span>
+<span class="sd">        List of names for each method (or feature set).</span>
+<span class="sd">    base_output_path : str</span>
+<span class="sd">    feature_names : list</span>
+<span class="sd">        List of names for each feature.</span>
+<span class="sd">    show_distr : bool</span>
+<span class="sd">        plots the distribution (over different trials of cross-validation)</span>
+<span class="sd">        of feature importance for each feature.</span>
+<span class="sd">    plot_title : str</span>
+<span class="sd">        Title of the importance map figure.</span>
+<span class="sd">    show_all : bool</span>
+<span class="sd">        If true, this will attempt to show the importance values for all the features. </span>
+<span class="sd">        Be advised if you have more than 50 features, the figure would illegible.</span>
+<span class="sd">        The default is to show only few important features (ranked by their median importance), when there is more than 25 features.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feat_imp</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                               <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">12</span><span class="p">])</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax_h</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">12</span><span class="p">])</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="p">[</span><span class="n">ax_h</span><span class="p">]</span> <span class="c1"># to support indexing</span>
+
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+
+        <span class="n">scaled_imp</span> <span class="o">=</span> <span class="n">feat_imp</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span>
+        <span class="c1"># some models do not provide importance values</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">scaled_imp</span><span class="o">.</span><span class="n">flatten</span><span class="p">())):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;unusable feature importance values for </span><span class="si">{}</span><span class="s1"> : all NaNs!</span><span class="se">\n</span><span class="s1"> Skipping it.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">]))</span>
+            <span class="k">continue</span>
+
+        <span class="n">num_features</span> <span class="o">=</span> <span class="n">feat_imp</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">feature_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">feat_labels</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;f</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ix</span><span class="p">)</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="n">num_features</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feat_labels</span> <span class="o">=</span> <span class="n">feature_names</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">feat_labels</span><span class="p">)</span><span class="o">&lt;</span><span class="n">num_features</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of feature labels.&#39;</span><span class="p">)</span>
+
+        <span class="n">usable_imp</span><span class="p">,</span> <span class="n">freq_sel</span><span class="p">,</span> <span class="n">median_feat_imp</span><span class="p">,</span> <span class="n">stdev_feat_imp</span><span class="p">,</span> <span class="n">conf_interval</span> <span class="o">=</span> <span class="n">compute_median_std_feat_imp</span><span class="p">(</span><span class="n">scaled_imp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_features</span> <span class="o">&gt;</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too many (n=</span><span class="si">{}</span><span class="s1">) features detected for </span><span class="si">{}</span><span class="s1">.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                  <span class="s1">&#39;Showing only the top </span><span class="si">{}</span><span class="s1"> to make the map legible.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                  <span class="s1">&#39;Use the exported results to plot your own feature importance maps.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_features</span><span class="p">,</span>
+                    <span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">))</span>
+            <span class="n">sort_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">median_feat_imp</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># ascending order, then reversing</span>
+            <span class="n">selected_idx_display</span> <span class="o">=</span> <span class="n">sort_indices</span><span class="p">[:</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">]</span>
+            <span class="n">usable_imp_display</span> <span class="o">=</span> <span class="p">[</span> <span class="n">usable_imp</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="n">selected_idx_display</span> <span class="p">]</span>
+            <span class="n">selected_feat_imp</span>  <span class="o">=</span> <span class="n">median_feat_imp</span><span class="p">[</span><span class="n">selected_idx_display</span><span class="p">]</span>
+            <span class="n">selected_imp_stdev</span> <span class="o">=</span> <span class="n">stdev_feat_imp</span><span class="p">[</span><span class="n">selected_idx_display</span><span class="p">]</span>
+            <span class="n">selected_conf_interval</span> <span class="o">=</span> <span class="n">conf_interval</span><span class="p">[</span><span class="n">selected_idx_display</span><span class="p">]</span>
+            <span class="n">selected_feat_names</span> <span class="o">=</span> <span class="n">feat_labels</span><span class="p">[</span><span class="n">selected_idx_display</span><span class="p">]</span>
+            <span class="n">effective_num_features</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">usable_imp_display</span> <span class="o">=</span> <span class="n">usable_imp</span>
+            <span class="n">selected_feat_imp</span> <span class="o">=</span> <span class="n">median_feat_imp</span>
+            <span class="n">selected_imp_stdev</span><span class="o">=</span> <span class="n">stdev_feat_imp</span>
+            <span class="n">selected_conf_interval</span><span class="o">=</span><span class="n">conf_interval</span>
+            <span class="n">selected_feat_names</span> <span class="o">=</span> <span class="n">feat_labels</span>
+            <span class="n">effective_num_features</span> <span class="o">=</span> <span class="n">num_features</span>
+
+        <span class="n">feat_ticks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">effective_num_features</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">sca</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">])</span>
+        <span class="c1"># checking whether all features selected equal number of times (needed for violing pl</span>
+        <span class="c1"># violin distribution or stick bar plot?</span>
+        <span class="k">if</span> <span class="n">show_distr</span><span class="p">:</span>
+            <span class="n">line_coll</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">usable_imp_display</span><span class="p">,</span>
+                                          <span class="n">positions</span><span class="o">=</span><span class="n">feat_ticks</span><span class="p">,</span>
+                                          <span class="n">widths</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">bw_method</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                                          <span class="n">vert</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                          <span class="n">showmedians</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">showextrema</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">CMAP_FEAT_IMP</span><span class="p">,</span> <span class="n">effective_num_features</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">cc</span><span class="p">,</span> <span class="n">ln</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">line_coll</span><span class="p">[</span><span class="s1">&#39;bodies&#39;</span><span class="p">]):</span>
+                <span class="n">ln</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">cc</span><span class="p">))</span>
+                <span class="c1">#ln.set_label(feat_labels[cc])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">barwidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">8.0</span> <span class="o">/</span> <span class="n">effective_num_features</span><span class="p">))</span>
+            <span class="n">rects</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">barh</span><span class="p">(</span><span class="n">feat_ticks</span><span class="p">,</span> <span class="n">selected_feat_imp</span><span class="p">,</span>
+                               <span class="n">height</span><span class="o">=</span><span class="n">barwidth</span><span class="p">,</span> <span class="n">xerr</span><span class="o">=</span><span class="n">selected_conf_interval</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">feat_ticks</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">feat_ticks</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">feat_ticks</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">selected_feat_names</span><span class="p">)</span> <span class="c1">#, rotation=45)  # &#39;vertical&#39;</span>
+        <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">])</span>
+
+
+    <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;feature importance&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+    <span class="c1"># plt.suptitle(plot_title, fontsize=16)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">base_output_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">pp1</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">base_output_path</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+
+
+<span class="k">def</span> <span class="nf">mean_confidence_interval</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes mean and CI</span>
+
+<span class="sd">    From: https://stackoverflow.com/questions/15033511/compute-a-confidence-interval-from-sample-data/</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">arr</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">n</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">se</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">sem</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="n">h</span>  <span class="o">=</span> <span class="n">se</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">_ppf</span><span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">confidence</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mu</span><span class="p">,</span> <span class="n">h</span>
+
+
+<span class="k">def</span> <span class="nf">compute_median_std_feat_imp</span><span class="p">(</span><span class="n">imp</span><span class="p">,</span>
+                                <span class="n">ignore_value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">importance_value_to_treated_as_not_selected</span><span class="p">,</span>
+                                <span class="n">never_tested_value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">importance_value_never_tested</span><span class="p">):</span>
+    <span class="s2">&quot;Calculates the median/SD of feature importance, ignoring NaNs and zeros&quot;</span>
+
+    <span class="n">num_features</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">usable_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">freq_selection</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">conf_interval</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">median_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">stdev_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_features</span><span class="p">):</span>
+        <span class="n">index_nan_or_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">imp</span><span class="p">[:,</span> <span class="n">feat</span><span class="p">]),</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ignore_value</span><span class="p">,</span> <span class="n">imp</span><span class="p">[:,</span> <span class="n">feat</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">))</span>
+        <span class="n">index_usable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">index_nan_or_0</span><span class="p">)</span>
+        <span class="n">this_feat_values</span> <span class="o">=</span> <span class="n">imp</span><span class="p">[</span><span class="n">index_usable</span><span class="p">,</span> <span class="n">feat</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">usable_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">)</span>
+            <span class="n">freq_selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">))</span>
+            <span class="n">median_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">))</span>
+            <span class="n">stdev_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">))</span>
+            <span class="n">mean_</span><span class="p">,</span> <span class="n">CI_sym</span> <span class="o">=</span> <span class="n">mean_confidence_interval</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">)</span>
+            <span class="n">conf_interval</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CI_sym</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># never ever selected</span>
+            <span class="n">usable_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">freq_selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">median_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_value</span><span class="p">)</span>
+            <span class="n">stdev_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_value</span><span class="p">)</span>
+            <span class="n">conf_interval</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">usable_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">freq_selection</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">median_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stdev_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conf_interval</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="confusion_matrices"><a class="viewcode-back" href="../API.html#visualize.confusion_matrices">[docs]</a><span class="k">def</span> <span class="nf">confusion_matrices</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span>
+                       <span class="n">method_names</span><span class="p">,</span> <span class="n">base_output_path</span><span class="p">,</span>
+                       <span class="n">cmap</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">CMAP_CONFMATX</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Display routine for the confusion matrix.</span>
+<span class="sd">    Entries in confusin matrix can be turned into percentages with `display_perc=True`.</span>
+
+<span class="sd">    Use a separate method to iteratve over multiple datasets.</span>
+<span class="sd">    confusion_matrix dime: [num_classes, num_classes, num_repetitions, num_datasets]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cfmat_array</span>
+<span class="sd">    class_labels</span>
+<span class="sd">    method_names</span>
+<span class="sd">    base_output_path</span>
+<span class="sd">    cmap</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">!=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dimensions of confusion matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;Need [num_classes, num_classes, num_repetitions, num_datasets]&quot;</span><span class="p">)</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="n">output_path</span> <span class="o">=</span> <span class="n">base_output_path</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span>
+        <span class="n">output_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+        <span class="c1"># mean confusion over CV trials</span>
+        <span class="n">avg_cfmat</span> <span class="o">=</span> <span class="n">mean_over_cv_trials</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">dd</span><span class="p">],</span> <span class="n">num_classes</span><span class="p">)</span>
+
+        <span class="c1"># avg_cfmat = np.mean(cfmat_array[:, :, :, dd], 0)</span>
+        <span class="c1">#</span>
+        <span class="c1"># # percentage confusion relative to class size</span>
+        <span class="c1"># class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))</span>
+        <span class="c1"># cfmat = np.divide(avg_cfmat, class_size_elementwise)</span>
+        <span class="c1"># # human readable in 0-100%, 3 deciamls</span>
+        <span class="c1"># cfmat = 100 * np.around(cfmat, decimals=cfg.PRECISION_METRICS)</span>
+
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_FIG_SIZE</span><span class="p">)</span>
+
+        <span class="n">im</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)</span>
+        <span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">class_labels</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">tick_marks</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">)</span>
+
+        <span class="n">thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">avg_cfmat</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s2">&quot;{:.</span><span class="si">{prec}</span><span class="s2">f}%&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">avg_cfmat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">prec</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">),</span>
+                     <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="s1">&#39;large&#39;</span><span class="p">,</span>
+                     <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="k">if</span> <span class="n">avg_cfmat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">thresh</span> <span class="k">else</span> <span class="s2">&quot;yellow&quot;</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;True class&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Predicted class&#39;</span><span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+        <span class="n">pp1</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">output_path</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+        <span class="n">pp1</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+        <span class="n">pp1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+
+
+<span class="k">def</span> <span class="nf">mean_over_cv_trials</span><span class="p">(</span><span class="n">conf_mat_array</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Common method to average over different CV trials,</span>
+<span class="sd">        to ensure it is done over the right axis</span>
+<span class="sd">        (the first one - axis=0, column 1) for all confusion matrix methods.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">conf_mat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_classes</span> <span class="ow">or</span> \
+                    <span class="n">conf_mat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_classes</span> <span class="ow">or</span> \
+                    <span class="nb">len</span><span class="p">(</span><span class="n">conf_mat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid shape of confusion matrix array! &#39;</span>
+                         <span class="s1">&#39;It must be num_rep x </span><span class="si">{nc}</span><span class="s1"> x </span><span class="si">{nc}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nc</span><span class="o">=</span><span class="n">num_classes</span><span class="p">))</span>
+
+    <span class="c1"># can not expect nan&#39;s here; If so, its a bug somewhere else</span>
+    <span class="n">avg_cfmat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">conf_mat_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># percentage confusion relative to class size</span>
+    <span class="n">class_size_elementwise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matlib</span><span class="o">.</span><span class="n">repmat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">num_classes</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">avg_cfmat_perc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">class_size_elementwise</span><span class="p">)</span>
+    <span class="c1"># making it human readable : 0-100%</span>
+    <span class="n">avg_cfmat_perc100</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">avg_cfmat_perc</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">avg_cfmat_perc100</span>
+
+
+<span class="k">def</span> <span class="nf">compute_pairwise_misclf</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">):</span>
+    <span class="s2">&quot;Merely computes the misclassification rates, for pairs of classes.&quot;</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">!=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dimensions of confusion matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;Need [num_classes, num_classes, num_repetitions, num_datasets]&quot;</span><span class="p">)</span>
+
+    <span class="n">num_misclf_axes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_classes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">avg_cfmat</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">misclf_rate</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_misclf_axes</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="c1"># mean confusion over CV trials</span>
+        <span class="n">avg_cfmat</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">mean_over_cv_trials</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">dd</span><span class="p">],</span> <span class="n">num_classes</span><span class="p">)</span>
+
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">ii</span> <span class="o">!=</span> <span class="n">jj</span><span class="p">:</span>
+                <span class="n">misclf_rate</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span><span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="n">avg_cfmat</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">misclf_rate</span>
+
+
+<div class="viewcode-block" id="compare_misclf_pairwise_parallel_coord_plot"><a class="viewcode-back" href="../API.html#visualize.compare_misclf_pairwise_parallel_coord_plot">[docs]</a><span class="k">def</span> <span class="nf">compare_misclf_pairwise_parallel_coord_plot</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">,</span> <span class="n">out_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a parallel coordinate plot (unravelling the cobweb plot) </span>
+<span class="sd">    comparing the the misclassfication rate of all feature sets </span>
+<span class="sd">    for different pairwise classifications.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cfmat_array</span>
+<span class="sd">    class_labels</span>
+<span class="sd">    method_labels</span>
+<span class="sd">    out_path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">!=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dimensions of confusion matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;Need [num_classes, num_classes, num_repetitions, num_datasets]&quot;</span><span class="p">)</span>
+
+    <span class="n">num_misclf_axes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_classes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">out_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+    <span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">misclf_rate</span> <span class="o">=</span> <span class="n">compute_pairwise_misclf</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">)</span>
+
+    <span class="n">misclf_ax_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">ii</span> <span class="o">!=</span> <span class="n">jj</span><span class="p">:</span>
+            <span class="n">misclf_ax_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> --&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_labels</span><span class="p">[</span><span class="n">ii</span><span class="p">],</span> <span class="n">class_labels</span><span class="p">[</span><span class="n">jj</span><span class="p">]))</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_FIG_SIZE</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">CMAP_DATASETS</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
+
+    <span class="n">misclf_ax_labels_loc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">handles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="n">misclf_ax_labels_loc</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">num_misclf_axes</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">misclf_ax_labels_loc</span><span class="p">,</span> <span class="n">misclf_rate</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:],</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="n">dd</span><span class="p">))</span>
+        <span class="n">handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">misclf_ax_labels_loc</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">misclf_ax_labels</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;misclassification rate (in %)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;misclassification type&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">num_misclf_axes</span><span class="o">+</span><span class="mf">0.25</span><span class="p">])</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">pp1</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">out_path</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+
+
+<span class="k">def</span> <span class="nf">compare_misclf_pairwise_barplot</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">,</span> <span class="n">out_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a bar plot comparing the the misclassfication rate of all feature sets for different pairwise</span>
+<span class="sd">    classifications.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cfmat_array</span>
+<span class="sd">    class_labels</span>
+<span class="sd">    method_labels</span>
+<span class="sd">    out_path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">!=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dimensions of confusion matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;Need [num_classes, num_classes, num_repetitions, num_datasets]&quot;</span><span class="p">)</span>
+
+    <span class="n">num_misclf_axes</span> <span class="o">=</span> <span class="n">num_classes</span><span class="o">*</span><span class="p">(</span><span class="n">num_classes</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">out_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+
+    <span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">misclf_rate</span> <span class="o">=</span> <span class="n">compute_pairwise_misclf</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">)</span>
+
+    <span class="n">misclf_ax_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">ii</span> <span class="o">!=</span> <span class="n">jj</span><span class="p">:</span>
+            <span class="n">misclf_ax_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> --&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_labels</span><span class="p">[</span><span class="n">ii</span><span class="p">],</span> <span class="n">class_labels</span><span class="p">[</span><span class="n">jj</span><span class="p">]))</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_FIG_SIZE</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">CMAP_DATASETS</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
+
+    <span class="n">misclf_ax_labels_loc</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">handles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">mca</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_misclf_axes</span><span class="p">):</span>
+        <span class="n">x_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">))</span> <span class="o">+</span> <span class="n">mca</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_datasets</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x_pos</span><span class="p">,</span> <span class="n">misclf_rate</span><span class="p">[:,</span><span class="n">mca</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">)))</span>
+        <span class="n">handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">misclf_ax_labels_loc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x_pos</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">method_labels</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">misclf_ax_labels_loc</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">misclf_ax_labels</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;misclassification rate (in %)&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;misclassification type&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">pp1</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">out_path</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span>
+
+
+<div class="viewcode-block" id="compare_misclf_pairwise"><a class="viewcode-back" href="../API.html#visualize.compare_misclf_pairwise">[docs]</a><span class="k">def</span> <span class="nf">compare_misclf_pairwise</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">,</span> <span class="n">out_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise</span>
+<span class="sd">    classifications.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cfmat_array</span>
+<span class="sd">    class_labels</span>
+<span class="sd">    method_labels</span>
+<span class="sd">    out_path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">!=</span> <span class="n">cfmat_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dimensions of confusion matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                         <span class="s2">&quot;Need [num_classes, num_classes, num_repetitions, num_datasets]&quot;</span><span class="p">)</span>
+
+    <span class="n">num_misclf_axes</span> <span class="o">=</span> <span class="n">num_classes</span><span class="o">*</span><span class="p">(</span><span class="n">num_classes</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">misclf_rate</span> <span class="o">=</span> <span class="n">compute_pairwise_misclf</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">)</span>
+
+    <span class="n">misclf_ax_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">jj</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">ii</span> <span class="o">!=</span> <span class="n">jj</span><span class="p">:</span>
+            <span class="n">misclf_ax_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> --&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_labels</span><span class="p">[</span><span class="n">ii</span><span class="p">],</span> <span class="n">class_labels</span><span class="p">[</span><span class="n">jj</span><span class="p">]))</span>
+
+    <span class="n">theta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">num_misclf_axes</span><span class="p">,</span> <span class="n">num_misclf_axes</span><span class="p">)</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">CMAP_DATASETS</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
+
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;polar&#39;</span><span class="p">)</span>
+
+    <span class="c1"># clock-wise</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_theta_direction</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># starting at top</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_theta_offset</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">misclf_rate</span><span class="p">[</span><span class="n">dd</span><span class="p">,:],</span> <span class="n">color</span><span class="o">=</span> <span class="n">cmap</span><span class="p">(</span><span class="n">dd</span><span class="p">),</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">LINE_WIDTH</span><span class="p">)</span>
+        <span class="c1"># connecting the last axis to the first to close the loop</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">theta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                <span class="p">[</span><span class="n">misclf_rate</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">misclf_rate</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="n">dd</span><span class="p">),</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">LINE_WIDTH</span><span class="p">)</span>
+
+    <span class="n">lbl_handles</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">set_thetagrids</span><span class="p">(</span><span class="n">theta</span> <span class="o">*</span> <span class="mi">360</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+                      <span class="n">labels</span><span class="o">=</span><span class="n">misclf_ax_labels</span><span class="p">,</span>
+                      <span class="n">va</span> <span class="o">=</span> <span class="s1">&#39;top&#39;</span><span class="p">,</span>
+                      <span class="n">ha</span> <span class="o">=</span> <span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                      <span class="n">fontsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">LINE_WIDTH</span><span class="p">)</span>
+    <span class="n">tick_perc</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;</span><span class="si">{:.2f}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tt</span><span class="p">)</span> <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_yticks</span><span class="p">()</span> <span class="p">]</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">tick_perc</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="p">)</span>
+    <span class="c1"># ax.set_yticks(np.arange(100 / num_classes, 100, 10))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">)</span>
+
+    <span class="c1"># putting legends outside the plot below.</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="n">leg</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">method_labels</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+                    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">))</span>
+
+    <span class="c1"># setting colors manually as plot has been through arbitray jumps</span>
+    <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">leg</span><span class="o">.</span><span class="n">legendHandles</span><span class="p">):</span>
+        <span class="n">lh</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">ix</span><span class="p">))</span>
+    <span class="n">leg</span><span class="o">.</span><span class="n">set_frame_on</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># making leg background transparent</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">out_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+    <span class="c1"># fig.savefig(out_path + &#39;.png&#39;, transparent=True, dpi=300,</span>
+    <span class="c1">#             bbox_extra_artists=(leg,), bbox_inches=&#39;tight&#39;)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">,</span>
+                <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">(</span><span class="n">leg</span><span class="p">,),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+
+
+<span class="k">def</span> <span class="nf">compute_perc_misclf_per_sample</span><span class="p">(</span><span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">):</span>
+    <span class="s2">&quot;Utility function to compute subject-wise percentage of misclassification.&quot;</span>
+
+    <span class="n">num_samples</span>   <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_times_tested</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">num_datasets</span>  <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_times_tested</span><span class="p">)</span>
+    <span class="n">perc_misclsfd</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="n">num_datasets</span>
+    <span class="n">never_tested</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">()</span> <span class="c1"># since train/test samples are same across different feature sets</span>
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">num_times_misclfd</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">num_times_tested</span><span class="p">[</span><span class="n">dd</span><span class="p">][</span><span class="n">sid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">][</span><span class="n">sid</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">num_times_misclfd</span><span class="p">[</span><span class="n">dd</span><span class="p">][</span><span class="n">sid</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">num_times_tested</span><span class="p">[</span><span class="n">dd</span><span class="p">][</span><span class="n">sid</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">never_tested</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span>
+
+    <span class="n">never_tested</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">never_tested</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">perc_misclsfd</span><span class="p">,</span> <span class="n">never_tested</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">num_datasets</span>
+
+
+<div class="viewcode-block" id="freq_hist_misclassifications"><a class="viewcode-back" href="../API.html#visualize.freq_hist_misclassifications">[docs]</a><span class="k">def</span> <span class="nf">freq_hist_misclassifications</span><span class="p">(</span><span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">,</span> <span class="n">outpath</span><span class="p">,</span>
+                                 <span class="n">separate_plots</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Summary of most/least frequently misclassified subjects for further analysis</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_bins</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">MISCLF_HIST_NUM_BINS</span>
+    <span class="n">count_thresh</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">MISCLF_PERC_THRESH</span>
+
+    <span class="k">def</span> <span class="nf">annnotate_plots</span><span class="p">(</span><span class="n">ax_h</span><span class="p">):</span>
+        <span class="s2">&quot;Adds axes labels and helpful highlights&quot;</span>
+
+        <span class="n">cur_ylim</span> <span class="o">=</span> <span class="n">ax_h</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+        <span class="n">line_thresh</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax_h</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">count_thresh</span><span class="p">,</span> <span class="n">count_thresh</span><span class="p">],</span>
+                            <span class="n">cur_ylim</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">MISCLF_HIST_ANNOT_LINEWIDTH</span><span class="p">)</span>
+        <span class="n">ax_h</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">cur_ylim</span><span class="p">)</span>
+        <span class="n">ax_h</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;number of subjects&#39;</span><span class="p">)</span>
+        <span class="n">ax_h</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;percentage of misclassification&#39;</span><span class="p">)</span>
+
+    <span class="c1"># computing the percentage of misclassification per subject</span>
+    <span class="n">perc_misclsfd</span><span class="p">,</span> <span class="n">never_tested</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">compute_perc_misclf_per_sample</span><span class="p">(</span><span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">never_tested</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39; </span><span class="si">{}</span><span class="s1"> subjects were never selected for testing.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">never_tested</span><span class="p">)))</span>
+        <span class="n">nvpath</span> <span class="o">=</span> <span class="n">outpath</span> <span class="o">+</span> <span class="s1">&#39;_never_tested_samples.txt&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">nvpath</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">nvf</span><span class="p">:</span>
+            <span class="n">nvf</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">never_tested</span><span class="p">))</span>
+
+    <span class="c1"># plot frequency histogram per dataset</span>
+    <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">separate_plots</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">num_datasets</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)),</span> <span class="mi">2</span><span class="p">,</span>
+                               <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                               <span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax_h</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+        <span class="c1"># calculating percentage of most frequently misclassified subjects in each dataset</span>
+        <span class="n">most_freq_misclfd</span> <span class="o">=</span> <span class="p">[</span><span class="n">sid</span> <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">][</span><span class="n">sid</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">count_thresh</span><span class="p">]</span>
+        <span class="n">perc_most_freq_misclsfd</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">most_freq_misclfd</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">])</span>
+        <span class="n">this_method_label</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> - </span><span class="si">{:.1f}</span><span class="s2">% &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">perc_most_freq_misclsfd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dd</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">this_method_label</span> <span class="o">=</span> <span class="n">this_method_label</span> <span class="o">+</span> <span class="s1">&#39;most frequently misclassfied&#39;</span>
+
+        <span class="c1"># for plotting</span>
+        <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">separate_plots</span><span class="p">:</span>
+            <span class="n">ax_h</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">sca</span><span class="p">(</span><span class="n">ax_h</span><span class="p">)</span>
+            <span class="n">ax_h</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">num_bins</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax_h</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">num_bins</span><span class="p">,</span>
+                      <span class="n">histtype</span> <span class="o">=</span> <span class="s1">&#39;stepfilled&#39;</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">MISCLF_HIST_ALPHA</span><span class="p">,</span>
+                      <span class="n">label</span> <span class="o">=</span> <span class="n">this_method_label</span><span class="p">)</span>
+
+        <span class="c1"># for annotation</span>
+        <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">separate_plots</span><span class="p">:</span>
+            <span class="n">ax_h</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">this_method_label</span><span class="p">)</span>
+            <span class="n">annnotate_plots</span><span class="p">(</span><span class="n">ax_h</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dd</span> <span class="o">==</span> <span class="n">num_datasets</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">ax_h</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">annnotate_plots</span><span class="p">(</span><span class="n">ax_h</span><span class="p">)</span>
+
+        <span class="n">txt_path</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">outpath</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="s1">&#39;ids_most_frequent.txt&#39;</span><span class="p">])</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">txt_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">mfm</span><span class="p">:</span>
+            <span class="n">mfm</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">most_freq_misclfd</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">separate_plots</span> <span class="ow">and</span> <span class="n">num_datasets</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">ax</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+    <span class="n">pp1</span> <span class="o">=</span> <span class="n">PdfPages</span><span class="p">(</span><span class="n">outpath</span> <span class="o">+</span> <span class="s1">&#39;_frequency_histogram.pdf&#39;</span><span class="p">)</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">savefig</span><span class="p">()</span>
+    <span class="n">pp1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="metric_distribution"><a class="viewcode-back" href="../API.html#visualize.metric_distribution">[docs]</a><span class="k">def</span> <span class="nf">metric_distribution</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span>
+                        <span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">metric_label</span><span class="o">=</span><span class="s1">&#39;balanced accuracy&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Distribution plots of various metrics such as balanced accuracy!</span>
+
+<span class="sd">    metric is expected to be ndarray of size [num_repetitions, num_datasets]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_repetitions</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num_datasets</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Insufficient number of labels for </span><span class="si">{}</span><span class="s2"> features!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">))</span>
+    <span class="n">method_ticks</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_FIG_SIZE</span><span class="p">)</span>
+    <span class="n">line_coll</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">widths</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">violin_width</span><span class="p">,</span>
+                              <span class="n">bw_method</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">violin_bandwidth</span><span class="p">,</span>
+                              <span class="n">showmedians</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">showextrema</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                              <span class="n">positions</span><span class="o">=</span><span class="n">method_ticks</span><span class="p">)</span>
+
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">CMAP_DATASETS</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">cc</span><span class="p">,</span> <span class="n">ln</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">line_coll</span><span class="p">[</span><span class="s1">&#39;bodies&#39;</span><span class="p">]):</span>
+        <span class="n">ln</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">cc</span><span class="p">))</span>
+        <span class="n">ln</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">cc</span><span class="p">])</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">LINE_WIDTH</span><span class="p">)</span>
+
+    <span class="n">lower_lim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">/</span> <span class="n">num_classes</span><span class="p">),</span> <span class="n">metric</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="p">]),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
+    <span class="n">upper_lim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span> <span class="mf">1.01</span><span class="p">,</span> <span class="n">metric</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="p">]),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
+    <span class="n">step_tick</span> <span class="o">=</span> <span class="mf">0.05</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">lower_lim</span><span class="p">,</span> <span class="n">upper_lim</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">method_ticks</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">method_ticks</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">method_ticks</span><span class="p">)</span>
+    <span class="c1"># ax.set_xticklabels(labels, rotation=45)  # &#39;vertical&#39;</span>
+
+    <span class="n">ytick_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">lower_lim</span><span class="p">,</span> <span class="n">upper_lim</span><span class="p">,</span> <span class="n">step_tick</span><span class="p">)</span>
+    <span class="c1"># add a tick for chance accuracy and/or % of majority class</span>
+    <span class="c1"># given the classifier trained on stratified set, we must use the balanced version</span>
+    <span class="n">chance_acc</span> <span class="o">=</span> <span class="n">chance_accuracy</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">,</span> <span class="s1">&#39;balanced&#39;</span><span class="p">)</span>
+
+    <span class="c1"># rounding to ensure improved labels</span>
+    <span class="n">chance_acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">chance_acc</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
+    <span class="n">ytick_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ytick_loc</span><span class="p">,</span> <span class="n">chance_acc</span><span class="p">),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">ytick_loc</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">ytick_loc</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">chance_acc</span><span class="p">,</span> <span class="s1">&#39;chance accuracy&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">metric_label</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">FONT_SIZE</span><span class="p">)</span>
+
+    <span class="c1"># numbered labels</span>
+    <span class="n">numbered_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">ix</span><span class="p">),</span><span class="n">lbl</span><span class="p">)</span> <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">method_ticks</span><span class="p">,</span><span class="n">labels</span><span class="p">)]</span>
+
+    <span class="c1"># putting legends outside the plot below.</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+    <span class="n">leg</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">numbered_labels</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">))</span>
+    <span class="c1"># setting colors manually as plot has been through arbitray jumps</span>
+    <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">lh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">leg</span><span class="o">.</span><span class="n">legendHandles</span><span class="p">):</span>
+        <span class="n">lh</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">ix</span><span class="p">))</span>
+
+    <span class="n">leg</span><span class="o">.</span><span class="n">set_frame_on</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># making leg background transparent</span>
+
+    <span class="c1"># fig.savefig(output_path + &#39;.png&#39;, transparent=True, dpi=300,</span>
+    <span class="c1">#             bbox_extra_artists=(leg,), bbox_inches=&#39;tight&#39;)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">output_path</span> <span class="o">+</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">,</span> <span class="n">bbox_extra_artists</span><span class="o">=</span><span class="p">(</span><span class="n">leg</span><span class="p">,),</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../_static/jquery.js"></script>
+            <script type="text/javascript" src="../_static/underscore.js"></script>
+            <script type="text/javascript" src="../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../_static/bernard.js"></script>
+    </body>
+</html>

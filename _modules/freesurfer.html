@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>freesurfer &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for freesurfer</h1><div class="highlight"><pre>
+<span></span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;aseg_stats_subcortical&#39;</span><span class="p">,</span> <span class="s1">&#39;aseg_stats_whole_brain&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">version_info</span>
+
+<span class="k">if</span> <span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;neuropredict supports only Python 3 or higher.&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">aseg_stats_whole_brain_via_regex</span><span class="p">(</span><span class="n">fspath</span><span class="p">,</span> <span class="n">subjid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a feature set of whole brain volumes found in Freesurfer output: subid/stats/aseg.stats</span>
+
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">seg_names_sel</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">freesurfer_whole_brain_stats_to_select</span>
+    <span class="n">segstatsfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fspath</span><span class="p">,</span> <span class="n">subjid</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">,</span> <span class="s1">&#39;aseg.stats&#39;</span><span class="p">)</span>
+
+    <span class="n">rexpattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;# Measure ([\w/+_\- ]+), ([\w/+_\- ]+), ([\w/+_\- ]+), ([\d\.]+), ([\w/+_\-^]+)&#39;</span>
+    <span class="n">datatypes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;U100,U100,U100,f8,U10&#39;</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromregex</span><span class="p">(</span><span class="n">segstatsfile</span><span class="p">,</span> <span class="n">rexpattern</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">datatypes</span><span class="p">)</span>
+
+    <span class="c1"># # this wont have the same order as seg_names_sel</span>
+    <span class="c1"># selected_names_volumes = [ (seg[3], seg[1]) for seg in stats if seg[1] in seg_names_sel]</span>
+    <span class="c1"># sel_volumes, sel_names = zip(*selected_names_volumes)</span>
+
+    <span class="n">volume_by_name</span> <span class="o">=</span> <span class="p">{</span> <span class="n">seg</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">seg</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">stats</span> <span class="p">}</span>
+    <span class="n">selected_names_volumes</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">volume_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">seg_names_sel</span> <span class="p">]</span>
+    <span class="n">sel_volumes</span><span class="p">,</span> <span class="n">sel_names</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">selected_names_volumes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sel_volumes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sel_names</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="aseg_stats_whole_brain"><a class="viewcode-back" href="../API.html#freesurfer.aseg_stats_whole_brain">[docs]</a><span class="k">def</span> <span class="nf">aseg_stats_whole_brain</span><span class="p">(</span><span class="n">fspath</span><span class="p">,</span> <span class="n">subjid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Returns a feature set of whole brain volumes found in Freesurfer output: subid/stats/aseg.stats</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># &#39;eTIV&#39; is not included as it is used to norm subcortical volumes</span>
+    <span class="n">seg_names_sel</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">freesurfer_whole_brain_stats_to_select</span>
+
+    <span class="n">wb_seg_volumes_selected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">seg_names_sel</span><span class="p">),</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="n">num_header_lines</span> <span class="o">=</span> <span class="mi">13</span>
+    <span class="n">num_measures</span> <span class="o">=</span> <span class="mi">21</span>  <span class="c1"># len(wb_seg_names_selected)</span>
+
+    <span class="n">segstatsfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fspath</span><span class="p">,</span> <span class="n">subjid</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">,</span> <span class="s1">&#39;aseg.stats&#39;</span><span class="p">)</span>
+
+    <span class="n">seg_names</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="n">num_measures</span>
+    <span class="n">seg_volumes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_measures</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">segstatsfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">ssf</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_header_lines</span><span class="p">):</span>
+            <span class="n">ssf</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_measures</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">ssf</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">seg_names</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">seg_volumes</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+    <span class="n">selected_names_volumes</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">vol</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">vol</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">seg_volumes</span><span class="p">,</span> <span class="n">seg_names</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">seg_names_sel</span><span class="p">]</span>
+    <span class="n">sel_volumes</span><span class="p">,</span> <span class="n">sel_names</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">selected_names_volumes</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sel_volumes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sel_names</span><span class="p">)</span> <span class="c1"># sel_names not returned to follow return-a-single-vector convention</span></div>
+
+
+<div class="viewcode-block" id="aseg_stats_subcortical"><a class="viewcode-back" href="../API.html#freesurfer.aseg_stats_subcortical">[docs]</a><span class="k">def</span> <span class="nf">aseg_stats_subcortical</span><span class="p">(</span><span class="n">fspath</span><span class="p">,</span> <span class="n">subjid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns all the subcortical volumes found in stats/aseg.stats.</span>
+
+<span class="sd">    Equivalent of load_fs_segstats.m</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ignore_seg_names</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">freesurfer_subcortical_seg_names_to_ignore</span>
+
+    <span class="n">segstatsfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fspath</span><span class="p">,</span> <span class="n">subjid</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">,</span> <span class="s1">&#39;aseg.stats&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ColHeaders  Index SegId NVoxels Volume_mm3 StructName normMean normStdDev normMin normMax normRange</span>
+    <span class="c1"># TODO this can fail if missing values were encouteterd. Change to genfromtxt later</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">segstatsfile</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;i1,i1,i4,f4,S50,f4,f4,f4,f4,f4&quot;</span><span class="p">)</span>
+
+    <span class="n">filtered_stats</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">seg</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">seg</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">seg</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">stats</span> <span class="k">if</span> <span class="n">seg</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_seg_names</span> <span class="p">]</span>
+
+    <span class="n">seg_ids</span><span class="p">,</span> <span class="n">volumes</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">filtered_stats</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">volumes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="c1"># , np.array(seg_ids), list(names)</span></div>
+
+
+<span class="k">def</span> <span class="nf">fsthickness</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">subjid</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns thickness feature set at a given fwhm.</span>
+
+<span class="sd">    Assumes freesurfer was run with -qcache flag!</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../_static/jquery.js"></script>
+            <script type="text/javascript" src="../_static/underscore.js"></script>
+            <script type="text/javascript" src="../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../_static/bernard.js"></script>
+    </body>
+</html>

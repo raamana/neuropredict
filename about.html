@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>About &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="_static/favicon.ico" />
+
+        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : './',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <div class="section" id="about">
+<h1>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h1>
+<p>neuropredict : automatic estimation of predictive power of commonly used neuroimaging features as well as user-defined features.</p>
+<p>The aim of neuropredict is to automatically assess the predictive power of different sets of features (such as resting-state connectivity, fractional anisotropy, subcortical volumes and cortical thickness features) provided by the user, or automatically read from the processing of popular tools such as FSL, DTIstudio, AFNI and Freesurfer. It is aimed (to lower or remove the barriers) at clinical users interested in measuring the classification accuracy of different features they are interested in studying, and assess  importance of brain regions/features in their dataset.</p>
+<p>On a high level,</p>
+<a class="reference internal image-reference" href="_images/high_level_flow.png"><img alt="_images/high_level_flow.png" src="_images/high_level_flow.png" style="width: 700px;" /></a>
+<p>On a more detailed level,</p>
+<a class="reference internal image-reference" href="_images/role.png"><img alt="_images/role.png" src="_images/role.png" style="width: 700px;" /></a>
+<p><code class="docutils literal"><span class="pre">neuropredict</span></code> sounds similar (on the surface) to other software available, such as scikit-learn (which is used underneath), however our aim here is to lower the barriers as much as possible, or remove them altogether and make machine learning seamless! For example,</p>
+<blockquote>
+<div><ul class="simple">
+<li>You don’t have to code when you use neurpredict - saves you a lot of headache with development and debugging!</li>
+<li>You don’t have to learn how the machine learning toolkits work and their APIs. This can be daunting and time-consuming, and  can likely lead to bad choices made in terms of how proper cross-validation is done.</li>
+<li>Toolkits like scikit-learn and nilearn are geared towards developers (focusing on the API to support most generic uses), but not focused easing your workflow, esp. when analyzing many feature sets.</li>
+<li>Comprehensive analysis of misclassfied subjects (histogram at top right in figure below) in different pairs of classes is not in the interest of other toolkits and not possible without significant rewriting of many underlying components of scikit-learn.</li>
+<li>Thorough analysis of  misclassification rates for different feature sets (radar plot at bottom right in figure below) is not possible in scikit-learn without significant development (who only provide basic metrics of classifier performance)..</li>
+<li>Methods and tools for statistical comparison of multiple features (and models) is missing in other toolkits, and which is a priority for neuropredict.</li>
+</ul>
+</div></blockquote>
+<p>All you would need to provide are your own features (such as a Freesurfer output directory) and obtain an easy to read and comprehensive report on the predictive power of the features they are interested in, along with well-packaged export of performance metrics (for sharing and posthoc comparison).</p>
+<p>It is geared towards neuroscience data (where the need for machine learning is high) offering readers for popular tools. However, it is not restricted to neuro-data, you could input any arbitrary set of features (from astrophysics, biology or chemistry).</p>
+<p><strong>Happy machine learning!</strong></p>
+<p>And neuropredicting.</p>
+<p>Check the <a class="reference internal" href="usage_cli.html"><span class="doc">Usage</span></a> and <a class="reference internal" href="features.html"><span class="doc">Input formats</span></a> pages, and let me know your comments.</p>
+<p>Thanks for checking out. Your feedback will be appreciated.</p>
+</div>
+
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="_static/jquery.js"></script>
+            <script type="text/javascript" src="_static/underscore.js"></script>
+            <script type="text/javascript" src="_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/bernard.js"></script>
+    </body>
+</html>

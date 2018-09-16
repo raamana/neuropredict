@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.results &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.results</h1><div class="highlight"><pre>
+<span></span>
+<div class="viewcode-block" id="Results"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.results.Results">[docs]</a><span class="k">class</span> <span class="nc">Results</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to contains full set of results for a given experiment.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">        pipeline_set : list of sklearn pipelines</span>
+<span class="sd">            sklearn pipelines allows a sequence of preprocessing, feature selection and</span>
+<span class="sd">                estimators to realize the full power of ML techniques for your problem.</span>
+<span class="sd">            Currently only one pipeline is supported.</span>
+<span class="sd">            The need for and utility of implementing multiple pipelines is being contemplated.</span>
+
+<span class="sd">        metric_set : dict</span>
+<span class="sd">            Contains the set of the metrics evaluating the predictive performance of the model.</span>
+<span class="sd">            The most common metric is classification accuracy, and other metrics available are:</span>
+<span class="sd">                balanced_accuracy : most generically applicable,</span>
+<span class="sd">                    with experiments with class imbalance and in multi-class experiments.</span>
+<span class="sd">                AUC (when the classification task is binary),</span>
+
+<span class="sd">        probabilities : dict</span>
+<span class="sd">            Contains predictive probabilities (predicted by the estimator)</span>
+<span class="sd">                from which the metrics (above) were derived from.</span>
+<span class="sd">            Note this may not always be available, and often is slower than otherwise.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">pipeline_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">metric_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">feature_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="p">):</span>
+        <span class="s2">&quot;Constructor.&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_set</span> <span class="o">=</span> <span class="n">pipeline_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_set</span> <span class="o">=</span> <span class="n">metric_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_names</span> <span class="o">=</span> <span class="n">feature_names</span>
+
+
+<div class="viewcode-block" id="Results.add_result"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.results.Results.add_result">[docs]</a>    <span class="k">def</span> <span class="nf">add_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">metric_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">probabilities</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">test_labels_predicted</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">test_labels_true</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">confusion_matrices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">best_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">feature_importance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">num_times_misclassified</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">num_times_tested</span><span class="o">=</span><span class="kc">None</span>
+                 <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to populate the Results class with predictions/accuracies,</span>
+<span class="sd">         coming from different repetitions of CV.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_data</span> <span class="o">=</span> <span class="n">metric_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">probabilities</span> <span class="o">=</span> <span class="n">probabilities</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_labels_predicted</span> <span class="o">=</span> <span class="n">test_labels_predicted</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_labels_true</span> <span class="o">=</span> <span class="n">test_labels_true</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confusion_matrices</span> <span class="o">=</span> <span class="n">confusion_matrices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_params</span> <span class="o">=</span> <span class="n">best_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_importance</span> <span class="o">=</span> <span class="n">feature_importance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_times_misclassified</span> <span class="o">=</span> <span class="n">num_times_misclassified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_times_tested</span> <span class="o">=</span> <span class="n">num_times_tested</span></div>
+
+<div class="viewcode-block" id="Results.save"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.results.Results.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Method to persist the results to disk.&quot;</span></div>
+
+<div class="viewcode-block" id="Results.export"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.results.Results.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Method to export the results to different formats (e.g. CSV)&quot;</span></div>
+
+<div class="viewcode-block" id="Results.load"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.results.Results.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s2">&quot;Method to load previously saved results e.g. to redo visualizations&quot;</span></div></div>
+
+
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>

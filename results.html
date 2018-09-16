@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Report &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="_static/favicon.ico" />
+
+        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : './',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <div class="section" id="report">
+<h1>Report<a class="headerlink" href="#report" title="Permalink to this headline">¶</a></h1>
+<p>Neuropredict is here to remove those barriers and make your life easier!</p>
+<p>All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below).</p>
+<img alt="_images/composite_flyer.001.png" src="_images/composite_flyer.001.png" />
+<p>The report consists of</p>
+<blockquote>
+<div><ul class="simple">
+<li>distribtions of cross-validated performance (balanced accuracy),</li>
+<li>confusion matrices for each feature set,</li>
+<li>intuitive comparison of misclassification rates across multiple features.</li>
+</ul>
+</div></blockquote>
+<p>The output directory (chosen with <code class="docutils literal"><span class="pre">-o</span></code> flag) contains the following sets of files, whose names are self-explanatory. In each set, there is separate visualization (PDF) or CSV file produced for each feature (named features A, B, C and D below) being studied, for your convenience.</p>
+<p><strong>First</strong>, a set of visualizations in PDF format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">balanced_accuracy</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">compare_misclf_rates</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">confusion_matrix_FeatureA</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">confusion_matrix_FeatureB</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">confusion_matrix_FeatureC</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">confusion_matrix_FeatureD</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">feature_importance</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">misclassified_subjects_frequency_histogram</span><span class="o">.</span><span class="n">pdf</span>
+</pre></div>
+</div>
+<p><strong>Second</strong>, a set of CSV files in a subfolder called <code class="docutils literal"><span class="pre">exported_results</span></code> (typical contents shown below), which can used for further posthoc statisical analysis or to produce more customised visualizations.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">average_misclassification_rates_FeatureA</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">average_misclassification_rates_FeatureB</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">average_misclassification_rates_FeatureC</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">average_misclassification_rates_FeatureD</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">balanced_accuracy</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">confusion_matrix_FeatureA</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">confusion_matrix_FeatureB</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">confusion_matrix_FeatureC</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">confusion_matrix_FeatureD</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">feature_importance_FeatureA</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">feature_importance_FeatureB</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">feature_importance_FeatureC</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">feature_importance_FeatureD</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">subject_misclf_freq_FeatureA</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">subject_misclf_freq_FeatureB</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">subject_misclf_freq_FeatureC</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">subject_misclf_freq_FeatureD</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
+</div>
+<p><strong>Third</strong>, a Python pickle file <code class="docutils literal"><span class="pre">rhst_results.pkl</span></code> containing the full set of results, that neuropredict can bases the visualizatiosn on.</p>
+<p><strong>Fourth</strong>, a set of files named <code class="docutils literal"><span class="pre">misclassified_subjects_*_most_frequent.txt</span></code>. Each of these files (for each feature being studied) contain the set of subject IDs that were misclassified different features most frequently (during multiple repetitions of CV). This is to help you further dig into why they have been so often misclassified. If classes are expected to well separated, and some subjects misclassified consistently (over 60%), you may want to ask these questions:</p>
+<blockquote>
+<div><ul class="simple">
+<li>are they mislabelled (data entry or human error)?</li>
+<li>were their data quality controlled properly (preprocessing or QC failure)?</li>
+<li>what explains their ‘outlier’ status (demographics, neuropsych or something related)?</li>
+</ul>
+</div></blockquote>
+<p>Fifth, few miscellaneous set of files that neuropredict relies to produce the comprehensive report.</p>
+<div class="section" id="interpretation">
+<h2>Interpretation<a class="headerlink" href="#interpretation" title="Permalink to this headline">¶</a></h2>
+<p>We will walk you through the resulting visualizations one by one.</p>
+</div>
+<div class="section" id="comparison-of-predictive-accuracy">
+<h2>Comparison of predictive accuracy<a class="headerlink" href="#comparison-of-predictive-accuracy" title="Permalink to this headline">¶</a></h2>
+<p>The following visualization compares the predictive performance of four features, using the balanced accuracy metric. The performance of each feature is shown as a distribution, wherein multiple points in the distribution are obtained from multiple CV repetitions. As you can see,</p>
+<blockquote>
+<div><ul class="simple">
+<li>it is important to visualize the full distribution and not just the mean or median, as the distributions are typically wide and usually not normal.</li>
+<li>to test whether a particular feature is statistically significantly better, a distribution for each feature is necessary to run statistical tests.</li>
+</ul>
+</div></blockquote>
+<img alt="_images/results_interpretation.balanced_accuracy.png" src="_images/results_interpretation.balanced_accuracy.png" />
+</div>
+<div class="section" id="comparison-of-misclassification-rates">
+<h2>Comparison of misclassification rates<a class="headerlink" href="#comparison-of-misclassification-rates" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/results_interpretation.mcr_radar.png" src="_images/results_interpretation.mcr_radar.png" />
+<p><strong>under dev</strong></p>
+<p><em>Stay tuned</em></p>
+</div>
+</div>
+
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="_static/jquery.js"></script>
+            <script type="text/javascript" src="_static/underscore.js"></script>
+            <script type="text/javascript" src="_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="_static/bernard.js"></script>
+    </body>
+</html>

@@ -1,0 +1,118 @@
+neuropredict package
+====================
+
+Submodules
+----------
+
+neuropredict\.algorithms module
+-------------------------------
+
+.. automodule:: neuropredict.algorithms
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.compare module
+----------------------------
+
+.. automodule:: neuropredict.compare
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.config\_neuropredict module
+-----------------------------------------
+
+.. automodule:: neuropredict.config_neuropredict
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.experiment module
+-------------------------------
+
+.. automodule:: neuropredict.experiment
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.freesurfer module
+-------------------------------
+
+.. automodule:: neuropredict.freesurfer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.io module
+-----------------------
+
+.. automodule:: neuropredict.io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.neural\_networks module
+-------------------------------------
+
+.. automodule:: neuropredict.neural_networks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.reports module
+----------------------------
+
+.. automodule:: neuropredict.reports
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.results module
+----------------------------
+
+.. automodule:: neuropredict.results
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.rhst module
+-------------------------
+
+.. automodule:: neuropredict.rhst
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.run\_workflow module
+----------------------------------
+
+.. automodule:: neuropredict.run_workflow
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.utils module
+--------------------------
+
+.. automodule:: neuropredict.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+neuropredict\.visualize module
+------------------------------
+
+.. automodule:: neuropredict.visualize
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: neuropredict
+    :members:
+    :undoc-members:
+    :show-inheritance:

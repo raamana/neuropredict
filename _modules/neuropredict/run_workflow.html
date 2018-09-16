@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.run_workflow &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.run_workflow</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">neuropredict : easy and comprehensive predictive analysis.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;cli&#39;</span><span class="p">,</span> <span class="s1">&#39;get_parser&#39;</span><span class="p">]</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">version_info</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">pjoin</span><span class="p">,</span> <span class="n">exists</span> <span class="k">as</span> <span class="n">pexists</span><span class="p">,</span> <span class="n">abspath</span><span class="p">,</span> <span class="n">realpath</span><span class="p">,</span> <span class="n">basename</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pyradigm</span> <span class="k">import</span> <span class="n">MLDataset</span>
+
+<span class="k">if</span> <span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+    <span class="c1"># the order of import is very important to avoid circular imports</span>
+    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">__version__</span>
+    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">rhst</span><span class="p">,</span> <span class="n">visualize</span>
+    <span class="kn">from</span> <span class="nn">neuropredict.freesurfer</span> <span class="k">import</span> <span class="n">aseg_stats_subcortical</span><span class="p">,</span> <span class="n">aseg_stats_whole_brain</span>
+    <span class="kn">from</span> <span class="nn">neuropredict.io</span> <span class="k">import</span> <span class="n">get_metadata</span><span class="p">,</span> <span class="n">get_features</span><span class="p">,</span> <span class="n">get_metadata_in_pyradigm</span><span class="p">,</span> \
+        <span class="n">get_data_matrix</span><span class="p">,</span> <span class="n">get_dir_of_dirs</span><span class="p">,</span> <span class="n">get_pyradigm</span><span class="p">,</span> <span class="n">get_arff</span><span class="p">,</span> <span class="n">saved_dataset_matches</span>
+    <span class="kn">from</span> <span class="nn">neuropredict.utils</span> <span class="k">import</span> <span class="n">check_paths</span><span class="p">,</span> <span class="n">uniq_combined_name</span><span class="p">,</span> <span class="n">check_num_procs</span><span class="p">,</span> \
+        <span class="n">sub_group_identifier</span><span class="p">,</span> <span class="n">save_options</span><span class="p">,</span> <span class="n">load_options</span><span class="p">,</span> <span class="n">validate_feature_selection_size</span><span class="p">,</span> \
+        <span class="n">make_dataset_filename</span><span class="p">,</span> <span class="n">not_unspecified</span><span class="p">,</span> <span class="n">check_classifier</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;neuropredict requires Python 3+.&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_parser"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.run_workflow.get_parser">[docs]</a><span class="k">def</span> <span class="nf">get_parser</span><span class="p">():</span>
+    <span class="s2">&quot;Parser to specify arguments and their defaults.&quot;</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s2">&quot;neuropredict&quot;</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawTextHelpFormatter</span><span class="p">,</span>
+                                     <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Easy, standardized and comprehensive predictive analysis.&#39;</span><span class="p">)</span>
+
+    <span class="n">help_text_fs_dir</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation</span>
+<span class="s2">    Each subject will be queried after its ID in the metadata file.</span>
+
+<span class="s2">    E.g. ``--fs_subject_dir /project/freesurfer_v5.3``</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_user_defined_folder</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    List of absolute paths to user&#39;s own features.</span>
+
+<span class="s2">    Format: Each of these folders contains a separate folder for each subject (named after its ID in the metadata file)</span>
+<span class="s2">    containing a file called features.txt with one number per line.</span>
+<span class="s2">    All the subjects (in a given folder) must have the number of features (#lines in file).</span>
+<span class="s2">    Different parent folders (describing one feature set) can have different number of features for each subject,</span>
+<span class="s2">    but they must all have the same number of subjects (folders) within them.</span>
+
+<span class="s2">    Names of each folder is used to annotate the results in visualizations.</span>
+<span class="s2">    Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.</span>
+<span class="s2">    For example,</span>
+
+<span class="s2">    .. parsed-literal::</span>
+
+<span class="s2">        --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_pyradigm_paths</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Path(s) to pyradigm datasets.</span>
+
+<span class="s2">    Each path is self-contained dataset identifying each sample, its class and features.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_data_matrix</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    List of absolute paths to text files containing one matrix of size N x p  (num_samples x num_features).</span>
+
+<span class="s2">    Each row in the data matrix file must represent data corresponding to sample in the same row</span>
+<span class="s2">    of the meta data file (meta data file and data matrix must be in row-wise correspondence).</span>
+
+<span class="s2">    Name of this file will be used to annotate the results and visualizations.</span>
+
+<span class="s2">    E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``</span>
+<span class="s2">    </span>
+<span class="s2">    File format could be</span>
+<span class="s2">     - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with</span>
+<span class="s2">        numpy.loadtxt(filepath, delimiter=&#39;,&#39;)</span>
+<span class="s2">        or</span>
+<span class="s2">     - a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath).</span>
+
+<span class="s2">     One could use ``numpy.savetxt(data_array, delimiter=&#39;,&#39;)`` or ``numpy.save(data_array)`` to save features.</span>
+
+<span class="s2">     File format is inferred from its extension.</span>
+<span class="s2">     </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_arff_paths</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    List of paths to files saved in Weka&#39;s ARFF dataset format.</span>
+<span class="s2">    </span>
+<span class="s2">    Note: </span>
+<span class="s2">     - this format does NOT allow IDs for each subject.</span>
+<span class="s2">     - given feature values are saved in text format, this can lead to large files with high-dimensional data, </span>
+<span class="s2">        compared to numpy arrays saved to disk in binary format.</span>
+<span class="s2">    </span>
+<span class="s2">    More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_positive_class</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Name of the positive class (e.g. Alzheimers, MCI etc) to be used in calculation of area under the ROC curve.</span>
+<span class="s2">    Applicable only for binary classification experiments.</span>
+
+<span class="s2">    Default: class appearing last in order specified in metadata file.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_train_perc</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Percentage of the smallest class to be reserved for training.</span>
+
+<span class="s2">    Must be in the interval [0.01 0.99].</span>
+
+<span class="s2">    If sample size is sufficiently big, we recommend 0.5.</span>
+<span class="s2">    If sample size is small, or class imbalance is high, choose 0.8.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_num_rep_cv</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Number of repetitions of the repeated-holdout cross-validation.</span>
+
+<span class="s2">    The larger the number, more stable the estimates will be.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_sub_groups</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    This option allows the user to study different combinations of classes in a multi-class (N&gt;2) dataset.</span>
+
+<span class="s2">    For example, in a dataset with 3 classes CN, FTD and AD,</span>
+<span class="s2">    two studies of pair-wise combinations can be studied separately</span>
+<span class="s2">    with the following flag ``--sub_groups CN,FTD CN,AD``.</span>
+<span class="s2">    This allows the user to focus on few interesting subgroups depending on their dataset/goal.</span>
+
+<span class="s2">    Format: Different subgroups must be separated by space,</span>
+<span class="s2">    and each sub-group must be a comma-separated list of class names defined in the meta data file.</span>
+<span class="s2">    Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters,</span>
+<span class="s2">    and ideally just alphanumeric characters separated by underscores.</span>
+
+<span class="s2">    Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes.</span>
+
+<span class="s2">    Default: ``&#39;all&#39;``, leading to inclusion of all available classes in a all-vs-all multi-class setting.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_metadata_file</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Abs path to file containing metadata for subjects to be included for analysis.</span>
+
+<span class="s2">    At the minimum, each subject should have an id per row followed by the class it belongs to.</span>
+
+<span class="s2">    E.g.</span>
+<span class="s2">    .. parsed-literal::</span>
+
+<span class="s2">        sub001,control</span>
+<span class="s2">        sub002,control</span>
+<span class="s2">        sub003,disease</span>
+<span class="s2">        sub004,disease</span>
+
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_feature_selection</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Number of features to select as part of feature selection.</span>
+<span class="s2">    Options:</span>
+
+<span class="s2">         - &#39;tenth&#39;</span>
+<span class="s2">         - &#39;sqrt&#39;</span>
+<span class="s2">         - &#39;log2&#39;</span>
+<span class="s2">         - &#39;all&#39;</span>
+
+<span class="s2">    Default: </span><span class="se">\&#39;</span><span class="s2">tenth</span><span class="se">\&#39;</span><span class="s2"> of the number of samples in the training set.</span>
+
+<span class="s2">    For example, if your dataset has 90 samples, you chose 50 percent for training (default),</span>
+<span class="s2">    then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining.</span>
+<span class="s2">    If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_gs_level</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Flag to specify the level of grid search during hyper-parameter optimization on the training set.</span>
+<span class="s2">    Allowed options are : &#39;none&#39;, &#39;light&#39; and &#39;exhaustive&#39;, in the order of how many values/values will be optimized. </span>
+<span class="s2">    </span>
+<span class="s2">    More parameters and more values demand more resources and much longer time for optimization.</span>
+<span class="s2">    </span>
+<span class="s2">    The &#39;light&#39; option tries to &quot;folk wisdom&quot; to try least number of values (no more than one or two),</span>
+<span class="s2">     for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization). </span>
+<span class="s2">     The &#39;light&#39; will be the fastest and should give a &quot;rough idea&quot; of predictive performance. </span>
+<span class="s2">     The &#39;exhaustive&#39; option will try to most parameter values for the most parameters that can be optimized.</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_make_vis</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Option to make visualizations from existing results in the given path. </span>
+<span class="s2">    This is helpful when neuropredict failed to generate result figures automatically </span>
+<span class="s2">    e.g. on a HPC cluster, or another environment when DISPLAY is either not available.</span>
+<span class="s2">    </span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_atlas</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Name of the atlas to use for visualization. Default: fsaverage, if available.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">help_text_num_cpus</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Number of CPUs to use to parallelize CV repetitions.</span>
+
+<span class="s2">    Default : 4.</span>
+
+<span class="s2">    Number of CPUs will be capped at the number available on the machine if higher is requested.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_text_out_dir</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Output folder to store gathered features &amp; results.</span>
+<span class="s2">    </span><span class="se">\n</span><span class="s2"> </span><span class="se">\n</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_classifier</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    </span>
+<span class="s2">    String specifying one of the implemented classifiers. </span>
+<span class="s2">    (Classifiers are carefully chosen to allow for the comprehensive report provided by neuropredict).</span>
+<span class="s2">    </span>
+<span class="s2">    Default: &#39;RandomForestClassifier&#39;</span>
+<span class="s2">    </span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">help_feat_select_method</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Feature selection method to apply prior to training the classifier.</span>
+<span class="s2">    </span>
+<span class="s2">    Default: &#39;VarianceThreshold&#39;, removing features with 0.001 percent of lowest variance (zeros etc).</span>
+<span class="s2">    </span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;--meta_file&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;meta_file&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_text_metadata_file</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--out_dir&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;out_dir&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_text_out_dir</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">None</span> <span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;--fs_subject_dir&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;fs_subject_dir&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_text_fs_dir</span><span class="p">)</span>
+
+    <span class="n">user_defined</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Input data and formats&#39;</span><span class="p">,</span>
+                                             <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Only one of ``--pyradigm_paths``, &#39;</span>
+                                                         <span class="s1">&#39;``--user_feature_paths``, &#39;</span>
+                                                         <span class="s1">&#39;``--data_matrix_path`` or &#39;</span>
+                                                         <span class="s1">&#39;``--arff_paths`` options &#39;</span>
+                                                         <span class="s1">&#39;can be specified.&#39;</span><span class="p">)</span>
+
+    <span class="n">user_defined</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-y&quot;</span><span class="p">,</span> <span class="s2">&quot;--pyradigm_paths&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;pyradigm_paths&quot;</span><span class="p">,</span>
+                              <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>  <span class="c1"># to allow for multiple features</span>
+                              <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">help</span><span class="o">=</span><span class="n">help_text_pyradigm_paths</span><span class="p">)</span>
+
+    <span class="n">user_defined</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;--user_feature_paths&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;user_feature_paths&quot;</span><span class="p">,</span>
+                              <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>  <span class="c1"># to allow for multiple features</span>
+                              <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">help</span><span class="o">=</span><span class="n">help_text_user_defined_folder</span><span class="p">)</span>
+
+    <span class="n">user_defined</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="s2">&quot;--data_matrix_paths&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;data_matrix_paths&quot;</span><span class="p">,</span>
+                              <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+                              <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">help</span><span class="o">=</span><span class="n">help_text_data_matrix</span><span class="p">)</span>
+
+    <span class="n">user_defined</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-a&quot;</span><span class="p">,</span> <span class="s2">&quot;--arff_paths&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;arff_paths&quot;</span><span class="p">,</span>
+                              <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+                              <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">help</span><span class="o">=</span><span class="n">help_text_arff_paths</span><span class="p">)</span>
+
+    <span class="n">cv_args_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Cross-validation&#39;</span><span class="p">,</span>
+                                              <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Parameters related to training and optimization during cross-validation&#39;</span><span class="p">)</span>
+    <span class="n">cv_args_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--positive_class&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;positive_class&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="n">help_text_positive_class</span><span class="p">)</span>
+
+    <span class="n">cv_args_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="s2">&quot;--train_perc&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;train_perc&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_train_perc</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="n">help_text_train_perc</span><span class="p">)</span>
+
+    <span class="n">cv_args_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-n&quot;</span><span class="p">,</span> <span class="s2">&quot;--num_rep_cv&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;num_rep_cv&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_num_repetitions</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="n">help_text_num_rep_cv</span><span class="p">)</span>
+
+    <span class="n">cv_args_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-k&quot;</span><span class="p">,</span> <span class="s2">&quot;--num_features_to_select&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;num_features_to_select&quot;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_num_features_to_select</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="n">help_text_feature_selection</span><span class="p">)</span>
+
+    <span class="n">cv_args_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-sg&quot;</span><span class="p">,</span> <span class="s2">&quot;--sub_groups&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;sub_groups&quot;</span><span class="p">,</span>
+                        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="n">help_text_sub_groups</span><span class="p">)</span>
+
+    <span class="n">cv_args_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="s2">&quot;--gs_level&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;gs_level&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;light&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_text_gs_level</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVELS</span><span class="p">)</span>
+
+    <span class="n">pipeline_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Predictive Model&#39;</span><span class="p">,</span>
+                                              <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Parameters related to pipeline comprising the predictive model&#39;</span><span class="p">)</span>
+
+    <span class="n">pipeline_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-fs&quot;</span><span class="p">,</span> <span class="s2">&quot;--feat_select_method&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;feat_select_method&quot;</span><span class="p">,</span>
+                                <span class="n">default</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_feat_select_method</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_feat_select_method</span><span class="p">,</span>
+                                <span class="n">choices</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">feature_selection_choices</span><span class="p">)</span>
+
+    <span class="n">pipeline_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-e&quot;</span><span class="p">,</span> <span class="s2">&quot;--classifier&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;classifier&quot;</span><span class="p">,</span>
+                                <span class="n">default</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_classifier</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_classifier</span><span class="p">,</span>
+                                <span class="n">choices</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">classifier_choices</span><span class="p">)</span>
+
+    <span class="n">vis_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Visualization&#39;</span><span class="p">,</span>
+                                         <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Parameters related to generating visualizations&#39;</span><span class="p">)</span>
+
+    <span class="n">vis_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-z&quot;</span><span class="p">,</span> <span class="s2">&quot;--make_vis&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;make_vis&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_text_make_vis</span><span class="p">)</span>
+
+    <span class="n">comp_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Computing&#39;</span><span class="p">,</span>
+                                         <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Parameters related to computations/debugging&#39;</span><span class="p">)</span>
+
+    <span class="n">comp_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;--num_procs&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;num_procs&quot;</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DEFAULT_NUM_PROCS</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="n">help_text_num_cpus</span><span class="p">)</span>
+
+    <span class="n">comp_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span>
+                        <span class="n">version</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(prog)s</span><span class="s1"> </span><span class="si">{version}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+<span class="k">def</span> <span class="nf">organize_inputs</span><span class="p">(</span><span class="n">user_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates the input features specified and returns organized list of paths and readers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_args : ArgParse object</span>
+<span class="sd">        Various options specified by the user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    user_feature_paths : list</span>
+<span class="sd">        List of paths to specified input features</span>
+<span class="sd">    user_feature_type : str</span>
+<span class="sd">        String identifying the type of user-defined input</span>
+<span class="sd">    fs_subject_dir : str</span>
+<span class="sd">        Path to freesurfer subject directory, if supplied.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">atleast_one_feature_specified</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># specifying pyradigm avoids the need for separate meta data file</span>
+    <span class="n">meta_data_supplied</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">meta_data_format</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">fs_subject_dir</span><span class="p">):</span>
+        <span class="n">fs_subject_dir</span> <span class="o">=</span> <span class="n">abspath</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">fs_subject_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">fs_subject_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Given Freesurfer directory doesn&#39;t exist.&quot;</span><span class="p">)</span>
+        <span class="n">atleast_one_feature_specified</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fs_subject_dir</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># ensuring only one type is specified</span>
+    <span class="n">mutually_excl_formats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user_feature_paths&#39;</span><span class="p">,</span> <span class="s1">&#39;data_matrix_paths&#39;</span><span class="p">,</span> <span class="s1">&#39;pyradigm_paths&#39;</span><span class="p">,</span> <span class="s1">&#39;arff_paths&#39;</span><span class="p">]</span>
+    <span class="n">not_none_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="nb">format</span> <span class="ow">in</span> <span class="n">mutually_excl_formats</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">user_args</span><span class="p">,</span> <span class="nb">format</span><span class="p">)):</span>
+            <span class="n">not_none_count</span> <span class="o">=</span> <span class="n">not_none_count</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">not_none_count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only one of the following formats can be specified:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mutually_excl_formats</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">user_feature_paths</span><span class="p">):</span>
+        <span class="n">user_feature_paths</span> <span class="o">=</span> <span class="n">check_paths</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">path_type</span><span class="o">=</span><span class="s1">&#39;user defined (dir_of_dirs)&#39;</span><span class="p">)</span>
+        <span class="n">atleast_one_feature_specified</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user_feature_type</span> <span class="o">=</span> <span class="s1">&#39;dir_of_dirs&#39;</span>
+
+    <span class="k">elif</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">data_matrix_paths</span><span class="p">):</span>
+        <span class="n">user_feature_paths</span> <span class="o">=</span> <span class="n">check_paths</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">data_matrix_paths</span><span class="p">,</span> <span class="n">path_type</span><span class="o">=</span><span class="s1">&#39;data matrix&#39;</span><span class="p">)</span>
+        <span class="n">atleast_one_feature_specified</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user_feature_type</span> <span class="o">=</span> <span class="s1">&#39;data_matrix&#39;</span>
+
+    <span class="k">elif</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">pyradigm_paths</span><span class="p">):</span>
+        <span class="n">user_feature_paths</span> <span class="o">=</span> <span class="n">check_paths</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">pyradigm_paths</span><span class="p">,</span> <span class="n">path_type</span><span class="o">=</span><span class="s1">&#39;pyradigm&#39;</span><span class="p">)</span>
+        <span class="n">atleast_one_feature_specified</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">meta_data_supplied</span> <span class="o">=</span> <span class="n">user_feature_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">meta_data_format</span> <span class="o">=</span> <span class="s1">&#39;pyradigm&#39;</span>
+        <span class="n">user_feature_type</span> <span class="o">=</span> <span class="s1">&#39;pyradigm&#39;</span>
+
+    <span class="k">elif</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">arff_paths</span><span class="p">):</span>
+        <span class="n">user_feature_paths</span> <span class="o">=</span> <span class="n">check_paths</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">arff_paths</span><span class="p">,</span> <span class="n">path_type</span><span class="o">=</span><span class="s1">&#39;ARFF&#39;</span><span class="p">)</span>
+        <span class="n">atleast_one_feature_specified</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">user_feature_type</span> <span class="o">=</span> <span class="s1">&#39;arff&#39;</span>
+        <span class="n">meta_data_supplied</span> <span class="o">=</span> <span class="n">user_feature_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">meta_data_format</span> <span class="o">=</span> <span class="s1">&#39;arff&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">user_feature_paths</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">user_feature_type</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># map in python 3 returns a generator, not a list, so len() wouldnt work</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_feature_paths</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">user_feature_paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">user_feature_paths</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">atleast_one_feature_specified</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Atleast one method specifying features must be specified. &#39;</span>
+                         <span class="s1">&#39;It can be a path(s) to pyradigm dataset, matrix file, user-defined folder or a Freesurfer subject directory.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span> <span class="n">meta_data_supplied</span><span class="p">,</span> <span class="n">meta_data_format</span>
+
+
+<span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Parser/validator for the cmd line args.&quot;&quot;&quot;</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too few arguments!&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># parsing</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">user_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">make_vis</span><span class="p">):</span>
+        <span class="n">out_dir</span>  <span class="o">=</span> <span class="n">realpath</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">make_vis</span><span class="p">)</span>
+        <span class="n">res_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span><span class="n">cfg</span><span class="o">.</span><span class="n">file_name_results</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pexists</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pexists</span><span class="p">(</span><span class="n">res_path</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Saving the visualizations to </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_dir</span><span class="p">))</span>
+            <span class="n">make_visualizations</span><span class="p">(</span><span class="n">res_path</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Given folder does not exist, or has no results!&#39;</span><span class="p">)</span>
+
+    <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span> <span class="n">meta_data_path</span><span class="p">,</span> <span class="n">meta_data_format</span> <span class="o">=</span> <span class="n">organize_inputs</span><span class="p">(</span><span class="n">user_args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_data_path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">user_args</span><span class="o">.</span><span class="n">meta_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">meta_file</span> <span class="o">=</span> <span class="n">abspath</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">meta_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pexists</span><span class="p">(</span><span class="n">meta_file</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Meta data file doesn&#39;t exist.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Metadata file must be provided when not using pyradigm/ARFF inputs.&#39;</span><span class="p">)</span>
+
+        <span class="n">sample_ids</span><span class="p">,</span> <span class="n">classes</span> <span class="o">=</span> <span class="n">get_metadata</span><span class="p">(</span><span class="n">meta_file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Using meta data from:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">meta_data_path</span><span class="p">))</span>
+        <span class="n">sample_ids</span><span class="p">,</span> <span class="n">classes</span> <span class="o">=</span> <span class="n">get_metadata_in_pyradigm</span><span class="p">(</span><span class="n">meta_data_path</span><span class="p">,</span> <span class="n">meta_data_format</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">user_args</span><span class="o">.</span><span class="n">out_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">realpath</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">out_dir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">output_dir_default</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Output folder could not be created.&#39;</span><span class="p">)</span>
+
+    <span class="n">train_perc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">train_perc</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span> <span class="mf">0.01</span> <span class="o">&lt;=</span> <span class="n">train_perc</span> <span class="o">&lt;=</span> <span class="mf">0.99</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Training percentage </span><span class="si">{}</span><span class="s2"> out of bounds - must be &gt;= 0.01 and &lt;= 0.99&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">train_perc</span><span class="p">))</span>
+
+    <span class="n">num_rep_cv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">num_rep_cv</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_rep_cv</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Atleast 10 repetitions of CV is recommened.&quot;</span><span class="p">)</span>
+
+    <span class="n">num_procs</span> <span class="o">=</span> <span class="n">check_num_procs</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">num_procs</span><span class="p">)</span>
+
+    <span class="n">class_set</span><span class="p">,</span> <span class="n">subgroups</span><span class="p">,</span> <span class="n">positive_class</span> <span class="o">=</span> <span class="n">validate_class_set</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">user_args</span><span class="o">.</span><span class="n">sub_groups</span><span class="p">,</span> <span class="n">user_args</span><span class="o">.</span><span class="n">positive_class</span><span class="p">)</span>
+
+    <span class="n">feature_selection_size</span> <span class="o">=</span> <span class="n">validate_feature_selection_size</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">num_features_to_select</span><span class="p">)</span>
+
+    <span class="n">grid_search_level</span> <span class="o">=</span> <span class="n">user_args</span><span class="o">.</span><span class="n">gs_level</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">grid_search_level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVELS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unrecognized level of grid search. Valid choices: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVELS</span><span class="p">))</span>
+
+    <span class="n">classifier</span> <span class="o">=</span> <span class="n">check_classifier</span><span class="p">(</span><span class="n">user_args</span><span class="o">.</span><span class="n">classifier</span><span class="p">)</span>
+    <span class="n">feat_select_method</span> <span class="o">=</span> <span class="n">user_args</span><span class="o">.</span><span class="n">feat_select_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># saving the validated and expanded values to disk for later use.</span>
+    <span class="n">options_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="n">sample_ids</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span>
+                       <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">subgroups</span><span class="p">,</span> <span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span>
+                       <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">]</span>
+    <span class="n">options_path</span> <span class="o">=</span> <span class="n">save_options</span><span class="p">(</span><span class="n">options_to_save</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sample_ids</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">,</span> \
+           <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span> \
+           <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> \
+           <span class="n">positive_class</span><span class="p">,</span> <span class="n">subgroups</span><span class="p">,</span> \
+           <span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> \
+           <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">feat_select_method</span>
+
+
+<span class="k">def</span> <span class="nf">make_visualizations</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces the performance visualizations/comparisons from the cross-validation results.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_file_path : str</span>
+<span class="sd">        Path to file containing results produced by `rhst`</span>
+
+<span class="sd">    out_dir : str</span>
+<span class="sd">        Path to a folder to store results.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">results_dict</span> <span class="o">=</span> <span class="n">rhst</span><span class="o">.</span><span class="n">load_results_dict</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">)</span>
+
+    <span class="c1"># using shorter names for readability</span>
+    <span class="n">accuracy_balanced</span>       <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;accuracy_balanced&#39;</span><span class="p">]</span>
+    <span class="n">method_names</span>            <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;method_names&#39;</span><span class="p">]</span>
+    <span class="n">num_classes</span>             <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;num_classes&#39;</span><span class="p">]</span>
+    <span class="n">class_sizes</span>             <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;class_sizes&#39;</span><span class="p">]</span>
+    <span class="n">confusion_matrix</span>        <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;confusion_matrix&#39;</span><span class="p">]</span>
+    <span class="n">class_order</span>             <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;class_set&#39;</span><span class="p">]</span>
+    <span class="n">feature_importances_rf</span>  <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;feature_importances_rf&#39;</span><span class="p">]</span>
+    <span class="n">feature_names</span>           <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;feature_names&#39;</span><span class="p">]</span>
+    <span class="n">num_times_misclfd</span>       <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;num_times_misclfd&#39;</span><span class="p">]</span>
+    <span class="n">num_times_tested</span>        <span class="o">=</span> <span class="n">results_dict</span><span class="p">[</span><span class="s1">&#39;num_times_tested&#39;</span><span class="p">]</span>
+
+    <span class="n">feature_importances_available</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">options_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">user_options</span> <span class="o">=</span> <span class="n">load_options</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_options</span><span class="p">[</span><span class="s1">&#39;classifier_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">clfs_with_feature_importance</span><span class="p">:</span>
+            <span class="n">feature_importances_available</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># check if the all values are NaN</span>
+        <span class="n">unusable</span> <span class="o">=</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">method_fi</span><span class="o">.</span><span class="n">flatten</span><span class="p">()))</span> <span class="k">for</span> <span class="n">method_fi</span> <span class="ow">in</span> <span class="n">feature_importances_rf</span> <span class="p">]</span>
+        <span class="n">feature_importances_available</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">unusable</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+
+        <span class="n">balacc_fig_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;balanced_accuracy&#39;</span><span class="p">)</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">metric_distribution</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">balacc_fig_path</span><span class="p">,</span>
+                                      <span class="n">class_sizes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="s2">&quot;Balanced Accuracy&quot;</span><span class="p">)</span>
+
+        <span class="n">confmat_fig_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;confusion_matrix&#39;</span><span class="p">)</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">confusion_matrices</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_order</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">confmat_fig_path</span><span class="p">)</span>
+
+        <span class="n">cmp_misclf_fig_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;compare_misclf_rates&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_classes</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">visualize</span><span class="o">.</span><span class="n">compare_misclf_pairwise</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_order</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">cmp_misclf_fig_path</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">num_classes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">visualize</span><span class="o">.</span><span class="n">compare_misclf_pairwise_parallel_coord_plot</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_order</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span>
+                                                                  <span class="n">cmp_misclf_fig_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">feature_importances_available</span><span class="p">:</span>
+            <span class="n">featimp_fig_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;feature_importance&#39;</span><span class="p">)</span>
+            <span class="n">visualize</span><span class="o">.</span><span class="n">feature_importance_map</span><span class="p">(</span><span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">featimp_fig_path</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Current predictive model does not provide feature importance values. Skipping them.&#39;</span><span class="p">)</span>
+
+        <span class="n">misclf_out_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;misclassified_subjects&#39;</span><span class="p">)</span>
+        <span class="n">visualize</span><span class="o">.</span><span class="n">freq_hist_misclassifications</span><span class="p">(</span><span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">misclf_out_path</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Error generating the visualizations! Skipping ..&#39;</span><span class="p">)</span>
+
+    <span class="c1"># cleaning up</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span>
+
+
+<span class="k">def</span> <span class="nf">validate_class_set</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">subgroups</span><span class="p">,</span> <span class="n">positive_class</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="s2">&quot;Ensures class names are valid and sub-groups exist.&quot;</span>
+
+    <span class="n">class_set</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+    <span class="n">sub_group_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">subgroups</span> <span class="o">!=</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">subgroups</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">subgroups</span> <span class="o">=</span> <span class="p">[</span> <span class="n">subgroups</span><span class="p">,</span> <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">comb</span> <span class="ow">in</span> <span class="n">subgroups</span><span class="p">:</span>
+            <span class="n">cls_list</span> <span class="o">=</span> <span class="n">comb</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+            <span class="c1"># ensuring each subgroup has atleast two classes</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cls_list</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;This subgroup </span><span class="si">{}</span><span class="s1"> does not contain two unique classes.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">comb</span><span class="p">))</span>
+
+            <span class="c1"># verify each of them were defined in meta</span>
+            <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">cls_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">cls</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">class_set</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Class </span><span class="si">{}</span><span class="s2"> in combination </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                                     <span class="s2">&quot;does not exist in meta data.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">comb</span><span class="p">))</span>
+
+            <span class="n">sub_group_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cls_list</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># using all classes</span>
+        <span class="n">sub_group_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">class_set</span><span class="p">)</span>
+
+    <span class="c1"># the following loop is required to preserve original order</span>
+    <span class="c1"># this does not: class_order_in_meta = list(set(classes.values()))</span>
+    <span class="n">class_order_in_meta</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">class_set</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">class_order_in_meta</span><span class="p">:</span>
+            <span class="n">class_order_in_meta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_order_in_meta</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Atleast two classes are required for predictive analysis! &quot;</span>
+                         <span class="s2">&quot;Only one given (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">positive_class</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">positive_class</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">class_order_in_meta</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Positive class specified does not exist in meta data.</span><span class="se">\n</span><span class="s1">&#39;</span>
+                                 <span class="s1">&#39;Choose one of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_order_in_meta</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Positive class specified for AUC calculation: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">positive_class</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">positive_class</span> <span class="o">=</span> <span class="n">class_order_in_meta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Positive class inferred for AUC calculation: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">positive_class</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">sub_group_list</span><span class="p">,</span> <span class="n">positive_class</span>
+
+
+<span class="k">def</span> <span class="nf">import_datasets</span><span class="p">(</span><span class="n">method_list</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">feature_path</span><span class="p">,</span> <span class="n">feature_type</span><span class="o">=</span><span class="s1">&#39;dir_of_dirs&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imports all the specified feature sets and organizes them into datasets.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    method_list : list of callables</span>
+<span class="sd">        Set of predefined methods returning a vector of features for a given sample id and location</span>
+<span class="sd">    out_dir : str</span>
+<span class="sd">        Path to the output folder</span>
+
+<span class="sd">    subjects : list of str</span>
+<span class="sd">        List of sample ids</span>
+<span class="sd">    classes : dict</span>
+<span class="sd">        Dict identifying the class for each sample id in the dataset.</span>
+<span class="sd">    feature_path : list of str</span>
+<span class="sd">        List of paths to the root directory containing the features (pre- or user-defined).</span>
+<span class="sd">        Must be of same length as method_list</span>
+<span class="sd">    feature_type : str</span>
+<span class="sd">        a string identifying the structure of feature set.</span>
+<span class="sd">        Choices = (&#39;dir_of_dirs&#39;, &#39;data_matrix&#39;)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    method_names : list of str</span>
+<span class="sd">        List of method names used for annotation.</span>
+<span class="sd">    dataset_paths_file : str</span>
+<span class="sd">        Path to the file containing paths to imported feature sets.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">clean_str</span><span class="p">(</span><span class="n">string</span><span class="p">):</span> <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; _-:</span><span class="se">\n\r\t</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="n">method_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">outpath_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">mm</span><span class="p">,</span> <span class="n">cur_method</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">method_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cur_method</span> <span class="ow">in</span> <span class="p">[</span><span class="n">get_dir_of_dirs</span><span class="p">]:</span>
+            <span class="n">method_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">cur_method</span> <span class="ow">in</span> <span class="p">[</span><span class="n">get_data_matrix</span><span class="p">]:</span>
+            <span class="n">method_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">basename</span><span class="p">(</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">cur_method</span> <span class="ow">in</span> <span class="p">[</span><span class="n">get_pyradigm</span><span class="p">]:</span>
+
+            <span class="k">if</span> <span class="n">feature_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pyradigm&#39;</span><span class="p">]:</span>
+                <span class="n">loaded_dataset</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span><span class="n">filepath</span><span class="o">=</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid state of the program!&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loaded_dataset</span><span class="o">.</span><span class="n">description</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">method_name</span> <span class="o">=</span> <span class="n">loaded_dataset</span><span class="o">.</span><span class="n">description</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">method_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">])</span>
+
+            <span class="n">method_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clean_str</span><span class="p">(</span><span class="n">method_name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">saved_dataset_matches</span><span class="p">(</span><span class="n">loaded_dataset</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
+                <span class="n">outpath_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;supplied pyradigm dataset does not match samples in the meta data.&#39;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">cur_method</span> <span class="ow">in</span> <span class="p">[</span><span class="n">get_arff</span><span class="p">]:</span>
+
+            <span class="n">loaded_dataset</span> <span class="o">=</span> <span class="n">MLDataset</span><span class="p">(</span><span class="n">arff_path</span><span class="o">=</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loaded_dataset</span><span class="o">.</span><span class="n">description</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">method_name</span> <span class="o">=</span> <span class="n">loaded_dataset</span><span class="o">.</span><span class="n">description</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">method_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">])</span>
+
+            <span class="n">method_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clean_str</span><span class="p">(</span><span class="n">method_name</span><span class="p">))</span>
+            <span class="n">out_name</span> <span class="o">=</span> <span class="n">make_dataset_filename</span><span class="p">(</span><span class="n">method_name</span><span class="p">)</span>
+            <span class="n">outpath_dataset</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">out_name</span><span class="p">)</span>
+            <span class="n">loaded_dataset</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">outpath_dataset</span><span class="p">)</span>
+            <span class="n">outpath_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outpath_dataset</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># adding an index for an even more unique identification</span>
+            <span class="c1"># method_name = &#39;{}_{}&#39;.format(cur_method.__name__,mm)</span>
+            <span class="n">method_name</span> <span class="o">=</span> <span class="n">cur_method</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">method_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clean_str</span><span class="p">(</span><span class="n">method_name</span><span class="p">))</span>
+        <span class="n">out_name</span> <span class="o">=</span> <span class="n">make_dataset_filename</span><span class="p">(</span><span class="n">method_name</span><span class="p">)</span>
+
+        <span class="n">outpath_dataset</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">out_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">saved_dataset_matches</span><span class="p">(</span><span class="n">outpath_dataset</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
+            <span class="c1"># noinspection PyTypeChecker</span>
+            <span class="n">outpath_dataset</span> <span class="o">=</span> <span class="n">get_features</span><span class="p">(</span><span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span>
+                                           <span class="n">feature_path</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                                           <span class="n">out_dir</span><span class="p">,</span> <span class="n">out_name</span><span class="p">,</span>
+                                           <span class="n">cur_method</span><span class="p">,</span> <span class="n">feature_type</span><span class="p">)</span>
+
+        <span class="n">outpath_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outpath_dataset</span><span class="p">)</span>
+
+    <span class="n">combined_name</span> <span class="o">=</span> <span class="n">uniq_combined_name</span><span class="p">(</span><span class="n">method_names</span><span class="p">)</span>
+
+    <span class="n">dataset_paths_file</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="s1">&#39;datasetlist.&#39;</span> <span class="o">+</span> <span class="n">combined_name</span> <span class="o">+</span> <span class="s1">&#39;.txt&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dataset_paths_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dpf</span><span class="p">:</span>
+        <span class="n">dpf</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outpath_list</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">dataset_paths_file</span>
+
+
+
+<span class="k">def</span> <span class="nf">make_method_list</span><span class="p">(</span><span class="n">fs_subject_dir</span><span class="p">,</span> <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="o">=</span><span class="s1">&#39;dir_of_dirs&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an organized list of feature paths and methods to read in features.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fs_subject_dir : str</span>
+<span class="sd">    user_feature_paths : list of str</span>
+<span class="sd">    user_feature_type : str</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    feature_dir : list</span>
+<span class="sd">    method_list : list</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">freesurfer_readers</span> <span class="o">=</span> <span class="p">[</span><span class="n">aseg_stats_subcortical</span><span class="p">,</span> <span class="n">aseg_stats_whole_brain</span><span class="p">]</span>
+    <span class="n">userdefined_readers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dir_of_dirs&#39;</span><span class="p">:</span> <span class="n">get_dir_of_dirs</span><span class="p">,</span>
+                           <span class="s1">&#39;data_matrix&#39;</span><span class="p">:</span> <span class="n">get_data_matrix</span><span class="p">,</span>
+                           <span class="s1">&#39;pyradigm&#39;</span><span class="p">:</span> <span class="n">get_pyradigm</span><span class="p">,</span>
+                           <span class="s1">&#39;arff&#39;</span><span class="p">:</span> <span class="n">get_arff</span><span class="p">}</span>
+
+    <span class="n">feature_dir</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">method_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">user_feature_paths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">user_feature_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">userdefined_readers</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Invalid feature type or its reader is not implemented yet!&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">upath</span> <span class="ow">in</span> <span class="n">user_feature_paths</span><span class="p">:</span>
+            <span class="n">feature_dir</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">upath</span><span class="p">)</span>
+            <span class="n">method_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">userdefined_readers</span><span class="p">[</span><span class="n">user_feature_type</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">not_unspecified</span><span class="p">(</span><span class="n">fs_subject_dir</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">fsrdr</span> <span class="ow">in</span> <span class="n">freesurfer_readers</span><span class="p">:</span>
+            <span class="n">feature_dir</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fs_subject_dir</span><span class="p">)</span>
+            <span class="n">method_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fsrdr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">method_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature_dir</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid specification for features!&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">method_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Atleast one feature set must be specified.&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Requested features for analysis:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">mm</span><span class="p">,</span> <span class="n">method</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">method_list</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">feature_dir</span><span class="p">[</span><span class="n">mm</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">feature_dir</span><span class="p">,</span> <span class="n">method_list</span>
+
+
+<span class="k">def</span> <span class="nf">prepare_and_run</span><span class="p">(</span><span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">,</span>
+                    <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span>
+                    <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span>
+                    <span class="n">sub_group_list</span><span class="p">,</span> <span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span>
+                    <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">):</span>
+    <span class="s2">&quot;Organizes the inputs and prepares them for CV&quot;</span>
+
+    <span class="n">feature_dir</span><span class="p">,</span> <span class="n">method_list</span> <span class="o">=</span> <span class="n">make_method_list</span><span class="p">(</span><span class="n">fs_subject_dir</span><span class="p">,</span> <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">)</span>
+
+    <span class="n">method_names</span><span class="p">,</span> <span class="n">dataset_paths_file</span> <span class="o">=</span> <span class="n">import_datasets</span><span class="p">(</span><span class="n">method_list</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span>
+                                                       <span class="n">feature_dir</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Requested processing for the following subgroups:&#39;</span>
+          <span class="s1">&#39;</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sg</span><span class="p">)</span> <span class="k">for</span> <span class="n">sg</span> <span class="ow">in</span> <span class="n">sub_group_list</span><span class="p">])))</span>
+
+    <span class="c1"># iterating through the given set of subgroups</span>
+    <span class="n">num_sg</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_group_list</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">sgi</span><span class="p">,</span> <span class="n">sub_group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sub_group_list</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="s1">Processing subgroup : </span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1">/</span><span class="si">{}</span><span class="s1">)&#39;</span>
+              <span class="s1">&#39;</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">80</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sub_group</span><span class="p">),</span> <span class="n">sgi</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_sg</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">80</span><span class="p">))</span>
+        <span class="n">out_dir_sg</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">sub_group_identifier</span><span class="p">(</span><span class="n">sub_group</span><span class="p">))</span>
+        <span class="n">results_file_path</span> <span class="o">=</span> <span class="n">rhst</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">dataset_paths_file</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">out_dir_sg</span><span class="p">,</span>
+                                     <span class="n">train_perc</span><span class="o">=</span><span class="n">train_perc</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="o">=</span><span class="n">num_rep_cv</span><span class="p">,</span>
+                                     <span class="n">positive_class</span><span class="o">=</span><span class="n">positive_class</span><span class="p">,</span> <span class="n">sub_group</span><span class="o">=</span><span class="n">sub_group</span><span class="p">,</span>
+                                     <span class="n">feat_sel_size</span><span class="o">=</span><span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="o">=</span><span class="n">num_procs</span><span class="p">,</span>
+                                     <span class="n">grid_search_level</span><span class="o">=</span><span class="n">grid_search_level</span><span class="p">,</span>
+                                     <span class="n">classifier_name</span><span class="o">=</span><span class="n">classifier</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="o">=</span><span class="n">feat_select_method</span><span class="p">,</span>
+                                     <span class="n">options_path</span><span class="o">=</span><span class="n">options_path</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Saving the visualizations to </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_dir</span><span class="p">))</span>
+        <span class="n">make_visualizations</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">,</span> <span class="n">out_dir_sg</span><span class="p">,</span> <span class="n">options_path</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span>
+
+
+<div class="viewcode-block" id="cli"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.run_workflow.cli">[docs]</a><span class="k">def</span> <span class="nf">cli</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main entry point.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">,</span> <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> \
+        <span class="n">fs_subject_dir</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">sub_group_list</span><span class="p">,</span> \
+        <span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">feat_select_method</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running neuropredict </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">))</span>
+    <span class="n">prepare_and_run</span><span class="p">(</span><span class="n">subjects</span><span class="p">,</span> <span class="n">classes</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">,</span>
+                    <span class="n">user_feature_paths</span><span class="p">,</span> <span class="n">user_feature_type</span><span class="p">,</span> <span class="n">fs_subject_dir</span><span class="p">,</span>
+                    <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span>
+                    <span class="n">sub_group_list</span><span class="p">,</span> <span class="n">feature_selection_size</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span>
+                    <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.run_workflow.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">feature_sets</span><span class="p">,</span>
+        <span class="n">feature_type</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_feature_type</span><span class="p">,</span>
+        <span class="n">meta_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">pipeline</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">train_perc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="n">num_repetitions</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">positive_class</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">feat_sel_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">default_num_features_to_select</span><span class="p">,</span>
+        <span class="n">sub_groups</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span>
+        <span class="n">grid_search_level</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">GRIDSEARCH_LEVEL_DEFAULT</span><span class="p">,</span>
+        <span class="n">num_procs</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate comprehensive report on the predictive performance for different feature sets and statistically compare them.</span>
+
+<span class="sd">    Main entry point for API access.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    feature_sets : list</span>
+<span class="sd">        The input can be specified in either of the following ways:</span>
+<span class="sd">            - list of paths to pyradigm datasets saved on disk</span>
+<span class="sd">            - path to a file containing list of paths (each line containing path to a valid MLDataset)</span>
+<span class="sd">            - list of MLDatasets that are already loaded</span>
+<span class="sd">            - list of tuples (to specify multiple features), each element containing (X, y) i.e. data and target labels</span>
+<span class="sd">            - a single tuple containing (X, y) i.e. data and target labels</span>
+<span class="sd">            - list of paths to CSV files, each containing one type of features.</span>
+
+<span class="sd">            When specifying multiple sets of input features, ensure:</span>
+<span class="sd">            - all of them contain the same number of samples</span>
+<span class="sd">            - each sample belongs to same class across all feature sets.</span>
+
+<span class="sd">    feature_type : str</span>
+<span class="sd">        String identifying the type of features as described above. It could be:</span>
+<span class="sd">        &#39;list_of_pyradigm_paths&#39;, &#39;pyradigm_list&#39;,</span>
+<span class="sd">        &#39;list_of_tuples&#39;, &#39;tuple&#39;, &#39;list_of_csv_paths&#39;</span>
+
+<span class="sd">    meta_data : multiple</span>
+<span class="sd">        The meta data can be specified in either of the following ways:</span>
+
+<span class="sd">            - a path to a meta data file (see :doc:`features` page)</span>
+<span class="sd">            - a dict keyed in by sample IDs with values representing their classes.</span>
+<span class="sd">            - None, if meta data is already specified in ``feature_sets`` input (e.g. with pyradigms).</span>
+
+<span class="sd">    pipeline : str or object</span>
+<span class="sd">        If a string, it identifying one of the implemented classifiers e.g. &#39;RandomForestClassifier&#39; or &#39;ExtraTreesClassifier&#39;</span>
+<span class="sd">        If an object, it must be a sciki-learn pipeline describing the sequence of steps.</span>
+<span class="sd">        This is typically a set of feature selections or dimensionality reduction steps followed by an estimator (classifier).</span>
+
+<span class="sd">        See http://scikit-learn.org/stable/modules/pipeline.html#pipeline for more details.</span>
+
+<span class="sd">        Default: None, which leads to the selection of a Random Forest classifier,</span>
+<span class="sd">         with robust scaling, followed by removal of low variance features.</span>
+
+<span class="sd">    method_names : list</span>
+<span class="sd">        A list of names to denote the different feature sets</span>
+
+<span class="sd">    out_results_dir : str</span>
+<span class="sd">        Path to output directory to save the cross validation results to.</span>
+<span class="sd">        If not specified, a new directory named &#39;neuropredict&#39; will be created in the current directory.</span>
+
+<span class="sd">    train_perc : float, optional</span>
+<span class="sd">        Percetange of subjects to train the classifier on.</span>
+<span class="sd">        The percentage is applied to the size of the smallest class to estimate</span>
+<span class="sd">        the number of subjects from each class to be reserved for training.</span>
+<span class="sd">        The smallest class is chosen to avoid class-imbalance in the training set.</span>
+<span class="sd">        Default: 0.8 (80%).</span>
+
+<span class="sd">    positive_class : str</span>
+<span class="sd">        Name of the class to be treated as positive in calculation of AUC</span>
+
+<span class="sd">    feat_sel_size : str or int</span>
+<span class="sd">        Number of features to select as part of feature selection. Options:</span>
+
+<span class="sd">             - &#39;tenth&#39;</span>
+<span class="sd">             - &#39;sqrt&#39;</span>
+<span class="sd">             - &#39;log2&#39;</span>
+<span class="sd">             - &#39;all&#39;</span>
+
+<span class="sd">            Default: \&#39;tenth\&#39; of the number of samples in the training set. For example, if your dataset has 90 samples, you chose 50 percent for training (default),  then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining. If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.</span>
+
+<span class="sd">    num_repetitions : int, optional</span>
+<span class="sd">        Number of repetitions of cross-validation estimation. Default: 200.</span>
+
+<span class="sd">    num_procs : int, optional</span>
+<span class="sd">        Number of CPUs to use to parallelize CV repetitions.</span>
+
+<span class="sd">        Default : 4. Number of CPUs will be capped at the number available on the machine if higher is requested.</span>
+
+<span class="sd">    sub_groups : list</span>
+<span class="sd">        This option allows the user to study different combinations of classes in a multi-class (N&gt;2) dataset. For example, in a dataset with 3 classes CN, FTD and AD, two studies of pair-wise combinations can be studied separately with the following flag ``--sub_groups CN,FTD CN,AD``. This allows the user to focus on few interesting subgroups depending on their dataset/goal.</span>
+
+<span class="sd">        Format: Different subgroups must be separated by space, and each sub-group must be a comma-separated list of class names defined in the meta data file. Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters, and ideally just alphanumeric characters separated by underscores. Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes.</span>
+
+<span class="sd">        Default: ``&#39;all&#39;``, leading to inclusion of all available classes in a all-vs-all multi-class setting.</span>
+
+<span class="sd">    grid_search_level : str</span>
+<span class="sd">        Flag to specify the level of grid search during hyper-parameter optimization on the training set.</span>
+<span class="sd">        Allowed options are : &#39;none&#39;, &#39;light&#39; and &#39;exhaustive&#39;, in the order of how many values/values will be optimized.</span>
+
+<span class="sd">        More parameters and more values demand more resources and much longer time for optimization.</span>
+
+<span class="sd">        The &#39;light&#39; option tries to &quot;folk wisdom&quot; to try least number of values (no more than one or two),</span>
+<span class="sd">         for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization).</span>
+<span class="sd">         The &#39;light&#39; will be the fastest and should give a &quot;rough idea&quot; of predictive performance.</span>
+<span class="sd">         The &#39;exhaustive&#39; option will try to most parameter values for the most parameters that can be optimized.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    results_path : str</span>
+<span class="sd">        Path to pickle file containing full set of CV results.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">return</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">cli</span><span class="p">()</span>
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>

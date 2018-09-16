@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.reports &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.reports</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">pjoin</span><span class="p">,</span> <span class="n">exists</span> <span class="k">as</span> <span class="n">pexists</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+<span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">visualize</span><span class="p">,</span> <span class="n">rhst</span>
+<span class="kn">from</span> <span class="nn">neuropredict.utils</span> <span class="k">import</span> <span class="n">load_options</span>
+
+<div class="viewcode-block" id="export_results"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.reports.export_results">[docs]</a><span class="k">def</span> <span class="nf">export_results</span><span class="p">(</span><span class="n">dict_to_save</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exports the results to simpler CSV format for use in other packages!</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dict_to_save : dict</span>
+<span class="sd">        Containing all the relevant results</span>
+
+<span class="sd">    out_dir : str</span>
+<span class="sd">        Path to save the results to.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">confusion_matrix</span>        <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;confusion_matrix&#39;</span><span class="p">]</span>
+    <span class="n">accuracy_balanced</span>       <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;accuracy_balanced&#39;</span><span class="p">]</span>
+    <span class="n">method_names</span>            <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;method_names&#39;</span><span class="p">]</span>
+    <span class="n">feature_importances_rf</span>  <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;feature_importances_rf&#39;</span><span class="p">]</span>
+    <span class="n">feature_names</span>           <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;feature_names&#39;</span><span class="p">]</span>
+    <span class="n">num_times_misclfd</span>       <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;num_times_misclfd&#39;</span><span class="p">]</span>
+    <span class="n">num_times_tested</span>        <span class="o">=</span> <span class="n">dict_to_save</span><span class="p">[</span><span class="s1">&#39;num_times_tested&#39;</span><span class="p">]</span>
+
+    <span class="n">num_rep_cv</span>   <span class="o">=</span> <span class="n">confusion_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">confusion_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">num_classes</span>  <span class="o">=</span> <span class="n">confusion_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># separating CSVs from the PDFs</span>
+    <span class="n">exp_dir</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">EXPORT_DIR_NAME</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">exp_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># TODO think about how to export predictive probability per class per CV rep</span>
+    <span class="c1"># pred_prob_per_class</span>
+
+    <span class="n">user_options</span> <span class="o">=</span> <span class="n">load_options</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">)</span>
+    <span class="n">print_aligned_msg</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">msg1</span><span class="p">,</span> <span class="n">msg2</span> <span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Exporting </span><span class="si">{msg1:&lt;40}</span><span class="s1"> .. </span><span class="si">{msg2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msg1</span><span class="o">=</span><span class="n">msg1</span><span class="p">,</span> <span class="n">msg2</span><span class="o">=</span><span class="n">msg2</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># accuracy</span>
+        <span class="n">balacc_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">exp_dir</span><span class="p">,</span> <span class="s1">&#39;balanced_accuracy.csv&#39;</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">balacc_path</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span>
+                   <span class="n">delimiter</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">,</span>
+                   <span class="n">fmt</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EXPORT_FORMAT</span><span class="p">,</span>
+                   <span class="n">header</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">method_names</span><span class="p">))</span>
+        <span class="n">print_aligned_msg</span><span class="p">(</span><span class="s1">&#39;accuracy distribution&#39;</span><span class="p">,</span> <span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># conf mat</span>
+        <span class="n">cfmat_reshaped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">,</span> <span class="p">[</span><span class="n">num_classes</span> <span class="o">*</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_rep_cv</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+            <span class="n">confmat_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">exp_dir</span><span class="p">,</span> <span class="s1">&#39;confusion_matrix_</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_names</span><span class="p">[</span><span class="n">mm</span><span class="p">]))</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">confmat_path</span><span class="p">,</span>
+                       <span class="n">cfmat_reshaped</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">mm</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>  <span class="c1"># NOTICE the transpose</span>
+                       <span class="n">delimiter</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EXPORT_FORMAT</span><span class="p">,</span>
+                       <span class="n">comments</span><span class="o">=</span><span class="s1">&#39;shape of confusion matrix: num_repetitions x num_classes^2&#39;</span><span class="p">)</span>
+        <span class="n">print_aligned_msg</span><span class="p">(</span><span class="s1">&#39;confusion matrices&#39;</span><span class="p">,</span> <span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># misclassfiication rates</span>
+        <span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">misclf_rate</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">compute_pairwise_misclf</span><span class="p">(</span><span class="n">confusion_matrix</span><span class="p">)</span>
+        <span class="n">num_datasets</span> <span class="o">=</span> <span class="n">misclf_rate</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+            <span class="n">cmp_misclf_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">exp_dir</span><span class="p">,</span> <span class="s1">&#39;average_misclassification_rates_</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_names</span><span class="p">[</span><span class="n">mm</span><span class="p">]))</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">cmp_misclf_path</span><span class="p">,</span>
+                       <span class="n">misclf_rate</span><span class="p">[</span><span class="n">mm</span><span class="p">,</span> <span class="p">:],</span>
+                       <span class="n">fmt</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EXPORT_FORMAT</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">)</span>
+        <span class="n">print_aligned_msg</span><span class="p">(</span><span class="s1">&#39;misclassfiication rates&#39;</span><span class="p">,</span> <span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># feature importance</span>
+        <span class="k">if</span> <span class="n">user_options</span><span class="p">[</span><span class="s1">&#39;classifier_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">clfs_with_feature_importance</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+                <span class="n">featimp_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">exp_dir</span><span class="p">,</span> <span class="s1">&#39;feature_importance_</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_names</span><span class="p">[</span><span class="n">mm</span><span class="p">]))</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">featimp_path</span><span class="p">,</span>
+                           <span class="n">feature_importances_rf</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                           <span class="n">fmt</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">EXPORT_FORMAT</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">,</span>
+                           <span class="n">header</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">feature_names</span><span class="p">[</span><span class="n">mm</span><span class="p">]))</span>
+            <span class="n">print_aligned_msg</span><span class="p">(</span><span class="s1">&#39;feature importance values&#39;</span><span class="p">,</span> <span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">print_aligned_msg</span><span class="p">(</span><span class="s1">&#39;feature importance values&#39;</span><span class="p">,</span> <span class="s1">&#39;Skipped.&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Current predictive model does not provide them.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># subject-wise misclf frequencies</span>
+        <span class="n">perc_misclsfd</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">visualize</span><span class="o">.</span><span class="n">compute_perc_misclf_per_sample</span><span class="p">(</span><span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
+            <span class="n">subwise_misclf_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">exp_dir</span><span class="p">,</span> <span class="s1">&#39;subject_misclf_freq_</span><span class="si">{}</span><span class="s1">.csv&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_names</span><span class="p">[</span><span class="n">mm</span><span class="p">]))</span>
+            <span class="c1"># TODO there must be a more elegant way to write dict to CSV</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">subwise_misclf_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">smf</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">sid</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">perc_misclsfd</span><span class="p">[</span><span class="n">mm</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">smf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}{}{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">DELIMITER</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+        <span class="n">print_aligned_msg</span><span class="p">(</span><span class="s1">&#39;subject-wise misclf frequencies&#39;</span><span class="p">,</span> <span class="s1">&#39;Done.&#39;</span><span class="p">)</span>
+
+    <span class="k">except</span><span class="p">:</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Unable to export the results to CSV files.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="report_best_params"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.reports.report_best_params">[docs]</a><span class="k">def</span> <span class="nf">report_best_params</span><span class="p">(</span><span class="n">best_params</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">):</span>
+    <span class="s2">&quot;Prints out the most frequently selected parameter values and saves them to disk.&quot;</span>
+
+    <span class="c1"># best_params : list of num_reps elements, each a list of num_datasets dictionaries</span>
+    <span class="n">num_reps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">best_params</span><span class="p">)</span>
+    <span class="n">param_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">best_params</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># building a list of best values (from each rep) for each parameter</span>
+    <span class="n">param_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_reps</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">method_names</span><span class="p">):</span>
+            <span class="n">param_values</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">param</span><span class="p">:</span> <span class="nb">list</span><span class="p">()</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">param_names</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">best_params</span><span class="p">[</span><span class="n">rep</span><span class="p">][</span><span class="n">ds</span><span class="p">]:</span>
+                <span class="n">param_values</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">best_params</span><span class="p">[</span><span class="n">rep</span><span class="p">][</span><span class="n">ds</span><span class="p">][</span><span class="n">param</span><span class="p">])</span>
+
+    <span class="c1"># finding frequent values and printing them</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">The most frequently selected parameter values are: &#39;</span><span class="p">)</span>
+    <span class="n">most_freq_values</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span> <span class="p">:</span> <span class="nb">dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">method_names</span><span class="p">}</span>
+    <span class="n">maxwidth</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">param_names</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">ds</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">method_names</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  For feature set </span><span class="si">{}</span><span class="s1"> : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">label</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">param_names</span><span class="p">:</span>
+            <span class="n">pcounter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">param_values</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="n">param</span><span class="p">])</span>
+            <span class="c1"># most_common returns a list of tuples, with value and its frequency</span>
+            <span class="n">most_freq_values</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">pcounter</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    {:</span><span class="si">{mw}</span><span class="s1">} : </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">most_freq_values</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="n">param</span><span class="p">],</span> <span class="n">mw</span><span class="o">=</span><span class="n">maxwidth</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+    <span class="c1"># saving them</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">out_results_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">file_name_best_param_values</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_results_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">resfid</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">most_freq_values</span><span class="p">,</span> <span class="n">resfid</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error saving the results to disk!&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="export_results_from_disk"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.reports.export_results_from_disk">[docs]</a><span class="k">def</span> <span class="nf">export_results_from_disk</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exports the results to simpler CSV format for use in other packages!</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results_file_path : str</span>
+<span class="sd">        Path to a pickle file containing all the relevant results</span>
+
+<span class="sd">    out_dir : str</span>
+<span class="sd">        Path to save the results to</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dataset_paths</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> \
+        <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
+        <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span> <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">,</span> \
+        <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_order</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">positive_class</span> <span class="o">=</span> \
+        <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span> <span class="o">=</span> <span class="n">rhst</span><span class="o">.</span><span class="n">load_results</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">)</span>
+
+    <span class="n">locals_var_dict</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+    <span class="n">dict_to_save</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="p">:</span> <span class="n">locals_var_dict</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">rhst_data_variables_to_persist</span><span class="p">}</span>
+    <span class="n">export_results</span><span class="p">(</span><span class="n">dict_to_save</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>

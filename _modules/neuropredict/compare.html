@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>neuropredict.compare &mdash; neuropredict 0.4.7+59.g49987e2.dirty documentation</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
+        <link rel="shortcut icon" href="../../_static/favicon.ico" />
+
+        <link rel="stylesheet" href="../../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/bernard.css" type="text/css" />
+        <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+        <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT       : '../../',
+            VERSION        : '0.4.7+59.g49987e2.dirty',
+            COLLAPSE_INDEX : false,
+            FILE_SUFFIX    : '.html',
+            HAS_SOURCE     : true
+        };
+        </script>
+
+        
+    </head>
+
+    <body>
+        <!--<div class="ribbon">-->
+            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
+        <!--</div>-->
+
+        <!--<div class="container text-center">-->
+            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
+        <!--</div>-->
+
+        <hr />
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 toc">
+                    
+
+                    
+                        <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html">Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../context.html#predictive-analysis">Predictive analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../longterm.html">Long term goals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage_cli.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Named Arguments">Named Arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Input data and formats">Input data and formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Cross-validation">Cross-validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Predictive Model">Predictive Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Visualization">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage_cli.html#Computing">Computing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Input formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../results.html">Report</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#interpretation">Interpretation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../implementation.html">Implemenation details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+                    
+
+                    <a href="#" class="navbar-toggle">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                </div>
+
+                <div class="col-md-9 body">
+                    
+  <h1>Source code for neuropredict.compare</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="k">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">friedmanchisquare</span><span class="p">,</span> <span class="n">rankdata</span><span class="p">,</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="k">import</span> <span class="n">gammaln</span>
+
+<div class="viewcode-block" id="pairwise"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.compare.pairwise">[docs]</a><span class="k">def</span> <span class="nf">pairwise</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Produces a matrix of pair-wise significance tests,</span>
+<span class="sd">        where each cell [i, j] answers the question:</span>
+<span class="sd">        is method i significantly better than method j?</span>
+
+<span class="sd">        The result would be based on a test of choice.</span>
+<span class="sd">        The default test would be non-parametric Friedman test.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bal_acc_transposed</span> <span class="o">=</span> <span class="n">accuracy_balanced</span><span class="o">.</span><span class="n">T</span> <span class="c1"># num_datasets x num_rep (each CV rep is considered a performance measurement on a new dataset, although not independent from each other)</span>
+
+    <span class="n">num_datasets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">method_names</span><span class="p">)</span>
+    <span class="n">median_bal_acc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">ranks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">median_bal_acc</span><span class="p">)</span>
+
+    <span class="n">critical_dist</span> <span class="o">=</span> <span class="n">compute_critical_dist</span><span class="p">(</span><span class="n">ranks</span><span class="p">)</span>
+
+    <span class="n">signif_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">m1</span><span class="p">,</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">method_names</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m1</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_datasets</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">signif_matrix</span><span class="p">[</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">]</span> <span class="o">=</span> <span class="n">check_if_better</span><span class="p">(</span><span class="n">ranks</span><span class="p">[</span><span class="n">m1</span><span class="p">],</span> <span class="n">ranks</span><span class="p">[</span><span class="n">m2</span><span class="p">],</span> <span class="n">critical_dist</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">signif_matrix</span></div>
+
+
+<div class="viewcode-block" id="compute_critical_dist"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.compare.compute_critical_dist">[docs]</a><span class="k">def</span> <span class="nf">compute_critical_dist</span><span class="p">(</span><span class="n">ranks</span><span class="p">):</span>
+    <span class="s2">&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="check_if_better"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.compare.check_if_better">[docs]</a><span class="k">def</span> <span class="nf">check_if_better</span><span class="p">(</span><span class="n">rank_one</span><span class="p">,</span> <span class="n">rank_two</span><span class="p">,</span> <span class="n">critical_dist</span><span class="p">):</span>
+    <span class="s2">&quot;Checks whether rank1 is greater than rank2 by at least critical dist&quot;</span>
+
+    <span class="n">is_better</span> <span class="o">=</span> <span class="n">rank_one</span> <span class="o">-</span> <span class="n">rank_two</span> <span class="o">&gt;=</span> <span class="n">critical_dist</span>
+
+    <span class="k">return</span> <span class="n">is_better</span></div>
+
+
+<div class="viewcode-block" id="vertical_nemenyi_plot"><a class="viewcode-back" href="../../neuropredict.html#neuropredict.compare.vertical_nemenyi_plot">[docs]</a><span class="k">def</span> <span class="nf">vertical_nemenyi_plot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">num_reps</span><span class="p">,</span>
+                          <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+                          <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">Greens</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Vertical Nemenyi plot to compare model ranks and show differences.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span></div>
+
+</pre></div>
+
+                </div>
+
+                <div class="container">
+                    
+                </div>
+            </div>
+        </div>
+            <script type="text/javascript" src="../../_static/jquery.js"></script>
+            <script type="text/javascript" src="../../_static/underscore.js"></script>
+            <script type="text/javascript" src="../../_static/doctools.js"></script>
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/javascript" src="../../_static/bernard.js"></script>
+    </body>
+</html>
