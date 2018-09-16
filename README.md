@@ -8,7 +8,7 @@
 [![Python versions](https://img.shields.io/badge/python-3.5%2C%203.6-blue.svg)]
 
 
-- Docs:   http://neuropredict.readthedocs.io 
+- Docs:   https://raamana.github.io/neuropredict/
 
 ## Overview
 
@@ -21,7 +21,7 @@ On a more detailed level,
 ![roleofneuropredict](docs/role.png)
 
 
- - Docs:   http://neuropredict.readthedocs.io 
+ - Docs:   https://raamana.github.io/neuropredict/
  - Contributors welcome [here](CONTRIBUTING.md) with these [guidelines](http://contribution-guide-org.readthedocs.io). Thanks.
 
 
