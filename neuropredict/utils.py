@@ -13,7 +13,8 @@ from time import localtime, strftime
 __re_delimiters_word = '_|:|; |, |\*|\n'
 
 def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train_perc,
-                      sub_groups, num_procs, grid_search_level, classifier, feat_select_method):
+                      sub_groups, num_procs, grid_search_level,
+                      classifier_name, feat_select_method):
     """Validates inputs and returns paths to feature sets to load"""
 
     if not pexists(dataset_path_file):
@@ -52,8 +53,7 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
     if grid_search_level.lower() not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
 
-    if classifier.lower() not in cfg.classifier_choices:
-        raise ValueError('Classifier not recognized : {}\n Implemented: {}'.format(classifier, cfg.classifier_choices))
+    classifier_name = check_classifier(classifier_name)
 
     if feat_select_method.lower() not in cfg.feature_selection_choices:
         raise ValueError('Feature selection method not recognized: {}\n '
@@ -62,7 +62,7 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
     # printing the chosen options
     print('Training percentage      : {:.2}'.format(train_perc))
     print('Number of CV repetitions : {}'.format(num_repetitions))
-    print('Classifier chosen        : {}'.format(classifier))
+    print('Classifier chosen        : {}'.format(classifier_name))
     print('Feature selection chosen : {}'.format(feat_select_method))
     print('Level of grid search     : {}'.format(grid_search_level))
     print('Number of processors     : {}'.format(num_procs))
@@ -70,6 +70,26 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     return dataset_paths, num_repetitions, num_procs, sub_groups
 
+
+def check_classifier(clf_name=cfg.default_classifier):
+    """Validates the classifier choice, and ensures necessary modules are installed."""
+
+    clf_name = clf_name.lower()
+    if clf_name not in cfg.classifier_choices:
+        raise ValueError('Classifier not recognized : {}\n'
+                         'Choose one of: {}'.format(clf_name, cfg.classifier_choices))
+
+    if clf_name in cfg.additional_modules_reqd:
+        try:
+            from importlib import import_module
+            import_module(clf_name)
+        except ImportError:
+            raise ImportError('choosing classifier {} requires installation of '
+                              'another package. Try running\n'
+                              'pip install -U {} '
+                              ''.format(clf_name, cfg.additional_modules_reqd[clf_name]))
+
+    return clf_name
 
 
 def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATASET_INDEX):
@@ -178,9 +198,7 @@ def balanced_accuracy(confmat):
     for cc in range(num_classes):
         indiv_class_acc[cc] = confmat[cc, cc] / np.sum(confmat[cc, :])
 
-    bal_acc = np.mean(indiv_class_acc)
-
-    return bal_acc
+    return np.mean(indiv_class_acc)
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):

@@ -31,7 +31,7 @@ large_constant_factor = 1e5
 # # ------- classifier
 
 __classifier_CHOICES = ('RandomForestClassifier', 'ExtraTreesClassifier',
-                        'DecisionTreeClassifier', 'SVM')
+                        'DecisionTreeClassifier', 'SVM', 'XGBoost')
 classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
 __feat_sel_CHOICES = ('SelectKBest_mutual_info_classif', 'SelectKBest_f_classif', 'VarianceThreshold')
@@ -40,8 +40,12 @@ feature_selection_choices = [ fsm.lower() for fsm in __feat_sel_CHOICES]
 default_classifier = 'RandomForestClassifier'
 default_feat_select_method = 'VarianceThreshold'
 
-__clfs_with_feature_importance = ('DecisionTreeClassifier', 'RandomForestClassifier', 'ExtraTreesClassifier', 'LinearSVM')
+__clfs_with_feature_importance = ('DecisionTreeClassifier',
+                                  'RandomForestClassifier', 'ExtraTreesClassifier',
+                                  'LinearSVM', 'XGBoost')
 clfs_with_feature_importance = [ clf.lower() for clf in __clfs_with_feature_importance]
+
+additional_modules_reqd = {'xgboost' : 'xgboost' }
 
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html

@@ -27,8 +27,9 @@ if version_info.major > 2:
     from neuropredict.freesurfer import aseg_stats_subcortical, aseg_stats_whole_brain
     from neuropredict.io import get_metadata, get_features, get_metadata_in_pyradigm, \
         get_data_matrix, get_dir_of_dirs, get_pyradigm, get_arff, saved_dataset_matches
-    from neuropredict.utils import check_paths, uniq_combined_name, check_num_procs, sub_group_identifier, \
-        save_options, load_options, validate_feature_selection_size, make_dataset_filename, not_unspecified
+    from neuropredict.utils import check_paths, uniq_combined_name, check_num_procs, \
+        sub_group_identifier, save_options, load_options, validate_feature_selection_size, \
+        make_dataset_filename, not_unspecified, check_classifier
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -462,7 +463,7 @@ def parse_args():
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
 
-    classifier = user_args.classifier.lower()
+    classifier = check_classifier(user_args.classifier)
     feat_select_method = user_args.feat_select_method.lower()
 
     # saving the validated and expanded values to disk for later use.

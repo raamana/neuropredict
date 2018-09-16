@@ -449,6 +449,7 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_max_depth = [2, 6, 10]
         # range_min_child_weight = []
         range_gamma = [0, 3, 5, 10]
+        range_subsample = [0.5, 0.75, 1.0]
 
         range_colsample_bytree = [0.6, 0.8, 1.0]
         range_learning_rate = [0.15, 0.3, 0.5]
@@ -459,6 +460,7 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_max_depth = [2, 6]
         # range_min_child_weight = []
         range_gamma = [0, 3, ]
+        range_subsample = [0.5, 1.0]
 
         range_colsample_bytree = [0.6, 0.8, 1.0]
         range_learning_rate = [0.15, 0.3, ]
@@ -469,9 +471,10 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
         range_max_depth = [2, ]
         # range_min_child_weight = []
         range_gamma = [0, ]
+        range_subsample = [1.0, ]
 
         range_colsample_bytree = [1.0, ]
-        range_learning_rate = [0.15,]
+        range_learning_rate = [0.3,]
 
         range_num_feature = [reduced_dim]
     else:
@@ -481,10 +484,11 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
     # not optimizing over number of features to save time
     clf_name = 'xgboost_clf'
     param_list_values = [('max_depth', range_max_depth),
-                         ('gamma', range_gamma),
-                         ('num_feature', range_num_feature),
-                         ('colsample_bytree', range_colsample_bytree),
                          ('learning_rate', range_learning_rate),
+                         ('gamma', range_gamma),
+                         ('colsample_bytree', range_colsample_bytree),
+                         ('subsample', range_subsample),
+                         ('num_feature', range_num_feature),
                          ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
@@ -532,7 +536,8 @@ def get_classifier(classifier_name=cfg.default_classifier,
     map_to_method = dict(randomforestclassifier=get_RandomForestClassifier,
                          extratreesclassifier=get_ExtraTreesClassifier,
                          decisiontreeclassifier=get_DecisionTreeClassifier,
-                         svm=get_svc)
+                         svm=get_svc,
+                         xgboost=get_xgboost)
 
     if classifier_name not in map_to_method:
         raise NotImplementedError('Invalid name or classifier not implemented.')
@@ -681,7 +686,8 @@ def get_feature_importance(clf_name, clf, num_features, index_selected_features,
     attr_importance = {'randomforestclassifier': 'feature_importances_',
                        'extratreesclassifier'  : 'feature_importances_',
                        'decisiontreeclassifier': 'feature_importances_',
-                       'svm'                   : 'coef_'}
+                       'svm'                   : 'coef_',
+                       'xgboost'               : 'feature_importances_',}
 
     feat_importance = np.full(num_features, fill_value)
     if hasattr(clf, attr_importance[clf_name]):
