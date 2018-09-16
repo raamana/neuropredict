@@ -45,6 +45,8 @@ __clfs_with_feature_importance = ('DecisionTreeClassifier',
                                   'LinearSVM', 'XGBoost')
 clfs_with_feature_importance = [ clf.lower() for clf in __clfs_with_feature_importance]
 
+additional_modules_reqd = {'xgboost' : 'xgboost' }
+
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
 robust_scaler_iqr = (5, 95)
