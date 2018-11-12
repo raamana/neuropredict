@@ -178,6 +178,7 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
         np.seterr(divide='ignore', invalid='ignore')
         warnings.filterwarnings(action='once', category=RuntimeWarning,
                                 message='invalid value encountered in true_divide')
+        warnings.simplefilter(action='once', category=DeprecationWarning)
 
         gs.fit(train_data_mat, train_labels)
 
