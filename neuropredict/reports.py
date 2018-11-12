@@ -61,11 +61,10 @@ def export_results(dict_to_save, out_dir, options_path):
         print_aligned_msg('accuracy distribution', 'Done.')
 
         # conf mat
-        cfmat_reshaped = np.reshape(confusion_matrix, [num_classes * num_classes, num_rep_cv, num_datasets])
         for mm in range(num_datasets):
             confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
-            np.savetxt(confmat_path,
-                       cfmat_reshaped[:, :, mm].T,  # NOTICE the transpose
+            reshaped_matrix = np.reshape(confusion_matrix[:, :, :, mm], [num_rep_cv, num_classes * num_classes])
+            np.savetxt(confmat_path, reshaped_matrix,
                        delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
                        comments='shape of confusion matrix: num_repetitions x num_classes^2')
         print_aligned_msg('confusion matrices', 'Done.')
