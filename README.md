@@ -7,7 +7,8 @@
 [![PyPI version](https://badge.fury.io/py/neuropredict.svg)](https://badge.fury.io/py/neuropredict)
 [![Python versions](https://img.shields.io/badge/python-3.5%2C%203.6-blue.svg)]
 
-
+[![saythanks](https://img.shields.io/badge/say-thanks-ff69b4.svg)](https://saythanks.io/to/raamana)
+   
 - Docs:   https://raamana.github.io/neuropredict/
 
 ## Overview
