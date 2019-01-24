@@ -22,8 +22,14 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     with open(dataset_path_file, 'r') as dpf:
         dataset_paths = dpf.read().splitlines()
-        # removing duplicates
-        dataset_paths = set(dataset_paths)
+        # alert for duplicates
+        if len(set(dataset_paths)) < len(dataset_paths):
+            raise RuntimeError('Duplicate paths for input datasets found!\n'
+                               'Try distinguish inputs further. '
+                               'Otherwise report this bug at:'
+                               'github.com/raamana/neuropredict/issues/new')
+        # do not apply set(dataset_paths) to remove duplicates,
+        # as set destroys current order, that is necessary to correspond to method_names
 
     try:
         out_results_dir = realpath(out_results_dir)

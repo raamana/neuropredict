@@ -744,6 +744,12 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
 
     combined_name = uniq_combined_name(method_names)
 
+    # checking if there are any duplicates
+    if len(set(outpath_list)) < len(outpath_list):
+        raise RuntimeError('Duplicate paths to input dataset found!\n'
+                           'Try distinguish inputs further. Otherwise report this bug '
+                           '@ github.com/raamana/neuropredict/issues/new')
+
     dataset_paths_file = pjoin(out_dir, 'datasetlist.' + combined_name + '.txt')
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
