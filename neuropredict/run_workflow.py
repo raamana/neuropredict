@@ -227,6 +227,11 @@ def get_parser():
     
     """)
 
+    help_text_print_options = textwrap.dedent("""
+    Prints the options used in the run in an output folder.
+    
+    """)
+
     parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
                         default=None, required=False, help=help_text_metadata_file)
 
@@ -308,10 +313,37 @@ def get_parser():
     comp_args.add_argument("-c", "--num_procs", action="store", dest="num_procs",
                         default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
 
+    comp_args.add_argument("--po", "--print_options", action="store",
+                           dest="print_opt_dir",
+                        default=False, help=help_text_print_options)
+
     comp_args.add_argument('-v', '--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
 
     return parser
+
+
+def print_options(run_dir):
+    """
+    Prints options used in a previous run.
+
+    Parameters
+    ----------
+    run_dir : str
+        Path to a folder to with options from a previous run stored.
+
+    """
+
+    from neuropredict.utils import load_options
+
+    print('\n\nOptions used in the run\n{}\n'.format(run_dir))
+    user_options = load_options(run_dir)
+    # print(user_options)
+    for key, val in user_options.items():
+        if key.lower() not in ('sample_ids', 'classes'):
+            print('{:>25} : {}'.format(key, val))
+
+    return
 
 
 def organize_inputs(user_args):
@@ -410,15 +442,27 @@ def parse_args():
     except:
         parser.exit(1)
 
-    if len(sys.argv) == 3 and not_unspecified(user_args.make_vis):
-        out_dir  = realpath(user_args.make_vis)
-        res_path = pjoin(out_dir,cfg.file_name_results)
-        if pexists(out_dir) and pexists(res_path):
-            print('\n\nSaving the visualizations to \n{}'.format(out_dir))
-            make_visualizations(res_path, out_dir)
+    if len(sys.argv) == 3:
+        # only if no features were specified to be assessed
+        if not any(not_unspecified(getattr(user_args, attr))
+               for attr in ('user_feature_paths', 'data_matrix_paths',
+                            'pyradigm_paths', 'arff_paths')):
+
+            if not_unspecified(user_args.print_opt_dir):
+                run_dir = realpath(user_args.print_opt_dir)
+                print_options(run_dir)
+
+            if not_unspecified(user_args.make_vis):
+                out_dir = realpath(user_args.make_vis)
+                res_path = pjoin(out_dir, cfg.file_name_results)
+                if pexists(out_dir) and pexists(res_path):
+                    if not_unspecified(user_args.make_vis):
+                        print('\n\nSaving the visualizations to \n{}'.format(out_dir))
+                        make_visualizations(res_path, out_dir)
+                else:
+                    raise ValueError('Given folder does not exist, or has no results!')
+
             sys.exit(0)
-        else:
-            raise ValueError('Given folder does not exist, or has no results!')
 
     user_feature_paths, user_feature_type, fs_subject_dir, meta_data_path, meta_data_format = organize_inputs(user_args)
 
@@ -698,6 +742,12 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
         outpath_list.append(outpath_dataset)
 
     combined_name = uniq_combined_name(method_names)
+
+    # checking if there are any duplicates
+    if len(set(outpath_list)) < len(outpath_list):
+        raise RuntimeError('Duplicate paths to input dataset found!\n'
+                           'Try distinguish inputs further. Otherwise report this bug '
+                           '@ github.com/raamana/neuropredict/issues/new')
 
     dataset_paths_file = pjoin(out_dir, 'datasetlist.' + combined_name + '.txt')
     with open(dataset_paths_file, 'w') as dpf:

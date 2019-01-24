@@ -106,6 +106,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_pipeline.predict(test_data_mat)
 
+    # only the selected features (via index_selected_features) get non-nan value
     feat_importance = get_feature_importance(classifier_name, best_clf,
                                              train_fs.num_features, index_selected_features)
 
