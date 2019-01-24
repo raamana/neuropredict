@@ -313,7 +313,6 @@ def get_parser():
     comp_args.add_argument("-c", "--num_procs", action="store", dest="num_procs",
                         default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
 
-    # TODO option to print saved options (from previous runs): simple and verbose
     comp_args.add_argument("--po", "--print_options", action="store",
                            dest="print_opt_dir",
                         default=False, help=help_text_print_options)
