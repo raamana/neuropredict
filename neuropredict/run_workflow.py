@@ -536,7 +536,7 @@ def parse_args():
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
-           feature_selection_size, num_procs, \
+           feature_selection_size, impute_strategy, num_procs, \
            grid_search_level, classifier, feat_select_method
 
 
@@ -676,7 +676,9 @@ def validate_class_set(classes, subgroups, positive_class=None):
     return class_set, sub_group_list, positive_class
 
 
-def import_datasets(method_list, out_dir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
+def import_datasets(method_list, out_dir, subjects, classes,
+                    feature_path, feature_type='dir_of_dirs',
+                    user_impute_strategy=cfg.default_imputation_strategy):
     """
     Imports all the specified feature sets and organizes them into datasets.
 
@@ -781,7 +783,9 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
-    return method_names, dataset_paths_file
+    print('\nData import is done.\n\n')
+
+    return method_names, dataset_paths_file, missing_data_flag, impute_strategy
 
 
 
@@ -840,14 +844,15 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
 def prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size, num_procs,
+                    sub_group_list, feature_selection_size, user_impute_strategy, num_procs,
                     grid_search_level, classifier, feat_select_method):
     "Organizes the inputs and prepares them for CV"
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
 
-    method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
-                                                       feature_dir, user_feature_type)
+    method_names, dataset_paths_file, missing_flag, impute_strategy \
+        = import_datasets(method_list, out_dir, subjects, classes,
+                          feature_dir, user_feature_type, user_impute_strategy)
 
     print('Requested processing for the following subgroups:'
           '\n{}\n'.format('\n'.join([','.join(sg) for sg in sub_group_list])))
@@ -861,7 +866,10 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
         results_file_path = rhst.run(dataset_paths_file, method_names, out_dir_sg,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
                                      positive_class=positive_class, sub_group=sub_group,
-                                     feat_sel_size=feature_selection_size, num_procs=num_procs,
+                                     feat_sel_size=feature_selection_size,
+                                     impute_strategy=impute_strategy,
+                                     missing_flag=missing_flag,
+                                     num_procs=num_procs,
                                      grid_search_level=grid_search_level,
                                      classifier_name=classifier, feat_select_method=feat_select_method,
                                      options_path=options_path)
@@ -881,13 +889,14 @@ def cli():
 
     subjects, classes, out_dir, options_path, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-        feature_selection_size, num_procs, grid_search_level, classifier, feat_select_method = parse_args()
+        feature_selection_size, impute_strategy, num_procs, \
+        grid_search_level, classifier, feat_select_method = parse_args()
 
     print('Running neuropredict {}'.format(__version__))
     prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size, num_procs,
+                    sub_group_list, feature_selection_size, impute_strategy, num_procs,
                     grid_search_level, classifier, feat_select_method)
 
     return
