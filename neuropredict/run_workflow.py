@@ -517,6 +517,8 @@ def parse_args():
 
     feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
 
+    impute_strategy = validate_impute_strategy(user_args.impute_strategy)
+
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
@@ -608,6 +610,18 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
     plt.close('all')
 
     return
+
+
+def validate_impute_strategy(user_choice):
+    """Checks that user made a valid choice."""
+
+    user_choice = user_choice.lower()
+    if user_choice != cfg.default_imputation_strategy and \
+            user_choice not in cfg.avail_imputation_strategies:
+        raise ValueError('Unrecognized imputation strategy!\n\tchoose one of {}'
+                         ''.format(cfg.avail_imputation_strategies))
+
+    return user_choice
 
 
 def validate_class_set(classes, subgroups, positive_class=None):
