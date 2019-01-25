@@ -778,7 +778,45 @@ def import_datasets(method_list, out_dir, subjects, classes,
                                            out_dir, out_name,
                                            cur_method, feature_type)
 
-        outpath_list.append(outpath_dataset)
+        # checking for presence of any missing data
+        data_mat, targets, ids = MLDataset(filepath=out_path_cur_dataset).data_and_labels()
+        is_nan = np.isnan(data_mat)
+        if is_nan.any():
+            data_missing_here = True
+            num_sub_with_md = np.sum(is_nan.sum(axis=1) > 0)
+            num_var_with_md = np.sum(is_nan.sum(axis=0) > 0)
+            if user_impute_strategy == 'raise':
+                raise MissingDataException(
+                    '{}/{} subjects with missing data found in {}/{} features\n'
+                    '\tin {} dataset at {}\n'
+                    '\tFill them and rerun, '
+                    'or choose one of the available imputation strategies: {}'
+                    ''.format(num_sub_with_md, data_mat.shape[0],
+                              num_var_with_md, data_mat.shape[1],
+                              method_name, out_path_cur_dataset,
+                              cfg.avail_imputation_strategies))
+        else:
+            data_missing_here = False
+
+        method_names.append(clean_str(method_name))
+        outpath_list.append(out_path_cur_dataset)
+        missing_data_flag.append(data_missing_here)
+
+    # finalizing the imputation strategy
+    if any(missing_data_flag):
+        print('\nOne or more of the input datasets have missing data!')
+        if user_impute_strategy == 'raise':
+            raise MissingDataException('Fill them and rerun, or choose one of the available '
+                                       'imputation strategies: {}'
+                                       ''.format(cfg.avail_imputation_strategies))
+        else:
+            impute_strategy = user_impute_strategy
+            print('The imputation strategy chosen is: {}'.format(impute_strategy))
+    else:
+        # disabling the imputation altogether if there is no missing data
+        impute_strategy = None
+        if user_impute_strategy in ('raise', None):
+            print('Ignoring imputation strategy chosen, as no missing data were found!')
 
     combined_name = uniq_combined_name(method_names)
 
