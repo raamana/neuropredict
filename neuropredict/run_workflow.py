@@ -227,6 +227,14 @@ def get_parser():
     
     """)
 
+    help_imputation_strategy = textwrap.dedent("""
+    Strategy to impute any missing data (as encoded by NaNs).
+    
+    Default: 'raise', which raises an error if there is any missing data anywhere.
+    Currently available imputation strategies are: {}
+    
+    """.format(cfg.avail_imputation_strategies))
+
     help_text_print_options = textwrap.dedent("""
     Prints the options used in the run in an output folder.
     
@@ -292,6 +300,12 @@ def get_parser():
 
     pipeline_group = parser.add_argument_group(title='Predictive Model',
                                               description='Parameters related to pipeline comprising the predictive model')
+
+    pipeline_group.add_argument("-is", "--impute_strategy", action="store",
+                                dest="impute_strategy",
+                                default=cfg.default_imputation_strategy,
+                                help=help_imputation_strategy,
+                                choices=cfg.avail_imputation_strategies_with_raise)
 
     pipeline_group.add_argument("-fs", "--feat_select_method", action="store", dest="feat_select_method",
                                 default=cfg.default_feat_select_method, help=help_feat_select_method,
