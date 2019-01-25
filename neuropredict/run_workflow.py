@@ -34,6 +34,15 @@ else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
 
+class NeuroPredictException(Exception):
+    """Custom exception to distinguish neuropredict related errors (usage etc) from the usual."""
+    pass
+
+class MissingDataException(NeuroPredictException):
+    """Custom exception to uniquely identify this error. Helpful for testing etc"""
+    pass
+
+
 def get_parser():
     "Parser to specify arguments and their defaults."
 
