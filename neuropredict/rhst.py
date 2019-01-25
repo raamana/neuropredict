@@ -483,6 +483,22 @@ def get_pretty_print_options(method_names, num_datasets):
     return print_options
 
 
+def impute_missing_data(train_data, train_labels, strategy, test_data):
+    """
+    Imputes missing values in train/test data matrices using the given strategy,
+    based on train data alone.
+
+    """
+
+    from sklearn.impute import SimpleImputer
+    # TODO integrate and use the missingdata pkg (with more methods) when time permits
+    imputer = SimpleImputer(missing_values=cfg.missing_value_identifier,
+                            strategy=strategy)
+    imputer.fit(train_data, train_labels)
+
+    return imputer.transform(train_data), imputer.transform(test_data)
+
+
 def remap_labels(datasets, common_ds, class_set, positive_class=None):
     """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
 
