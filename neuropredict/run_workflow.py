@@ -739,30 +739,26 @@ def import_datasets(method_list, out_dir, subjects, classes,
     missing_data_flag = list() # boolean flag for each dataset
 
     for mm, cur_method in enumerate(method_list):
-        if cur_method in [get_dir_of_dirs]:
-            method_name = basename(feature_path[mm])
+        if cur_method in [get_pyradigm]:
 
-        elif cur_method in [get_data_matrix]:
-            method_name = os.path.splitext(basename(feature_path[mm]))[0]
+            method_name, out_path_cur_dataset = process_pyradigm(feature_path[mm], subjects, classes)
 
-        elif cur_method in [get_pyradigm]:
-
-            if feature_type in ['pyradigm']:
-                loaded_dataset = MLDataset(filepath=feature_path[mm])
-            else:
-                raise ValueError('Invalid state of the program!')
-
-            if len(loaded_dataset.description) > 1:
-                method_name = loaded_dataset.description
-            else:
-                method_name = basename(feature_path[mm])
-
-            method_names.append(clean_str(method_name))
-            if saved_dataset_matches(loaded_dataset, subjects, classes):
-                outpath_list.append(feature_path[mm])
-                continue
-            else:
-                raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
+            # if feature_type in ['pyradigm']:
+            #     loaded_dataset = MLDataset(filepath=feature_path[mm])
+            # else:
+            #     raise ValueError('Invalid state of the program!')
+            #
+            # if len(loaded_dataset.description) > 1:
+            #     method_name = loaded_dataset.description
+            # else:
+            #     method_name = basename(feature_path[mm])
+            #
+            # method_names.append(clean_str(method_name))
+            # if not saved_dataset_matches(loaded_dataset, subjects, classes):
+            #     raise ValueError(
+            #         'supplied pyradigm dataset does not match samples in the meta data.')
+            # else:
+            #     out_path_cur_dataset = feature_path[mm]
 
         elif cur_method in [get_arff]:
 

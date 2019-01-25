@@ -4,9 +4,10 @@ import sys
 import traceback
 import warnings
 from collections import Counter
-from os.path import join as pjoin, exists as pexists, realpath
+from os.path import join as pjoin, exists as pexists, realpath, basename
 import numpy as np
 from neuropredict import config_neuropredict as cfg
+from neuropredict.utils import make_dataset_filename
 from pyradigm import MLDataset
 
 def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
@@ -114,6 +115,24 @@ def get_pyradigm(feat_path):
     "Do-nothing reader of pyradigm."
 
     return feat_path
+
+
+def process_pyradigm(feature_path, subjects, classes):
+    """Processes the given dataset to return a clean name and path."""
+
+    loaded_dataset = MLDataset(filepath=feature_path)
+
+    if len(loaded_dataset.description) > 1:
+        method_name = loaded_dataset.description
+    else:
+        method_name = basename(feature_path)
+
+    if not saved_dataset_matches(loaded_dataset, subjects, classes):
+        raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
+    else:
+        out_path_cur_dataset = feature_path
+
+    return method_name, out_path_cur_dataset
 
 
 def get_arff(feat_path):
@@ -246,6 +265,8 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
     else:
         raise ValueError('Input must be a path or MLDataset.')
 
+    # TODO this check for exact match is too conservative: allow for extra subjects/classes to exist
+    #   as long as they contain the subjects you need, and they belong to right class in both
     if set(ds.class_set) != set(classes.values()) or set(ds.sample_ids) != set(subjects):
         return False
     else:
