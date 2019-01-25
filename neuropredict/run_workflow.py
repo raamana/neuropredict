@@ -695,33 +695,49 @@ def import_datasets(method_list, out_dir, subjects, classes,
     ----------
     method_list : list of callables
         Set of predefined methods returning a vector of features for a given sample id and location
+
     out_dir : str
         Path to the output folder
 
     subjects : list of str
         List of sample ids
+
     classes : dict
         Dict identifying the class for each sample id in the dataset.
+
     feature_path : list of str
         List of paths to the root directory containing the features (pre- or user-defined).
         Must be of same length as method_list
+
     feature_type : str
         a string identifying the structure of feature set.
         Choices = ('dir_of_dirs', 'data_matrix')
 
+    user_impute_strategy : str
+        Strategy to handle the missing data: whether to raise an error if data is missing, or
+            to impute them using the method chosen here.
+
     Returns
     -------
     method_names : list of str
-        List of method names used for annotation.
+        List of method names used for annotation
+
     dataset_paths_file : str
-        Path to the file containing paths to imported feature sets.
+        Path to the file containing paths to imported feature sets
+
+    missing_data_flag : list
+        List of boolean flags indicating whether data is missing in each of the input datasets.
 
     """
 
     def clean_str(string): return ' '.join(string.strip().split(' _-:\n\r\t'))
 
+    from neuropredict.io import process_pyradigm, process_arff
+
     method_names = list()
     outpath_list = list()
+    missing_data_flag = list() # boolean flag for each dataset
+
     for mm, cur_method in enumerate(method_list):
         if cur_method in [get_dir_of_dirs]:
             method_name = basename(feature_path[mm])
@@ -895,7 +911,8 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
                     grid_search_level, classifier, feat_select_method):
     "Organizes the inputs and prepares them for CV"
 
-    feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
+    feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
+                                                user_feature_type)
 
     method_names, dataset_paths_file, missing_flag, impute_strategy \
         = import_datasets(method_list, out_dir, subjects, classes,
@@ -918,7 +935,8 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
                                      missing_flag=missing_flag,
                                      num_procs=num_procs,
                                      grid_search_level=grid_search_level,
-                                     classifier_name=classifier, feat_select_method=feat_select_method,
+                                     classifier_name=classifier,
+                                     feat_select_method=feat_select_method,
                                      options_path=options_path)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))

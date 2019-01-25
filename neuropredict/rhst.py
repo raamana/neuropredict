@@ -594,7 +594,8 @@ def holdout_trial_compare_datasets(datasets, impute_strategy,
                                             feat_sel_size=feat_sel_size,
                                             label_order_in_conf_matrix=label_set,
                                             grid_search_level=grid_search_level,
-                                            classifier_name=classifier_name, feat_select_method=feat_select_method)
+                                            classifier_name=classifier_name,
+                                            feat_select_method=feat_select_method)
 
         # TODO new feature: add additional metrics such as PPV
         accuracy_balanced[dd] = balanced_accuracy(conf_mat)
