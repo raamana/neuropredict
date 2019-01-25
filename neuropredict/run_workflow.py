@@ -762,18 +762,19 @@ def import_datasets(method_list, out_dir, subjects, classes,
 
         elif cur_method in [get_arff]:
 
-            loaded_dataset = MLDataset(arff_path=feature_path[mm])
-            if len(loaded_dataset.description) > 1:
-                method_name = loaded_dataset.description
-            else:
-                method_name = basename(feature_path[mm])
+            method_name, out_path_cur_dataset = process_arff(feature_path[mm], subjects, classes,
+                                                             out_dir)
 
-            method_names.append(clean_str(method_name))
-            out_name = make_dataset_filename(method_name)
-            outpath_dataset = pjoin(out_dir, out_name)
-            loaded_dataset.save(outpath_dataset)
-            outpath_list.append(outpath_dataset)
-            continue
+            # loaded_dataset = MLDataset(arff_path=feature_path[mm])
+            # if len(loaded_dataset.description) > 1:
+            #     method_name = loaded_dataset.description
+            # else:
+            #     method_name = basename(feature_path[mm])
+            #
+            # method_names.append(clean_str(method_name))
+            # out_name = make_dataset_filename(method_name)
+            # out_path_cur_dataset = pjoin(out_dir, out_name)
+            # loaded_dataset.save(out_path_cur_dataset)
         else:
             # adding an index for an even more unique identification
             # method_name = '{}_{}'.format(cur_method.__name__,mm)

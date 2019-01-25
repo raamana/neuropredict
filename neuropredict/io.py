@@ -141,6 +141,28 @@ def get_arff(feat_path):
     return feat_path
 
 
+def process_arff(feature_path, subjects, classes, out_dir):
+    """Processes the given dataset to return a clean name and path."""
+
+
+    loaded_dataset = MLDataset(arff_path=feature_path)
+    if len(loaded_dataset.description) > 1:
+        method_name = loaded_dataset.description
+    else:
+        method_name = basename(feature_path)
+
+    out_name = make_dataset_filename(method_name)
+    out_path_cur_dataset = pjoin(out_dir, out_name)
+    loaded_dataset.save(out_path_cur_dataset)
+
+    if not saved_dataset_matches(loaded_dataset, subjects, classes):
+        raise ValueError('supplied ARFF dataset does not match samples in the meta data.')
+    else:
+        out_path_cur_dataset = feature_path
+
+    return method_name, out_path_cur_dataset
+
+
 def get_features(subjects, classes, featdir, outdir, outname, get_method=None, feature_type='dir_of_dris'):
     """
     Populates the pyradigm data structure with features from a given method.
