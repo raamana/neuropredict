@@ -776,20 +776,25 @@ def import_datasets(method_list, out_dir, subjects, classes,
             # out_path_cur_dataset = pjoin(out_dir, out_name)
             # loaded_dataset.save(out_path_cur_dataset)
         else:
-            # adding an index for an even more unique identification
-            # method_name = '{}_{}'.format(cur_method.__name__,mm)
-            method_name = cur_method.__name__
 
-        method_names.append(clean_str(method_name))
-        out_name = make_dataset_filename(method_name)
+            if cur_method in [get_dir_of_dirs]:
+                method_name = basename(feature_path[mm])
 
-        outpath_dataset = pjoin(out_dir, out_name)
-        if not saved_dataset_matches(outpath_dataset, subjects, classes):
-            # noinspection PyTypeChecker
-            outpath_dataset = get_features(subjects, classes,
-                                           feature_path[mm],
-                                           out_dir, out_name,
-                                           cur_method, feature_type)
+            elif cur_method in [get_data_matrix]:
+                method_name = os.path.splitext(basename(feature_path[mm]))[0]
+
+            else:
+                method_name = cur_method.__name__
+
+            out_name = make_dataset_filename(method_name)
+
+            out_path_cur_dataset = pjoin(out_dir, out_name)
+            if not saved_dataset_matches(out_path_cur_dataset, subjects, classes):
+                # noinspection PyTypeChecker
+                out_path_cur_dataset = get_features(subjects, classes,
+                                                    feature_path[mm],
+                                                    out_dir, out_name,
+                                                    cur_method, feature_type)
 
         # checking for presence of any missing data
         data_mat, targets, ids = MLDataset(filepath=out_path_cur_dataset).data_and_labels()
