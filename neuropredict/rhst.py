@@ -84,6 +84,10 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     train_data_mat, train_labels, _ = train_fs.data_and_labels()
     test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_labels()
 
+    if impute_strategy is not None:
+        train_data_mat, test_data_mat = impute_missing_data(train_data_mat, train_labels,
+                                                            impute_strategy, test_data_mat)
+
     train_class_sizes = list(train_fs.class_sizes.values())
 
     # TODO look for ways to avoid building this every iter and every dataset.
