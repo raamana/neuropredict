@@ -78,8 +78,10 @@ def feature_importance_map(feat_imp,
 
         scaled_imp = feat_imp[dd]
         # some models do not provide importance values
-        if np.all(np.isnan(scaled_imp.flatten())):
-            print('unusable feature importance values for {} : all NaNs!\n Skipping it.'.format(method_labels[dd]))
+        is_nan_imp_values = np.isnan(scaled_imp.flatten())
+        if np.all(is_nan_imp_values):
+            print('unusable feature importance values for {} : '
+                  'all NaNs!\n Skipping it.'.format(method_labels[dd]))
             continue
 
         num_features = feat_imp[dd].shape[1]
@@ -90,13 +92,15 @@ def feature_importance_map(feat_imp,
             if len(feat_labels)<num_features:
                 raise ValueError('Insufficient number of feature labels.')
 
-        usable_imp, freq_sel, median_feat_imp, stdev_feat_imp, conf_interval = compute_median_std_feat_imp(scaled_imp)
+        usable_imp, freq_sel, median_feat_imp, stdev_feat_imp, conf_interval \
+            = compute_median_std_feat_imp(scaled_imp)
 
         if num_features > cfg.max_allowed_num_features_importance_map:
             print('Too many (n={}) features detected for {}.\n'
                   'Showing only the top {} to make the map legible.\n'
-                  'Use the exported results to plot your own feature importance maps.'.format(num_features,
-                    method_labels[dd], cfg.max_allowed_num_features_importance_map))
+                  'Use the exported results to plot make importance maps.'
+                  ''.format(num_features, method_labels[dd],
+                            cfg.max_allowed_num_features_importance_map))
             sort_indices = np.argsort(median_feat_imp)[::-1] # ascending order, then reversing
             selected_idx_display = sort_indices[:cfg.max_allowed_num_features_importance_map]
             usable_imp_display = [ usable_imp[ix] for ix in selected_idx_display ]
@@ -106,6 +110,7 @@ def feature_importance_map(feat_imp,
             selected_feat_names = feat_labels[selected_idx_display]
             effective_num_features = cfg.max_allowed_num_features_importance_map
         else:
+            selected_idx_display = None
             usable_imp_display = usable_imp
             selected_feat_imp = median_feat_imp
             selected_imp_stdev= stdev_feat_imp
@@ -140,6 +145,7 @@ def feature_importance_map(feat_imp,
         ax[dd].set_ylim(np.min(feat_ticks) - 1, np.max(feat_ticks) + 1)
         ax[dd].set_yticklabels(selected_feat_names) #, rotation=45)  # 'vertical'
         ax[dd].set_title(method_labels[dd])
+        print()
 
 
     if num_datasets < len(ax):
@@ -176,7 +182,8 @@ def mean_confidence_interval(data, confidence=0.95):
 
 def compute_median_std_feat_imp(imp,
                                 ignore_value=cfg.importance_value_to_treated_as_not_selected,
-                                never_tested_value=cfg.importance_value_never_tested):
+                                never_tested_value=cfg.importance_value_never_tested,
+                                never_tested_stdev=cfg.importance_value_never_tested_stdev):
     "Calculates the median/SD of feature importance, ignoring NaNs and zeros"
 
     num_features = imp.shape[1]
@@ -187,7 +194,8 @@ def compute_median_std_feat_imp(imp,
     stdev_values = list()
     for feat in range(num_features):
         index_nan_or_0 = np.logical_or(np.isnan(imp[:, feat]),
-                                       np.isclose(ignore_value, imp[:, feat], rtol=1e-4, atol=1e-5))
+                                       np.isclose(ignore_value, imp[:, feat],
+                                                  rtol=1e-4, atol=1e-5))
         index_usable = np.logical_not(index_nan_or_0)
         this_feat_values = imp[index_usable, feat].flatten()
         if len(this_feat_values) > 0:
@@ -201,10 +209,11 @@ def compute_median_std_feat_imp(imp,
             usable_values.append(None)
             freq_selection.append(0)
             median_values.append(never_tested_value)
-            stdev_values.append(never_tested_value)
-            conf_interval.append(never_tested_value)
+            stdev_values.append(never_tested_stdev)
+            conf_interval.append(never_tested_stdev)
 
-    return usable_values, np.array(freq_selection), np.array(median_values), np.array(stdev_values), np.array(conf_interval)
+    return usable_values, np.array(freq_selection), \
+           np.array(median_values), np.array(stdev_values), np.array(conf_interval)
 
 
 def confusion_matrices(cfmat_array, class_labels,
@@ -255,6 +264,8 @@ def confusion_matrices(cfmat_array, class_labels,
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
         im = plt.imshow(avg_cfmat, interpolation='nearest', cmap=cmap)
+        # TODO need a utility compress a super long method name (>50 chars) to < 50 chars
+        #   with ... in the middle
         plt.title(method_names[dd])
         plt.colorbar(im, fraction=0.046, pad=0.04)
         tick_marks = np.arange(len(class_labels))

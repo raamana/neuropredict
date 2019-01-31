@@ -88,7 +88,7 @@ def check_classifier(clf_name=cfg.default_classifier):
     if clf_name in cfg.additional_modules_reqd:
         try:
             from importlib import import_module
-            import_module(clf_name)
+            import_module(cfg.additional_modules_reqd[clf_name])
         except ImportError:
             raise ImportError('choosing classifier {} requires installation of '
                               'another package. Try running\n'

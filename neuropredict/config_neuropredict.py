@@ -21,9 +21,19 @@ max_allowed_num_features_importance_map = 10
 importance_value_to_treated_as_not_selected = 0.0
 # importance values are sorted by value (higher better), so we need to able discard them
 importance_value_never_tested = -np.Inf
+importance_value_never_tested_stdev = np.nan
 
 # to help bring up feature importances that can be very small in 4/5th decimal places
 large_constant_factor = 1e5
+
+# # ------- missing data imputation strategy -------------
+
+missing_value_identifier = np.NaN #
+default_imputation_strategy = 'raise'
+# not supporting 'constant' for now, as it is not popular,
+#   and integrating it requires a bit more software engineering
+avail_imputation_strategies = ('median', 'mean', 'most_frequent')
+avail_imputation_strategies_with_raise = avail_imputation_strategies + (default_imputation_strategy, )
 
 # # ------- feature importance -------
 

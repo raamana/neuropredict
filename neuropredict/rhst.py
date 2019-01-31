@@ -32,6 +32,7 @@ else:
 
 
 def eval_optimized_model_on_testset(train_fs, test_fs,
+                                    impute_strategy=cfg.default_imputation_strategy,
                                     label_order_in_conf_matrix=None,
                                     feat_sel_size=cfg.default_num_features_to_select,
                                     train_perc=0.5,
@@ -48,6 +49,10 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     test_fs : MLDataset
         Dataset to make predictions on using the classifier optimized on training set.
+
+    impute_strategy : str
+        Strategy to handle the missing data: whether to raise an error if data is missing, or
+            to impute them using the method chosen here.
 
     label_order_in_conf_matrix : list
         List of labels to compute the order of confusion matrix.
@@ -78,6 +83,10 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     train_data_mat, train_labels, _ = train_fs.data_and_labels()
     test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_labels()
+
+    if impute_strategy is not None:
+        train_data_mat, test_data_mat = impute_missing_data(train_data_mat, train_labels,
+                                                            impute_strategy, test_data_mat)
 
     train_class_sizes = list(train_fs.class_sizes.values())
 
@@ -277,6 +286,8 @@ def run(dataset_path_file, method_names, out_results_dir,
         train_perc=0.8, num_repetitions=200,
         positive_class=None, sub_group=None,
         feat_sel_size=cfg.default_num_features_to_select,
+        impute_strategy=cfg.default_imputation_strategy,
+        missing_flag=None,
         num_procs=4,
         grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
         classifier_name=cfg.default_classifier,
@@ -358,7 +369,8 @@ def run(dataset_path_file, method_names, out_results_dir,
     if num_procs > 1:
         print('Parallelizing the repetitions of CV with {} processes ...'.format(num_procs))
         with Manager() as proxy_manager:
-            shared_inputs = proxy_manager.list([datasets, train_size_common, feat_sel_size, train_perc,
+            shared_inputs = proxy_manager.list([datasets, impute_strategy,
+                                                train_size_common, feat_sel_size, train_perc,
                                                 total_test_samples, num_classes, num_features, label_set,
                                                 method_names, pos_class_index, out_results_dir,
                                                 grid_search_level, classifier_name, feat_select_method])
@@ -368,7 +380,8 @@ def run(dataset_path_file, method_names, out_results_dir,
                 cv_results = pool.map(partial_func_holdout, range(num_repetitions))
     else:
         # switching to regular sequential for loop
-        partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, train_size_common, feat_sel_size,
+        partial_func_holdout = partial(holdout_trial_compare_datasets, datasets, impute_strategy,
+                                       train_size_common, feat_sel_size,
                                        train_perc, total_test_samples, num_classes, num_features, label_set,
                                        method_names, pos_class_index, out_results_dir, grid_search_level,
                                        classifier_name, feat_select_method)
@@ -474,6 +487,22 @@ def get_pretty_print_options(method_names, num_datasets):
     return print_options
 
 
+def impute_missing_data(train_data, train_labels, strategy, test_data):
+    """
+    Imputes missing values in train/test data matrices using the given strategy,
+    based on train data alone.
+
+    """
+
+    from sklearn.impute import SimpleImputer
+    # TODO integrate and use the missingdata pkg (with more methods) when time permits
+    imputer = SimpleImputer(missing_values=cfg.missing_value_identifier,
+                            strategy=strategy)
+    imputer.fit(train_data, train_labels)
+
+    return imputer.transform(train_data), imputer.transform(test_data)
+
+
 def remap_labels(datasets, common_ds, class_set, positive_class=None):
     """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
 
@@ -497,7 +526,8 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
     return datasets, positive_class, pos_class_index
 
 
-def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, train_perc,
+def holdout_trial_compare_datasets(datasets, impute_strategy,
+                                   train_size_common, feat_sel_size, train_perc,
                                    total_test_samples, num_classes, num_features_per_dataset,
                                    label_set, method_names, pos_class_index,
                                    out_results_dir, grid_search_level,
@@ -509,6 +539,11 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
     Parameters
     ----------
     datasets
+
+    impute_strategy : str
+        Strategy to handle the missing data: whether to raise an error if data is missing, or
+            to impute them using the method chosen here.
+
     train_size_common
     feat_sel_size
     train_perc
@@ -573,11 +608,14 @@ def holdout_trial_compare_datasets(datasets, train_size_common, feat_sel_size, t
 
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd, :], true_test_labels, \
         conf_mat, misclsfd_ids_this_run[dd], feature_importances[dd], best_params[dd] = \
-            eval_optimized_model_on_testset(train_fs, test_fs, train_perc=train_perc,
+            eval_optimized_model_on_testset(train_fs, test_fs,
+                                            impute_strategy=impute_strategy,
+                                            train_perc=train_perc,
                                             feat_sel_size=feat_sel_size,
                                             label_order_in_conf_matrix=label_set,
                                             grid_search_level=grid_search_level,
-                                            classifier_name=classifier_name, feat_select_method=feat_select_method)
+                                            classifier_name=classifier_name,
+                                            feat_select_method=feat_select_method)
 
         # TODO new feature: add additional metrics such as PPV
         accuracy_balanced[dd] = balanced_accuracy(conf_mat)

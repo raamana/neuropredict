@@ -34,6 +34,15 @@ else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
 
+class NeuroPredictException(Exception):
+    """Custom exception to distinguish neuropredict related errors (usage etc) from the usual."""
+    pass
+
+class MissingDataException(NeuroPredictException):
+    """Custom exception to uniquely identify this error. Helpful for testing etc"""
+    pass
+
+
 def get_parser():
     "Parser to specify arguments and their defaults."
 
@@ -227,6 +236,14 @@ def get_parser():
     
     """)
 
+    help_imputation_strategy = textwrap.dedent("""
+    Strategy to impute any missing data (as encoded by NaNs).
+    
+    Default: 'raise', which raises an error if there is any missing data anywhere.
+    Currently available imputation strategies are: {}
+    
+    """.format(cfg.avail_imputation_strategies))
+
     help_text_print_options = textwrap.dedent("""
     Prints the options used in the run in an output folder.
     
@@ -292,6 +309,12 @@ def get_parser():
 
     pipeline_group = parser.add_argument_group(title='Predictive Model',
                                               description='Parameters related to pipeline comprising the predictive model')
+
+    pipeline_group.add_argument("-is", "--impute_strategy", action="store",
+                                dest="impute_strategy",
+                                default=cfg.default_imputation_strategy,
+                                help=help_imputation_strategy,
+                                choices=cfg.avail_imputation_strategies_with_raise)
 
     pipeline_group.add_argument("-fs", "--feat_select_method", action="store", dest="feat_select_method",
                                 default=cfg.default_feat_select_method, help=help_feat_select_method,
@@ -448,7 +471,7 @@ def parse_args():
                for attr in ('user_feature_paths', 'data_matrix_paths',
                             'pyradigm_paths', 'arff_paths')):
 
-            if not_unspecified(user_args.print_opt_dir):
+            if not_unspecified(user_args.print_opt_dir) and user_args.print_opt_dir:
                 run_dir = realpath(user_args.print_opt_dir)
                 print_options(run_dir)
 
@@ -503,6 +526,8 @@ def parse_args():
 
     feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
 
+    impute_strategy = validate_impute_strategy(user_args.impute_strategy)
+
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
@@ -520,7 +545,7 @@ def parse_args():
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
-           feature_selection_size, num_procs, \
+           feature_selection_size, impute_strategy, num_procs, \
            grid_search_level, classifier, feat_select_method
 
 
@@ -596,6 +621,18 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
     return
 
 
+def validate_impute_strategy(user_choice):
+    """Checks that user made a valid choice."""
+
+    user_choice = user_choice.lower()
+    if user_choice != cfg.default_imputation_strategy and \
+            user_choice not in cfg.avail_imputation_strategies:
+        raise ValueError('Unrecognized imputation strategy!\n\tchoose one of {}'
+                         ''.format(cfg.avail_imputation_strategies))
+
+    return user_choice
+
+
 def validate_class_set(classes, subgroups, positive_class=None):
     "Ensures class names are valid and sub-groups exist."
 
@@ -648,7 +685,9 @@ def validate_class_set(classes, subgroups, positive_class=None):
     return class_set, sub_group_list, positive_class
 
 
-def import_datasets(method_list, out_dir, subjects, classes, feature_path, feature_type='dir_of_dirs'):
+def import_datasets(method_list, out_dir, subjects, classes,
+                    feature_path, feature_type='dir_of_dirs',
+                    user_impute_strategy=cfg.default_imputation_strategy):
     """
     Imports all the specified feature sets and organizes them into datasets.
 
@@ -656,90 +695,146 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     ----------
     method_list : list of callables
         Set of predefined methods returning a vector of features for a given sample id and location
+
     out_dir : str
         Path to the output folder
 
     subjects : list of str
         List of sample ids
+
     classes : dict
         Dict identifying the class for each sample id in the dataset.
+
     feature_path : list of str
         List of paths to the root directory containing the features (pre- or user-defined).
         Must be of same length as method_list
+
     feature_type : str
         a string identifying the structure of feature set.
         Choices = ('dir_of_dirs', 'data_matrix')
 
+    user_impute_strategy : str
+        Strategy to handle the missing data: whether to raise an error if data is missing, or
+            to impute them using the method chosen here.
+
     Returns
     -------
     method_names : list of str
-        List of method names used for annotation.
+        List of method names used for annotation
+
     dataset_paths_file : str
-        Path to the file containing paths to imported feature sets.
+        Path to the file containing paths to imported feature sets
+
+    missing_data_flag : list
+        List of boolean flags indicating whether data is missing in each of the input datasets.
 
     """
 
     def clean_str(string): return ' '.join(string.strip().split(' _-:\n\r\t'))
 
+    from neuropredict.io import process_pyradigm, process_arff
+
     method_names = list()
     outpath_list = list()
+    missing_data_flag = list() # boolean flag for each dataset
+
     for mm, cur_method in enumerate(method_list):
-        if cur_method in [get_dir_of_dirs]:
-            method_name = basename(feature_path[mm])
+        if cur_method in [get_pyradigm]:
 
-        elif cur_method in [get_data_matrix]:
-            method_name = os.path.splitext(basename(feature_path[mm]))[0]
+            method_name, out_path_cur_dataset = process_pyradigm(feature_path[mm], subjects, classes)
 
-        elif cur_method in [get_pyradigm]:
-
-            if feature_type in ['pyradigm']:
-                loaded_dataset = MLDataset(filepath=feature_path[mm])
-            else:
-                raise ValueError('Invalid state of the program!')
-
-            if len(loaded_dataset.description) > 1:
-                method_name = loaded_dataset.description
-            else:
-                method_name = basename(feature_path[mm])
-
-            method_names.append(clean_str(method_name))
-            if saved_dataset_matches(loaded_dataset, subjects, classes):
-                outpath_list.append(feature_path[mm])
-                continue
-            else:
-                raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
+            # if feature_type in ['pyradigm']:
+            #     loaded_dataset = MLDataset(filepath=feature_path[mm])
+            # else:
+            #     raise ValueError('Invalid state of the program!')
+            #
+            # if len(loaded_dataset.description) > 1:
+            #     method_name = loaded_dataset.description
+            # else:
+            #     method_name = basename(feature_path[mm])
+            #
+            # method_names.append(clean_str(method_name))
+            # if not saved_dataset_matches(loaded_dataset, subjects, classes):
+            #     raise ValueError(
+            #         'supplied pyradigm dataset does not match samples in the meta data.')
+            # else:
+            #     out_path_cur_dataset = feature_path[mm]
 
         elif cur_method in [get_arff]:
 
-            loaded_dataset = MLDataset(arff_path=feature_path[mm])
-            if len(loaded_dataset.description) > 1:
-                method_name = loaded_dataset.description
-            else:
+            method_name, out_path_cur_dataset = process_arff(feature_path[mm], subjects, classes,
+                                                             out_dir)
+
+            # loaded_dataset = MLDataset(arff_path=feature_path[mm])
+            # if len(loaded_dataset.description) > 1:
+            #     method_name = loaded_dataset.description
+            # else:
+            #     method_name = basename(feature_path[mm])
+            #
+            # method_names.append(clean_str(method_name))
+            # out_name = make_dataset_filename(method_name)
+            # out_path_cur_dataset = pjoin(out_dir, out_name)
+            # loaded_dataset.save(out_path_cur_dataset)
+        else:
+
+            if cur_method in [get_dir_of_dirs]:
                 method_name = basename(feature_path[mm])
 
-            method_names.append(clean_str(method_name))
+            elif cur_method in [get_data_matrix]:
+                method_name = os.path.splitext(basename(feature_path[mm]))[0]
+
+            else:
+                method_name = cur_method.__name__
+
             out_name = make_dataset_filename(method_name)
-            outpath_dataset = pjoin(out_dir, out_name)
-            loaded_dataset.save(outpath_dataset)
-            outpath_list.append(outpath_dataset)
-            continue
+
+            out_path_cur_dataset = pjoin(out_dir, out_name)
+            if not saved_dataset_matches(out_path_cur_dataset, subjects, classes):
+                # noinspection PyTypeChecker
+                out_path_cur_dataset = get_features(subjects, classes,
+                                                    feature_path[mm],
+                                                    out_dir, out_name,
+                                                    cur_method, feature_type)
+
+        # checking for presence of any missing data
+        data_mat, targets, ids = MLDataset(filepath=out_path_cur_dataset).data_and_labels()
+        is_nan = np.isnan(data_mat)
+        if is_nan.any():
+            data_missing_here = True
+            num_sub_with_md = np.sum(is_nan.sum(axis=1) > 0)
+            num_var_with_md = np.sum(is_nan.sum(axis=0) > 0)
+            if user_impute_strategy == 'raise':
+                raise MissingDataException(
+                    '{}/{} subjects with missing data found in {}/{} features\n'
+                    '\tin {} dataset at {}\n'
+                    '\tFill them and rerun, '
+                    'or choose one of the available imputation strategies: {}'
+                    ''.format(num_sub_with_md, data_mat.shape[0],
+                              num_var_with_md, data_mat.shape[1],
+                              method_name, out_path_cur_dataset,
+                              cfg.avail_imputation_strategies))
         else:
-            # adding an index for an even more unique identification
-            # method_name = '{}_{}'.format(cur_method.__name__,mm)
-            method_name = cur_method.__name__
+            data_missing_here = False
 
         method_names.append(clean_str(method_name))
-        out_name = make_dataset_filename(method_name)
+        outpath_list.append(out_path_cur_dataset)
+        missing_data_flag.append(data_missing_here)
 
-        outpath_dataset = pjoin(out_dir, out_name)
-        if not saved_dataset_matches(outpath_dataset, subjects, classes):
-            # noinspection PyTypeChecker
-            outpath_dataset = get_features(subjects, classes,
-                                           feature_path[mm],
-                                           out_dir, out_name,
-                                           cur_method, feature_type)
-
-        outpath_list.append(outpath_dataset)
+    # finalizing the imputation strategy
+    if any(missing_data_flag):
+        print('\nOne or more of the input datasets have missing data!')
+        if user_impute_strategy == 'raise':
+            raise MissingDataException('Fill them and rerun, or choose one of the available '
+                                       'imputation strategies: {}'
+                                       ''.format(cfg.avail_imputation_strategies))
+        else:
+            impute_strategy = user_impute_strategy
+            print('The imputation strategy chosen is: {}'.format(impute_strategy))
+    else:
+        # disabling the imputation altogether if there is no missing data
+        impute_strategy = None
+        if user_impute_strategy in ('raise', None):
+            print('Ignoring imputation strategy chosen, as no missing data were found!')
 
     combined_name = uniq_combined_name(method_names)
 
@@ -753,7 +848,9 @@ def import_datasets(method_list, out_dir, subjects, classes, feature_path, featu
     with open(dataset_paths_file, 'w') as dpf:
         dpf.writelines('\n'.join(outpath_list))
 
-    return method_names, dataset_paths_file
+    print('\nData import is done.\n\n')
+
+    return method_names, dataset_paths_file, missing_data_flag, impute_strategy
 
 
 
@@ -812,14 +909,16 @@ def make_method_list(fs_subject_dir, user_feature_paths, user_feature_type='dir_
 def prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size, num_procs,
+                    sub_group_list, feature_selection_size, user_impute_strategy, num_procs,
                     grid_search_level, classifier, feat_select_method):
     "Organizes the inputs and prepares them for CV"
 
-    feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths, user_feature_type)
+    feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
+                                                user_feature_type)
 
-    method_names, dataset_paths_file = import_datasets(method_list, out_dir, subjects, classes,
-                                                       feature_dir, user_feature_type)
+    method_names, dataset_paths_file, missing_flag, impute_strategy \
+        = import_datasets(method_list, out_dir, subjects, classes,
+                          feature_dir, user_feature_type, user_impute_strategy)
 
     print('Requested processing for the following subgroups:'
           '\n{}\n'.format('\n'.join([','.join(sg) for sg in sub_group_list])))
@@ -833,9 +932,13 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
         results_file_path = rhst.run(dataset_paths_file, method_names, out_dir_sg,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
                                      positive_class=positive_class, sub_group=sub_group,
-                                     feat_sel_size=feature_selection_size, num_procs=num_procs,
+                                     feat_sel_size=feature_selection_size,
+                                     impute_strategy=impute_strategy,
+                                     missing_flag=missing_flag,
+                                     num_procs=num_procs,
                                      grid_search_level=grid_search_level,
-                                     classifier_name=classifier, feat_select_method=feat_select_method,
+                                     classifier_name=classifier,
+                                     feat_select_method=feat_select_method,
                                      options_path=options_path)
 
         print('\n\nSaving the visualizations to \n{}'.format(out_dir))
@@ -853,13 +956,14 @@ def cli():
 
     subjects, classes, out_dir, options_path, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-        feature_selection_size, num_procs, grid_search_level, classifier, feat_select_method = parse_args()
+        feature_selection_size, impute_strategy, num_procs, \
+        grid_search_level, classifier, feat_select_method = parse_args()
 
     print('Running neuropredict {}'.format(__version__))
     prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size, num_procs,
+                    sub_group_list, feature_selection_size, impute_strategy, num_procs,
                     grid_search_level, classifier, feat_select_method)
 
     return
