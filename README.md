@@ -11,6 +11,10 @@
    
 - Docs:   https://raamana.github.io/neuropredict/
 
+## News
+
+ - Good news: `neuropredict` can handle missing data now (that are encoded with `numpy.NaN`). This is done respecting the cross-validation splits without any data leakage.
+
 ## Overview
 
 On a high level,
