@@ -471,7 +471,7 @@ def parse_args():
                for attr in ('user_feature_paths', 'data_matrix_paths',
                             'pyradigm_paths', 'arff_paths')):
 
-            if not_unspecified(user_args.print_opt_dir):
+            if not_unspecified(user_args.print_opt_dir) and user_args.print_opt_dir:
                 run_dir = realpath(user_args.print_opt_dir)
                 print_options(run_dir)
 
