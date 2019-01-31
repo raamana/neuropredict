@@ -257,6 +257,16 @@ def test_versioning():
         sys.argv = shlex.split('neuropredict -v')
         cli()
 
+
+def test_print_options():
+    " ensures the CLI works. "
+
+    known_out_dir = '/Users/Reddy/rotman/CANBIND/results/base_vs_network_thk_curv_area_HistInt_many_subgroups'
+    with raises(SystemExit):
+        sys.argv = shlex.split('neuropredict --print_options {}'.format(known_out_dir))
+        cli()
+
+
 def test_vis():
     " ensures the CLI works. "
 
@@ -286,9 +296,11 @@ def test_arff():
 # test_chance_clf_default()
 # test_chance_clf_binary_extratrees()
 # test_chance_clf_binary_svm()
-test_separable_100perc()
+# test_separable_100perc()
 # test_chance_multiclass()
 # test_versioning()
 # test_vis()
 # etc_debug()
 # test_arff()
+test_print_options()
+# test_each_combination_works()
