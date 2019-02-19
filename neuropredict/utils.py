@@ -353,12 +353,30 @@ def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     return combined_name
 
 
-def sub_group_identifier(group_names):
-    "Constructs clean identifier to refer to a group of classes. Names will be sorted to allow for reproducibility."
+def sub_group_identifier(group_names, sg_index=None, num_letters=3):
+    """
+    Constructs clean identifier to refer to a group of classes.
+        Names will be sorted to allow for reproducibility.
+        If there are too many classes or if the names are too long,
+        only the first few letters of each word are used to generate the identifier.
+    """
 
     group_names.sort()
-    words = [ word for group in group_names for word in re.split(__re_delimiters_word, group) if word ]
+    words = [ word for group in group_names
+              for word in re.split(__re_delimiters_word, group) if word ]
     identifier = '_'.join(words)
+
+    if len(identifier) > cfg.max_len_identifiers:
+        # if there are too many groups, choosing the first few
+        if len(group_names) >= cfg.max_len_identifiers:
+            num_letters = 1
+            words = words[:cfg.max_len_identifiers]
+
+        # choosing first few letters from each word
+        shorter_words = [word[:num_letters] for word in words]
+        if sg_index is None:
+            sg_index = 1
+        identifier = 'subgroup{}_{}'.format(sg_index, '_'.join(shorter_words))
 
     return identifier
 
