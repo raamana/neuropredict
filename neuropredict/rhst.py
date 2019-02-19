@@ -226,7 +226,8 @@ def load_results_from_folder(results_folder):
         sg_id = sub_group_identifier(sg, ix)
         results_file_path = pjoin(results_folder, sg_id, cfg.file_name_results)
         if not pexists(results_file_path) or os.path.getsize(results_file_path) <= 0:
-            raise IOError('Results file for sub group {} does not exist or is empty!'.format(sg_id))
+            raise IOError('Results file for sub group {} does not exist'
+                          ' or is empty!'.format(sg_id))
         results[sg_id] = load_results_dict(results_file_path)
 
     return results
@@ -421,6 +422,10 @@ def determine_training_size(train_perc, class_sizes, num_classes):
     if len(reduced_sizes) != 1:
         raise ValueError("Error in stratification of training set based on the smallest class!")
     train_size_common = reduced_sizes[0]
+
+    if train_size_common < 1:
+        raise ValueError('Invalid state - Zero samples selected for training!'
+                         'Check the class size distribution in dataset!')
 
     total_test_samples = np.int64(np.sum(class_sizes) - num_classes * train_size_common)
 

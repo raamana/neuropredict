@@ -536,8 +536,9 @@ def parse_args():
     feat_select_method = user_args.feat_select_method.lower()
 
     # saving the validated and expanded values to disk for later use.
-    options_to_save = [sample_ids, classes, out_dir, user_feature_paths, user_feature_type, fs_subject_dir,
-                       train_perc, num_rep_cv, positive_class, subgroups, feature_selection_size, num_procs,
+    options_to_save = [sample_ids, classes, out_dir, user_feature_paths,
+                       user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
+                       positive_class, subgroups, feature_selection_size, num_procs,
                        grid_search_level, classifier, feat_select_method]
     options_path = save_options(options_to_save, out_dir)
 
@@ -647,7 +648,10 @@ def validate_class_set(classes, subgroups, positive_class=None):
             cls_list = comb.split(',')
             # ensuring each subgroup has atleast two classes
             if len(set(cls_list)) < 2:
-                raise ValueError('This subgroup {} does not contain two unique classes.'.format(comb))
+                raise ValueError('Subgroup {} does not contain 2 unique classes! '
+                                 'Each subgroup must contain atleast two classes '
+                                 'for classification experiments.'
+                                 ''.format(comb))
 
             # verify each of them were defined in meta
             for cls in cls_list:
