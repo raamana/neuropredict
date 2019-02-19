@@ -928,7 +928,7 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
     for sgi, sub_group in enumerate(sub_group_list):
         print('{}\nProcessing subgroup : {} ({}/{})'
               '\n{}'.format('-'*80, ','.join(sub_group), sgi+1, num_sg, '-'*80))
-        out_dir_sg = pjoin(out_dir, sub_group_identifier(sub_group))
+        out_dir_sg = pjoin(out_dir, sub_group_identifier(sub_group, sg_index=sgi+1))
         results_file_path = rhst.run(dataset_paths_file, method_names, out_dir_sg,
                                      train_perc=train_perc, num_repetitions=num_rep_cv,
                                      positive_class=positive_class, sub_group=sub_group,
