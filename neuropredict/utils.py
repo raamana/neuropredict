@@ -336,6 +336,16 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
     return num_select
 
 
+def uniquify_in_order(seq):
+    """Produces a list with unique elements in the same order as original sequence.
+
+    https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-whilst-preserving-order
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+
 def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     "Function to produce a uniq, and not a long combined name. Recursive"
 
