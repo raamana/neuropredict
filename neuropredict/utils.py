@@ -354,8 +354,10 @@ def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     if len(combined_name) > max_len:
         first_letters = list()
         for mname in method_names:
-            first_letters.append(''.join([word[:num_char_each_word] for word in re.split(__re_delimiters_word, mname)]))
-        combined_name = '_'.join(first_letters)
+            this_FLs = ''.join([word[:num_char_each_word]
+                                for word in re.split(__re_delimiters_word, mname)])
+            first_letters.append(this_FLs)
+        combined_name = '_'.join(uniquify_in_order(first_letters))
 
         if len(combined_name) > max_len:
             combined_name = uniq_combined_name(first_letters)
