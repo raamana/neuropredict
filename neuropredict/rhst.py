@@ -178,7 +178,8 @@ def optimize_pipeline_via_grid_search_CV(pipeline, train_data_mat, train_labels,
 
     # not specifying n_jobs to avoid any kind of parallelism (joblib) from within sklearn
     # to avoid potentially bad interactions with outer parallization with builtin multiprocessing library
-    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv)
+    gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
+                      refit=cfg.refit_best_model_on_ALL_training_set)
 
     # ignoring some not-so-critical warnings
     with warnings.catch_warnings():
