@@ -578,6 +578,11 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
     num_times_misclfd       = results_dict['num_times_misclfd']
     num_times_tested        = results_dict['num_times_tested']
 
+    num_methods = len(method_names)
+    if len(set(method_names)) < num_methods:
+        method_names = ['m{}_{}'.format(ix,mn)
+                        for ix, mn in enumerate(method_names)]
+
     feature_importances_available = True
     if options_path is not None:
         user_options = load_options(out_dir, options_path)
