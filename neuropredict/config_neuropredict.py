@@ -83,6 +83,10 @@ INNER_CV_TEST_PERC = 0.2
 INNER_CV_NUM_FOLDS = 5
 INNER_CV_NUM_REPEATS = 5
 
+# although refit is True by default in GridSearchCV, this is to avoid depending on
+# defaults for future releases!
+refit_best_model_on_ALL_training_set = True
+
 # parallelization is now achieved at the repetitions level.
 DEFAULT_NUM_PROCS = 4
 GRIDSEARCH_PRE_DISPATCH = 1
