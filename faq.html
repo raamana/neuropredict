@@ -1,195 +1,164 @@
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Frequently Asked Questions &mdash; neuropredict 0.4.8 documentation</title>
 
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
-        <link rel="shortcut icon" href="_static/favicon.ico" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frequently Asked Questions &#8212; neuropredict 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Implemenation details" href="implementation.html" />
+    <link rel="prev" title="Report" href="results.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
-        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
-        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.1 documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.1 documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
 
-        <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT       : './',
-            VERSION        : '0.4.8',
-            COLLAPSE_INDEX : false,
-            FILE_SUFFIX    : '.html',
-            HAS_SOURCE     : true
-        };
-        </script>
-
-        
-    </head>
-
-    <body>
-        <!--<div class="ribbon">-->
-            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
-        <!--</div>-->
-
-        <!--<div class="container text-center">-->
-            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
-        <!--</div>-->
-
-        <hr />
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 toc">
-                    
-
-                    
-                        <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
-<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
-</ul>
-
-                    
-
-                    <a href="#" class="navbar-toggle">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                </div>
-
-                <div class="col-md-9 body">
-                    
-  <div class="section" id="frequently-asked-questions">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="frequently-asked-questions">
 <h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
 <ul>
-<li><p class="first"><em>What is the overarching goal for neuropredict?</em></p>
+<li><p><em>What is the overarching goal for neuropredict?</em></p>
 <blockquote>
 <div><ul class="simple">
-<li>To offer a comprehensive report on predictive analysis effortlessly!</li>
-<li>Aiming to interface directly with the outputs of various neuroimaging tools</li>
-<li><strong>although the user could input arbitrary set of features (neuroimaging, astronomy, nutrition, phrama or otherwise).</strong></li>
+<li><p>To offer a comprehensive report on predictive analysis effortlessly!</p></li>
+<li><p>Aiming to interface directly with the outputs of various neuroimaging tools</p></li>
+<li><p><strong>although the user could input arbitrary set of features (neuroimaging, astronomy, nutrition, phrama or otherwise).</strong></p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><em>What is your default classification system?</em></p>
+<li><p><em>What is your default classification system?</em></p>
 <blockquote>
 <div><ul class="simple">
-<li>Predictive analysis [by default] is performed with Random Forest classifier (using scikit-learn’s implementation), after some basic preprocessing comprising of <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html">robust scaling</a> and <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html">removal of low-variance features</a>.</li>
-<li>Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.</li>
+<li><p>Predictive analysis [by default] is performed with Random Forest classifier (using scikit-learn’s implementation), after some basic preprocessing comprising of <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html">robust scaling</a> and <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html">removal of low-variance features</a>.</p></li>
+<li><p>Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><em>Can I use a different classifier?</em></p>
+<li><p><em>Can I use a different classifier?</em></p>
 <blockquote>
 <div><ul class="simple">
-<li>Yes. User can choose among few techniques offered by scikit-learn and similar toolboxes [to be added].</li>
-<li><a class="reference external" href="http://github.com/raamana/neuropredict/issues/new">Let me know</a> if you would like something that’s not already integrated. As long as it is implemented in python, we will integrate it.</li>
+<li><p>Yes. User can choose among few techniques offered by scikit-learn and similar toolboxes [to be added].</p></li>
+<li><p><a class="reference external" href="http://github.com/raamana/neuropredict/issues/new">Let me know</a> if you would like something that’s not already integrated. As long as it is implemented in python, we will integrate it.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><em>Why did you pick random forests to be the default classifier?</em></p>
+<li><p><em>Why did you pick random forests to be the default classifier?</em></p>
 <blockquote>
 <div><ul>
-<li><p class="first">Because they have consistently demonstrated top performance across multiple domains:</p>
+<li><p>Because they have consistently demonstrated top performance across multiple domains:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Fernández-Delgado, M., Cernadas, E., Barro, S., &amp; Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181. <a class="reference external" href="http://jmlr.org/papers/volume15/delgado14a/delgado14a.pdf">Link</a></li>
-<li>Lebedev, A. V., Westman, E., Van Westen, G. J. P., Kramberger, M. G., Lundervold, A., Aarsland, D., et al. (2014). Random Forest ensembles for detection and prediction of Alzheimer’s disease with a good between-cohort robustness. NeuroImage: Clinical, 6, 115–125. <a class="reference external" href="http://doi.org/10.1016/j.nicl.2014.08.023">Link</a></li>
+<li><p>Fernández-Delgado, M., Cernadas, E., Barro, S., &amp; Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181. <a class="reference external" href="http://jmlr.org/papers/volume15/delgado14a/delgado14a.pdf">Link</a></p></li>
+<li><p>Lebedev, A. V., Westman, E., Van Westen, G. J. P., Kramberger, M. G., Lundervold, A., Aarsland, D., et al. (2014). Random Forest ensembles for detection and prediction of Alzheimer’s disease with a good between-cohort robustness. NeuroImage: Clinical, 6, 115–125. <a class="reference external" href="http://doi.org/10.1016/j.nicl.2014.08.023">Link</a></p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">Because it’s multi-class by design and automatically estimates feature importance.</p>
-</li>
+<li><p>Because it’s multi-class by design and automatically estimates feature importance.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><em>What are the options for my feature selection?</em></p>
+<li><p><em>What are the options for my feature selection?</em></p>
 <ul class="simple">
-<li>Currently <code class="docutils literal"><span class="pre">neuropredict</span></code> selects the top <code class="docutils literal"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">n_train/10</span></code> features based on their variable importance, as computed by Random Forest classifier, where n_train = number of <em>training</em> samples. The value of <cite>n_train</cite> depends on the size of the smallest class in the dataset and is <code class="docutils literal"><span class="pre">train_perc*n_smallest*n_C</span></code>, where <cite>train_perc</cite> is the amount of dataset the user reserved for training, <cite>n_C</cite> is the numer of classes in the dataset and <cite>n_smallest</cite> is the size of smallest classs.</li>
-<li>The choice of stratifying the training set by the size of smallest classs <cite>n_smallest</cite> in the given dataset helps alleviate class-imbalance problems as well as improve the robustness of the classifier.<ul>
-<li>We plan to implement offer more choices for feature selection in the near future, although the benefit of trying some arbitrary choice for feature selection method seems unclear. The overarching goals of <code class="docutils literal"><span class="pre">neuropredict</span></code> might help answer the current choice:</li>
-<li>to enable novice predictive modeling users to get started easily and quickly,</li>
-<li>provide a thorough estimate of <em>baseline</em> performance of their feature sets, instead of trying to find an arbitrary combination of predictive modeling tools to drive the numerical performance as high as possible.</li>
+<li><p>Currently <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> selects the top <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">n_train/10</span></code> features based on their variable importance, as computed by Random Forest classifier, where n_train = number of <em>training</em> samples. The value of <cite>n_train</cite> depends on the size of the smallest class in the dataset and is <code class="docutils literal notranslate"><span class="pre">train_perc*n_smallest*n_C</span></code>, where <cite>train_perc</cite> is the amount of dataset the user reserved for training, <cite>n_C</cite> is the numer of classes in the dataset and <cite>n_smallest</cite> is the size of smallest classs.</p></li>
+<li><p>The choice of stratifying the training set by the size of smallest classs <cite>n_smallest</cite> in the given dataset helps alleviate class-imbalance problems as well as improve the robustness of the classifier.</p>
+<ul>
+<li><p>We plan to implement offer more choices for feature selection in the near future, although the benefit of trying some arbitrary choice for feature selection method seems unclear. The overarching goals of <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> might help answer the current choice:</p></li>
+<li><p>to enable novice predictive modeling users to get started easily and quickly,</p></li>
+<li><p>provide a thorough estimate of <em>baseline</em> performance of their feature sets, instead of trying to find an arbitrary combination of predictive modeling tools to drive the numerical performance as high as possible.</p></li>
 </ul>
 </li>
-<li>Also because Random forest classifier automatically discard features without any useful signal.</li>
-<li><code class="docutils literal"><span class="pre">neuropredict</span></code> is designed such that another classifier or combination of classifiers could easily be plugged in. We may be adding an option to integrate one of the following options to automatically select a classifier with the highest performance: <a class="reference external" href="https://github.com/scikit-optimize/scikit-optimize">scikit-optimize</a>, <a class="reference external" href="https://github.com/ClimbsRocks/auto_ml">auto_ml</a> and <a class="reference external" href="https://github.com/rhiever/tpot">tpot</a> etc.</li>
+<li><p>Also because Random forest classifier automatically discard features without any useful signal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> is designed such that another classifier or combination of classifiers could easily be plugged in. We may be adding an option to integrate one of the following options to automatically select a classifier with the highest performance: <a class="reference external" href="https://github.com/scikit-optimize/scikit-optimize">scikit-optimize</a>, <a class="reference external" href="https://github.com/ClimbsRocks/auto_ml">auto_ml</a> and <a class="reference external" href="https://github.com/rhiever/tpot">tpot</a> etc.</p></li>
 </ul>
 </li>
-<li><p class="first"><em>Does ``neuropredict`` handle covariates?</em></p>
+<li><p><em>Does ``neuropredict`` handle covariates?</em></p>
 <ul class="simple">
-<li>Not yet. This feature request is not trivial to implement, as the nature of covariate handling is complex and variety of methods is large.</li>
-<li>If you need to, please regress them out (or handle them using another method of your choice) prior to inputting the features.</li>
+<li><p>Not yet. This feature request is not trivial to implement, as the nature of covariate handling is complex and variety of methods is large.</p></li>
+<li><p>If you need to, please regress them out (or handle them using another method of your choice) prior to inputting the features.</p></li>
 </ul>
 </li>
-<li><p class="first"><em>Can I get ROC curves?</em></p>
+<li><p><em>Can I get ROC curves?</em></p>
 <ul class="simple">
-<li>Not at the moment, as the presented results and report is obtained from a large number of CV iterations and there is not one ROC curve to represent it all.</li>
-<li>It is indeed possible to <em>average</em> ROC curves from multiple iterations (see below) and visualize it. This feature will be added soon.<ul>
-<li>ROC Reference: Fawcett, T. (2006). An introduction to ROC analysis. Pattern Recognition Letters, 27(8), 861–874.</li>
+<li><p>Not at the moment, as the presented results and report is obtained from a large number of CV iterations and there is not one ROC curve to represent it all.</p></li>
+<li><p>It is indeed possible to <em>average</em> ROC curves from multiple iterations (see below) and visualize it. This feature will be added soon.</p>
+<ul>
+<li><p>ROC Reference: Fawcett, T. (2006). An introduction to ROC analysis. Pattern Recognition Letters, 27(8), 861–874.</p></li>
 </ul>
 </li>
-<li>For multi-class classification problems, ROC analysis (hyper-surface to be precise) becomes intractable quickly. The author is currently not aware of any easy solutions. if you are aware of any solutions or could contribute, it would be greatly appreciated.</li>
+<li><p>For multi-class classification problems, ROC analysis (hyper-surface to be precise) becomes intractable quickly. The author is currently not aware of any easy solutions. if you are aware of any solutions or could contribute, it would be greatly appreciated.</p></li>
 </ul>
 </li>
-<li><p class="first"><em>Can I compare an arbitrary set of my own custom-designed features?</em></p>
+<li><p><em>Can I compare an arbitrary set of my own custom-designed features?</em></p>
 <ul class="simple">
-<li>Yes. The -u option allows you to supply arbitrary set of paths to user’s own custom features e.g.<ul>
-<li><code class="docutils literal"><span class="pre">-u</span> <span class="pre">/myproject/awsome-new-idea-v2.0</span> <span class="pre">/project-B/DTI_FA_Method1</span></code></li>
-<li><code class="docutils literal"><span class="pre">-u</span> <span class="pre">/sideproject/resting-dynamic-fc</span> <span class="pre">/prevproject/resting-dynamic-fc-competingmethod</span></code></li>
+<li><p>Yes. The -u option allows you to supply arbitrary set of paths to user’s own custom features e.g.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">/myproject/awsome-new-idea-v2.0</span> <span class="pre">/project-B/DTI_FA_Method1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">/sideproject/resting-dynamic-fc</span> <span class="pre">/prevproject/resting-dynamic-fc-competingmethod</span></code></p></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><p class="first"><em>Can I combine ``-f`` option with ``-u`` to compare my own features with that of Freesurfer or other supported software?</em></p>
+<li><p><em>Can I combine ``-f`` option with ``-u`` to compare my own features with that of Freesurfer or other supported software?</em></p>
 <ul class="simple">
-<li>Absolutely.</li>
-<li>While <code class="docutils literal"><span class="pre">-f</span></code> option allows specifying only 1 freesurfer folder, it can be combined with <code class="docutils literal"><span class="pre">-u</span></code> which can take arbitray number of custom features.</li>
+<li><p>Absolutely.</p></li>
+<li><p>While <code class="docutils literal notranslate"><span class="pre">-f</span></code> option allows specifying only 1 freesurfer folder, it can be combined with <code class="docutils literal notranslate"><span class="pre">-u</span></code> which can take arbitray number of custom features.</p></li>
 </ul>
 </li>
 </ul>
-<hr class="docutils" />
 </div>
 
 
-                </div>
-
-                <div class="container">
-                    
-                </div>
-            </div>
+          </div>
         </div>
-            <script type="text/javascript" src="_static/jquery.js"></script>
-            <script type="text/javascript" src="_static/underscore.js"></script>
-            <script type="text/javascript" src="_static/doctools.js"></script>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/javascript" src="_static/bernard.js"></script>
-    </body>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="results.html"
+                        title="previous chapter">Report</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="implementation.html"
+                        title="next chapter">Implemenation details</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
 </html>

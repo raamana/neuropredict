@@ -1,110 +1,78 @@
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Long term goals &mdash; neuropredict 0.4.8 documentation</title>
 
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
-        <link rel="shortcut icon" href="_static/favicon.ico" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Long term goals &#8212; neuropredict 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+    <link rel="prev" title="Context and target audience" href="context.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
-        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
-        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.1 documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.1 documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
 
-        <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT       : './',
-            VERSION        : '0.4.8',
-            COLLAPSE_INDEX : false,
-            FILE_SUFFIX    : '.html',
-            HAS_SOURCE     : true
-        };
-        </script>
-
-        
-    </head>
-
-    <body>
-        <!--<div class="ribbon">-->
-            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
-        <!--</div>-->
-
-        <!--<div class="container text-center">-->
-            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
-        <!--</div>-->
-
-        <hr />
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 toc">
-                    
-
-                    
-                        <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Long term goals</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
-<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
-</ul>
-
-                    
-
-                    <a href="#" class="navbar-toggle">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                </div>
-
-                <div class="col-md-9 body">
-                    
-  <div class="section" id="long-term-goals">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="long-term-goals">
 <h1>Long term goals<a class="headerlink" href="#long-term-goals" title="Permalink to this headline">¶</a></h1>
-<p>Neuropredict is part of a larger initiative to ease and standardize predictive analysis :</p>
+<p>Neuropredict is part of a larger initiative to ease and standardize predictive analysis.</p>
+<p><em>Click</em> on the image to see an easy to read enlarged version!</p>
 <a class="reference internal image-reference" href="_images/neuropredict_long_term_goals.jpg"><img alt="_images/neuropredict_long_term_goals.jpg" src="_images/neuropredict_long_term_goals.jpg" style="width: 700px;" /></a>
-<hr class="docutils" />
 </div>
 
 
-                </div>
-
-                <div class="container">
-                    
-                </div>
-            </div>
+          </div>
         </div>
-            <script type="text/javascript" src="_static/jquery.js"></script>
-            <script type="text/javascript" src="_static/underscore.js"></script>
-            <script type="text/javascript" src="_static/doctools.js"></script>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/javascript" src="_static/bernard.js"></script>
-    </body>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="context.html"
+                        title="previous chapter">Context and target audience</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="next chapter">Installation</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
 </html>

@@ -1,92 +1,43 @@
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>visualize &mdash; neuropredict 0.4.8 documentation</title>
 
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
-        <link rel="shortcut icon" href="../_static/favicon.ico" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>visualize &#8212; neuropredict 0.5.1 documentation</title>
+    <link rel="stylesheet" href="../_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <script type="text/javascript" src="../_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <link rel="stylesheet" href="../_static/bootstrap/css/bootstrap.min.css" type="text/css" />
-        <link rel="stylesheet" href="../_static/bernard.css" type="text/css" />
-        <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.1 documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="../index.html">neuropredict 0.5.1 documentation</a> &#187;
+            </li>
+                <li class="nav-item nav-item-1"><a href="index.html"
+                        accesskey="U">Module code</a> &#187;</li>
+        </ul>
+    </div>
+  
 
-        <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT       : '../',
-            VERSION        : '0.4.8',
-            COLLAPSE_INDEX : false,
-            FILE_SUFFIX    : '.html',
-            HAS_SOURCE     : true
-        };
-        </script>
-
-        
-    </head>
-
-    <body>
-        <!--<div class="ribbon">-->
-            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
-        <!--</div>-->
-
-        <!--<div class="container text-center">-->
-            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
-        <!--</div>-->
-
-        <hr />
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 toc">
-                    
-
-                    
-                        <ul>
-<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../context.html">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../context.html#predictive-analysis">Predictive analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../longterm.html">Long term goals</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../usage_cli.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Named Arguments">Named Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Input data and formats">Input data and formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Cross-validation">Cross-validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Predictive Model">Predictive Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Visualization">Visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../usage_cli.html#Computing">Computing</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">Input formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../results.html">Report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../results.html#interpretation">Interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../implementation.html">Implemenation details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
-</ul>
-
-                    
-
-                    <a href="#" class="navbar-toggle">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                </div>
-
-                <div class="col-md-9 body">
-                    
-  <h1>Source code for visualize</h1><div class="highlight"><pre>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<h1>Source code for visualize</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;feature_importance_map&#39;</span><span class="p">,</span> <span class="s1">&#39;confusion_matrices&#39;</span><span class="p">,</span>
@@ -167,8 +118,10 @@
 
         <span class="n">scaled_imp</span> <span class="o">=</span> <span class="n">feat_imp</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span>
         <span class="c1"># some models do not provide importance values</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">scaled_imp</span><span class="o">.</span><span class="n">flatten</span><span class="p">())):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;unusable feature importance values for </span><span class="si">{}</span><span class="s1"> : all NaNs!</span><span class="se">\n</span><span class="s1"> Skipping it.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">]))</span>
+        <span class="n">is_nan_imp_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">scaled_imp</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">is_nan_imp_values</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;unusable feature importance values for </span><span class="si">{}</span><span class="s1"> : &#39;</span>
+                  <span class="s1">&#39;all NaNs!</span><span class="se">\n</span><span class="s1"> Skipping it.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">]))</span>
             <span class="k">continue</span>
 
         <span class="n">num_features</span> <span class="o">=</span> <span class="n">feat_imp</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -179,13 +132,15 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">feat_labels</span><span class="p">)</span><span class="o">&lt;</span><span class="n">num_features</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of feature labels.&#39;</span><span class="p">)</span>
 
-        <span class="n">usable_imp</span><span class="p">,</span> <span class="n">freq_sel</span><span class="p">,</span> <span class="n">median_feat_imp</span><span class="p">,</span> <span class="n">stdev_feat_imp</span><span class="p">,</span> <span class="n">conf_interval</span> <span class="o">=</span> <span class="n">compute_median_std_feat_imp</span><span class="p">(</span><span class="n">scaled_imp</span><span class="p">)</span>
+        <span class="n">usable_imp</span><span class="p">,</span> <span class="n">freq_sel</span><span class="p">,</span> <span class="n">median_feat_imp</span><span class="p">,</span> <span class="n">stdev_feat_imp</span><span class="p">,</span> <span class="n">conf_interval</span> \
+            <span class="o">=</span> <span class="n">compute_median_std_feat_imp</span><span class="p">(</span><span class="n">scaled_imp</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_features</span> <span class="o">&gt;</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too many (n=</span><span class="si">{}</span><span class="s1">) features detected for </span><span class="si">{}</span><span class="s1">.</span><span class="se">\n</span><span class="s1">&#39;</span>
                   <span class="s1">&#39;Showing only the top </span><span class="si">{}</span><span class="s1"> to make the map legible.</span><span class="se">\n</span><span class="s1">&#39;</span>
-                  <span class="s1">&#39;Use the exported results to plot your own feature importance maps.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_features</span><span class="p">,</span>
-                    <span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">))</span>
+                  <span class="s1">&#39;Use the exported results to plot make importance maps.&#39;</span>
+                  <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_features</span><span class="p">,</span> <span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span>
+                            <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">))</span>
             <span class="n">sort_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">median_feat_imp</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># ascending order, then reversing</span>
             <span class="n">selected_idx_display</span> <span class="o">=</span> <span class="n">sort_indices</span><span class="p">[:</span><span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span><span class="p">]</span>
             <span class="n">usable_imp_display</span> <span class="o">=</span> <span class="p">[</span> <span class="n">usable_imp</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="n">selected_idx_display</span> <span class="p">]</span>
@@ -195,6 +150,7 @@
             <span class="n">selected_feat_names</span> <span class="o">=</span> <span class="n">feat_labels</span><span class="p">[</span><span class="n">selected_idx_display</span><span class="p">]</span>
             <span class="n">effective_num_features</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_allowed_num_features_importance_map</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">selected_idx_display</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">usable_imp_display</span> <span class="o">=</span> <span class="n">usable_imp</span>
             <span class="n">selected_feat_imp</span> <span class="o">=</span> <span class="n">median_feat_imp</span>
             <span class="n">selected_imp_stdev</span><span class="o">=</span> <span class="n">stdev_feat_imp</span>
@@ -229,6 +185,7 @@
         <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">feat_ticks</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">feat_ticks</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">(</span><span class="n">selected_feat_names</span><span class="p">)</span> <span class="c1">#, rotation=45)  # &#39;vertical&#39;</span>
         <span class="n">ax</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">method_labels</span><span class="p">[</span><span class="n">dd</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">()</span>
 
 
     <span class="k">if</span> <span class="n">num_datasets</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
@@ -265,7 +222,8 @@
 
 <span class="k">def</span> <span class="nf">compute_median_std_feat_imp</span><span class="p">(</span><span class="n">imp</span><span class="p">,</span>
                                 <span class="n">ignore_value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">importance_value_to_treated_as_not_selected</span><span class="p">,</span>
-                                <span class="n">never_tested_value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">importance_value_never_tested</span><span class="p">):</span>
+                                <span class="n">never_tested_value</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">importance_value_never_tested</span><span class="p">,</span>
+                                <span class="n">never_tested_stdev</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">importance_value_never_tested_stdev</span><span class="p">):</span>
     <span class="s2">&quot;Calculates the median/SD of feature importance, ignoring NaNs and zeros&quot;</span>
 
     <span class="n">num_features</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -276,7 +234,8 @@
     <span class="n">stdev_values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_features</span><span class="p">):</span>
         <span class="n">index_nan_or_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">imp</span><span class="p">[:,</span> <span class="n">feat</span><span class="p">]),</span>
-                                       <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ignore_value</span><span class="p">,</span> <span class="n">imp</span><span class="p">[:,</span> <span class="n">feat</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">))</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">ignore_value</span><span class="p">,</span> <span class="n">imp</span><span class="p">[:,</span> <span class="n">feat</span><span class="p">],</span>
+                                                  <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">))</span>
         <span class="n">index_usable</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">index_nan_or_0</span><span class="p">)</span>
         <span class="n">this_feat_values</span> <span class="o">=</span> <span class="n">imp</span><span class="p">[</span><span class="n">index_usable</span><span class="p">,</span> <span class="n">feat</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">this_feat_values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -290,10 +249,11 @@
             <span class="n">usable_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">freq_selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">median_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_value</span><span class="p">)</span>
-            <span class="n">stdev_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_value</span><span class="p">)</span>
-            <span class="n">conf_interval</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_value</span><span class="p">)</span>
+            <span class="n">stdev_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_stdev</span><span class="p">)</span>
+            <span class="n">conf_interval</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">never_tested_stdev</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">usable_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">freq_selection</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">median_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stdev_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conf_interval</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">usable_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">freq_selection</span><span class="p">),</span> \
+           <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">median_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stdev_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conf_interval</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="confusion_matrices"><a class="viewcode-back" href="../API.html#visualize.confusion_matrices">[docs]</a><span class="k">def</span> <span class="nf">confusion_matrices</span><span class="p">(</span><span class="n">cfmat_array</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span>
@@ -344,6 +304,8 @@
         <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_FIG_SIZE</span><span class="p">)</span>
 
         <span class="n">im</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">avg_cfmat</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+        <span class="c1"># TODO need a utility compress a super long method name (&gt;50 chars) to &lt; 50 chars</span>
+        <span class="c1">#   with ... in the middle</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">fraction</span><span class="o">=</span><span class="mf">0.046</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)</span>
         <span class="n">tick_marks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">class_labels</span><span class="p">))</span>
@@ -771,7 +733,7 @@
         <span class="n">ln</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">cc</span><span class="p">])</span>
 
     <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;both&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">LINE_WIDTH</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">LINE_WIDTH</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="n">lower_lim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">/</span> <span class="n">num_classes</span><span class="p">),</span> <span class="n">metric</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="p">]),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
     <span class="n">upper_lim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span> <span class="mf">1.01</span><span class="p">,</span> <span class="n">metric</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="p">]),</span> <span class="n">cfg</span><span class="o">.</span><span class="n">PRECISION_METRICS</span><span class="p">)</span>
@@ -824,17 +786,28 @@
     <span class="k">pass</span>
 </pre></div>
 
-                </div>
-
-                <div class="container">
-                    
-                </div>
-            </div>
+          </div>
         </div>
-            <script type="text/javascript" src="../_static/jquery.js"></script>
-            <script type="text/javascript" src="../_static/underscore.js"></script>
-            <script type="text/javascript" src="../_static/doctools.js"></script>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/javascript" src="../_static/bernard.js"></script>
-    </body>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
 </html>

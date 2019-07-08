@@ -1,128 +1,81 @@
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Input formats &mdash; neuropredict 0.4.8 documentation</title>
 
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
-        <link rel="shortcut icon" href="_static/favicon.ico" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Input formats &#8212; neuropredict 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Report" href="results.html" />
+    <link rel="prev" title="Examples" href="examples.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
-        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
-        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.1 documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.1 documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
 
-        <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT       : './',
-            VERSION        : '0.4.8',
-            COLLAPSE_INDEX : false,
-            FILE_SUFFIX    : '.html',
-            HAS_SOURCE     : true
-        };
-        </script>
-
-        
-    </head>
-
-    <body>
-        <!--<div class="ribbon">-->
-            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
-        <!--</div>-->
-
-        <!--<div class="container text-center">-->
-            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
-        <!--</div>-->
-
-        <hr />
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 toc">
-                    
-
-                    
-                        <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Input formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="#arbitrary-feature-input">Arbitrary feature input</a></li>
-<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
-</ul>
-
-                    
-
-                    <a href="#" class="navbar-toggle">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                </div>
-
-                <div class="col-md-9 body">
-                    
-  <div class="section" id="input-formats">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="input-formats">
 <h1>Input formats<a class="headerlink" href="#input-formats" title="Permalink to this headline">¶</a></h1>
 <p>Currently supported:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Arbitary/user-defined format (see below)</li>
-<li>CSV files (with samples along rows and features along columns)</li>
-<li><cite>pyradigm</cite>’s <a class="reference external" href="http://pyradigm.readthedocs.io">MLDataset</a></li>
-<li>Weka’s <a class="reference external" href="https://www.cs.waikato.ac.nz/ml/weka/arff.html">ARFF</a></li>
+<li><p><cite>pyradigm</cite>’s <a class="reference external" href="http://pyradigm.readthedocs.io">MLDataset</a> (<strong>highly recommended</strong>)</p></li>
+<li><p>Arbitary/user-defined format (see below)</p></li>
+<li><p>CSV files (with samples along rows and features along columns)</p></li>
+<li><p>Weka’s <a class="reference external" href="https://www.cs.waikato.ac.nz/ml/weka/arff.html">ARFF</a></p></li>
 </ul>
 </div></blockquote>
+<hr class="docutils" />
 <p>Formats specific to neuroimaging:</p>
 <blockquote>
 <div><ul class="simple">
-<li>Freesurfer</li>
+<li><p>Freesurfer</p></li>
 </ul>
 <blockquote>
 <div><ul class="simple">
-<li>Subcortical volumes</li>
-<li>Wholebrain Aseg stats</li>
+<li><p>Subcortical volumes</p></li>
+<li><p>Wholebrain Aseg stats</p></li>
 </ul>
 </div></blockquote>
 </div></blockquote>
 <p>In development (stay tuned)</p>
 <blockquote>
 <div><ul class="simple">
-<li>Freesurfer<ul>
-<li>cortical thickness</li>
-<li>gray matter density</li>
-<li>structural covariance</li>
+<li><p>Freesurfer</p>
+<ul>
+<li><p>cortical thickness</p></li>
+<li><p>gray matter density</p></li>
+<li><p>structural covariance</p></li>
 </ul>
 </li>
-<li>Any nibabel-readable data</li>
-<li>DT-MRI features</li>
-<li>task-free fMRI features</li>
-<li>HCP datasets</li>
-<li>Weka’s ARFF format</li>
+<li><p>Any nibabel-readable data</p></li>
+<li><p>DT-MRI features</p></li>
+<li><p>task-free fMRI features</p></li>
+<li><p>HCP datasets</p></li>
+<li><p>Weka’s ARFF format</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -134,23 +87,20 @@
 <h1>Arbitrary feature input<a class="headerlink" href="#arbitrary-feature-input" title="Permalink to this headline">¶</a></h1>
 <p>For custom input:</p>
 <ul>
-<li><p class="first">the user needs to save the features in a single folder for all subjects (let’s call it <code class="docutils literal"><span class="pre">/project/myawsomepipeline</span></code> )</p>
+<li><p>the user needs to save the features in a single folder for all subjects (let’s call it <code class="docutils literal notranslate"><span class="pre">/project/myawsomepipeline</span></code> )</p>
 <blockquote>
 <div><ul class="simple">
-<li>specify it with –userdefined /project/myawsomepipeline</li>
+<li><p>specify it with –userdefined /project/myawsomepipeline</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">within which, features for each subject in a separate folder (named after its id specified in the meta data file)</p>
-</li>
-<li><p class="first">in a file called <code class="docutils literal"><span class="pre">features.txt</span></code>. The <code class="docutils literal"><span class="pre">features.txt</span></code> file must contain a single floating point number per line (see below - its not comma separated),</p>
-</li>
-<li><p class="first">and all the subject features must have an equal number of features.</p>
-</li>
+<li><p>within which, features for each subject in a separate folder (named after its id specified in the meta data file)</p></li>
+<li><p>in a file called <code class="docutils literal notranslate"><span class="pre">features.txt</span></code>. The <code class="docutils literal notranslate"><span class="pre">features.txt</span></code> file must contain a single floating point number per line (see below - its not comma separated),</p></li>
+<li><p>and all the subject features must have an equal number of features.</p></li>
 </ul>
 <p>Then neuropredict will automatically consolidate the features into its native <a class="reference external" href="github.com/raamana/pyradigm">pyradigm MLdataset format</a>, ideally suited for the predictive analysis tasks.</p>
 <p>The example for a dataset with 2 controls and 2 disease sujects with 5 features each is shown below:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>$ <span class="m">11</span>:19:22 linux userdefined &gt;&gt;  ls -1
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="m">11</span>:19:22 linux userdefined &gt;&gt;  ls -1
 control-001
 control-002
 disease-003
@@ -201,17 +151,41 @@ $ <span class="m">11</span>:19:33 linux userdefined &gt;&gt;  head -n <span clas
 </div>
 
 
-                </div>
-
-                <div class="container">
-                    
-                </div>
-            </div>
+          </div>
         </div>
-            <script type="text/javascript" src="_static/jquery.js"></script>
-            <script type="text/javascript" src="_static/underscore.js"></script>
-            <script type="text/javascript" src="_static/doctools.js"></script>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/javascript" src="_static/bernard.js"></script>
-    </body>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Input formats</a></li>
+<li><a class="reference internal" href="#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
+<li><a class="reference internal" href="#arbitrary-feature-input">Arbitrary feature input</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Examples</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="results.html"
+                        title="next chapter">Report</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
 </html>

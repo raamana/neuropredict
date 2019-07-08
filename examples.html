@@ -1,99 +1,50 @@
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Examples &mdash; neuropredict 0.4.8 documentation</title>
 
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
-        <link rel="shortcut icon" href="_static/favicon.ico" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Examples &#8212; neuropredict 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Input formats" href="features.html" />
+    <link rel="prev" title="Usage" href="usage_cli.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
-        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
-        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.1 documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.1 documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
 
-        <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT       : './',
-            VERSION        : '0.4.8',
-            COLLAPSE_INDEX : false,
-            FILE_SUFFIX    : '.html',
-            HAS_SOURCE     : true
-        };
-        </script>
-
-        
-    </head>
-
-    <body>
-        <!--<div class="ribbon">-->
-            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
-        <!--</div>-->
-
-        <!--<div class="container text-center">-->
-            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
-        <!--</div>-->
-
-        <hr />
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 toc">
-                    
-
-                    
-                        <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
-<li class="toctree-l1"><a class="reference internal" href="results.html">Report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="results.html#interpretation">Interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="results.html#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
-</ul>
-
-                    
-
-                    <a href="#" class="navbar-toggle">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                </div>
-
-                <div class="col-md-9 body">
-                    
-  <div class="section" id="examples">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<p>If your features are collected into a <code class="docutils literal"><span class="pre">features.csv</span></code> file (each row is a subject, with features along the columns), running neuropredict is as simple as:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>neuropredict -m /project/meta_data.csv -d /project/features.csv
+<p>If your features are collected into a <code class="docutils literal notranslate"><span class="pre">features.csv</span></code> file (each row is a subject, with features along the columns), running neuropredict is as simple as:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>neuropredict -m /project/meta_data.csv -d /project/features.csv
 </pre></div>
 </div>
-<p>Where the <code class="docutils literal"><span class="pre">meta_data.csv</span></code> file specifies which subject belongs to which class. For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="mi">3071</span><span class="p">,</span><span class="n">controls</span>
+<p>Where the <code class="docutils literal notranslate"><span class="pre">meta_data.csv</span></code> file specifies which subject belongs to which class. For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">3071</span><span class="p">,</span><span class="n">controls</span>
 <span class="mi">3069</span><span class="p">,</span><span class="n">controls</span>
 <span class="mi">3064</span><span class="p">,</span><span class="n">controls</span>
 <span class="mi">3063</span><span class="p">,</span><span class="n">controls</span>
@@ -118,9 +69,9 @@
 <p>and <cite>neuropredict</cite> will produce the figures similar to the following:</p>
 <a class="reference internal image-reference" href="_images/composite_outputs.png"><img alt="_images/composite_outputs.png" src="_images/composite_outputs.png" style="width: 700px;" /></a>
 <p>The higher resolution PDFs are included in the <a class="reference external" href="docs/results_vis">docs</a> folder.</p>
-<p>In addition to the figures, the data underlying the figures is also exported in the form of multiple separate <code class="docutils literal"><span class="pre">CSV</span></code> files to the <code class="docutils literal"><span class="pre">exported_results</span></code> folder under the chosen output directory.</p>
-<p>You can choose values for many other parameters, and specify the features in few other formats. For examples, when using <code class="docutils literal"><span class="pre">pyradigm</span></code> as in the input format and choosing <code class="docutils literal"><span class="pre">train_perc</span></code> to be 75% and the repeating the CV 250 times, the typical output on the command line would look something like:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>neuropredict -y /project/*.MLDataset.pkl -m /project/meta_FourClasses.csv -o /project/predictions -t 0.75 -n 250
+<p>In addition to the figures, the data underlying the figures is also exported in the form of multiple separate <code class="docutils literal notranslate"><span class="pre">CSV</span></code> files to the <code class="docutils literal notranslate"><span class="pre">exported_results</span></code> folder under the chosen output directory.</p>
+<p>You can choose values for many other parameters, and specify the features in few other formats. For examples, when using <code class="docutils literal notranslate"><span class="pre">pyradigm</span></code> as in the input format and choosing <code class="docutils literal notranslate"><span class="pre">train_perc</span></code> to be 75% and the repeating the CV 250 times, the typical output on the command line would look something like :</p>
+<pre class="literal-block">neuropredict -y /project/*.MLDataset.pkl -m /project/meta_FourClasses.csv -o /project/predictions -t 0.75 -n 250
 
 Requested features for analysis:
 get_pyradigm from chebyshev.MLDataset.pkl
@@ -166,28 +117,42 @@ Different classes in the training set are stratified to match the smallest class
  . . . .
  . . . .
  . . . .
- CV repetition   n
-</pre></div>
-</div>
+ CV repetition   n</pre>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">pyradigm is a python class (data structure) aimed to ease your ML workflow - check it out here: <a class="reference external" href="http://pyradigm.readthedocs.io">pyradigm.readthedocs.io</a></p>
+<p class="admonition-title">Note</p>
+<p>pyradigm is a python class (data structure) aimed to ease your ML workflow - check it out here: <a class="reference external" href="http://pyradigm.readthedocs.io">pyradigm.readthedocs.io</a></p>
 </div>
-<hr class="docutils" />
 </div>
 
 
-                </div>
-
-                <div class="container">
-                    
-                </div>
-            </div>
+          </div>
         </div>
-            <script type="text/javascript" src="_static/jquery.js"></script>
-            <script type="text/javascript" src="_static/underscore.js"></script>
-            <script type="text/javascript" src="_static/doctools.js"></script>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/javascript" src="_static/bernard.js"></script>
-    </body>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage_cli.html"
+                        title="previous chapter">Usage</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="next chapter">Input formats</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
 </html>

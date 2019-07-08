@@ -82,4 +82,5 @@ Frequently Asked Questions
   * Absolutely.
   * While ``-f`` option allows specifying only 1 freesurfer folder, it can be combined with ``-u`` which can take arbitray number of custom features.
 
-----------
+
+

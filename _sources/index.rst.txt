@@ -8,9 +8,6 @@ neuropredict
 
 .. image:: https://travis-ci.org/raamana/neuropredict.svg?branch=master
    :target: https://travis-ci.org/raamana/neuropredict
-.. image:: https://landscape.io/github/raamana/neuropredict/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/raamana/neuropredict/master
-   :alt: Code Health
 .. image:: https://api.codacy.com/project/badge/Grade/cffd80f290544e2e824011bfccf35ff8
    :target: https://www.codacy.com/app/raamana/neuropredict?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/neuropredict&amp;utm_campaign=Badge_Grade
 .. image:: https://img.shields.io/badge/python-3.5%2C%203.6-blue.svg
@@ -43,10 +40,6 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-
-.. note::
-
-   This website uses a modified version of the ``sphinx_bernard_theme`` from https://sphinx-themes.org
 
 
 ----------

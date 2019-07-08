@@ -1,107 +1,57 @@
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Report &mdash; neuropredict 0.4.8 documentation</title>
 
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=auto, initial-scale=auto, maximum-scale=1.0, user-scalable=no" />
-        <link rel="shortcut icon" href="_static/favicon.ico" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Report &#8212; neuropredict 0.5.1 documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Input formats" href="features.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <link rel="stylesheet" href="_static/bootstrap/css/bootstrap.min.css" type="text/css" />
-        <link rel="stylesheet" href="_static/bernard.css" type="text/css" />
-        <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.1 documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.1 documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
 
-        <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT       : './',
-            VERSION        : '0.4.8',
-            COLLAPSE_INDEX : false,
-            FILE_SUFFIX    : '.html',
-            HAS_SOURCE     : true
-        };
-        </script>
-
-        
-    </head>
-
-    <body>
-        <!--<div class="ribbon">-->
-            <!--<a href="https://github.com/raamana">Fork me on GitHub!</a>-->
-        <!--</div>-->
-
-        <!--<div class="container text-center">-->
-            <!--<a class="logo" href="http://bernardphp.com">Bernard</a>-->
-        <!--</div>-->
-
-        <hr />
-
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3 toc">
-                    
-
-                    
-                        <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html">Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="context.html#predictive-analysis">Predictive analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="longterm.html">Long term goals</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage_cli.html">Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Named Arguments">Named Arguments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Input data and formats">Input data and formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Cross-validation">Cross-validation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Predictive Model">Predictive Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Visualization">Visualization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_cli.html#Computing">Computing</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Input formats</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#interfaces-to-neuroimaging-tools">Interfaces to Neuroimaging tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html#arbitrary-feature-input">Arbitrary feature input</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Report</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#interpretation">Interpretation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implemenation details</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citation.html">Citation</a></li>
-</ul>
-
-                    
-
-                    <a href="#" class="navbar-toggle">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </a>
-                </div>
-
-                <div class="col-md-9 body">
-                    
-  <div class="section" id="report">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="report">
 <h1>Report<a class="headerlink" href="#report" title="Permalink to this headline">¶</a></h1>
-<p>Neuropredict is here to remove those barriers and make your life easier!</p>
-<p>All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below).</p>
+<p>neuropredict produces a comprehensive report, parts of which can be seen in the figure below:</p>
 <a class="reference internal image-reference" href="_images/composite_outputs.png"><img alt="_images/composite_outputs.png" src="_images/composite_outputs.png" style="width: 700px;" /></a>
 <p>The report consists of</p>
 <blockquote>
 <div><ul class="simple">
-<li>distribtions of cross-validated performance (balanced accuracy),</li>
-<li>confusion matrices for each feature set,</li>
-<li>intuitive comparison of misclassification rates across multiple features.</li>
+<li><p>distribtions of cross-validated performance (balanced accuracy),</p></li>
+<li><p>confusion matrices for each feature set,</p></li>
+<li><p>intuitive comparison of misclassification rates across multiple features.</p></li>
 </ul>
 </div></blockquote>
-<p>The output directory (chosen with <code class="docutils literal"><span class="pre">-o</span></code> flag) contains the following sets of files, whose names are self-explanatory. In each set, there is separate visualization (PDF) or CSV file produced for each feature (named features A, B, C and D below) being studied, for your convenience.</p>
+<p>The output directory (chosen with <code class="docutils literal notranslate"><span class="pre">-o</span></code> flag) contains the following sets of files, whose names are self-explanatory. In each set, there is separate visualization (PDF) or CSV file produced for each feature (named features A, B, C and D below) being studied, for your convenience.</p>
 <p><strong>First</strong>, a set of visualizations in PDF format:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">balanced_accuracy</span><span class="o">.</span><span class="n">pdf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">balanced_accuracy</span><span class="o">.</span><span class="n">pdf</span>
 <span class="n">compare_misclf_rates</span><span class="o">.</span><span class="n">pdf</span>
 <span class="n">confusion_matrix_FeatureA</span><span class="o">.</span><span class="n">pdf</span>
 <span class="n">confusion_matrix_FeatureB</span><span class="o">.</span><span class="n">pdf</span>
@@ -111,8 +61,8 @@
 <span class="n">misclassified_subjects_frequency_histogram</span><span class="o">.</span><span class="n">pdf</span>
 </pre></div>
 </div>
-<p><strong>Second</strong>, a set of CSV files in a subfolder called <code class="docutils literal"><span class="pre">exported_results</span></code> (typical contents shown below), which can used for further posthoc statisical analysis or to produce more customised visualizations.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">average_misclassification_rates_FeatureA</span><span class="o">.</span><span class="n">csv</span>
+<p><strong>Second</strong>, a set of CSV files in a subfolder called <code class="docutils literal notranslate"><span class="pre">exported_results</span></code> (typical contents shown below), which can used for further posthoc statisical analysis or to produce more customised visualizations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">average_misclassification_rates_FeatureA</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">average_misclassification_rates_FeatureB</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">average_misclassification_rates_FeatureC</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">average_misclassification_rates_FeatureD</span><span class="o">.</span><span class="n">csv</span>
@@ -131,13 +81,13 @@
 <span class="n">subject_misclf_freq_FeatureD</span><span class="o">.</span><span class="n">csv</span>
 </pre></div>
 </div>
-<p><strong>Third</strong>, a Python pickle file <code class="docutils literal"><span class="pre">rhst_results.pkl</span></code> containing the full set of results, that neuropredict can bases the visualizatiosn on.</p>
-<p><strong>Fourth</strong>, a set of files named <code class="docutils literal"><span class="pre">misclassified_subjects_*_most_frequent.txt</span></code>. Each of these files (for each feature being studied) contain the set of subject IDs that were misclassified different features most frequently (during multiple repetitions of CV). This is to help you further dig into why they have been so often misclassified. If classes are expected to well separated, and some subjects misclassified consistently (over 60%), you may want to ask these questions:</p>
+<p><strong>Third</strong>, a Python pickle file <code class="docutils literal notranslate"><span class="pre">rhst_results.pkl</span></code> containing the full set of results, that neuropredict can bases the visualizatiosn on.</p>
+<p><strong>Fourth</strong>, a set of files named <code class="docutils literal notranslate"><span class="pre">misclassified_subjects_*_most_frequent.txt</span></code>. Each of these files (for each feature being studied) contain the set of subject IDs that were misclassified different features most frequently (during multiple repetitions of CV). This is to help you further dig into why they have been so often misclassified. If classes are expected to well separated, and some subjects misclassified consistently (over 60%), you may want to ask these questions:</p>
 <blockquote>
 <div><ul class="simple">
-<li>are they mislabelled (data entry or human error)?</li>
-<li>were their data quality controlled properly (preprocessing or QC failure)?</li>
-<li>what explains their ‘outlier’ status (demographics, neuropsych or something related)?</li>
+<li><p>are they mislabelled (data entry or human error)?</p></li>
+<li><p>were their data quality controlled properly (preprocessing or QC failure)?</p></li>
+<li><p>what explains their ‘outlier’ status (demographics, neuropsych or something related)?</p></li>
 </ul>
 </div></blockquote>
 <p>Fifth, few miscellaneous set of files that neuropredict relies to produce the comprehensive report.</p>
@@ -150,8 +100,8 @@
 <p>The following visualization compares the predictive performance of four features, using the balanced accuracy metric. The performance of each feature is shown as a distribution, wherein multiple points in the distribution are obtained from multiple CV repetitions. As you can see,</p>
 <blockquote>
 <div><ul class="simple">
-<li>it is important to visualize the full distribution and not just the mean or median, as the distributions are typically wide and usually not normal.</li>
-<li>to test whether a particular feature is statistically significantly better, a distribution for each feature is necessary to run statistical tests.</li>
+<li><p>it is important to visualize the full distribution and not just the mean or median, as the distributions are typically wide and usually not normal.</p></li>
+<li><p>to test whether a particular feature is statistically significantly better, a distribution for each feature is necessary to run statistical tests.</p></li>
 </ul>
 </div></blockquote>
 <a class="reference internal image-reference" href="_images/results_interpretation.balanced_accuracy.png"><img alt="_images/results_interpretation.balanced_accuracy.png" src="_images/results_interpretation.balanced_accuracy.png" style="width: 700px;" /></a>
@@ -164,17 +114,44 @@
 </div>
 
 
-                </div>
-
-                <div class="container">
-                    
-                </div>
-            </div>
+          </div>
         </div>
-            <script type="text/javascript" src="_static/jquery.js"></script>
-            <script type="text/javascript" src="_static/underscore.js"></script>
-            <script type="text/javascript" src="_static/doctools.js"></script>
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/javascript" src="_static/bernard.js"></script>
-    </body>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Report</a><ul>
+<li><a class="reference internal" href="#interpretation">Interpretation</a></li>
+<li><a class="reference internal" href="#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
+<li><a class="reference internal" href="#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="features.html"
+                        title="previous chapter">Input formats</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="faq.html"
+                        title="next chapter">Frequently Asked Questions</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
 </html>
