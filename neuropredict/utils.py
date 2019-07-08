@@ -22,8 +22,14 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     with open(dataset_path_file, 'r') as dpf:
         dataset_paths = dpf.read().splitlines()
-        # removing duplicates
-        dataset_paths = set(dataset_paths)
+        # alert for duplicates
+        if len(set(dataset_paths)) < len(dataset_paths):
+            raise RuntimeError('Duplicate paths for input datasets found!\n'
+                               'Try distinguish inputs further. '
+                               'Otherwise report this bug at:'
+                               'github.com/raamana/neuropredict/issues/new')
+        # do not apply set(dataset_paths) to remove duplicates,
+        # as set destroys current order, that is necessary to correspond to method_names
 
     try:
         out_results_dir = realpath(out_results_dir)
@@ -82,7 +88,7 @@ def check_classifier(clf_name=cfg.default_classifier):
     if clf_name in cfg.additional_modules_reqd:
         try:
             from importlib import import_module
-            import_module(clf_name)
+            import_module(cfg.additional_modules_reqd[clf_name])
         except ImportError:
             raise ImportError('choosing classifier {} requires installation of '
                               'another package. Try running\n'
@@ -330,6 +336,16 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
     return num_select
 
 
+def uniquify_in_order(seq):
+    """Produces a list with unique elements in the same order as original sequence.
+
+    https://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-whilst-preserving-order
+    """
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
+
+
 def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     "Function to produce a uniq, and not a long combined name. Recursive"
 
@@ -338,8 +354,10 @@ def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     if len(combined_name) > max_len:
         first_letters = list()
         for mname in method_names:
-            first_letters.append(''.join([word[:num_char_each_word] for word in re.split(__re_delimiters_word, mname)]))
-        combined_name = '_'.join(first_letters)
+            this_FLs = ''.join([word[:num_char_each_word]
+                                for word in re.split(__re_delimiters_word, mname)])
+            first_letters.append(this_FLs)
+        combined_name = '_'.join(uniquify_in_order(first_letters))
 
         if len(combined_name) > max_len:
             combined_name = uniq_combined_name(first_letters)
@@ -347,12 +365,30 @@ def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
     return combined_name
 
 
-def sub_group_identifier(group_names):
-    "Constructs clean identifier to refer to a group of classes. Names will be sorted to allow for reproducibility."
+def sub_group_identifier(group_names, sg_index=None, num_letters=3):
+    """
+    Constructs clean identifier to refer to a group of classes.
+        Names will be sorted to allow for reproducibility.
+        If there are too many classes or if the names are too long,
+        only the first few letters of each word are used to generate the identifier.
+    """
 
     group_names.sort()
-    words = [ word for group in group_names for word in re.split(__re_delimiters_word, group) if word ]
+    words = [ word for group in group_names
+              for word in re.split(__re_delimiters_word, group) if word ]
     identifier = '_'.join(words)
+
+    if len(identifier) > cfg.max_len_identifiers:
+        # if there are too many groups, choosing the first few
+        if len(group_names) >= cfg.max_len_identifiers:
+            num_letters = 1
+            words = words[:cfg.max_len_identifiers]
+
+        # choosing first few letters from each word
+        shorter_words = [word[:num_letters] for word in words]
+        if sg_index is None:
+            sg_index = 1
+        identifier = 'subgroup{}_{}'.format(sg_index, '_'.join(shorter_words))
 
     return identifier
 

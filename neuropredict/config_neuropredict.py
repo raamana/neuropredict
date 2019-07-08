@@ -21,9 +21,19 @@ max_allowed_num_features_importance_map = 10
 importance_value_to_treated_as_not_selected = 0.0
 # importance values are sorted by value (higher better), so we need to able discard them
 importance_value_never_tested = -np.Inf
+importance_value_never_tested_stdev = np.nan
 
 # to help bring up feature importances that can be very small in 4/5th decimal places
 large_constant_factor = 1e5
+
+# # ------- missing data imputation strategy -------------
+
+missing_value_identifier = np.NaN #
+default_imputation_strategy = 'raise'
+# not supporting 'constant' for now, as it is not popular,
+#   and integrating it requires a bit more software engineering
+avail_imputation_strategies = ('median', 'mean', 'most_frequent')
+avail_imputation_strategies_with_raise = avail_imputation_strategies + (default_imputation_strategy, )
 
 # # ------- feature importance -------
 
@@ -73,6 +83,10 @@ INNER_CV_TEST_PERC = 0.2
 INNER_CV_NUM_FOLDS = 5
 INNER_CV_NUM_REPEATS = 5
 
+# although refit is True by default in GridSearchCV, this is to avoid depending on
+# defaults for future releases!
+refit_best_model_on_ALL_training_set = True
+
 # parallelization is now achieved at the repetitions level.
 DEFAULT_NUM_PROCS = 4
 GRIDSEARCH_PRE_DISPATCH = 1
@@ -94,7 +108,7 @@ MISCLF_HIST_ANNOT_LINEWIDTH = 2
 COMMON_FIG_SIZE = [9, 9]
 LARGE_FIG_SIZE = [15, 15]
 FONT_SIZE = 12
-LINE_WIDTH = 2
+LINE_WIDTH = 1.5
 
 FONT_SIZE_LARGE = 25
 LINE_WIDTH_LARGE = 5
@@ -105,6 +119,8 @@ CMAP_CONFMATX = 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
 file_name_results = 'rhst_results.pkl'
 file_name_options = 'options_neuropredict.pkl'
 file_name_best_param_values = 'best_parameter_values.pkl'
+
+max_len_identifiers = 75
 
 output_dir_default = 'neuropredict_results'
 temp_results_dir = 'temp_scratch_neuropredict'
