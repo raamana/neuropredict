@@ -43,11 +43,12 @@ The higher resolution PDFs are included in the `docs <docs/results_vis>`_ folder
 
 In addition to the figures, the data underlying the figures is also exported in the form of multiple separate ``CSV`` files to the ``exported_results`` folder under the chosen output directory.
 
-You can choose values for many other parameters, and specify the features in few other formats. For examples, when using ``pyradigm`` as in the input format and choosing ``train_perc`` to be 75% and the repeating the CV 250 times, the typical output on the command line would look something like:
+You can choose values for many other parameters, and specify the features in few other formats. For examples, when using ``pyradigm`` as in the input format and choosing ``train_perc`` to be 75% and the repeating the CV 250 times, the typical output on the command line would look something like :
+
 
 .. parsed-literal::
 
-    neuropredict -y /project/*.MLDataset.pkl -m /project/meta_FourClasses.csv -o /project/predictions -t 0.75 -n 250
+    neuropredict -y /project/\*.MLDataset.pkl -m /project/meta_FourClasses.csv -o /project/predictions -t 0.75 -n 250
 
     Requested features for analysis:
     get_pyradigm from chebyshev.MLDataset.pkl
@@ -102,5 +103,4 @@ You can choose values for many other parameters, and specify the features in few
 
 
 
-----------
 

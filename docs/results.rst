@@ -2,9 +2,7 @@
 Report
 -------
 
-Neuropredict is here to remove those barriers and make your life easier!
-
-All you need to do is take care of preprocessing and produce quality controlled output through popular software, and neuropredict will produce a comprehensive report (see figures below).
+neuropredict produces a comprehensive report, parts of which can be seen in the figure below:
 
 .. image:: composite_outputs.png
   :width: 700

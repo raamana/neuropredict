@@ -98,9 +98,13 @@ html_show_sourcelink = False
 # import sphinx_rtd_theme
 # html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-html_theme = 'sphinx_bernard_theme'
-import sphinx_bernard_theme
-html_theme_path = [sphinx_bernard_theme.get_html_theme_path()]
+# html_theme = 'sphinx_bernard_theme'
+# import sphinx_bernard_theme
+# html_theme_path = [sphinx_bernard_theme.get_html_theme_path()]
+
+html_theme = 'sphinx_theme_pd'
+import sphinx_theme_pd
+html_theme_path = [sphinx_theme_pd.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
