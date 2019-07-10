@@ -120,7 +120,11 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
             reduced_dim = np.int64(np.floor(train_data_dim / select_method))
     else:
         raise ValueError(
-            'Invalid method to choose size of feature selection. It can only be 1) string or 2) finite integer (< data dimensionality) or 3) a fraction between 0.0 and 1.0 !')
+            'Invalid method to choose size of feature selection. '
+            'It can only be '
+            '1) string or '
+            '2) finite integer (< data dimensionality) or '
+            '3) a fraction between 0.0 and 1.0 !')
 
     # ensuring it is an integer >= 1
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
