@@ -24,7 +24,8 @@ else:
 
 feat_generator = np.random.randn
 
-out_dir = os.path.abspath('../tests/scratch')
+test_dir = dirname(os.path.realpath(__file__))
+out_dir = realpath(pjoin(test_dir, '..', 'tests', 'scratch'))
 if not pexists(out_dir):
     os.makedirs(out_dir)
 
@@ -261,7 +262,7 @@ def test_versioning():
 def test_print_options():
     " ensures the CLI works. "
 
-    known_out_dir = '/Users/Reddy/rotman/CANBIND/results/base_vs_network_thk_curv_area_HistInt_many_subgroups'
+    known_out_dir = out_dir
     with raises(SystemExit):
         sys.argv = shlex.split('neuropredict --print_options {}'.format(known_out_dir))
         cli()
