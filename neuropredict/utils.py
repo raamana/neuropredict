@@ -287,7 +287,8 @@ def load_options(out_dir, options_path=None):
         options_path = pjoin(out_dir, cfg.file_name_options)
 
     if not pexists(options_path):
-        raise ValueError('Invalid path to options file provided.')
+        raise IOError('Filepath for options file does not exist:\n\t{}'
+                         ''.format(options_path))
 
     try:
         with open(options_path, 'rb') as opt_file:
