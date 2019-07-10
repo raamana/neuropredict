@@ -258,16 +258,6 @@ def test_versioning():
         sys.argv = shlex.split('neuropredict -v')
         cli()
 
-
-def test_print_options():
-    " ensures the CLI works. "
-
-    known_out_dir = out_dir
-    with raises(SystemExit):
-        sys.argv = shlex.split('neuropredict --print_options {}'.format(known_out_dir))
-        cli()
-
-
 def test_vis():
     " ensures the CLI works. "
 
@@ -290,6 +280,24 @@ def test_arff():
     sys.argv = shlex.split('neuropredict -a {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}'.format(arff_path,
                     train_perc, num_repetitions, num_procs, gs_level, out_dir, classifier, fs_method))
     cli()
+
+
+def test_print_options():
+    " ensures the CLI works. "
+
+    known_out_dir = out_dir
+    options_path = pjoin(out_dir, cfg.file_name_options)
+
+    if pexists(options_path):
+        with raises(SystemExit):
+            sys.argv = shlex.split('neuropredict --print_options {}'.format(known_out_dir))
+            cli()
+
+    known_nonexisting_dir = known_out_dir+'_43_34563$#*$@)'
+    with raises(IOError):
+        sys.argv = shlex.split('neuropredict --po {}'
+                               ''.format(known_nonexisting_dir))
+        cli()
 
 
 # res_path = pjoin(out_dir, 'rhst_results.pkl')
