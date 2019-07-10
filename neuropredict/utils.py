@@ -324,15 +324,35 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
 
     """
 
-    if feature_select_method.lower() in cfg.feature_selection_size_methods:
-        num_select = feature_select_method
-    elif feature_select_method.isdigit():
-        num_select = np.int64(feature_select_method)
-        if not 0 < num_select < np.Inf:
-            raise UnboundLocalError('feature selection size out of bounds.\n'
-                                    'Must be > 0 and < {}'.format(np.Inf))
+
+    try:
+        # checking if its convertible to number
+        num_select = np.float(feature_select_method)
+    except:
+        # if it is a str, it must be recognized
+        if isinstance(feature_select_method, str):
+            if feature_select_method.lower() in cfg.feature_selection_size_methods:
+                num_select = feature_select_method.lower()
+            else:
+                raise ValueError('Invalid str choice {} - choose one of these:\n{}'
+                                 ''.format(feature_select_method,
+                                           cfg.feature_selection_size_methods))
+        else:
+            raise ValueError('Invalid choice {} for reduced dim size!\n'
+                             'Choose an int between 1 and N-1, '
+                             'or float between 0 and 1 (exclusive)\n'
+                             'or one of these methods:\n{}'
+                             ''.format(feature_select_method,
+                                       cfg.feature_selection_size_methods))
     else:
-        raise ValueError('Invalid choise - Choose an integer or one of \n{}'.format(cfg.feature_selection_size_methods))
+        if dim_in_data is not None:
+            upper_limit = np.Inf
+        else:
+            upper_limit = dim_in_data
+        if not 0 < num_select < np.Inf:
+            raise UnboundLocalError(
+                'feature selection size out of bounds.\n'
+                'Must be > 0 and < {}'.format(upper_limit))
 
     return num_select
 
