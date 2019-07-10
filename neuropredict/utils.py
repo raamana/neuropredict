@@ -61,7 +61,12 @@ def check_params_rhst(dataset_path_file, out_results_dir, num_repetitions, train
 
     classifier_name = check_classifier(classifier_name)
 
-    feat_select_method = validate_feature_selection_size(feat_select_method)
+    if feat_select_method.lower() not in cfg.feature_selection_choices:
+        raise ValueError('Feature selection method not recognized: {}\n '
+                         'Implemented choices: {}'
+                         ''.format(feat_select_method,
+                                   cfg.feature_selection_choices))
+
 
     # printing the chosen options
     print('Training percentage      : {:.2}'.format(train_perc))
