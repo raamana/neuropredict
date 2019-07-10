@@ -358,10 +358,10 @@ def print_options(run_dir):
     """
 
     from neuropredict.utils import load_options
-
-    print('\n\nOptions used in the run\n{}\n'.format(run_dir))
     user_options = load_options(run_dir)
+
     # print(user_options)
+    print('\n\nOptions used in the run\n{}\n'.format(run_dir))
     for key, val in user_options.items():
         if key.lower() not in ('sample_ids', 'classes'):
             print('{:>25} : {}'.format(key, val))
