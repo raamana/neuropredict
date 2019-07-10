@@ -9,6 +9,8 @@ import warnings
 from sys import version_info
 
 import matplotlib.pyplot as plt
+import numpy
+import numpy.matlib # to force
 import numpy as np
 import scipy.stats
 from matplotlib import cm
