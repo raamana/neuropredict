@@ -6,8 +6,10 @@ import versioneer
 setup(name='neuropredict',
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
-      description='Neuroimaging Predictive Analysis',
-      long_description='Neuroimaging Predictive Analysis; neuropredict',
+      description='easy and standardized predictive analysis for '
+                  'biomarkers, neuroimaging, and beyond',
+      long_description='easy and standardized predictive analysis for '
+                  'biomarkers, neuroimaging, and beyond; neuropredict',
       author='Pradeep Reddy Raamana',
       author_email='raamana@gmail.com',
       url='https://github.com/raamana/neuropredict',
