@@ -128,7 +128,8 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
 
     # ensuring it is an integer >= 1
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
-    print('reduced dimensionality: {}'.format(reduced_dim))
+    # # the following statement would print it in each trial of CV!! Not useful
+    # print('reduced dimensionality: {}'.format(reduced_dim))
 
     return reduced_dim
 
