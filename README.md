@@ -32,7 +32,7 @@ On a more detailed level,
 
 ## Long term goals
 
-neuropredict is part of a broader intiative to develop easy, comprehensice and standardized predictive analysis. See [here](https://drive.google.com/file/d/1A9vVgImZ4_Ud04wOE4n63atr8Uh4rR16/view?usp=sharing) for an overview and the bigger picture idea.
+neuropredict is part of a broader initiative to develop easy, comprehensive and standardized predictive analysis. See [here](https://drive.google.com/file/d/1A9vVgImZ4_Ud04wOE4n63atr8Uh4rR16/view?usp=sharing) for an overview and the bigger picture idea.
 
 ## Citation
 
