@@ -1,5 +1,14 @@
 # Change Log
 
+## 0.5.2
+
+ - Imputation of missing values
+ - Additional classifiers such as `XGBoost`, Decision Trees
+ - Better internal code structure
+ - Lot more tests
+ - More precise tests, as we vary number of classes wildly in test suites
+ - several bug fixes and enhancements (more cmd line options such as `--print_options`)
+
 ## 0.4.5
 
  - new classifier : SVM
