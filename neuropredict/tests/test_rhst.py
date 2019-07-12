@@ -161,10 +161,12 @@ def raise_if_mean_differs_from(accuracy_balanced,
     # chance calculation expects "average", not median
     mean_bal_acc = np.mean(accuracy_balanced, axis=0)
     for ma  in mean_bal_acc:
-        print('for {}, reference level accuracy expected: {} '
+        print('for {},\n reference level accuracy expected: {} '
               '-- Estimated via CV:  {}'.format(method_descr, reference_level, ma))
-        if abs(ma - reference_level) > eps_chance_acc:
-            raise ValueError('they substantially differ by more than {:.4f}!'.format(eps_chance_acc))
+        abs_diff = abs(ma - reference_level)
+        if abs_diff > eps_chance_acc:
+            raise ValueError('they substantially differ by {:.4f} that is '
+                             'more than {:.4f}!'.format(abs_diff, eps_chance_acc))
 
 
 def test_chance_clf_binary_svm():
