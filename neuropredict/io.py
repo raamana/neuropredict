@@ -157,8 +157,6 @@ def process_arff(feature_path, subjects, classes, out_dir):
 
     if not saved_dataset_matches(loaded_dataset, subjects, classes):
         raise ValueError('supplied ARFF dataset does not match samples in the meta data.')
-    else:
-        out_path_cur_dataset = feature_path
 
     return method_name, out_path_cur_dataset
 
