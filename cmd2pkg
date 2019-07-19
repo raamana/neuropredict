@@ -3,3 +3,6 @@ python setup.py sdist bdist_wheel
 
 twine upload dist/*
 
+echo "----"
+echo "deleting temp folders"
+rm -rf dist build neuropredict.egg-info
