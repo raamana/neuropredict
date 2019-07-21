@@ -1,12 +1,13 @@
 __all__ = ['get_pipeline', 'get_feature_importance',]
 
-from neuropredict import config_neuropredict as cfg
-import sklearn
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.feature_selection import mutual_info_classif, f_classif, SelectKBest, VarianceThreshold
+import sklearn
+from neuropredict import config_neuropredict as cfg
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from sklearn.feature_selection import (SelectKBest, VarianceThreshold, f_classif,
+                                       mutual_info_classif)
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
 
 def make_parameter_grid(estimator_name=None, named_ranges=None):
@@ -51,7 +52,7 @@ def make_parameter_grid(estimator_name=None, named_ranges=None):
 
 def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_dim):
     """
-    Estimates the number of features to retain for feature selection based on method chosen.
+    Estimates the number of features to retain for feature selection.
 
     Parameters
     ----------
@@ -111,7 +112,8 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
             reduced_dim = select_method
     elif isinstance(select_method, float):
         if not np.isfinite(select_method):
-            raise ValueError('Fraction for the reduced dimensionality must be finite within (0.0, 1.0).')
+            raise ValueError('Fraction for the reduced dimensionality '
+                             'must be finite within (0.0, 1.0).')
         elif select_method <= 0.0:
             reduced_dim = 1
         elif select_method >= 1.0:
@@ -137,7 +139,8 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
 def add_new_params(old_grid, new_grid, old_name, new_name):
     """
     Adds new items (parameters) in-place to old dict (of parameters),
-    ensuring no overlap in new parameters with old parameters which prevents silent overwrite.
+        ensuring no overlap in new parameters with old parameters
+        which prevents silent overwrite.
 
     """
 
@@ -145,15 +148,16 @@ def add_new_params(old_grid, new_grid, old_name, new_name):
         new_params = set(new_grid.keys())
         old_params = set(old_grid.keys())
         if len(old_params.intersection(new_params)) > 0:
-            raise ValueError(
-                    'Overlap in parameters between {} and {} of the chosen pipeline.'.format(old_name, new_name))
+            raise ValueError('Overlap in parameters between {} and {} of the ' \
+                             'chosen pipeline.'.format(old_name, new_name))
 
         old_grid.update(new_grid)
 
     return
 
 
-def get_DecisionTreeClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+def get_DecisionTreeClassifier(reduced_dim=None,
+                               grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the Random Forest classifier and its parameter grid.
 
@@ -164,11 +168,14 @@ def get_DecisionTreeClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
 
-        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
-        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
-        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
 
     Returns
     -------
@@ -213,7 +220,8 @@ def get_DecisionTreeClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
     return dtc, clf_name, param_grid
 
 
-def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+def get_ExtraTreesClassifier(reduced_dim=None,
+                             grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the Random Forest classifier and its parameter grid.
 
@@ -224,11 +232,14 @@ def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
 
-        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
-        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
-        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
 
     Returns
     -------
@@ -242,7 +253,8 @@ def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_
         range_min_leafsize = [1, 3, 5, 10, 20]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
-        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        # if user supplied reduced_dim, it will be tried also.
+        # Default None --> all features.
         range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
@@ -268,7 +280,8 @@ def get_ExtraTreesClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_
     clf_name = 'extra_trees_clf'
     param_list_values = [('n_estimators', range_num_trees),
                          ('criterion', split_criteria),
-                         # ('min_impurity_decrease',  range_min_impurity), # ignoring this
+                         # ('min_impurity_decrease',  range_min_impurity),
+                         #  ignoring this
                          ('min_samples_leaf', range_min_leafsize),
                          ('max_features', range_max_features),
                          ]
@@ -293,11 +306,14 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
 
-        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
-        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
-        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
 
     Returns
     -------
@@ -315,7 +331,8 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
         range_coef0 = np.sort(np.hstack((np.arange(-100, 101, 50),
                                          np.arange(-1.0, 1.01, 0.25))))
 
-        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        # if user supplied reduced_dim, it will be tried also.
+        # Default None --> all features.
         range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
@@ -359,7 +376,8 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     return clf, clf_name, param_grid
 
 
-def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+def get_RandomForestClassifier(reduced_dim=None,
+                               grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the Random Forest classifier and its parameter grid.
 
@@ -370,11 +388,14 @@ def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
 
-        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
-        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
-        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
 
     Returns
     -------
@@ -388,7 +409,8 @@ def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
         range_min_leafsize = [1, 3, 5, 10, 20]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
-        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        # if user supplied reduced_dim, it will be tried also.
+        # Default None --> all features.
         range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
@@ -420,12 +442,15 @@ def get_RandomForestClassifier(reduced_dim=None, grid_search_level=cfg.GRIDSEARC
                          ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
-    rfc = RandomForestClassifier(max_features=reduced_dim, n_estimators=max(range_num_trees), oob_score=True)
+    rfc = RandomForestClassifier(max_features=reduced_dim,
+                                 n_estimators=max(range_num_trees),
+                                 oob_score=True)
 
     return rfc, clf_name, param_grid
 
 
-def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+def get_xgboost(reduced_dim=None,
+                grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the extremene gradient boosting (XGB) classifier and its parameter grid.
 
@@ -436,12 +461,14 @@ def get_xgboost(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
 
-        The 'light' option provides a lighter and much less exhaustive grid search to speed up optimization.
-        Parameter values will be chosen based on defaults, previous studies and "folk wisdom".
-        Useful to get a "very rough" idea of performance for different feature sets, and for debugging.
-
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
     Returns
     -------
 
@@ -521,11 +548,19 @@ def get_classifier(classifier_name=cfg.default_classifier,
         String referring to a valid scikit-learn classifier.
 
     reduced_dim : int or str
-        Reduced dimensionality, either an integer or "all", which defaults to using everything.
+        Reduced dimensionality, either an integer or
+        "all", which defaults to using everything.
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
 
     Returns
     -------
@@ -564,7 +599,8 @@ def get_feature_selector(feat_selector_name='variancethreshold',
     feat_selector_name : str
         String referring to a valid scikit-learn feature selector.
     reduced_dim : str or int
-        Reduced dimensionality, either an integer or "all", which defaults to using everything.
+        Reduced dimensionality, either an integer
+        or "all", which defaults to using everything.
 
     Returns
     -------
@@ -634,7 +670,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     Parameters
     ----------
     train_class_sizes : list
-        sizes of different classes in the training set, to estimate the reduced dimensionality.
+        sizes of different classes in the training set,
+        to estimate the reduced dimensionality.
 
     feat_sel_size : str or int
         Method specify the method to estimate the reduced dimensionality.
@@ -663,15 +700,18 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
         Valid scikit learn pipeline.
     param_grid : dict
         Dict of named ranges to construct the parameter grid.
-        Grid contains ranges for parameters of all the steps, including preprocessor, feature selector and classifier.
+        Grid contains ranges for parameters of all the steps,
+        including preprocessor, feature selector and classifier.
 
     """
 
-    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes, num_features)
+    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes,
+                                                 num_features)
 
     preproc, preproc_name, preproc_param_grid = get_preprocessor(preprocessor_name)
     estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim, grid_search_level)
-    feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name, reduced_dim)
+    feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name,
+                                                                 reduced_dim)
 
     # composite grid of parameters from all steps
     param_grid = clf_param_grid.copy()
@@ -697,6 +737,7 @@ def get_feature_importance(clf_name, clf, num_features, index_selected_features,
 
     feat_importance = np.full(num_features, fill_value)
     if hasattr(clf, attr_importance[clf_name]):
-        feat_importance[index_selected_features] = getattr(clf, attr_importance[clf_name])
+        feat_importance[index_selected_features] = getattr(clf,
+                                                           attr_importance[clf_name])
 
     return feat_importance
