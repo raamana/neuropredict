@@ -33,15 +33,19 @@ default_imputation_strategy = 'raise'
 # not supporting 'constant' for now, as it is not popular,
 #   and integrating it requires a bit more software engineering
 avail_imputation_strategies = ('median', 'mean', 'most_frequent')
-avail_imputation_strategies_with_raise = avail_imputation_strategies + (default_imputation_strategy, )
+avail_imputation_strategies_with_raise = avail_imputation_strategies + \
+                                         (default_imputation_strategy, )
 
 # # ------- feature importance -------
 
 
 # # ------- classifier
 
-__classifier_CHOICES = ('RandomForestClassifier', 'ExtraTreesClassifier',
-                        'DecisionTreeClassifier', 'SVM', 'XGBoost')
+__classifier_CHOICES = ('RandomForestClassifier',
+                        'ExtraTreesClassifier',
+                        'DecisionTreeClassifier',
+                        'SVM',
+                        'XGBoost')
 classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
 __feat_sel_CHOICES = ('SelectKBest_mutual_info_classif',
@@ -53,8 +57,10 @@ default_classifier = 'RandomForestClassifier'
 default_feat_select_method = 'VarianceThreshold'
 
 __clfs_with_feature_importance = ('DecisionTreeClassifier',
-                                  'RandomForestClassifier', 'ExtraTreesClassifier',
-                                  'LinearSVM', 'XGBoost')
+                                  'RandomForestClassifier',
+                                  'ExtraTreesClassifier',
+                                  'LinearSVM',
+                                  'XGBoost')
 clfs_with_feature_importance = [ clf.lower() for clf in __clfs_with_feature_importance]
 
 additional_modules_reqd = {'xgboost' : 'xgboost' }
@@ -139,25 +145,28 @@ default_feature_type = 'list_of_pyradigm_paths'
 # when more than one feature set is given, which one to map everyone to
 COMMON_DATASET_INDEX = 0
 
-rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
-                  'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
-                  'best_params',
-                  'feature_importances_rf', 'feature_names',
-                  'num_times_misclfd', 'num_times_tested',
-                  'confusion_matrix', 'class_set', 'class_sizes',
-                  'accuracy_balanced', 'auc_weighted', 'positive_class',
-                                  'classifier_name', 'feat_select_method']
+rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc',
+                                  'num_repetitions', 'num_classes',
+                                  'pred_prob_per_class', 'pred_labels_per_rep_fs',
+                                  'test_labels_per_rep', 'best_params',
+                                  'feature_importances_rf', 'feature_names',
+                                  'num_times_misclfd', 'num_times_tested',
+                                  'confusion_matrix', 'class_set', 'class_sizes',
+                                  'accuracy_balanced', 'auc_weighted',
+                                  'positive_class', 'classifier_name',
+                                  'feat_select_method']
 
 # TODO decide to where to include eTIV
 # 'eTIV' is not included as it is used to norm subcortical volumes
-freesurfer_whole_brain_stats_to_select = [ 'BrainSegVol', 'BrainSegVolNotVent',
-        'lhCortexVol', 'rhCortexVol',
-        'lhCorticalWhiteMatterVol', 'rhCorticalWhiteMatterVol',
-        'SubCortGrayVol', 'TotalGrayVol',
-        'SupraTentorialVol', 'SupraTentorialVolNotVent',
-        'MaskVol', 'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV',
-        'lhSurfaceHoles', 'rhSurfaceHoles',
-        'eTIV' ]
+freesurfer_whole_brain_stats_to_select = ['BrainSegVol', 'BrainSegVolNotVent',
+                                          'lhCortexVol', 'rhCortexVol',
+                                          'lhCorticalWhiteMatterVol',
+                                          'rhCorticalWhiteMatterVol',
+                                          'SubCortGrayVol', 'TotalGrayVol',
+                                          'SupraTentorialVol',
+                                          'SupraTentorialVolNotVent', 'MaskVol',
+                                          'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV',
+                                          'lhSurfaceHoles', 'rhSurfaceHoles', 'eTIV']
 
 freesurfer_whole_brain_stats_to_ignore = [ 'SurfaceHoles',
                                            'CortexVol',
@@ -165,18 +174,30 @@ freesurfer_whole_brain_stats_to_ignore = [ 'SurfaceHoles',
                                            'CorticalWhiteMatterVol',
                                            'BrainSegVolNotVentSurf']
 
+freesurfer_subcortical_seg_names_to_ignore = ['WM-hypointensities',
+                                              'Left-WM-hypointensities',
+                                              'Right-WM-hypointensities',
+                                              'non-WM-hypointensities',
+                                              'Left-non-WM-hypointensities',
+                                              'Right-non-WM-hypointensities',
+                                              'Optic-Chiasm']
 
-freesurfer_subcortical_seg_names_to_ignore = ['WM-hypointensities', 'Left-WM-hypointensities', 'Right-WM-hypointensities',
-                    'non-WM-hypointensities', 'Left-non-WM-hypointensities', 'Right-non-WM-hypointensities',
-                    'Optic-Chiasm']
-
-freesurfer_subcortical_seg_names = ['Left-Lateral-Ventricle', 'Left-Inf-Lat-Vent', 'Left-Cerebellum-White-Matter',
-                                    'Left-Cerebellum-Cortex', 'Left-Thalamus-Proper', 'Left-Caudate', 'Left-Putamen',
-                                    'Left-Pallidum', '3rd-Ventricle', '4th-Ventricle', 'Brain-Stem', 'Left-Hippocampus',
-                                    'Left-Amygdala', 'CSF', 'Left-Accumbens-area', 'Left-VentralDC', 'Left-vessel',
-                                    'Left-choroid-plexus', 'Right-Lateral-Ventricle', 'Right-Inf-Lat-Vent',
-                                    'Right-Cerebellum-White-Matter', 'Right-Cerebellum-Cortex', 'Right-Thalamus-Proper',
-                                    'Right-Caudate', 'Right-Putamen', 'Right-Pallidum', 'Right-Hippocampus',
-                                    'Right-Amygdala', 'Right-Accumbens-area', 'Right-VentralDC', 'Right-vessel',
-                                    'Right-choroid-plexus', '5th-Ventricle',
-                                    'CC_Posterior', 'CC_Mid_Posterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Anterior']
+freesurfer_subcortical_seg_names = ['Left-Lateral-Ventricle', 'Left-Inf-Lat-Vent',
+                                    'Left-Cerebellum-White-Matter',
+                                    'Left-Cerebellum-Cortex', 'Left-Thalamus-Proper',
+                                    'Left-Caudate', 'Left-Putamen', 'Left-Pallidum',
+                                    '3rd-Ventricle', '4th-Ventricle', 'Brain-Stem',
+                                    'Left-Hippocampus', 'Left-Amygdala', 'CSF',
+                                    'Left-Accumbens-area', 'Left-VentralDC',
+                                    'Left-vessel', 'Left-choroid-plexus',
+                                    'Right-Lateral-Ventricle', 'Right-Inf-Lat-Vent',
+                                    'Right-Cerebellum-White-Matter',
+                                    'Right-Cerebellum-Cortex',
+                                    'Right-Thalamus-Proper', 'Right-Caudate',
+                                    'Right-Putamen', 'Right-Pallidum',
+                                    'Right-Hippocampus', 'Right-Amygdala',
+                                    'Right-Accumbens-area', 'Right-VentralDC',
+                                    'Right-vessel', 'Right-choroid-plexus',
+                                    '5th-Ventricle', 'CC_Posterior',
+                                    'CC_Mid_Posterior', 'CC_Central',
+                                    'CC_Mid_Anterior', 'CC_Anterior']
