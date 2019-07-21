@@ -630,7 +630,9 @@ def get_feature_selector(feat_selector_name='variancethreshold',
         fs_param_grid = None
 
     else:
-        raise NotImplementedError('Invalid name or feature selector not implemented.')
+        raise ValueError('Invalid name, or method {} not implemented.\n'
+                         'Choose one of {}'.format(fs_name,
+                                                   cfg.feature_selection_choices))
 
     return feat_selector, fs_name, fs_param_grid
 

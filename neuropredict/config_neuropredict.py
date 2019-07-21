@@ -44,7 +44,9 @@ __classifier_CHOICES = ('RandomForestClassifier', 'ExtraTreesClassifier',
                         'DecisionTreeClassifier', 'SVM', 'XGBoost')
 classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
-__feat_sel_CHOICES = ('SelectKBest_mutual_info_classif', 'SelectKBest_f_classif', 'VarianceThreshold')
+__feat_sel_CHOICES = ('SelectKBest_mutual_info_classif',
+                      'SelectKBest_f_classif',
+                      'VarianceThreshold')
 feature_selection_choices = [ fsm.lower() for fsm in __feat_sel_CHOICES]
 
 default_classifier = 'RandomForestClassifier'
