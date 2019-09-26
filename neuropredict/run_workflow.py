@@ -17,6 +17,7 @@ from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 import numpy as np
 from pyradigm import MLDataset
+from pyradigm.utils import load_dataset
 
 if version_info.major > 2:
     # the order of import is very important to avoid circular imports
@@ -874,7 +875,7 @@ def import_datasets(method_list, out_dir, subjects, classes,
                                                     cur_method, feature_type)
 
         # checking for presence of any missing data
-        data_mat, targets, ids = MLDataset(filepath=out_path_cur_dataset).data_and_labels()
+        data_mat, targets, ids = load_dataset(out_path_cur_dataset).data_and_labels()
         is_nan = np.isnan(data_mat)
         if is_nan.any():
             data_missing_here = True

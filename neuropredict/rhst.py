@@ -574,8 +574,8 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
     pos_class_index = class_set.index(positive_class)
 
     labels_with_correspondence = dict()
-    for subid in common_ds.sample_ids:
-        labels_with_correspondence[subid] = numeric_labels[common_ds.classes[subid]]
+    for subid in common_ds.samplet_ids:
+        labels_with_correspondence[subid] = numeric_labels[common_ds.targets[subid]]
 
     for idx in range(len(datasets)):
         datasets[idx].labels = labels_with_correspondence

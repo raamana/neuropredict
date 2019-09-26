@@ -106,13 +106,13 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
 
     # looking into the first dataset
     common_ds = datasets[common_ds_index]
-    class_set, label_set_in_ds, class_sizes = common_ds.summarize_classes()
+    class_set, class_sizes = common_ds.summarize()
     # below code turns the labels numeric regardless of dataset
-    label_set = list(range(len(label_set_in_ds)))
+    label_set = list(range(len(class_set)))
 
-    common_samples = set(common_ds.sample_ids)
+    common_samples = set(common_ds.samplet_ids)
 
-    num_samples = common_ds.num_samples
+    num_samples = common_ds.num_samplets
     num_classes = len(class_set)
 
     num_datasets = len(datasets)
@@ -121,20 +121,23 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
     if num_datasets > 1:
         for idx in remaining:
             this_ds = datasets[idx]
-            if num_samples != this_ds.num_samples:
+            if num_samples != this_ds.num_samplets:
                 raise ValueError("Number of samples in different datasets differ!")
-            if common_samples != set(this_ds.sample_ids):
+            if common_samples != set(this_ds.samplet_ids):
                 raise ValueError("Sample IDs differ across atleast two datasets!\n"
                                  "All datasets must have the same set of samples, "
                                  "even if the dimensionality of individual feature set changes.")
-            if set(class_set) != set(this_ds.classes.values()):
-                raise ValueError("Classes differ among datasets! \n One dataset: {} \n Another: {}".format(
-                        set(class_set), set(this_ds.classes.values())))
+            if set(class_set) != set(this_ds.targets.values()):
+                raise ValueError("Classes differ among datasets!\n"
+                                 " One dataset: {} \n"
+                                 " Another: {}"
+                                 "".format(set(class_set), set(this_ds.targets.values())))
 
     # displaying info on what is common across datasets
     common_ds.description = ' ' # this description is not reflective of all datasets
     dash_line = '-'*25
-    print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'.format(line=dash_line, ds=common_ds))
+    print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'
+          ''.format(line=dash_line, ds=common_ds))
 
     # choosing 'balanced' or 1/n_c for chance accuracy as training set is stratified
     print('Estimated chance accuracy : {:.3f}\n'.format(chance_accuracy(class_sizes, 'balanced')))
@@ -143,7 +146,8 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
     for idx in range(num_datasets):
         num_features[idx] = datasets[idx].num_features
 
-    return common_ds, class_set, label_set, class_sizes, num_samples, num_classes, num_datasets, num_features
+    return common_ds, class_set, label_set, class_sizes, \
+           num_samples, num_classes, num_datasets, num_features
 
 
 def chance_accuracy(class_sizes, method='imbalanced'):
