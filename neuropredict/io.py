@@ -9,20 +9,22 @@ import numpy as np
 from neuropredict import config_neuropredict as cfg
 from neuropredict.utils import make_dataset_filename
 from pyradigm import MLDataset
+from pyradigm.utils import load_dataset, load_arff_dataset
 
 def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
     "Returns sample IDs and their classes from a given pyradigm"
 
     meta_data_format = meta_data_format.lower()
     if meta_data_format in ['pyradigm', 'mldataset']:
-        dataset = MLDataset(filepath=realpath(meta_data_supplied))
+        dataset = load_dataset(realpath(meta_data_supplied))
     elif meta_data_format in ['arff', 'weka']:
-        dataset = MLDataset(arff_path=realpath(meta_data_supplied))
+        dataset = load_arff_dataset(realpath(meta_data_supplied))
     else:
         raise NotImplementedError('Meta data format {} not implemented. '
-                                  'Only pyradigm and ARFF are supported.'.format(meta_data_format))
+                                  'Only pyradigm and ARFF are supported.'
+                                  ''.format(meta_data_format))
 
-    return dataset.sample_ids, dataset.classes
+    return dataset.samplet_ids, dataset.targets
 
 
 def get_metadata(path):
@@ -47,7 +49,9 @@ def get_metadata(path):
     # checking for duplicates
     if len(set(sample_ids)) < len(sample_ids):
         duplicates = [sample for sample, count in Counter(sample_ids).items() if count > 1]
-        raise ValueError('Duplicate sample ids found!\n{}\nRemove duplicates and rerun.'.format(duplicates))
+        raise ValueError('Duplicate sample ids found!\n{}\n'
+                         'Remove duplicates and rerun.'
+                         ''.format(duplicates))
 
     classes = dict(zip(sample_ids, meta[:, 1]))
 
