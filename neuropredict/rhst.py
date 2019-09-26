@@ -628,6 +628,8 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
     pred_prob_per_class = np.full([num_datasets, total_test_samples, num_classes],
                                   np.nan)
     pred_labels_per_rep_fs = np.full([num_datasets, total_test_samples], np.nan)
+    # NOTE test labels are the same for all datasets - each feature/model
+    # combination is being evaluated against the same set of test samplets
     true_test_labels = np.full(total_test_samples, np.nan)
 
     # multi-class metrics
@@ -668,7 +670,7 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
         test_fs = datasets[dd].get_subset(test_set)
 
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd,:], \
-        true_test_labels, conf_mat, misclsfd_ids_this_run[dd], \
+        _ignored_true_test_labels, conf_mat, misclsfd_ids_this_run[dd], \
         feature_importances[dd], best_params[dd] = \
             eval_optimized_model_on_testset(train_fs, test_fs,
                                             impute_strategy=impute_strategy,
