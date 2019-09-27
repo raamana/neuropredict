@@ -106,14 +106,12 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
 
     # looking into the first dataset
     common_ds = datasets[common_ds_index]
-    class_set, class_sizes = common_ds.summarize()
-    # below code turns the labels numeric regardless of dataset
-    label_set = list(range(len(class_set)))
+    target_set, target_sizes = common_ds.summarize()
 
     common_samples = set(common_ds.samplet_ids)
 
     num_samples = common_ds.num_samplets
-    num_classes = len(class_set)
+    num_classes = len(target_set)
 
     num_datasets = len(datasets)
     remaining = set(range(num_datasets))
@@ -126,12 +124,14 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
             if common_samples != set(this_ds.samplet_ids):
                 raise ValueError("Sample IDs differ across atleast two datasets!\n"
                                  "All datasets must have the same set of samples, "
-                                 "even if the dimensionality of individual feature set changes.")
-            if set(class_set) != set(this_ds.targets.values()):
+                                 "even if the dimensionality of individual feature "
+                                 "set changes.")
+            if set(target_set) != set(this_ds.targets.values()):
                 raise ValueError("Classes differ among datasets!\n"
                                  " One dataset: {} \n"
                                  " Another: {}"
-                                 "".format(set(class_set), set(this_ds.targets.values())))
+                                 "".format(set(target_set),
+                                           set(this_ds.targets.values())))
 
     # displaying info on what is common across datasets
     common_ds.description = ' ' # this description is not reflective of all datasets
@@ -140,13 +140,14 @@ def check_feature_sets_are_comparable(datasets, common_ds_index=cfg.COMMON_DATAS
           ''.format(line=dash_line, ds=common_ds))
 
     # choosing 'balanced' or 1/n_c for chance accuracy as training set is stratified
-    print('Estimated chance accuracy : {:.3f}\n'.format(chance_accuracy(class_sizes, 'balanced')))
+    print('Estimated chance accuracy : {:.3f}\n'
+          ''.format(chance_accuracy(target_sizes, 'balanced')))
 
     num_features = np.zeros(num_datasets).astype(np.int64)
     for idx in range(num_datasets):
         num_features[idx] = datasets[idx].num_features
 
-    return common_ds, class_set, label_set, class_sizes, \
+    return common_ds, target_set, target_sizes, \
            num_samples, num_classes, num_datasets, num_features
 
 
