@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 import numpy as np
-from pyradigm import MLDataset
 from pyradigm.utils import load_dataset
 
 if version_info.major > 2:

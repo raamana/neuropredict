@@ -8,7 +8,7 @@ from os.path import join as pjoin, exists as pexists, realpath, basename
 import numpy as np
 from neuropredict import config_neuropredict as cfg
 from neuropredict.utils import make_dataset_filename
-from pyradigm import MLDataset, BaseDataset, ClassificationDataset
+from pyradigm import BaseDataset, ClassificationDataset
 from pyradigm.utils import load_dataset, load_arff_dataset
 
 def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
