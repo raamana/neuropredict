@@ -393,10 +393,11 @@ def run(dataset_path_file, method_names, out_results_dir,
         check_feature_sets_are_comparable(datasets)
     # TODO warning when num_rep are not suficient: need a heuristic to assess it
 
-    # re-map the labels (from 1 to n) to ensure numeric labels do not differ
-    datasets, positive_class, pos_class_index = remap_labels(datasets, common_ds,
-                                                             class_set,
-                                                             positive_class)
+    positive_class, pos_class_index = check_positive_class(class_set, positive_class)
+
+    # the following is not necessary anymore, as labels are now strings!
+    # # re-map the labels (from 1 to n) to ensure numeric labels do not differ
+    # datasets = remap_labels(datasets, common_ds, class_set)
 
     # determine the common size for training
     train_size_common, total_test_samples = determine_training_size(train_perc,
@@ -558,19 +559,22 @@ def impute_missing_data(train_data, train_labels, strategy, test_data):
     return imputer.transform(train_data), imputer.transform(test_data)
 
 
-def remap_labels(datasets, common_ds, class_set, positive_class=None):
-    """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
+def check_positive_class(class_set, positive_class=None):
+    """Checks the provided positive class, and returns its index"""
 
-    numeric_labels = make_numeric_labels(class_set)
-
-    # finding the numeric label for positive class
-    # label will also be in the index into the arrays over classes
-    #   due to construction above
     if positive_class is None:
         positive_class = class_set[-1]
     elif positive_class not in class_set:
         raise ValueError('Chosen positive class does not exist in the dataset')
     pos_class_index = class_set.index(positive_class)
+
+    return positive_class, pos_class_index
+
+
+def remap_labels(datasets, common_ds, class_set):
+    """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
+
+    numeric_labels = make_numeric_labels(class_set)
 
     labels_with_correspondence = dict()
     for subid in common_ds.samplet_ids:
@@ -579,7 +583,7 @@ def remap_labels(datasets, common_ds, class_set, positive_class=None):
     for idx in range(len(datasets)):
         datasets[idx].labels = labels_with_correspondence
 
-    return datasets, positive_class, pos_class_index
+    return datasets
 
 
 def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
