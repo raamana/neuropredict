@@ -499,17 +499,21 @@ def initialize_result_containers(common_ds, datasets, total_test_samples,
                                  n_repetitions, n_datasets, n_classes, num_features):
     """Prepare containers for various outputs"""
 
-    pred_prob_per_class = np.full([n_repetitions, n_datasets, total_test_samples, n_classes], np.nan)
-    pred_labels_per_rep_fs = np.full([n_repetitions, n_datasets, total_test_samples], np.nan)
-    test_labels_per_rep = np.full([n_repetitions, total_test_samples], np.nan)
+    pred_prob_per_class = np.full([n_repetitions, n_datasets,
+                                   total_test_samples, n_classes], np.nan)
+    pred_labels_per_rep_fs = np.full([n_repetitions, n_datasets, total_test_samples],
+                                     fill_value=np.nan, dtype=object);
+    test_labels_per_rep = np.full([n_repetitions, total_test_samples],
+                                  fill_value=np.nan, dtype=object)
 
     best_params = [None] * n_repetitions
 
     num_times_misclfd, num_times_tested = \
-        initialize_misclf_counters(common_ds.sample_ids, n_datasets)
+        initialize_misclf_counters(common_ds.samplet_ids, n_datasets)
 
     # multi-class metrics
-    confusion_matrix = np.full([n_repetitions, n_classes, n_classes, n_datasets], np.nan)
+    confusion_matrix = np.full([n_repetitions, n_classes, n_classes, n_datasets],
+                               np.nan)
     accuracy_balanced = np.full([n_repetitions, n_datasets], np.nan)
     auc_weighted = np.full([n_repetitions, n_datasets], np.nan)
 

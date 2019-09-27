@@ -151,7 +151,7 @@ rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc',
                                   'test_labels_per_rep', 'best_params',
                                   'feature_importances_rf', 'feature_names',
                                   'num_times_misclfd', 'num_times_tested',
-                                  'confusion_matrix', 'class_set', 'class_sizes',
+                                  'confusion_matrix', 'class_set', 'target_sizes',
                                   'accuracy_balanced', 'auc_weighted',
                                   'positive_class', 'classifier_name',
                                   'feat_select_method']
