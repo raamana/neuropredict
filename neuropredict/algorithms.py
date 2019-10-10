@@ -736,7 +736,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     return pipeline, param_grid
 
 
-def get_feature_importance(clf_name, clf, num_features, index_selected_features, fill_value=np.nan):
+def get_feature_importance(clf_name, clf, dim_red,
+                           num_features, fill_value=np.nan):
     "Extracts the feature importance of input features, if available."
 
     attr_importance = {'randomforestclassifier': 'feature_importances_',
@@ -746,8 +747,12 @@ def get_feature_importance(clf_name, clf, num_features, index_selected_features,
                        'xgboost'               : 'feature_importances_',}
 
     feat_importance = np.full(num_features, fill_value)
-    if hasattr(clf, attr_importance[clf_name]):
-        feat_importance[index_selected_features] = getattr(clf,
-                                                           attr_importance[clf_name])
+
+    if hasattr(dim_red, 'get_support'): # nonlinear dim red won't have this
+        index_selected_features = dim_red.get_support(indices=True)
+
+        if hasattr(clf, attr_importance[clf_name]):
+            feat_importance[index_selected_features] = \
+                getattr(clf, attr_importance[clf_name])
 
     return feat_importance

@@ -112,21 +112,17 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     # assuming order in pipeline construction :
     #   - step 0 : preprocessign (robust scaling)
-    #   - step 1 : feature selector
+    #   - step 1 : feature selector / dim reducer
     _, best_fsr = best_pipeline.steps[1]
     _, best_clf = best_pipeline.steps[-1]  # the final step in an sklearn pipeline
                                            #   is always an estimator/classifier
 
-    # could be useful to compute frequency of selection
-    index_selected_features = best_fsr.get_support(indices=True)
-
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_pipeline.predict(test_data_mat)
 
-    # only the selected features (via index_selected_features) get non-nan value
+    # only the selected features get non-nan value
     feat_importance = get_feature_importance(classifier_name, best_clf,
-                                             train_fs.num_features,
-                                             index_selected_features)
+                                             best_fsr, train_fs.num_features)
 
     # TODO test if the gathering of prob data is consistent
     #   across multiple calls to this method
