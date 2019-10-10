@@ -604,7 +604,7 @@ def get_feature_selector(feat_selector_name='variancethreshold',
 
     Returns
     -------
-    feat_selector : sklearn.feature_selection method
+    dim_red : sklearn.feature_selection method
         Valid scikit-learn feature selector.
     clf_name : str
         String identifying the feature selector to construct the parameter grid.
@@ -613,28 +613,35 @@ def get_feature_selector(feat_selector_name='variancethreshold',
 
     """
 
-    fs_name = feat_selector_name.lower()
-    if fs_name in ['selectkbest_mutual_info_classif', ]:
+    from sklearn.manifold import isomap, LocallyLinearEmbedding, MDS, smacof
+
+    dr_name = feat_selector_name.lower()
+    if dr_name in ['isomap', ]:
+        from sklearn.manifold.isomap import Isomap
+        dim_red = Isomap(n_components=reduced_dim)
+        # TODO eigen_solver, path_method could be hyper params for Isomap
+        dr_param_grid = None
+    elif dr_name in ['selectkbest_mutual_info_classif', ]:
         # no param optimization for feat selector for now.
-        feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
+        dim_red = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
         # TODO optimize the num features to select as part of grid search
-        fs_param_grid = None
+        dr_param_grid = None
 
-    elif fs_name in ['selectkbest_f_classif', ]:
+    elif dr_name in ['selectkbest_f_classif', ]:
         # no param optimization for feat selector for now.
-        feat_selector = SelectKBest(score_func=f_classif, k=reduced_dim)
-        fs_param_grid = None
+        dim_red = SelectKBest(score_func=f_classif, k=reduced_dim)
+        dr_param_grid = None
 
-    elif fs_name in ['variancethreshold', ]:
-        feat_selector = VarianceThreshold(threshold=cfg.variance_threshold)
-        fs_param_grid = None
+    elif dr_name in ['variancethreshold', ]:
+        dim_red = VarianceThreshold(threshold=cfg.variance_threshold)
+        dr_param_grid = None
 
     else:
         raise ValueError('Invalid name, or method {} not implemented.\n'
-                         'Choose one of {}'.format(fs_name,
+                         'Choose one of {}'.format(dr_name,
                                                    cfg.feature_selection_choices))
 
-    return feat_selector, fs_name, fs_param_grid
+    return dim_red, dr_name, dr_param_grid
 
 
 def get_preprocessor(preproc_name='RobustScaler'):
@@ -651,7 +658,8 @@ def get_preprocessor(preproc_name='RobustScaler'):
         raise ValueError('chosen preprocessor not supported.')
 
     if preproc_name in ['robustscaler']:
-        preproc = RobustScaler(with_centering=True, with_scaling=True, quantile_range=cfg.robust_scaler_iqr)
+        preproc = RobustScaler(with_centering=True, with_scaling=True,
+                               quantile_range=cfg.robust_scaler_iqr)
         param_grid = None
     else:
         # TODO returning preprocessor blindly without any parameters
