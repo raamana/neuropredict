@@ -237,7 +237,13 @@ def get_parser():
     """)
 
     help_feat_select_method = textwrap.dedent("""
-    Feature selection method to apply prior to training the classifier.
+    Feature selection, or dimensionality reduction method to apply prior to training the classifier.
+    
+    NOTE: when feature 'selection' methods are used, we are able to keep track 
+    of which features in the original input space were slected and hence visualize their 
+    feature importance after the repetitions of CV. When 'dimensionality reduction' methods are used,
+    they get transformed to new subspaces, wherein the link to original features is lost and hence 
+    importance values for original input features can not be computed and hence are not visualized.
     
     Default: 'VarianceThreshold', removing features with 0.001 percent of lowest variance (zeros etc).
     
@@ -673,8 +679,9 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
             visualize.feature_importance_map(feature_importances_rf, method_names,
                                              featimp_fig_path, feature_names)
         else:
-            print('\nCurrent predictive model does not provide '
-                  'feature importance values. Skipping them.')
+            print('\nCurrent predictive model, and/or dimensionality reduction'
+                  ' method, does not provide (or allow for computing) feature'
+                  ' importance values. Skipping them.')
 
         misclf_out_path = pjoin(out_dir, 'misclassified_subjects')
         visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested,
