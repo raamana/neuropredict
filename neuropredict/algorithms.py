@@ -613,18 +613,42 @@ def get_feature_selector(feat_selector_name='variancethreshold',
 
     """
 
-    from sklearn.manifold import isomap, LocallyLinearEmbedding, MDS, smacof
+    # TODO not optimizing hyper params for any technique: Isomap, LLE etc
 
     dr_name = feat_selector_name.lower()
     if dr_name in ['isomap', ]:
         from sklearn.manifold.isomap import Isomap
         dim_red = Isomap(n_components=reduced_dim)
-        # TODO eigen_solver, path_method could be hyper params for Isomap
+        dr_param_grid = None
+    elif dr_name in ['lle', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+        dim_red = LocallyLinearEmbedding(n_components=reduced_dim,
+                                         method='standard')
+        dr_param_grid = None
+    elif dr_name in ['lle_modified', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+        dim_red = LocallyLinearEmbedding(n_components=reduced_dim,
+                                         method='modified')
+        dr_param_grid = None
+    elif dr_name in ['lle_hessian', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+
+        n_components = reduced_dim
+        # ensuring n_neighbors meets the required magnitude
+        dp = n_components * (n_components + 1) // 2
+        n_neighbors = n_components + dp + 1
+        dim_red = LocallyLinearEmbedding(n_components=n_components,
+                                         n_neighbors=n_neighbors,
+                                         method='hessian')
+        dr_param_grid = None
+    elif dr_name in ['lle_ltsa', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+        dim_red = LocallyLinearEmbedding(n_components=reduced_dim,
+                                         method='ltsa')
         dr_param_grid = None
     elif dr_name in ['selectkbest_mutual_info_classif', ]:
         # no param optimization for feat selector for now.
         dim_red = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
-        # TODO optimize the num features to select as part of grid search
         dr_param_grid = None
 
     elif dr_name in ['selectkbest_f_classif', ]:
