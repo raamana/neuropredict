@@ -337,7 +337,7 @@ def get_parser():
     cv_args_group.add_argument("-g", "--gs_level", action="store",
                                dest="gs_level",
                                default="light", help=help_text_gs_level,
-                               choices=cfg.GRIDSEARCH_LEVELS)
+                               choices=cfg.GRIDSEARCH_LEVELS, type=str.lower)
 
     pipeline_group = parser.add_argument_group(title='Predictive Model',
                                                description='Parameters related to '
@@ -348,18 +348,20 @@ def get_parser():
                                 dest="impute_strategy",
                                 default=cfg.default_imputation_strategy,
                                 help=help_imputation_strategy,
-                                choices=cfg.avail_imputation_strategies_with_raise)
+                                choices=cfg.avail_imputation_strategies_with_raise,
+                                type=str.lower)
 
     pipeline_group.add_argument("-fs", "--feat_select_method", action="store",
                                 dest="feat_select_method",
                                 default=cfg.default_feat_select_method,
                                 help=help_feat_select_method,
-                                choices=cfg.feature_selection_choices)
+                                choices=cfg.feature_selection_choices,
+                                type=str.lower)
 
     pipeline_group.add_argument("-e", "--classifier", action="store",
                                 dest="classifier",
                                 default=cfg.default_classifier, help=help_classifier,
-                                choices=cfg.classifier_choices)
+                                choices=cfg.classifier_choices, type=str.lower)
 
     vis_args = parser.add_argument_group(title='Visualization',
                                          description='Parameters related to '
