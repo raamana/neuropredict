@@ -9,7 +9,7 @@ import numpy as np
 
 sys.dont_write_bytecode = True
 
-from pyradigm import MLDataset
+from pyradigm import ClassificationDataset as ClfDataset
 from pytest import raises
 
 if __name__ == '__main__' and __package__ is None:
@@ -33,11 +33,11 @@ meta_file = os.path.join(out_dir,'meta.csv')
 
 meta = list()
 
-def make_random_MLdataset(max_num_classes = 20,
-                          max_class_size = 50,
-                          max_dim = 100,
-                          stratified = True):
-    "Generates a random MLDataset for use in testing."
+def make_random_Dataset(max_num_classes = 20,
+                        max_class_size = 50,
+                        max_dim = 100,
+                        stratified = True):
+    "Generates a random Dataset for use in testing."
 
     smallest = 10
     max_class_size = max(smallest, max_class_size)
@@ -67,13 +67,15 @@ def make_random_MLdataset(max_num_classes = 20,
         class_ids.append('class-{}'.format(cl))
         labels.append(int(cl))
 
-    ds = MLDataset()
+    ds = ClfDataset()
     for cc, class_ in enumerate(class_ids):
         subids = [ 'sub{:03}-class{:03}'.format(ix,cc)
                    for ix in range(class_sizes[cc]) ]
         for sid in subids:
-            ds.add_sample(sid, feat_generator(num_features), int(cc), class_,
-                          feat_names)
+            ds.add_samplet(samplet_id=sid,
+                           features=feat_generator(num_features),
+                           target=class_,
+                           feature_names=feat_names)
 
     return ds
 
@@ -91,10 +93,11 @@ def make_fully_separable_classes(max_class_size = 50, max_dim = 100):
     unique_labels = np.unique(blobs_y)
     class_ids = { lbl : str(lbl) for lbl in unique_labels }
 
-    new_ds = MLDataset()
+    new_ds = ClfDataset()
     for index, row in enumerate(blobs_X):
-            new_ds.add_sample('sub{}'.format(index), row, label=blobs_y[index],
-                              class_id=class_ids[blobs_y[index]])
+            new_ds.add_samplet(samplet_id='sub{}'.format(index),
+                               features=row, #label=blobs_y[index],
+                               target=class_ids[blobs_y[index]])
 
     return new_ds
 
@@ -115,14 +118,14 @@ num_procs = 1
 
 
 # using a really small sample size for faster testing.
-rand_ds = make_random_MLdataset(max_num_classes=max_num_classes, stratified=True,
-    max_class_size = max_class_size, max_dim = max_dim)
+rand_ds = make_random_Dataset(max_num_classes=max_num_classes, stratified=True,
+                              max_class_size = max_class_size, max_dim = max_dim)
 
 out_path_multiclass = os.path.join(out_dir, 'multiclass_random_features.pkl')
 rand_ds.save(out_path_multiclass)
 
 out_path = os.path.join(out_dir, 'two_classes_random_features.pkl')
-rand_two_class = rand_ds.get_class(rand_ds.class_set[0:3])
+rand_two_class = rand_ds.get_class(rand_ds.target_set[0:3])
 rand_two_class.save(out_path)
 rand_two_class.description = 'random_1'
 
@@ -138,7 +141,7 @@ with open(ds_path_list, 'w') as lf:
 method_names = ['random1', 'another']
 
 # deciding on tolerances for chance accuracy
-total_num_classes = rand_ds.num_classes
+total_num_classes = rand_ds.num_targets
 
 eps_chance_acc_binary =0.05
 eps_chance_acc = max(0.02, 0.1 / total_num_classes)
