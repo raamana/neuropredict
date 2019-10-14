@@ -355,7 +355,7 @@ def get_parser():
                                 dest="feat_select_method",
                                 default=cfg.default_feat_select_method,
                                 help=help_feat_select_method,
-                                choices=cfg.feature_selection_choices,
+                                choices=cfg.all_dim_red_methods,
                                 type=str.lower)
 
     pipeline_group.add_argument("-e", "--classifier", action="store",

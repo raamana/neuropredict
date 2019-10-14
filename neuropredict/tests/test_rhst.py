@@ -212,7 +212,7 @@ def test_separable_100perc():
     nrep = 10
     gsl = 'none' # to speed up the process
     for clf_name in cfg.classifier_choices:
-        for fs_name in cfg.feature_selection_choices:
+        for fs_name in cfg.all_dim_red_methods:
 
             cli_str = 'neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}' \
                       ''.format(out_path_sep, train_perc, nrep, 1, gsl, out_dir_sep,
@@ -259,7 +259,7 @@ def test_each_combination_works():
     nrep = 10
     gsl = 'none' # to speed up the process
     for clf_name in cfg.classifier_choices:
-        for fs_name in cfg.feature_selection_choices:
+        for fs_name in cfg.all_dim_red_methods:
             try:
                 cli_str = 'neuropredict -y {} -t {} -n {} -c {} -o {} ' \
                           ' -e {} -fs {} -g {} ' \

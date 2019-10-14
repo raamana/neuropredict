@@ -593,7 +593,7 @@ def get_classifier(classifier_name=cfg.default_classifier,
 def get_feature_selector(feat_selector_name='variancethreshold',
                          reduced_dim='all'):
     """
-    Returns the named classifier and its parameter grid.
+    Returns the named dimensionality reduction method and its parameter grid.
 
     Parameters
     ----------
@@ -664,7 +664,7 @@ def get_feature_selector(feat_selector_name='variancethreshold',
     else:
         raise ValueError('Invalid name, or method {} not implemented.\n'
                          'Choose one of {}'.format(dr_name,
-                                                   cfg.feature_selection_choices))
+                                                   cfg.all_dim_red_methods))
 
     return dim_red, dr_name, dr_param_grid
 

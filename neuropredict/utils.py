@@ -63,11 +63,11 @@ def check_params_rhst(dataset_path_file, out_results_dir,
 
     classifier_name = check_classifier(classifier_name)
 
-    if feat_select_method.lower() not in cfg.feature_selection_choices:
+    if feat_select_method.lower() not in cfg.all_dim_red_methods:
         raise ValueError('Feature selection method not recognized: {}\n '
                          'Implemented choices: {}'
                          ''.format(feat_select_method,
-                                   cfg.feature_selection_choices))
+                                   cfg.all_dim_red_methods))
 
 
     # printing the chosen options
