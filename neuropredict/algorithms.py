@@ -188,7 +188,8 @@ def get_DecisionTreeClassifier(reduced_dim=None,
         split_criteria = ['gini', 'entropy']
         range_min_leafsize = [1, 3, 5, 10, 20]
 
-        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        # if user supplied reduced_dim, it will be tried also.
+        #   Default None --> all features.
         range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
@@ -694,10 +695,10 @@ def get_preprocessor(preproc_name='RobustScaler'):
 
 
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
-                 preprocessor_name='robustscaler',
-                 feat_selector_name=cfg.default_feat_select_method,
-                 classifier_name=cfg.default_classifier,
-                 grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+                 preproc_name='robustscaler',
+                 fsr_name=cfg.default_feat_select_method,
+                 clfr_name=cfg.default_classifier,
+                 gs_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Constructor for pipeline (feature selection followed by a classifier).
 
@@ -714,19 +715,20 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     num_features : int
         Number of features in the training set.
 
-    classifier_name : str
+    clfr_name : str
         String referring to a valid scikit-learn classifier.
 
-    feat_selector_name : str
+    fsr_name : str
         String referring to a valid scikit-learn feature selector.
 
-    preprocessor_name : str
+    preproc_name : str
         String referring to a valid scikit-learn preprocessor
         (This can technically be another feature selector, although discourage).
 
-    grid_search_level : str
+    gs_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be user for
+        optimization.
 
     Returns
     -------
@@ -742,9 +744,10 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes,
                                                  num_features)
 
-    preproc, preproc_name, preproc_param_grid = get_preprocessor(preprocessor_name)
-    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim, grid_search_level)
-    feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name,
+    preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
+    estimator, est_name, clf_param_grid = get_classifier(clfr_name, reduced_dim,
+                                                         gs_level)
+    feat_selector, fs_name, fs_param_grid = get_feature_selector(fsr_name,
                                                                  reduced_dim)
 
     # composite grid of parameters from all steps

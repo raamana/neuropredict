@@ -48,7 +48,7 @@ def get_metadata(path):
     sample_ids = list(meta[:, 0])
     # checking for duplicates
     if len(set(sample_ids)) < len(sample_ids):
-        duplicates = [sample for sample, count in Counter(sample_ids).items() if count > 1]
+        duplicates = [sid for sid, count in Counter(sample_ids).items() if count > 1]
         raise ValueError('Duplicate sample ids found!\n{}\n'
                          'Remove duplicates and rerun.'
                          ''.format(duplicates))
@@ -60,8 +60,9 @@ def get_metadata(path):
 
 def get_dir_of_dirs(featdir, subjid):
     """
-    Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a
-    separate folder for each subject with a file called features.txt with one number per line.
+    Method to read in features for a given subject from a user-defined feature folder.
+    This featdir must contain a separate folder for each subject with a file
+    called features.txt with one number per line.
 
     Parameters
     ----------
@@ -88,8 +89,9 @@ def get_dir_of_dirs(featdir, subjid):
         raise IOError('Unable to load features from \n{}'.format(featfile))
 
     # the following ensures an array is returned even when data is a single scalar,
-    # for which len() is not defined (which is needed for pyradigm to find dimensionality
-    # order='F' (column-major) is chosen to as input is expected to be in a single column
+    # for which len() is not defined (which is needed for pyradigm
+    #   to find dimensionality of features
+    # order='F' (column-major) chosen as input is expected to be in a single column
     data = data.flatten(order='F')
 
     return data, feat_names
@@ -106,7 +108,8 @@ def get_data_matrix(featpath):
             matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
         else:
             raise ValueError(
-                'Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
+                'Invalid or empty file extension : {}\n'
+                ' Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
     except IOError:
         raise IOError('Unable to load the data matrix from disk.')
     except:
@@ -132,7 +135,8 @@ def process_pyradigm(feature_path, subjects, classes):
         method_name = basename(feature_path)
 
     if not saved_dataset_matches(loaded_dataset, subjects, classes):
-        raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
+        raise ValueError('supplied pyradigm dataset does not match '
+                         'samples in the meta data.')
     else:
         out_path_cur_dataset = feature_path
 
@@ -160,7 +164,8 @@ def process_arff(feature_path, subjects, classes, out_dir):
     loaded_dataset.save(out_path_cur_dataset)
 
     if not saved_dataset_matches(loaded_dataset, subjects, classes):
-        raise ValueError('supplied ARFF dataset does not match samples in the meta data.')
+        raise ValueError('supplied ARFF dataset does not match '
+                         'samples in the meta data.')
 
     return method_name, out_path_cur_dataset
 
@@ -200,9 +205,11 @@ def get_features(samplet_id_list, classes,
 
     if not callable(get_method):
         raise ValueError("Supplied get_method is not callable! "
-                         "It must take in a path and return a vectorized feature set and labels.")
+                         " It must take in a path and "
+                         "return a vectorized feature set and labels.")
 
-    # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
+    # generating an unique numeric label for each class
+    # (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
     class_labels = dict()
     for idx, cls in enumerate(class_set):
@@ -229,8 +236,8 @@ def get_features(samplet_id_list, classes,
         except:
             ids_excluded.append(samplet_id)
             traceback.print_exc()
-            warnings.warn("Features for {} via {} method could not be read or added. "
-                          "Excluding it.".format(samplet_id, get_method.__name__))
+            warnings.warn("Features for {} via {} method could not be read or added."
+                          " Excluding it.".format(samplet_id, get_method.__name__))
 
     # warning for if failed to extract features even for one subject
     alert_failed_feature_extraction(len(ids_excluded), ds.num_samplets,
@@ -320,7 +327,7 @@ def load_pyradigms(dataset_paths, sub_group=None):
 
     sub_group : iterable
         subset of classes to return. Default: return all classes.
-        If sub_group is specified, returns only that subset of classes for all datasets.
+        If sub_group is given, returns only that subset of classes for all datasets.
 
     Raises
     ------
