@@ -4,6 +4,8 @@ neuropredict : easy and comprehensive predictive analysis.
 """
 from __future__ import print_function
 
+from neuropredict.base import organize_inputs
+
 __all__ = ['run', 'cli', 'get_parser']
 
 import argparse
@@ -30,12 +32,13 @@ if version_info.major > 2:
                                  get_data_matrix, get_dir_of_dirs, get_pyradigm,
                                  get_arff,
                                  saved_dataset_matches)
-    from neuropredict.utils import (check_paths, uniq_combined_name,
+    from neuropredict.utils import (uniq_combined_name,
                                     check_num_procs,
                                     sub_group_identifier, save_options, load_options,
                                     validate_feature_selection_size,
+                                    validate_impute_strategy,
                                     make_dataset_filename, not_unspecified,
-                                    check_classifier)
+                                    check_classifier, print_options)
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -53,8 +56,10 @@ class MissingDataException(NeuroPredictException):
 def get_parser():
     "Parser to specify arguments and their defaults."
 
-    parser = argparse.ArgumentParser(prog="neuropredict", formatter_class=argparse.RawTextHelpFormatter,
-                                     description='Easy, standardized and comprehensive predictive analysis.')
+    parser = argparse.ArgumentParser(prog="neuropredict",
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     description='Easy, standardized and '
+                                                 'comprehensive predictive analysis.')
 
     help_text_fs_dir = textwrap.dedent("""
     Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
@@ -387,119 +392,6 @@ def get_parser():
     return parser
 
 
-def print_options(run_dir):
-    """
-    Prints options used in a previous run.
-
-    Parameters
-    ----------
-    run_dir : str
-        Path to a folder to with options from a previous run stored.
-
-    """
-
-    from neuropredict.utils import load_options
-    user_options = load_options(run_dir)
-
-    # print(user_options)
-    print('\n\nOptions used in the run\n{}\n'.format(run_dir))
-    for key, val in user_options.items():
-        if key.lower() not in ('sample_ids', 'classes'):
-            print('{:>25} : {}'.format(key, val))
-
-    return
-
-
-def organize_inputs(user_args):
-    """
-    Validates the input features specified and
-    returns organized list of paths and readers.
-
-    Parameters
-    ----------
-    user_args : ArgParse object
-        Various options specified by the user.
-
-    Returns
-    -------
-    user_feature_paths : list
-        List of paths to specified input features
-    user_feature_type : str
-        String identifying the type of user-defined input
-    fs_subject_dir : str
-        Path to freesurfer subject directory, if supplied.
-
-    """
-
-    atleast_one_feature_specified = False
-    # specifying pyradigm avoids the need for separate meta data file
-    meta_data_supplied = False
-    meta_data_format = None
-
-    if not_unspecified(user_args.fs_subject_dir):
-        fs_subject_dir = abspath(user_args.fs_subject_dir)
-        if not pexists(fs_subject_dir):
-            raise IOError("Given Freesurfer directory doesn't exist.")
-        atleast_one_feature_specified = True
-    else:
-        fs_subject_dir = None
-
-    # ensuring only one type is specified
-    mutually_excl_formats = ['user_feature_paths',
-                             'data_matrix_paths',
-                             'pyradigm_paths',
-                             'arff_paths']
-    not_none_count = 0
-    for format in mutually_excl_formats:
-        if not_unspecified(getattr(user_args, format)):
-            not_none_count = not_none_count + 1
-    if not_none_count > 1:
-        raise ValueError('Only one of the following formats can be specified:\n'
-                         '{}'.format(mutually_excl_formats))
-
-    if not_unspecified(user_args.user_feature_paths):
-        user_feature_paths = check_paths(user_args.user_feature_paths,
-                                         path_type='user defined (dir_of_dirs)')
-        atleast_one_feature_specified = True
-        user_feature_type = 'dir_of_dirs'
-
-    elif not_unspecified(user_args.data_matrix_paths):
-        user_feature_paths = check_paths(user_args.data_matrix_paths,
-                                         path_type='data matrix')
-        atleast_one_feature_specified = True
-        user_feature_type = 'data_matrix'
-
-    elif not_unspecified(user_args.pyradigm_paths):
-        user_feature_paths = check_paths(user_args.pyradigm_paths,
-                                         path_type='pyradigm')
-        atleast_one_feature_specified = True
-        meta_data_supplied = user_feature_paths[0]
-        meta_data_format = 'pyradigm'
-        user_feature_type = 'pyradigm'
-
-    elif not_unspecified(user_args.arff_paths):
-        user_feature_paths = check_paths(user_args.arff_paths, path_type='ARFF')
-        atleast_one_feature_specified = True
-        user_feature_type = 'arff'
-        meta_data_supplied = user_feature_paths[0]
-        meta_data_format = 'arff'
-    else:
-        user_feature_paths = None
-        user_feature_type = None
-
-    # map in python 3 returns a generator, not a list, so len() wouldnt work
-    if not isinstance(user_feature_paths, list):
-        user_feature_paths = list(user_feature_paths)
-
-    if not atleast_one_feature_specified:
-        raise ValueError('Atleast one method specifying features must be specified. '
-                         'It can be a path(s) to pyradigm dataset, matrix file, '
-                         'user-defined folder or a Freesurfer subject directory.')
-
-    return user_feature_paths, user_feature_type, fs_subject_dir, \
-           meta_data_supplied, meta_data_format
-
-
 def parse_args():
     """Parser/validator for the cmd line args."""
 
@@ -699,18 +591,6 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
     return
 
 
-def validate_impute_strategy(user_choice):
-    """Checks that user made a valid choice."""
-
-    user_choice = user_choice.lower()
-    if user_choice != cfg.default_imputation_strategy and \
-            user_choice not in cfg.avail_imputation_strategies:
-        raise ValueError('Unrecognized imputation strategy!\n\tchoose one of {}'
-                         ''.format(cfg.avail_imputation_strategies))
-
-    return user_choice
-
-
 def validate_class_set(classes, subgroups, positive_class=None):
     "Ensures class names are valid and sub-groups exist."
 
@@ -828,7 +708,8 @@ def import_datasets(method_list, out_dir, subjects, classes,
     for mm, cur_method in enumerate(method_list):
         if cur_method in [get_pyradigm]:
 
-            method_name, out_path_cur_dataset = process_pyradigm(feature_path[mm], subjects, classes)
+            method_name, out_path_cur_dataset = process_pyradigm(feature_path[mm],
+                                                                 subjects, classes)
 
             # if feature_type in ['pyradigm']:
             #     loaded_dataset = MLDataset(filepath=feature_path[mm])
@@ -849,8 +730,8 @@ def import_datasets(method_list, out_dir, subjects, classes,
 
         elif cur_method in [get_arff]:
 
-            method_name, out_path_cur_dataset = process_arff(feature_path[mm], subjects, classes,
-                                                             out_dir)
+            method_name, out_path_cur_dataset = process_arff(
+                    feature_path[mm], subjects, classes, out_dir)
 
             # loaded_dataset = MLDataset(arff_path=feature_path[mm])
             # if len(loaded_dataset.description) > 1:

@@ -374,6 +374,18 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
     return num_select
 
 
+def validate_impute_strategy(user_choice):
+    """Checks that user made a valid choice."""
+
+    user_choice = user_choice.lower()
+    if user_choice != cfg.default_imputation_strategy and \
+            user_choice not in cfg.avail_imputation_strategies:
+        raise ValueError('Unrecognized imputation strategy!\n\tchoose one of {}'
+                         ''.format(cfg.avail_imputation_strategies))
+
+    return user_choice
+
+
 def uniquify_in_order(seq):
     """Produces a list with unique elements in the same order as original sequence.
 
@@ -457,3 +469,26 @@ def not_unspecified(var):
     """ Checks for null values of a give variable! """
 
     return var not in ['None', 'none', None, '']
+
+
+def print_options(run_dir):
+    """
+    Prints options used in a previous run.
+
+    Parameters
+    ----------
+    run_dir : str
+        Path to a folder to with options from a previous run stored.
+
+    """
+
+    from neuropredict.utils import load_options
+    user_options = load_options(run_dir)
+
+    # print(user_options)
+    print('\n\nOptions used in the run\n{}\n'.format(run_dir))
+    for key, val in user_options.items():
+        if key.lower() not in ('sample_ids', 'classes'):
+            print('{:>25} : {}'.format(key, val))
+
+    return
