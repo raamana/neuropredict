@@ -266,17 +266,22 @@ def confusion_matrices(cfmat_array, class_labels,
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
         im = plt.imshow(avg_cfmat, interpolation='nearest', cmap=cmap)
-        # TODO need a utility compress a super long method name (>50 chars) to < 50 chars
-        #   with ... in the middle
+        # TODO need a utility compress a super long method name
+        #  (>50 chars) to < 50 chars with ... in the middle
         plt.title(method_names[dd])
         plt.colorbar(im, fraction=0.046, pad=0.04)
+
         tick_marks = np.arange(len(class_labels))
         plt.xticks(tick_marks, class_labels, rotation=45)
         plt.yticks(tick_marks, class_labels)
+        left, right, bottom, top = im.get_extent()
+        ax.set(xlim=(left, right), ylim=(bottom, top))
 
         thresh = np.percentile(avg_cfmat, 50)
         for i, j in itertools.product(range(num_classes), range(num_classes)):
-            plt.text(j, i, "{:.{prec}f}%".format(avg_cfmat[i, j], prec=cfg.PRECISION_METRICS),
+            plt.text(j, i,
+                     "{:.{prec}f}%".format(avg_cfmat[i, j],
+                                           prec=cfg.PRECISION_METRICS),
                      horizontalalignment="center", fontsize='large',
                      color="blue" if avg_cfmat[i, j] > thresh else "yellow")
 

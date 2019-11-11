@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from sys import version_info
 from os.path import join as pjoin, exists as pexists, abspath, realpath, basename
 import numpy as np
-from pyradigm import MLDataset
+from pyradigm.utils import load_dataset
 
 if version_info.major > 2:
     # the order of import is very important to avoid circular imports
@@ -237,7 +237,13 @@ def get_parser():
     """)
 
     help_feat_select_method = textwrap.dedent("""
-    Feature selection method to apply prior to training the classifier.
+    Feature selection, or dimensionality reduction method to apply prior to training the classifier.
+    
+    NOTE: when feature 'selection' methods are used, we are able to keep track 
+    of which features in the original input space were slected and hence visualize their 
+    feature importance after the repetitions of CV. When 'dimensionality reduction' methods are used,
+    they get transformed to new subspaces, wherein the link to original features is lost and hence 
+    importance values for original input features can not be computed and hence are not visualized.
     
     Default: 'VarianceThreshold', removing features with 0.001 percent of lowest variance (zeros etc).
     
@@ -331,7 +337,7 @@ def get_parser():
     cv_args_group.add_argument("-g", "--gs_level", action="store",
                                dest="gs_level",
                                default="light", help=help_text_gs_level,
-                               choices=cfg.GRIDSEARCH_LEVELS)
+                               choices=cfg.GRIDSEARCH_LEVELS, type=str.lower)
 
     pipeline_group = parser.add_argument_group(title='Predictive Model',
                                                description='Parameters related to '
@@ -342,18 +348,20 @@ def get_parser():
                                 dest="impute_strategy",
                                 default=cfg.default_imputation_strategy,
                                 help=help_imputation_strategy,
-                                choices=cfg.avail_imputation_strategies_with_raise)
+                                choices=cfg.avail_imputation_strategies_with_raise,
+                                type=str.lower)
 
     pipeline_group.add_argument("-fs", "--feat_select_method", action="store",
                                 dest="feat_select_method",
                                 default=cfg.default_feat_select_method,
                                 help=help_feat_select_method,
-                                choices=cfg.feature_selection_choices)
+                                choices=cfg.all_dim_red_methods,
+                                type=str.lower)
 
     pipeline_group.add_argument("-e", "--classifier", action="store",
                                 dest="classifier",
                                 default=cfg.default_classifier, help=help_classifier,
-                                choices=cfg.classifier_choices)
+                                choices=cfg.classifier_choices, type=str.lower)
 
     vis_args = parser.add_argument_group(title='Visualization',
                                          description='Parameters related to '
@@ -622,7 +630,7 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
     accuracy_balanced       = results_dict['accuracy_balanced']
     method_names            = results_dict['method_names']
     num_classes             = results_dict['num_classes']
-    class_sizes             = results_dict['class_sizes']
+    class_sizes             = results_dict['target_sizes']
     confusion_matrix        = results_dict['confusion_matrix']
     class_order             = results_dict['class_set']
     feature_importances_rf  = results_dict['feature_importances_rf']
@@ -673,8 +681,9 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
             visualize.feature_importance_map(feature_importances_rf, method_names,
                                              featimp_fig_path, feature_names)
         else:
-            print('\nCurrent predictive model does not provide '
-                  'feature importance values. Skipping them.')
+            print('\nCurrent predictive model, and/or dimensionality reduction'
+                  ' method, does not provide (or allow for computing) feature'
+                  ' importance values. Skipping them.')
 
         misclf_out_path = pjoin(out_dir, 'misclassified_subjects')
         visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested,
@@ -874,7 +883,7 @@ def import_datasets(method_list, out_dir, subjects, classes,
                                                     cur_method, feature_type)
 
         # checking for presence of any missing data
-        data_mat, targets, ids = MLDataset(filepath=out_path_cur_dataset).data_and_labels()
+        data_mat, targets, ids = load_dataset(out_path_cur_dataset).data_and_labels()
         is_nan = np.isnan(data_mat)
         if is_nan.any():
             data_missing_here = True

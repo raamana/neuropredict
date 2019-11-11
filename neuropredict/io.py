@@ -8,21 +8,23 @@ from os.path import join as pjoin, exists as pexists, realpath, basename
 import numpy as np
 from neuropredict import config_neuropredict as cfg
 from neuropredict.utils import make_dataset_filename
-from pyradigm import MLDataset
+from pyradigm import BaseDataset, ClassificationDataset
+from pyradigm.utils import load_dataset, load_arff_dataset
 
 def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
     "Returns sample IDs and their classes from a given pyradigm"
 
     meta_data_format = meta_data_format.lower()
     if meta_data_format in ['pyradigm', 'mldataset']:
-        dataset = MLDataset(filepath=realpath(meta_data_supplied))
+        dataset = load_dataset(realpath(meta_data_supplied))
     elif meta_data_format in ['arff', 'weka']:
-        dataset = MLDataset(arff_path=realpath(meta_data_supplied))
+        dataset = load_arff_dataset(realpath(meta_data_supplied))
     else:
         raise NotImplementedError('Meta data format {} not implemented. '
-                                  'Only pyradigm and ARFF are supported.'.format(meta_data_format))
+                                  'Only pyradigm and ARFF are supported.'
+                                  ''.format(meta_data_format))
 
-    return dataset.sample_ids, dataset.classes
+    return dataset.samplet_ids, dataset.targets
 
 
 def get_metadata(path):
@@ -46,8 +48,10 @@ def get_metadata(path):
     sample_ids = list(meta[:, 0])
     # checking for duplicates
     if len(set(sample_ids)) < len(sample_ids):
-        duplicates = [sample for sample, count in Counter(sample_ids).items() if count > 1]
-        raise ValueError('Duplicate sample ids found!\n{}\nRemove duplicates and rerun.'.format(duplicates))
+        duplicates = [sid for sid, count in Counter(sample_ids).items() if count > 1]
+        raise ValueError('Duplicate sample ids found!\n{}\n'
+                         'Remove duplicates and rerun.'
+                         ''.format(duplicates))
 
     classes = dict(zip(sample_ids, meta[:, 1]))
 
@@ -56,8 +60,9 @@ def get_metadata(path):
 
 def get_dir_of_dirs(featdir, subjid):
     """
-    Method to read in features for a given subject from a user-defined feature folder. This featdir must contain a
-    separate folder for each subject with a file called features.txt with one number per line.
+    Method to read in features for a given subject from a user-defined feature folder.
+    This featdir must contain a separate folder for each subject with a file
+    called features.txt with one number per line.
 
     Parameters
     ----------
@@ -84,8 +89,9 @@ def get_dir_of_dirs(featdir, subjid):
         raise IOError('Unable to load features from \n{}'.format(featfile))
 
     # the following ensures an array is returned even when data is a single scalar,
-    # for which len() is not defined (which is needed for pyradigm to find dimensionality
-    # order='F' (column-major) is chosen to as input is expected to be in a single column
+    # for which len() is not defined (which is needed for pyradigm
+    #   to find dimensionality of features
+    # order='F' (column-major) chosen as input is expected to be in a single column
     data = data.flatten(order='F')
 
     return data, feat_names
@@ -102,7 +108,8 @@ def get_data_matrix(featpath):
             matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
         else:
             raise ValueError(
-                'Invalid or empty file extension : {}\n Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
+                'Invalid or empty file extension : {}\n'
+                ' Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
     except IOError:
         raise IOError('Unable to load the data matrix from disk.')
     except:
@@ -120,7 +127,7 @@ def get_pyradigm(feat_path):
 def process_pyradigm(feature_path, subjects, classes):
     """Processes the given dataset to return a clean name and path."""
 
-    loaded_dataset = MLDataset(filepath=feature_path)
+    loaded_dataset = load_dataset(feature_path)
 
     if len(loaded_dataset.description) > 1:
         method_name = loaded_dataset.description
@@ -128,7 +135,8 @@ def process_pyradigm(feature_path, subjects, classes):
         method_name = basename(feature_path)
 
     if not saved_dataset_matches(loaded_dataset, subjects, classes):
-        raise ValueError('supplied pyradigm dataset does not match samples in the meta data.')
+        raise ValueError('supplied pyradigm dataset does not match '
+                         'samples in the meta data.')
     else:
         out_path_cur_dataset = feature_path
 
@@ -145,7 +153,7 @@ def process_arff(feature_path, subjects, classes, out_dir):
     """Processes the given dataset to return a clean name and path."""
 
 
-    loaded_dataset = MLDataset(arff_path=feature_path)
+    loaded_dataset = load_arff_dataset(feature_path)
     if len(loaded_dataset.description) > 1:
         method_name = loaded_dataset.description
     else:
@@ -156,18 +164,22 @@ def process_arff(feature_path, subjects, classes, out_dir):
     loaded_dataset.save(out_path_cur_dataset)
 
     if not saved_dataset_matches(loaded_dataset, subjects, classes):
-        raise ValueError('supplied ARFF dataset does not match samples in the meta data.')
+        raise ValueError('supplied ARFF dataset does not match '
+                         'samples in the meta data.')
 
     return method_name, out_path_cur_dataset
 
 
-def get_features(subjects, classes, featdir, outdir, outname, get_method=None, feature_type='dir_of_dris'):
+def get_features(samplet_id_list, classes,
+                 featdir, outdir, outname,
+                 get_method=None,
+                 feature_type='dir_of_dris'):
     """
     Populates the pyradigm data structure with features from a given method.
 
     Parameters
     ----------
-    subjects : list or ndarray
+    samplet_id_list : list or ndarray
         List of subject IDs
     classes : dict
         dict of class labels keyed in by subject id
@@ -178,23 +190,26 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method=None, f
     outname : str
         Name of the feature set
     get_method : callable
-        Callable that takes in a path and returns a vectorized feature set (e.g. set of subcortical volumes),
-        with an optional array of names for each feature.
+        Callable that takes in a path and returns a vectorized feature set
+        e.g. set of subcortical volumes, with an optional array of names for each
+        feature.
     feature_type : str
         Identifier of data organization for features.
 
     Returns
     -------
     saved_path : str
-        Path where the features have been saved to as an MLDataset
+        Path where the features have been saved to as a pyradigm dataset
 
     """
 
     if not callable(get_method):
         raise ValueError("Supplied get_method is not callable! "
-                         "It must take in a path and return a vectorized feature set and labels.")
+                         " It must take in a path and "
+                         "return a vectorized feature set and labels.")
 
-    # generating an unique numeric label for each class (sorted in order of their appearance in metadata file)
+    # generating an unique numeric label for each class
+    # (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
     class_labels = dict()
     for idx, cls in enumerate(class_set):
@@ -205,31 +220,36 @@ def get_features(subjects, classes, featdir, outdir, outname, get_method=None, f
     if feature_type == 'data_matrix':
         data_matrix = get_data_matrix(featdir)
 
-    ds = MLDataset()
-    for subjid in subjects:
+    ds = ClassificationDataset()
+    for samplet_id in samplet_id_list:
         try:
             if feature_type == 'data_matrix':
-                data = data_matrix[subjects.index(subjid), :]
+                data = data_matrix[samplet_id_list.index(samplet_id), :]
                 feat_names = None
             else:
-                data, feat_names = get_method(featdir, subjid)
+                data, feat_names = get_method(featdir, samplet_id)
 
-            ds.add_sample(subjid, data, class_labels[classes[subjid]], classes[subjid], feat_names)
+            ds.add_samplet(samplet_id=samplet_id,
+                           features=data,
+                           target=classes[samplet_id],
+                           feature_names=feat_names)
         except:
-            ids_excluded.append(subjid)
+            ids_excluded.append(samplet_id)
             traceback.print_exc()
-            warnings.warn("Features for {} via {} method could not be read or added. "
-                          "Excluding it.".format(subjid, get_method.__name__))
+            warnings.warn("Features for {} via {} method could not be read or added."
+                          " Excluding it.".format(samplet_id, get_method.__name__))
 
     # warning for if failed to extract features even for one subject
-    alert_failed_feature_extraction(len(ids_excluded), ds.num_samples, len(subjects))
+    alert_failed_feature_extraction(len(ids_excluded), ds.num_samplets,
+                                    len(samplet_id_list))
 
     # save the dataset to disk to enable passing on multiple dataset(s)
     saved_path = realpath(pjoin(outdir, outname))
     try:
         ds.save(saved_path)
     except IOError as ioe:
-        print('Unable to save {} features to disk in folder:\n{}'.format(outname, outdir))
+        print('Unable to save {} features to disk in folder:\n{}'
+              ''.format(outname, outdir))
         raise ioe
 
     return saved_path
@@ -240,7 +260,8 @@ def alert_failed_feature_extraction(num_excluded, num_read, total_num):
 
     allowed_to_proceed = True
     if num_excluded > 0:
-        warnings.warn('Features for {} / {} subjects could not be read. '.format(num_excluded, total_num))
+        warnings.warn('Features for {} / {} subjects could not be read. '
+                      ''.format(num_excluded, total_num))
         user_confirmation = input("Would you like to proceed?  y / [N] : ")
         if user_confirmation.lower() not in ['y', 'yes', 'ye']:
             print('Stopping. \n'
@@ -279,15 +300,18 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
         if (not pexists(dataset_spec)) or (os.path.getsize(dataset_spec) <= 0):
             return False
         else:
-            ds = MLDataset(dataset_spec)
-    elif isinstance(dataset_spec, MLDataset):
+            ds = load_dataset(dataset_spec)
+    elif isinstance(dataset_spec, BaseDataset):
         ds = dataset_spec
     else:
         raise ValueError('Input must be a path or MLDataset.')
 
-    # TODO this check for exact match is too conservative: allow for extra subjects/classes to exist
-    #   as long as they contain the subjects you need, and they belong to right class in both
-    if set(ds.class_set) != set(classes.values()) or set(ds.sample_ids) != set(subjects):
+    # TODO this check for exact match is too conservative:
+    #   allow for extra subjects/classes to exist
+    #   as long as they contain the subjects you need,
+    #       and they belong to right class in both
+    if (set(ds.target_set) != set(classes.values())) or \
+            (set(ds.samplet_ids) != set(subjects)):
         return False
     else:
         return True
@@ -303,7 +327,7 @@ def load_pyradigms(dataset_paths, sub_group=None):
 
     sub_group : iterable
         subset of classes to return. Default: return all classes.
-        If sub_group is specified, returns only that subset of classes for all datasets.
+        If sub_group is given, returns only that subset of classes for all datasets.
 
     Raises
     ------
@@ -323,18 +347,19 @@ def load_pyradigms(dataset_paths, sub_group=None):
 
         try:
             # there is an internal validation of dataset
-            ds_in = MLDataset(fp)
+            ds_in = load_dataset(fp)
         except:
-            print("Dataset @ {} is not a valid MLDataset!".format(fp))
+            print("Dataset @ {} is not a valid pyradigm dataset!".format(fp))
             raise
 
-        class_set = set(ds_in.class_set)
+        class_set = set(ds_in.target_set)
         if sub_group is None or sub_group == class_set:
             ds_out = ds_in
         elif sub_group < class_set: # < on sets is an issubset operation
             ds_out = ds_in.get_class(sub_group)
         else:
-            raise ValueError('One or more classes in {} does not exist in\n{}'.format(sub_group, fp))
+            raise ValueError('One or more classes in {} does not exist in\n{}'
+                             ''.format(sub_group, fp))
 
         # add the valid dataset to list
         datasets.append(ds_out)

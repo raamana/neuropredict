@@ -19,7 +19,6 @@ from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 import traceback
 import shutil
-from pyradigm import MLDataset
 
 if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
@@ -84,14 +83,14 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
         raise ValueError('Label order for confusion matrix must be specified '
                          'for accurate results/visulizations.')
 
-    train_data_mat, train_labels, _ = train_fs.data_and_labels()
-    test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_labels()
+    train_data_mat, train_labels, _ = train_fs.data_and_targets()
+    test_data_mat, true_test_labels, test_sample_ids = test_fs.data_and_targets()
 
     if impute_strategy is not None:
         train_data_mat, test_data_mat = impute_missing_data(train_data_mat, train_labels,
                                                             impute_strategy, test_data_mat)
 
-    train_class_sizes = list(train_fs.class_sizes.values())
+    train_class_sizes = list(train_fs.target_sizes.values())
 
     # TODO look for ways to avoid building this every iter and every dataset.
     pipeline, param_grid = get_pipeline(train_class_sizes,
@@ -113,21 +112,17 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
 
     # assuming order in pipeline construction :
     #   - step 0 : preprocessign (robust scaling)
-    #   - step 1 : feature selector
+    #   - step 1 : feature selector / dim reducer
     _, best_fsr = best_pipeline.steps[1]
     _, best_clf = best_pipeline.steps[-1]  # the final step in an sklearn pipeline
                                            #   is always an estimator/classifier
 
-    # could be useful to compute frequency of selection
-    index_selected_features = best_fsr.get_support(indices=True)
-
     # making predictions on the test set and assessing their performance
     pred_test_labels = best_pipeline.predict(test_data_mat)
 
-    # only the selected features (via index_selected_features) get non-nan value
+    # only the selected features get non-nan value
     feat_importance = get_feature_importance(classifier_name, best_clf,
-                                             train_fs.num_features,
-                                             index_selected_features)
+                                             best_fsr, train_fs.num_features)
 
     # TODO test if the gathering of prob data is consistent
     #   across multiple calls to this method
@@ -298,7 +293,7 @@ def load_results(results_file_path):
             pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
             best_params, feature_importances_rf, \
             feature_names, num_times_misclfd, num_times_tested, \
-            confusion_matrix, class_set, class_sizes, accuracy_balanced, \
+            confusion_matrix, class_set, target_sizes, accuracy_balanced, \
             auc_weighted, positive_class, classifier_name, feat_select_method = \
                 [results_dict.get(var_name)
                  for var_name in cfg.rhst_data_variables_to_persist]
@@ -312,7 +307,7 @@ def load_results(results_file_path):
            pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
            best_params, feature_importances_rf, feature_names, \
            num_times_misclfd, num_times_tested, \
-           confusion_matrix, class_set, class_sizes, \
+           confusion_matrix, class_set, target_sizes, \
            accuracy_balanced, auc_weighted, positive_class, \
            classifier_name, feat_select_method
 
@@ -389,19 +384,20 @@ def run(dataset_path_file, method_names, out_results_dir,
     datasets = load_pyradigms(dataset_paths, sub_group)
 
     # making sure different feature sets are comparable
-    common_ds, class_set, label_set, class_sizes, \
+    common_ds, class_set, target_sizes, \
     num_samples, num_classes, num_datasets, num_features = \
         check_feature_sets_are_comparable(datasets)
     # TODO warning when num_rep are not suficient: need a heuristic to assess it
 
-    # re-map the labels (from 1 to n) to ensure numeric labels do not differ
-    datasets, positive_class, pos_class_index = remap_labels(datasets, common_ds,
-                                                             class_set,
-                                                             positive_class)
+    positive_class, pos_class_index = check_positive_class(class_set, positive_class)
+
+    # the following is not necessary anymore, as labels are now strings!
+    # # re-map the labels (from 1 to n) to ensure numeric labels do not differ
+    # datasets = remap_labels(datasets, common_ds, class_set)
 
     # determine the common size for training
     train_size_common, total_test_samples = determine_training_size(train_perc,
-                                                                    class_sizes,
+                                                                    target_sizes,
                                                                     num_classes)
 
     # the main parallel loop to crunch optimizations, predictions and evaluations
@@ -413,7 +409,7 @@ def run(dataset_path_file, method_names, out_results_dir,
             shared_inputs = proxy_manager.list(
                     [datasets, impute_strategy, train_size_common, feat_sel_size,
                      train_perc, total_test_samples, num_classes, num_features,
-                     label_set, method_names, pos_class_index, out_results_dir,
+                     class_set, method_names, pos_class_index, out_results_dir,
                      grid_search_level, classifier_name, feat_select_method])
             partial_func_holdout = partial(holdout_trial_compare_datasets,
                                            *shared_inputs)
@@ -425,7 +421,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         partial_func_holdout = partial(holdout_trial_compare_datasets, datasets,
                                        impute_strategy, train_size_common,
                                        feat_sel_size, train_perc, total_test_samples,
-                                       num_classes, num_features, label_set,
+                                       num_classes, num_features, class_set,
                                        method_names, pos_class_index,
                                        out_results_dir, grid_search_level,
                                        classifier_name, feat_select_method)
@@ -456,12 +452,12 @@ def run(dataset_path_file, method_names, out_results_dir,
     return out_results_path
 
 
-def determine_training_size(train_perc, class_sizes, num_classes):
+def determine_training_size(train_perc, target_sizes, num_classes):
     """Computes the maximum training size that the smallest class can provide """
 
     print("Different classes in the training set are stratified "
           "to match the smallest class!")
-    train_size_per_class = np.int64(np.floor(train_perc * class_sizes).astype(np.float64))
+    train_size_per_class = np.int64(np.floor(train_perc * target_sizes).astype(np.float64))
     # per-class
     train_size_common = np.int64(np.minimum(min(train_size_per_class), train_size_per_class))
     # single number
@@ -475,7 +471,7 @@ def determine_training_size(train_perc, class_sizes, num_classes):
         raise ValueError('Invalid state - Zero samples selected for training!'
                          'Check the class size distribution in dataset!')
 
-    total_test_samples = np.int64(np.sum(class_sizes) - num_classes * train_size_common)
+    total_test_samples = np.int64(np.sum(target_sizes) - num_classes * train_size_common)
 
     return train_size_common, total_test_samples
 
@@ -499,17 +495,21 @@ def initialize_result_containers(common_ds, datasets, total_test_samples,
                                  n_repetitions, n_datasets, n_classes, num_features):
     """Prepare containers for various outputs"""
 
-    pred_prob_per_class = np.full([n_repetitions, n_datasets, total_test_samples, n_classes], np.nan)
-    pred_labels_per_rep_fs = np.full([n_repetitions, n_datasets, total_test_samples], np.nan)
-    test_labels_per_rep = np.full([n_repetitions, total_test_samples], np.nan)
+    pred_prob_per_class = np.full([n_repetitions, n_datasets,
+                                   total_test_samples, n_classes], np.nan)
+    pred_labels_per_rep_fs = np.full([n_repetitions, n_datasets, total_test_samples],
+                                     fill_value=np.nan, dtype=object);
+    test_labels_per_rep = np.full([n_repetitions, total_test_samples],
+                                  fill_value=np.nan, dtype=object)
 
     best_params = [None] * n_repetitions
 
     num_times_misclfd, num_times_tested = \
-        initialize_misclf_counters(common_ds.sample_ids, n_datasets)
+        initialize_misclf_counters(common_ds.samplet_ids, n_datasets)
 
     # multi-class metrics
-    confusion_matrix = np.full([n_repetitions, n_classes, n_classes, n_datasets], np.nan)
+    confusion_matrix = np.full([n_repetitions, n_classes, n_classes, n_datasets],
+                               np.nan)
     accuracy_balanced = np.full([n_repetitions, n_datasets], np.nan)
     auc_weighted = np.full([n_repetitions, n_datasets], np.nan)
 
@@ -559,47 +559,50 @@ def impute_missing_data(train_data, train_labels, strategy, test_data):
     return imputer.transform(train_data), imputer.transform(test_data)
 
 
-def remap_labels(datasets, common_ds, class_set, positive_class=None):
-    """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
+def check_positive_class(class_set, positive_class=None):
+    """Checks the provided positive class, and returns its index"""
 
-    numeric_labels = make_numeric_labels(class_set)
-
-    # finding the numeric label for positive class
-    # label will also be in the index into the arrays over classes
-    #   due to construction above
     if positive_class is None:
         positive_class = class_set[-1]
     elif positive_class not in class_set:
         raise ValueError('Chosen positive class does not exist in the dataset')
     pos_class_index = class_set.index(positive_class)
 
+    return positive_class, pos_class_index
+
+
+def remap_labels(datasets, common_ds, class_set):
+    """re-map the labels (from 1 to n) to ensure numeric labels do not differ"""
+
+    numeric_labels = make_numeric_labels(class_set)
+
     labels_with_correspondence = dict()
-    for subid in common_ds.sample_ids:
-        labels_with_correspondence[subid] = numeric_labels[common_ds.classes[subid]]
+    for subid in common_ds.samplet_ids:
+        labels_with_correspondence[subid] = numeric_labels[common_ds.targets[subid]]
 
     for idx in range(len(datasets)):
         datasets[idx].labels = labels_with_correspondence
 
-    return datasets, positive_class, pos_class_index
+    return datasets
 
 
 def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
                                    feat_sel_size, train_perc, total_test_samples,
-                                   num_classes, num_features_per_dataset, label_set,
+                                   num_classes, num_features_per_dataset, class_set,
                                    method_names, pos_class_index, out_results_dir,
                                    grid_search_level, classifier_name,
                                    feat_select_method, rep_id=None):
     """
-    Runs a single iteration of optimizing the chosen pipeline on the chosen training set,
-    and evaluations on the given test set.
+    Runs a single iteration of optimizing the chosen pipeline on the chosen
+    training set, and evaluations on the given test set.
 
     Parameters
     ----------
     datasets
 
     impute_strategy : str
-        Strategy to handle the missing data: whether to raise an error if data is missing, or
-            to impute them using the method chosen here.
+        Strategy to handle the missing data: whether to raise an error if data is
+        missing, or to impute them using the method chosen here.
 
     train_size_common
     feat_sel_size
@@ -607,7 +610,7 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
     total_test_samples
     num_classes
     num_features_per_dataset
-    label_set
+    class_set
     method_names
     pos_class_index
     out_results_dir
@@ -615,7 +618,8 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
 
     grid_search_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', broadest range of values for most parameters will be used
+        for optimization.
 
     Returns
     -------
@@ -624,11 +628,6 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
 
     common_ds = datasets[cfg.COMMON_DATASET_INDEX]
     num_datasets = len(datasets)
-
-    pred_prob_per_class = np.full([num_datasets, total_test_samples, num_classes],
-                                  np.nan)
-    pred_labels_per_rep_fs = np.full([num_datasets, total_test_samples], np.nan)
-    true_test_labels = np.full(total_test_samples, np.nan)
 
     # multi-class metrics
     confusion_matrix = np.full([num_classes, num_classes, num_datasets], np.nan)
@@ -643,8 +642,15 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
 
     # set of subjects for training and testing, common for all datasets.
     train_set, test_set = common_ds.train_test_split_ids(count_per_class=train_size_common)
-    true_test_labels = [common_ds.labels[sid]
-                        for sid in test_set if sid in common_ds.labels]
+    # NOTE test labels are the same for all datasets - each feature/model
+    # combination is being evaluated against the same set of test samplets
+    true_test_labels = np.array([common_ds.targets[sid]
+                        for sid in test_set if sid in common_ds.targets])
+
+    pred_prob_per_class = np.full([num_datasets, total_test_samples, num_classes],
+                                  np.nan)
+    pred_labels_per_rep_fs = np.empty([num_datasets, total_test_samples],
+                                     dtype=true_test_labels.dtype)
 
     # to uniquely identify this iteration
     if rep_id is None:
@@ -668,13 +674,13 @@ def holdout_trial_compare_datasets(datasets, impute_strategy, train_size_common,
         test_fs = datasets[dd].get_subset(test_set)
 
         pred_prob_per_class[dd, :, :], pred_labels_per_rep_fs[dd,:], \
-        true_test_labels, conf_mat, misclsfd_ids_this_run[dd], \
+        _ignored_true_test_labels, conf_mat, misclsfd_ids_this_run[dd], \
         feature_importances[dd], best_params[dd] = \
             eval_optimized_model_on_testset(train_fs, test_fs,
                                             impute_strategy=impute_strategy,
                                             train_perc=train_perc,
                                             feat_sel_size=feat_sel_size,
-                                            label_order_in_conf_matrix=label_set,
+                                            label_order_in_conf_matrix=class_set,
                                             grid_search_level=grid_search_level,
                                             classifier_name=classifier_name,
                                             feat_select_method=feat_select_method)

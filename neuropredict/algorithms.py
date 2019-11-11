@@ -188,7 +188,8 @@ def get_DecisionTreeClassifier(reduced_dim=None,
         split_criteria = ['gini', 'entropy']
         range_min_leafsize = [1, 3, 5, 10, 20]
 
-        # if user supplied reduced_dim, it will be tried also. Default None --> all features.
+        # if user supplied reduced_dim, it will be tried also.
+        #   Default None --> all features.
         range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
@@ -592,7 +593,7 @@ def get_classifier(classifier_name=cfg.default_classifier,
 def get_feature_selector(feat_selector_name='variancethreshold',
                          reduced_dim='all'):
     """
-    Returns the named classifier and its parameter grid.
+    Returns the named dimensionality reduction method and its parameter grid.
 
     Parameters
     ----------
@@ -604,7 +605,7 @@ def get_feature_selector(feat_selector_name='variancethreshold',
 
     Returns
     -------
-    feat_selector : sklearn.feature_selection method
+    dim_red : sklearn.feature_selection method
         Valid scikit-learn feature selector.
     clf_name : str
         String identifying the feature selector to construct the parameter grid.
@@ -613,28 +614,59 @@ def get_feature_selector(feat_selector_name='variancethreshold',
 
     """
 
-    fs_name = feat_selector_name.lower()
-    if fs_name in ['selectkbest_mutual_info_classif', ]:
-        # no param optimization for feat selector for now.
-        feat_selector = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
-        # TODO optimize the num features to select as part of grid search
-        fs_param_grid = None
+    # TODO not optimizing hyper params for any technique: Isomap, LLE etc
 
-    elif fs_name in ['selectkbest_f_classif', ]:
-        # no param optimization for feat selector for now.
-        feat_selector = SelectKBest(score_func=f_classif, k=reduced_dim)
-        fs_param_grid = None
+    dr_name = feat_selector_name.lower()
+    if dr_name in ['isomap', ]:
+        from sklearn.manifold.isomap import Isomap
+        dim_red = Isomap(n_components=reduced_dim)
+        dr_param_grid = None
+    elif dr_name in ['lle', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+        dim_red = LocallyLinearEmbedding(n_components=reduced_dim,
+                                         method='standard')
+        dr_param_grid = None
+    elif dr_name in ['lle_modified', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+        dim_red = LocallyLinearEmbedding(n_components=reduced_dim,
+                                         method='modified')
+        dr_param_grid = None
+    elif dr_name in ['lle_hessian', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
 
-    elif fs_name in ['variancethreshold', ]:
-        feat_selector = VarianceThreshold(threshold=cfg.variance_threshold)
-        fs_param_grid = None
+        n_components = reduced_dim
+        # ensuring n_neighbors meets the required magnitude
+        dp = n_components * (n_components + 1) // 2
+        n_neighbors = n_components + dp + 1
+        dim_red = LocallyLinearEmbedding(n_components=n_components,
+                                         n_neighbors=n_neighbors,
+                                         method='hessian')
+        dr_param_grid = None
+    elif dr_name in ['lle_ltsa', ]:
+        from sklearn.manifold import LocallyLinearEmbedding
+        dim_red = LocallyLinearEmbedding(n_components=reduced_dim,
+                                         method='ltsa')
+        dr_param_grid = None
+    elif dr_name in ['selectkbest_mutual_info_classif', ]:
+        # no param optimization for feat selector for now.
+        dim_red = SelectKBest(score_func=mutual_info_classif, k=reduced_dim)
+        dr_param_grid = None
+
+    elif dr_name in ['selectkbest_f_classif', ]:
+        # no param optimization for feat selector for now.
+        dim_red = SelectKBest(score_func=f_classif, k=reduced_dim)
+        dr_param_grid = None
+
+    elif dr_name in ['variancethreshold', ]:
+        dim_red = VarianceThreshold(threshold=cfg.variance_threshold)
+        dr_param_grid = None
 
     else:
         raise ValueError('Invalid name, or method {} not implemented.\n'
-                         'Choose one of {}'.format(fs_name,
-                                                   cfg.feature_selection_choices))
+                         'Choose one of {}'.format(dr_name,
+                                                   cfg.all_dim_red_methods))
 
-    return feat_selector, fs_name, fs_param_grid
+    return dim_red, dr_name, dr_param_grid
 
 
 def get_preprocessor(preproc_name='RobustScaler'):
@@ -651,7 +683,8 @@ def get_preprocessor(preproc_name='RobustScaler'):
         raise ValueError('chosen preprocessor not supported.')
 
     if preproc_name in ['robustscaler']:
-        preproc = RobustScaler(with_centering=True, with_scaling=True, quantile_range=cfg.robust_scaler_iqr)
+        preproc = RobustScaler(with_centering=True, with_scaling=True,
+                               quantile_range=cfg.robust_scaler_iqr)
         param_grid = None
     else:
         # TODO returning preprocessor blindly without any parameters
@@ -662,10 +695,10 @@ def get_preprocessor(preproc_name='RobustScaler'):
 
 
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
-                 preprocessor_name='robustscaler',
-                 feat_selector_name=cfg.default_feat_select_method,
-                 classifier_name=cfg.default_classifier,
-                 grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+                 preproc_name='robustscaler',
+                 fsr_name=cfg.default_feat_select_method,
+                 clfr_name=cfg.default_classifier,
+                 gs_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Constructor for pipeline (feature selection followed by a classifier).
 
@@ -682,19 +715,20 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     num_features : int
         Number of features in the training set.
 
-    classifier_name : str
+    clfr_name : str
         String referring to a valid scikit-learn classifier.
 
-    feat_selector_name : str
+    fsr_name : str
         String referring to a valid scikit-learn feature selector.
 
-    preprocessor_name : str
+    preproc_name : str
         String referring to a valid scikit-learn preprocessor
         (This can technically be another feature selector, although discourage).
 
-    grid_search_level : str
+    gs_level : str
         If 'light', grid search resolution will be reduced to speed up optimization.
-        If 'exhaustive', most values for most parameters will be user for optimization.
+        If 'exhaustive', most values for most parameters will be user for
+        optimization.
 
     Returns
     -------
@@ -710,9 +744,10 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes,
                                                  num_features)
 
-    preproc, preproc_name, preproc_param_grid = get_preprocessor(preprocessor_name)
-    estimator, est_name, clf_param_grid = get_classifier(classifier_name, reduced_dim, grid_search_level)
-    feat_selector, fs_name, fs_param_grid = get_feature_selector(feat_selector_name,
+    preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
+    estimator, est_name, clf_param_grid = get_classifier(clfr_name, reduced_dim,
+                                                         gs_level)
+    feat_selector, fs_name, fs_param_grid = get_feature_selector(fsr_name,
                                                                  reduced_dim)
 
     # composite grid of parameters from all steps
@@ -728,7 +763,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     return pipeline, param_grid
 
 
-def get_feature_importance(clf_name, clf, num_features, index_selected_features, fill_value=np.nan):
+def get_feature_importance(clf_name, clf, dim_red,
+                           num_features, fill_value=np.nan):
     "Extracts the feature importance of input features, if available."
 
     attr_importance = {'randomforestclassifier': 'feature_importances_',
@@ -738,8 +774,12 @@ def get_feature_importance(clf_name, clf, num_features, index_selected_features,
                        'xgboost'               : 'feature_importances_',}
 
     feat_importance = np.full(num_features, fill_value)
-    if hasattr(clf, attr_importance[clf_name]):
-        feat_importance[index_selected_features] = getattr(clf,
-                                                           attr_importance[clf_name])
+
+    if hasattr(dim_red, 'get_support'): # nonlinear dim red won't have this
+        index_selected_features = dim_red.get_support(indices=True)
+
+        if hasattr(clf, attr_importance[clf_name]):
+            feat_importance[index_selected_features] = \
+                getattr(clf, attr_importance[clf_name])
 
     return feat_importance

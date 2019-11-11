@@ -50,8 +50,11 @@ classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
 __feat_sel_CHOICES = ('SelectKBest_mutual_info_classif',
                       'SelectKBest_f_classif',
-                      'VarianceThreshold')
-feature_selection_choices = [ fsm.lower() for fsm in __feat_sel_CHOICES]
+                      'VarianceThreshold',
+                      )
+__dim_red_CHOICES = ('Isomap', 'LLE', 'LLE_modified', 'LLE_Hessian', 'LLE_LTSA')
+__generic_fs_dr_CHOICES = __feat_sel_CHOICES + __dim_red_CHOICES
+all_dim_red_methods = [fsm.lower() for fsm in __generic_fs_dr_CHOICES]
 
 default_classifier = 'RandomForestClassifier'
 default_feat_select_method = 'VarianceThreshold'
@@ -151,7 +154,7 @@ rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc',
                                   'test_labels_per_rep', 'best_params',
                                   'feature_importances_rf', 'feature_names',
                                   'num_times_misclfd', 'num_times_tested',
-                                  'confusion_matrix', 'class_set', 'class_sizes',
+                                  'confusion_matrix', 'class_set', 'target_sizes',
                                   'accuracy_balanced', 'auc_weighted',
                                   'positive_class', 'classifier_name',
                                   'feat_select_method']
