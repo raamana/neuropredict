@@ -31,6 +31,10 @@ setup(name='neuropredict',
       entry_points={
           "console_scripts": [
               "neuropredict=neuropredict.__main__:main",
+              "neuropredict_classify=neuropredict.__main__:main",
+              "np_classify=neuropredict.__main__:main",
+              "neuropredict_regress=neuropredict.__regress__:main",
+              "np_regress=neuropredict.__regress__:main",
           ]
       }
 
