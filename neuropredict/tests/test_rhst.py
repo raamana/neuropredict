@@ -185,7 +185,7 @@ def test_chance_clf_binary_svm():
     sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} '
                            '-e {} -fs {}'.format(out_path, out_path2, train_perc,
                                                  min_rep_per_class *
-                                                 rand_two_class.num_classes,
+                                                 rand_two_class.num_targets,
                                                  num_procs, gs_level, out_dir,
                                                  classifier, fs_method))
     cli()
@@ -193,7 +193,7 @@ def test_chance_clf_binary_svm():
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
         raise_if_mean_differs_from(result['accuracy_balanced'],
-                                   result['class_sizes'],
+                                   result['target_sizes'],
                                    eps_chance_acc=eps_chance_acc_binary)
 
 
@@ -223,7 +223,7 @@ def test_separable_100perc():
             cv_results = rhst.load_results_from_folder(out_dir_sep)
             for sg, result in cv_results.items():
                 raise_if_mean_differs_from(result['accuracy_balanced'],
-                                           result['class_sizes'],
+                                           result['target_sizes'],
                                            reference_level=1.0, #comparing to perfect
                                            eps_chance_acc=0.5,
                                            method_descr='{} {}'.format(fs_name,
@@ -247,7 +247,8 @@ def test_chance_multiclass():
 
     cv_results = rhst.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
-        raise_if_mean_differs_from(result['accuracy_balanced'], result['class_sizes'],
+        raise_if_mean_differs_from(result['accuracy_balanced'],
+                                   result['target_sizes'],
                                    eps_chance_acc,
                                    method_descr='{} {} gsl {}'
                                                 ''.format(fs_method, clf, gsl))
@@ -268,7 +269,7 @@ def test_each_combination_works():
                 sys.argv = shlex.split(cli_str)
                 cli()
             except:
-                print(' ---> combination failed: {} {}'.format(clf_name, fs_name))
+                print('\n ---> combination failed: {} {}'.format(clf_name, fs_name))
                 raise
 
 
@@ -287,7 +288,8 @@ def test_vis():
         with raises(SystemExit):
             sys.argv = shlex.split('neuropredict --make_vis {}'.format(out_dir))
             cli()
-            expected_results = ['balanced_accuracy.pdf', 'compare_misclf_rates.pdf',
+            expected_results = ['balanced_accuracy.pdf',
+                                'compare_misclf_rates.pdf',
                                 'feature_importance.pdf']
             for rpath in expected_results:
                 if not pexists(rpath):
