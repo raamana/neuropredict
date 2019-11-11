@@ -96,9 +96,9 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
     pipeline, param_grid = get_pipeline(train_class_sizes,
                                         feat_sel_size,
                                         train_fs.num_features,
-                                        grid_search_level=grid_search_level,
-                                        classifier_name=classifier_name,
-                                        feat_selector_name=feat_select_method)
+                                        gs_level=grid_search_level,
+                                        clfr_name=classifier_name,
+                                        fsr_name=feat_select_method)
 
     best_pipeline, best_params = optimize_pipeline_via_grid_search_CV(pipeline,
                                                                       train_data_mat,
