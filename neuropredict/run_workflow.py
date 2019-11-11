@@ -582,7 +582,8 @@ def parse_args():
                                                               user_args.sub_groups,
                                                               user_args.positive_class)
 
-    feature_selection_size = validate_feature_selection_size(user_args.num_features_to_select)
+    feature_selection_size = validate_feature_selection_size(
+            user_args.num_features_to_select)
 
     impute_strategy = validate_impute_strategy(user_args.impute_strategy)
 
@@ -1050,7 +1051,7 @@ def cli():
         feature_selection_size, impute_strategy, num_procs, \
         grid_search_level, classifier, feat_select_method = parse_args()
 
-    print('Running neuropredict {}'.format(__version__))
+    print('Running neuropredict version {}'.format(__version__))
     prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
@@ -1191,14 +1192,12 @@ def run(feature_sets,
         More parameters and more values demand more resources and much longer time
         for optimization.
 
-        The 'light' option tries to "folk wisdom" to try least number of values (
-        no more than one or two),
-         for the parameters for the given classifier. (e.g. a lage number say 500
-         trees for a random forest optimization).
-         The 'light' will be the fastest and should give a "rough idea" of
-         predictive performance.
-         The 'exhaustive' option will try to most parameter values for the most
-         parameters that can be optimized.
+        The 'light' option tries to use "folk wisdom" to try least number of
+        values (no more than one or two), for the parameters for the given
+        classifier e.g. a lage number say 500 trees for a random forest
+        optimization. The 'light' option will be the fastest and should give a
+        "rough idea" of predictive performance. The 'exhaustive' option will try
+        to most parameter values for the most parameters that can be optimized.
 
     Returns
     -------
