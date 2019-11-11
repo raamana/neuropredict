@@ -4,7 +4,8 @@ import numpy as np
 # following affects the maximum num of predictors to be tried in random forest
 PERC_PROB_ERROR_ALLOWED = 0.05
 
-default_num_features_to_select = 'tenth'
+default_reduced_dim_size = 'tenth'
+default_num_features_to_select = default_reduced_dim_size
 feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
 variance_threshold = 0.001
@@ -48,6 +49,17 @@ __classifier_CHOICES = ('RandomForestClassifier',
                         'XGBoost')
 classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
+__regressor_CHOICES = ('RandomForestRegressor',
+                       'ExtraTreesRegressor',
+                       'DecisionTreeRegressor',
+                       'SVR',
+                       'KernelRidge',
+                       'BayesianRidge',
+                       'GaussianProcessRegressor',
+                       'GradientBoostingRegressor'
+                       )
+regressor_choices = [ clf.lower() for clf in __regressor_CHOICES]
+
 __feat_sel_CHOICES = ('SelectKBest_mutual_info_classif',
                       'SelectKBest_f_classif',
                       'VarianceThreshold',
@@ -57,7 +69,10 @@ __generic_fs_dr_CHOICES = __feat_sel_CHOICES + __dim_red_CHOICES
 all_dim_red_methods = [fsm.lower() for fsm in __generic_fs_dr_CHOICES]
 
 default_classifier = 'RandomForestClassifier'
-default_feat_select_method = 'VarianceThreshold'
+default_regressor = 'RandomForestRegressor'
+
+default_dim_red_method = 'VarianceThreshold'
+default_feat_select_method = default_dim_red_method
 
 __clfs_with_feature_importance = ('DecisionTreeClassifier',
                                   'RandomForestClassifier',
