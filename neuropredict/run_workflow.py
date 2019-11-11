@@ -53,285 +53,60 @@ class MissingDataException(NeuroPredictException):
     pass
 
 
-def get_parser():
-    "Parser to specify arguments and their defaults."
+def get_parser_classify():
+    """"""
 
-    parser = argparse.ArgumentParser(prog="neuropredict",
-                                     formatter_class=argparse.RawTextHelpFormatter,
-                                     description='Easy, standardized and '
-                                                 'comprehensive predictive analysis.')
+    from neuropredict.base import get_parser_base
 
-    help_text_fs_dir = textwrap.dedent("""
-    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of Freesurfer parcellation
-    Each subject will be queried after its ID in the metadata file.
-
-    E.g. ``--fs_subject_dir /project/freesurfer_v5.3``
-    \n \n """)
-
-    help_text_user_defined_folder = textwrap.dedent("""
-    List of absolute paths to user's own features.
-
-    Format: Each of these folders contains a separate folder for each subject (named after its ID in the metadata file)
-    containing a file called features.txt with one number per line.
-    All the subjects (in a given folder) must have the number of features (#lines in file).
-    Different parent folders (describing one feature set) can have different number of features for each subject,
-    but they must all have the same number of subjects (folders) within them.
-
-    Names of each folder is used to annotate the results in visualizations.
-    Hence name them uniquely and meaningfully, keeping in mind these figures will be included in your papers.
-    For example,
-
-    .. parsed-literal::
-
-        --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/
-
-    Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` or ``arff_paths`` options can be specified.
-    \n \n """)
-
-    help_text_pyradigm_paths = textwrap.dedent("""
-    Path(s) to pyradigm datasets.
-
-    Each path is self-contained dataset identifying each sample, its class and features.
-    \n \n """)
-
-    help_text_data_matrix = textwrap.dedent("""
-    List of absolute paths to text files containing one matrix of size N x p  (num_samples x num_features).
-
-    Each row in the data matrix file must represent data corresponding to sample in the same row
-    of the meta data file (meta data file and data matrix must be in row-wise correspondence).
-
-    Name of this file will be used to annotate the results and visualizations.
-
-    E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv /project/t1_volumes.csv ``
-
-    Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` or ``arff_paths`` options can be specified.
-    
-    File format could be
-     - a simple comma-separated text file (with extension .csv or .txt): which can easily be read back with
-        numpy.loadtxt(filepath, delimiter=',')
-        or
-     - a numpy array saved to disk (with extension .npy or .numpy) that can read in with numpy.load(filepath).
-
-     One could use ``numpy.savetxt(data_array, delimiter=',')`` or ``numpy.save(data_array)`` to save features.
-
-     File format is inferred from its extension.
-     \n \n """)
-
-    help_text_arff_paths = textwrap.dedent("""
-    List of paths to files saved in Weka's ARFF dataset format.
-    
-    Note: 
-     - this format does NOT allow IDs for each subject.
-     - given feature values are saved in text format, this can lead to large files with high-dimensional data, 
-        compared to numpy arrays saved to disk in binary format.
-    
-    More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html
-    \n \n """)
+    parser, user_defined, cv_args_group, pipeline_group, vis_args, comp_args\
+        = get_parser_base()
 
     help_text_positive_class = textwrap.dedent("""
-    Name of the positive class (e.g. Alzheimers, MCI etc) to be used in calculation of area under the ROC curve.
-    Applicable only for binary classification experiments.
+    Name of the positive class (e.g. Alzheimers, MCI etc) to be used in 
+    calculation of area under the ROC curve. This is applicable only for binary 
+    classification experiments.
 
     Default: class appearing last in order specified in metadata file.
     \n \n """)
 
-    help_text_train_perc = textwrap.dedent("""
-    Percentage of the smallest class to be reserved for training.
-
-    Must be in the interval [0.01 0.99].
-
-    If sample size is sufficiently big, we recommend 0.5.
-    If sample size is small, or class imbalance is high, choose 0.8.
-    \n \n """)
-
-    help_text_num_rep_cv = textwrap.dedent("""
-    Number of repetitions of the repeated-holdout cross-validation.
-
-    The larger the number, more stable the estimates will be.
-    \n \n """)
-
     help_text_sub_groups = textwrap.dedent("""
-    This option allows the user to study different combinations of classes in a multi-class (N>2) dataset.
+    This option allows the user to study different combinations of classes in a 
+    multi-class (N>2) dataset.
 
-    For example, in a dataset with 3 classes CN, FTD and AD,
-    two studies of pair-wise combinations can be studied separately
-    with the following flag ``--sub_groups CN,FTD CN,AD``.
-    This allows the user to focus on few interesting subgroups depending on their dataset/goal.
+    For example, in a dataset with 3 classes CN, FTD and AD, two studies of 
+    pair-wise combinations can be studied separately with the following flag 
+    ``--sub_groups CN,FTD CN,AD``. This allows the user to focus on few 
+    interesting subgroups depending on their dataset/goal.
 
-    Format: Different subgroups must be separated by space,
-    and each sub-group must be a comma-separated list of class names defined in the meta data file.
-    Hence it is strongly recommended to use class names without any spaces, commas, hyphens and special characters,
-    and ideally just alphanumeric characters separated by underscores.
+    Format: Different subgroups must be separated by space, and each sub-group 
+    must be a comma-separated list of class names defined in the meta data file. 
+    Hence it is strongly recommended to use class names without any spaces, 
+    commas, hyphens and special characters, and ideally just alphanumeric 
+    characters separated by underscores.
 
-    Any number of subgroups can be specified, but each subgroup must have atleast two distinct classes.
+    Any number of subgroups can be specified, but each subgroup must have atleast 
+    two distinct classes.
 
-    Default: ``'all'``, leading to inclusion of all available classes in a all-vs-all multi-class setting.
+    Default: ``'all'``, leading to inclusion of all available classes in a 
+    all-vs-all multi-class setting.
     \n \n """)
 
-    help_text_metadata_file = textwrap.dedent("""
-    Abs path to file containing metadata for subjects to be included for analysis.
-
-    At the minimum, each subject should have an id per row followed by the class it belongs to.
-
-    E.g.
-    .. parsed-literal::
-
-        sub001,control
-        sub002,control
-        sub003,disease
-        sub004,disease
-
-    \n \n """)
-
-    help_text_feature_selection = textwrap.dedent("""Number of features to select as part of feature selection.
-    Options:
-
-         - 'tenth'
-         - 'sqrt'
-         - 'log2'
-         - 'all'
-
-    Default: \'tenth\' of the number of samples in the training set.
-
-    For example, if your dataset has 90 samples, you chose 50 percent for training (default),
-    then Y will have 90*.5=45 samples in training set, leading to 5 features to be selected for taining.
-    If you choose a fixed integer, ensure all the feature sets under evaluation have atleast that many features.
-    \n \n """)
-
-    help_text_gs_level = textwrap.dedent("""
-    Flag to specify the level of grid search during hyper-parameter optimization on the training set.
-    Allowed options are : 'none', 'light' and 'exhaustive', in the order of how many values/values will be optimized. 
-    
-    More parameters and more values demand more resources and much longer time for optimization.
-    
-    The 'light' option tries to "folk wisdom" to try least number of values (no more than one or two),
-     for the parameters for the given classifier. (e.g. a lage number say 500 trees for a random forest optimization). 
-     The 'light' will be the fastest and should give a "rough idea" of predictive performance. 
-     The 'exhaustive' option will try to most parameter values for the most parameters that can be optimized.
-    """)
-
-    help_text_make_vis = textwrap.dedent("""
-    Option to make visualizations from existing results in the given path. 
-    This is helpful when neuropredict failed to generate result figures automatically 
-    e.g. on a HPC cluster, or another environment when DISPLAY is either not available.
-    
-    """)
-
-    help_text_atlas = textwrap.dedent("""
-    Name of the atlas to use for visualization. Default: fsaverage, if available.
-    \n \n """)
-    help_text_num_cpus = textwrap.dedent("""
-    Number of CPUs to use to parallelize CV repetitions.
-
-    Default : 4.
-
-    Number of CPUs will be capped at the number available on the machine if higher is requested.
-    \n \n """)
-
-    help_text_out_dir = textwrap.dedent("""
-    Output folder to store gathered features & results.
-    \n \n """)
 
     help_classifier = textwrap.dedent("""
-    
+
     String specifying one of the implemented classifiers. 
-    (Classifiers are carefully chosen to allow for the comprehensive report provided by neuropredict).
-    
+    (Classifiers are carefully chosen to allow for the comprehensive report 
+    provided by neuropredict).
+
     Default: 'RandomForestClassifier'
-    
+
     """)
 
-    help_feat_select_method = textwrap.dedent("""
-    Feature selection, or dimensionality reduction method to apply prior to training the classifier.
-    
-    NOTE: when feature 'selection' methods are used, we are able to keep track 
-    of which features in the original input space were slected and hence visualize their 
-    feature importance after the repetitions of CV. When 'dimensionality reduction' methods are used,
-    they get transformed to new subspaces, wherein the link to original features is lost and hence 
-    importance values for original input features can not be computed and hence are not visualized.
-    
-    Default: 'VarianceThreshold', removing features with 0.001 percent of lowest variance (zeros etc).
-    
-    """)
 
-    help_imputation_strategy = textwrap.dedent("""
-    Strategy to impute any missing data (as encoded by NaNs).
-    
-    Default: 'raise', which raises an error if there is any missing data anywhere.
-    Currently available imputation strategies are: {}
-    
-    """.format(cfg.avail_imputation_strategies))
-
-    help_text_print_options = textwrap.dedent("""
-    Prints the options used in the run in an output folder.
-    
-    """)
-
-    parser.add_argument("-m", "--meta_file", action="store", dest="meta_file",
-                        default=None, required=False, help=help_text_metadata_file)
-
-    parser.add_argument("-o", "--out_dir", action="store", dest="out_dir",
-                        required=False, help=help_text_out_dir,
-                        default=None)
-
-    parser.add_argument("-f", "--fs_subject_dir", action="store",
-                        dest="fs_subject_dir",
-                        default=None, help=help_text_fs_dir)
-
-    user_defined = parser.add_argument_group(title='Input data and formats',
-                                             description='Only one of the '
-                                                         'following types can be '
-                                                         'specified.')
-
-    user_defined.add_argument("-y", "--pyradigm_paths", action="store",
-                              dest="pyradigm_paths",
-                              nargs='+',  # to allow for multiple features
-                              default=None,
-                              help=help_text_pyradigm_paths)
-
-    user_defined.add_argument("-u", "--user_feature_paths", action="store",
-                              dest="user_feature_paths",
-                              nargs='+',  # to allow for multiple features
-                              default=None,
-                              help=help_text_user_defined_folder)
-
-    user_defined.add_argument("-d", "--data_matrix_paths", action="store",
-                              dest="data_matrix_paths",
-                              nargs='+',
-                              default=None,
-                              help=help_text_data_matrix)
-
-    user_defined.add_argument("-a", "--arff_paths", action="store",
-                              dest="arff_paths",
-                              nargs='+',
-                              default=None,
-                              help=help_text_arff_paths)
-
-    cv_args_group = parser.add_argument_group(title='Cross-validation',
-                                              description='Parameters related to '
-                                                          'training and '
-                                                          'optimization during '
-                                                          'cross-validation')
     cv_args_group.add_argument("-p", "--positive_class", action="store",
                                dest="positive_class",
                                default=None,
                                help=help_text_positive_class)
-
-    cv_args_group.add_argument("-t", "--train_perc", action="store",
-                               dest="train_perc",
-                               default=cfg.default_train_perc,
-                               help=help_text_train_perc)
-
-    cv_args_group.add_argument("-n", "--num_rep_cv", action="store",
-                               dest="num_rep_cv",
-                               default=cfg.default_num_repetitions,
-                               help=help_text_num_rep_cv)
-
-    cv_args_group.add_argument("-k", "--num_features_to_select",
-                               dest="num_features_to_select",
-                               action="store",
-                               default=cfg.default_num_features_to_select,
-                               help=help_text_feature_selection)
 
     cv_args_group.add_argument("-sg", "--sub_groups", action="store",
                                dest="sub_groups",
@@ -339,55 +114,10 @@ def get_parser():
                                default="all",
                                help=help_text_sub_groups)
 
-    cv_args_group.add_argument("-g", "--gs_level", action="store",
-                               dest="gs_level",
-                               default="light", help=help_text_gs_level,
-                               choices=cfg.GRIDSEARCH_LEVELS, type=str.lower)
-
-    pipeline_group = parser.add_argument_group(title='Predictive Model',
-                                               description='Parameters related to '
-                                                           'pipeline comprising '
-                                                           'the predictive model')
-
-    pipeline_group.add_argument("-is", "--impute_strategy", action="store",
-                                dest="impute_strategy",
-                                default=cfg.default_imputation_strategy,
-                                help=help_imputation_strategy,
-                                choices=cfg.avail_imputation_strategies_with_raise,
-                                type=str.lower)
-
-    pipeline_group.add_argument("-fs", "--feat_select_method", action="store",
-                                dest="feat_select_method",
-                                default=cfg.default_feat_select_method,
-                                help=help_feat_select_method,
-                                choices=cfg.all_dim_red_methods,
-                                type=str.lower)
-
     pipeline_group.add_argument("-e", "--classifier", action="store",
                                 dest="classifier",
                                 default=cfg.default_classifier, help=help_classifier,
                                 choices=cfg.classifier_choices, type=str.lower)
-
-    vis_args = parser.add_argument_group(title='Visualization',
-                                         description='Parameters related to '
-                                                     'generating visualizations')
-
-    vis_args.add_argument("-z", "--make_vis", action="store", dest="make_vis",
-                          default=None, help=help_text_make_vis)
-
-    comp_args = parser.add_argument_group(title='Computing',
-                                          description='Parameters related to '
-                                                      'computations/debugging')
-
-    comp_args.add_argument("-c", "--num_procs", action="store", dest="num_procs",
-                           default=cfg.DEFAULT_NUM_PROCS, help=help_text_num_cpus)
-
-    comp_args.add_argument("--po", "--print_options", action="store",
-                           dest="print_opt_dir",
-                           default=False, help=help_text_print_options)
-
-    comp_args.add_argument('-v', '--version', action='version',
-                           version='%(prog)s {version}'.format(version=__version__))
 
     return parser
 
@@ -395,7 +125,7 @@ def get_parser():
 def parse_args():
     """Parser/validator for the cmd line args."""
 
-    parser = get_parser()
+    parser = get_parser_classify()
 
     if len(sys.argv) < 2:
         print('Too few arguments!')
