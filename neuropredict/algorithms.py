@@ -97,8 +97,8 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
 
     if isinstance(select_method, str):
         if select_method in get_reduced_dim:
-            smallest_class_size = np.sum(train_class_sizes)
-            calc_size = get_reduced_dim[select_method](smallest_class_size)
+            sum_of_class_sizes = np.sum(train_class_sizes)
+            calc_size = get_reduced_dim[select_method](sum_of_class_sizes)
         else:
             # arg could be string coming from command line
             calc_size = np.int64(select_method)
@@ -590,7 +590,8 @@ def get_classifier(classifier_name=cfg.default_classifier,
     return clf, clf_name, param_grid
 
 
-def get_feature_selector(feat_selector_name='variancethreshold',
+def get_feature_selector(train_class_sizes,
+                         feat_selector_name='variancethreshold',
                          reduced_dim='all'):
     """
     Returns the named dimensionality reduction method and its parameter grid.
@@ -616,6 +617,8 @@ def get_feature_selector(feat_selector_name='variancethreshold',
 
     # TODO not optimizing hyper params for any technique: Isomap, LLE etc
 
+    total_num_samplets = np.sum(train_class_sizes)
+
     dr_name = feat_selector_name.lower()
     if dr_name in ['isomap', ]:
         from sklearn.manifold.isomap import Isomap
@@ -638,6 +641,7 @@ def get_feature_selector(feat_selector_name='variancethreshold',
         # ensuring n_neighbors meets the required magnitude
         dp = n_components * (n_components + 1) // 2
         n_neighbors = n_components + dp + 1
+        n_neighbors = min(n_neighbors, total_num_samplets)
         dim_red = LocallyLinearEmbedding(n_components=n_components,
                                          n_neighbors=n_neighbors,
                                          method='hessian')
@@ -747,8 +751,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
     estimator, est_name, clf_param_grid = get_classifier(clfr_name, reduced_dim,
                                                          gs_level)
-    feat_selector, fs_name, fs_param_grid = get_feature_selector(fsr_name,
-                                                                 reduced_dim)
+    feat_selector, fs_name, fs_param_grid = get_feature_selector(
+            train_class_sizes, fsr_name, reduced_dim)
 
     # composite grid of parameters from all steps
     param_grid = clf_param_grid.copy()
