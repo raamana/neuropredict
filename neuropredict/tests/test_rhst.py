@@ -183,7 +183,7 @@ def test_chance_clf_binary_svm():
         gs_level, train_perc, num_procs
 
     sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} '
-                           '-e {} -fs {}'.format(out_path, out_path2, train_perc,
+                           '-e {} -dr {}'.format(out_path, out_path2, train_perc,
                                                  min_rep_per_class *
                                                  rand_two_class.num_targets,
                                                  num_procs, gs_level, out_dir,
@@ -214,7 +214,7 @@ def test_separable_100perc():
     for clf_name in cfg.classifier_choices:
         for fs_name in cfg.all_dim_red_methods:
 
-            cli_str = 'neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -fs {}' \
+            cli_str = 'neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -dr {}' \
                       ''.format(out_path_sep, train_perc, nrep, 1, gsl, out_dir_sep,
                                 clf_name, fs_name)
             sys.argv = shlex.split(cli_str)
@@ -240,7 +240,7 @@ def test_chance_multiclass():
     nrep = total_num_classes*min_rep_per_class
     gsl = 'none'  # to speed up the process
     sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} '
-                           '-o {} -e {} -fs {}'
+                           '-o {} -e {} -dr {}'
                            ''.format(out_path_multiclass, train_perc, nrep,
                                      num_procs, gsl, out_dir, clf, fs_method))
     cli()
@@ -263,7 +263,7 @@ def test_each_combination_works():
         for fs_name in cfg.all_dim_red_methods:
             try:
                 cli_str = 'neuropredict -y {} -t {} -n {} -c {} -o {} ' \
-                          ' -e {} -fs {} -g {} ' \
+                          ' -e {} -dr {} -g {} ' \
                           ''.format(out_path, train_perc, nrep, num_procs, out_dir,
                                     clf_name, fs_name, gsl)
                 sys.argv = shlex.split(cli_str)
@@ -303,7 +303,7 @@ def test_arff():
     arff_path = realpath(pjoin(dirname(dirname(dirname(__file__))), # 3 levels up
                                'example_datasets', 'arff', 'iris.arff'))
     sys.argv = shlex.split('neuropredict -a {} -t {} -n {} -c {} -g {} -o {} '
-                           '-e {} -fs {}'.format(arff_path, train_perc,
+                           '-e {} -dr {}'.format(arff_path, train_perc,
                                                  num_repetitions, num_procs,
                                                  gs_level, out_dir, classifier,
                                                  fs_method))

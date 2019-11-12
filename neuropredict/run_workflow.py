@@ -61,6 +61,24 @@ def get_parser_classify():
     parser, user_defined, cv_args_group, pipeline_group, vis_args, comp_args\
         = get_parser_base()
 
+    help_text_fs_dir = textwrap.dedent("""
+    Absolute path to ``SUBJECTS_DIR`` containing the finished runs of 
+    Freesurfer parcellation. Each subject will be queried after its ID in the 
+    metadata file. E.g. ``--fs_subject_dir /project/freesurfer_v5.3``
+    \n \n """)
+
+    help_text_arff_paths = textwrap.dedent("""
+    List of paths to files saved in Weka's ARFF dataset format.
+
+    Note: 
+     - this format does NOT allow IDs for each subject.
+     - given feature values are saved in text format, this can lead to large files 
+     with high-dimensional data, 
+        compared to numpy arrays saved to disk in binary format.
+
+    More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html
+    \n \n """)
+
     help_text_positive_class = textwrap.dedent("""
     Name of the positive class (e.g. Alzheimers, MCI etc) to be used in 
     calculation of area under the ROC curve. This is applicable only for binary 
@@ -102,6 +120,15 @@ def get_parser_classify():
 
     """)
 
+    parser.add_argument("-f", "--fs_subject_dir", action="store",
+                        dest="fs_subject_dir",
+                        default=None, help=help_text_fs_dir)
+
+    user_defined.add_argument("-a", "--arff_paths", action="store",
+                              dest="arff_paths",
+                              nargs='+',
+                              default=None,
+                              help=help_text_arff_paths)
 
     cv_args_group.add_argument("-p", "--positive_class", action="store",
                                dest="positive_class",
@@ -205,7 +232,7 @@ def parse_args():
                                                               user_args.positive_class)
 
     feature_selection_size = validate_feature_selection_size(
-            user_args.num_features_to_select)
+            user_args.reduced_dim_size)
 
     impute_strategy = validate_impute_strategy(user_args.impute_strategy)
 
@@ -215,13 +242,13 @@ def parse_args():
                          ''.format(cfg.GRIDSEARCH_LEVELS))
 
     classifier = check_classifier(user_args.classifier)
-    feat_select_method = user_args.feat_select_method.lower()
+    dim_red_method = user_args.dim_red_method.lower()
 
     # saving the validated and expanded values to disk for later use.
     options_to_save = [sample_ids, classes, out_dir, user_feature_paths,
                        user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
                        positive_class, subgroups, feature_selection_size, num_procs,
-                       grid_search_level, classifier, feat_select_method]
+                       grid_search_level, classifier, dim_red_method]
     options_path = save_options(options_to_save, out_dir)
 
     return sample_ids, classes, out_dir, options_path, \
@@ -229,7 +256,7 @@ def parse_args():
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
            feature_selection_size, impute_strategy, num_procs, \
-           grid_search_level, classifier, feat_select_method
+           grid_search_level, classifier, dim_red_method
 
 
 def make_visualizations(results_file_path, out_dir, options_path=None):
