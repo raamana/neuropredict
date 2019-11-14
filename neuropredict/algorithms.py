@@ -50,16 +50,16 @@ def make_parameter_grid(estimator_name=None, named_ranges=None):
     return param_grid
 
 
-def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_dim):
+def compute_reduced_dimensionality(size_spec, train_set_size, train_data_dim):
     """
     Estimates the number of features to retain for feature selection.
 
     Parameters
     ----------
-    select_method : str
+    size_spec : str
         Type of feature selection.
-    train_class_sizes : iterable
-        Sizes of all classes in training set.
+    train_set_size : iterable
+        Total size of the training set.
     train_data_dim : int
         Data dimensionality for the feature set.
 
@@ -75,7 +75,7 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
     """
 
     # default to use them all.
-    if select_method in [None, 'all']:
+    if size_spec in [None, 'all']:
         return train_data_dim
 
 
@@ -95,31 +95,30 @@ def compute_reduced_dimensionality(select_method, train_class_sizes, train_data_
                        'sqrt' : do_sqrt,
                        'log2' : do_log2}
 
-    if isinstance(select_method, str):
-        if select_method in get_reduced_dim:
-            sum_of_class_sizes = np.sum(train_class_sizes)
-            calc_size = get_reduced_dim[select_method](sum_of_class_sizes)
+    if isinstance(size_spec, str):
+        if size_spec in get_reduced_dim:
+            calc_size = get_reduced_dim[size_spec](train_set_size)
         else:
             # arg could be string coming from command line
-            calc_size = np.int64(select_method)
+            calc_size = np.int64(size_spec)
         reduced_dim = min(calc_size, train_data_dim)
-    elif isinstance(select_method, int):
-        if select_method > train_data_dim:  # case of Inf is covered
+    elif isinstance(size_spec, int):
+        if size_spec > train_data_dim:  # case of Inf is covered
             reduced_dim = train_data_dim
             print('Reducing the feature selection size to {}, '
                   'to accommondate the current feature set.'.format(train_data_dim))
         else:
-            reduced_dim = select_method
-    elif isinstance(select_method, float):
-        if not np.isfinite(select_method):
+            reduced_dim = size_spec
+    elif isinstance(size_spec, float):
+        if not np.isfinite(size_spec):
             raise ValueError('Fraction for the reduced dimensionality '
                              'must be finite within (0.0, 1.0).')
-        elif select_method <= 0.0:
+        elif size_spec <= 0.0:
             reduced_dim = 1
-        elif select_method >= 1.0:
+        elif size_spec >= 1.0:
             reduced_dim = train_data_dim
         else:
-            reduced_dim = np.int64(np.floor(train_data_dim / select_method))
+            reduced_dim = np.int64(np.floor(train_data_dim / size_spec))
     else:
         raise ValueError(
             'Invalid method to choose size of feature selection. '
@@ -745,7 +744,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
 
     """
 
-    reduced_dim = compute_reduced_dimensionality(feat_sel_size, train_class_sizes,
+    reduced_dim = compute_reduced_dimensionality(feat_sel_size,
+                                                 np.sum(train_class_sizes),
                                                  num_features)
 
     preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
