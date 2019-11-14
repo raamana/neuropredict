@@ -589,7 +589,7 @@ def get_classifier(classifier_name=cfg.default_classifier,
     return clf, clf_name, param_grid
 
 
-def get_feature_selector(train_class_sizes,
+def get_feature_selector(total_num_samplets,
                          feat_selector_name='variancethreshold',
                          reduced_dim='all'):
     """
@@ -615,8 +615,6 @@ def get_feature_selector(train_class_sizes,
     """
 
     # TODO not optimizing hyper params for any technique: Isomap, LLE etc
-
-    total_num_samplets = np.sum(train_class_sizes)
 
     dr_name = feat_selector_name.lower()
     if dr_name in ['isomap', ]:
