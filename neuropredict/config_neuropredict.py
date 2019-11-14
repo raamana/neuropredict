@@ -37,6 +37,8 @@ avail_imputation_strategies = ('median', 'mean', 'most_frequent')
 avail_imputation_strategies_with_raise = avail_imputation_strategies + \
                                          (default_imputation_strategy, )
 
+missing_data_flag_name = 'missing_data'
+
 # # ------- feature importance -------
 
 
