@@ -366,7 +366,7 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
             upper_limit = np.Inf
         else:
             upper_limit = dim_in_data
-        if not 0 < num_select < np.Inf:
+        if not 0 < num_select < upper_limit:
             raise UnboundLocalError(
                 'feature selection size out of bounds.\n'
                 'Must be > 0 and < {}'.format(upper_limit))
