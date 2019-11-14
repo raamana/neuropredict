@@ -4,11 +4,10 @@ neuropredict : easy and comprehensive predictive analysis.
 """
 from __future__ import print_function
 
-from neuropredict.base import organize_inputs
+from neuropredict.base import organize_inputs, MissingDataException
 
 __all__ = ['run', 'cli', 'get_parser']
 
-import argparse
 import os
 import sys
 import textwrap
@@ -41,16 +40,6 @@ if version_info.major > 2:
                                     check_classifier, print_options)
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
-
-
-class NeuroPredictException(Exception):
-    """Custom exception to distinguish neuropredict related errors (usage etc)
-    from the usual."""
-    pass
-
-class MissingDataException(NeuroPredictException):
-    """Custom exception to uniquely identify this error. Helpful for testing etc"""
-    pass
 
 
 def get_parser_classify():

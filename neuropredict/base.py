@@ -385,3 +385,14 @@ def organize_inputs(user_args):
 
     return user_feature_paths, user_feature_type, fs_subject_dir, \
            meta_data_supplied, meta_data_format
+
+
+class NeuroPredictException(Exception):
+    """Custom exception to distinguish neuropredict related errors (usage etc)
+    from the usual."""
+    pass
+
+
+class MissingDataException(NeuroPredictException):
+    """Custom exception to uniquely identify this error. Helpful for testing etc"""
+    pass
