@@ -589,15 +589,15 @@ def get_estimator(est_name=cfg.default_classifier,
     return est, est_name, param_grid
 
 
-def get_feature_selector(total_num_samplets,
-                         feat_selector_name='variancethreshold',
-                         reduced_dim='all'):
+def get_dim_reducer(total_num_samplets,
+                    dr_name='variancethreshold',
+                    reduced_dim='all'):
     """
     Returns the named dimensionality reduction method and its parameter grid.
 
     Parameters
     ----------
-    feat_selector_name : str
+    dr_name : str
         String referring to a valid scikit-learn feature selector.
     reduced_dim : str or int
         Reduced dimensionality, either an integer
@@ -616,7 +616,7 @@ def get_feature_selector(total_num_samplets,
 
     # TODO not optimizing hyper params for any technique: Isomap, LLE etc
 
-    dr_name = feat_selector_name.lower()
+    dr_name = dr_name.lower()
     if dr_name in ['isomap', ]:
         from sklearn.manifold.isomap import Isomap
         dim_red = Isomap(n_components=reduced_dim)
@@ -749,7 +749,7 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
     estimator, est_name, clf_param_grid = get_estimator(clfr_name, reduced_dim,
                                                         gs_level)
-    feat_selector, fs_name, fs_param_grid = get_feature_selector(
+    feat_selector, fs_name, fs_param_grid = get_dim_reducer(
             train_class_sizes, fsr_name, reduced_dim)
 
     # composite grid of parameters from all steps
