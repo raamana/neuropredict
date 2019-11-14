@@ -536,15 +536,15 @@ def get_xgboost(reduced_dim=None,
 
 
 
-def get_classifier(classifier_name=cfg.default_classifier,
-                   reduced_dim='all',
-                   grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+def get_estimator(est_name=cfg.default_classifier,
+                  reduced_dim='all',
+                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the named classifier and its parameter grid.
 
     Parameters
     ----------
-    classifier_name : str
+    est_name : str
         String referring to a valid scikit-learn classifier.
 
     reduced_dim : int or str
@@ -573,20 +573,20 @@ def get_classifier(classifier_name=cfg.default_classifier,
 
     """
 
-    classifier_name = classifier_name.lower()
+    est_name = est_name.lower()
     map_to_method = dict(randomforestclassifier=get_RandomForestClassifier,
                          extratreesclassifier=get_ExtraTreesClassifier,
                          decisiontreeclassifier=get_DecisionTreeClassifier,
                          svm=get_svc,
                          xgboost=get_xgboost)
 
-    if classifier_name not in map_to_method:
+    if est_name not in map_to_method:
         raise NotImplementedError('Invalid name or classifier not implemented.')
 
-    clf_builder = map_to_method[classifier_name]
-    clf, clf_name, param_grid = clf_builder(reduced_dim, grid_search_level)
+    est_builder = map_to_method[est_name]
+    est, est_name, param_grid = est_builder(reduced_dim, grid_search_level)
 
-    return clf, clf_name, param_grid
+    return est, est_name, param_grid
 
 
 def get_feature_selector(total_num_samplets,
@@ -747,8 +747,8 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
                                                  num_features)
 
     preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
-    estimator, est_name, clf_param_grid = get_classifier(clfr_name, reduced_dim,
-                                                         gs_level)
+    estimator, est_name, clf_param_grid = get_estimator(clfr_name, reduced_dim,
+                                                        gs_level)
     feat_selector, fs_name, fs_param_grid = get_feature_selector(
             train_class_sizes, fsr_name, reduced_dim)
 
