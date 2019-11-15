@@ -128,8 +128,8 @@ class BaseWorkflow(object):
                 train_data, test_data = impute_missing_data(
                         train_data, train_targets, self.impute_strategy, test_data)
 
-            best_pipeline, best_params = self._optimize_pipeline_on_train_set(
-                    train_data, train_targets)
+            best_pipeline, best_params, feat_importance = \
+                self._optimize_pipeline_on_train_set(train_data, train_targets)
 
             self._eval_predictions(best_pipeline, test_data, test_targets,
                                    run_id, ds_id)
@@ -149,14 +149,33 @@ class BaseWorkflow(object):
         best_pipeline, best_params = self._optimize_pipeline(
                 pipeline, train_data, train_targets, param_grid, self.train_perc)
 
-        # assuming order in pipeline construction :
-        #   - step 0 : preprocessing (robust scaling)
-        #   - step 1 : dim reducer method
-        _, best_drm = best_pipeline.steps[1]
-        _, best_est = best_pipeline.steps[-1] # the final step in an sklearn pipeline
-                                              #  is always an estimator/classifier
+        feat_importance = self._get_feature_importance(
+                self.pred_model, best_pipeline, train_data.shape[1])
 
-        return best_pipeline, best_params
+        return best_pipeline, best_params, feat_importance
+
+
+    @staticmethod
+    def _get_feature_importance(est_name, pipeline, num_features, fill_value=np.nan):
+        "Extracts the feature importance of input features, if available."
+
+        # assuming order in pipeline construction :
+        #   - step 0 : preprocessign (robust scaling)
+        #   - step 1 : feature selector / dim reducer
+        dim_red = pipeline.steps[1]
+        est = pipeline.steps[-1]  # the final step in an sklearn pipeline
+                                  #   is always an estimator/classifier
+
+        feat_importance = None
+        if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
+            index_selected_features = dim_red.get_support(indices=True)
+
+            if hasattr(est, cfg.importance_attr[est_name]):
+                feat_importance = np.full(num_features, fill_value)
+                feat_importance[index_selected_features] = \
+                    getattr(est, cfg.importance_attr[est_name])
+
+        return feat_importance
 
 
     def _optimize_pipeline(self, pipeline, train_data, train_targets,
