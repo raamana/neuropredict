@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 
 import os
@@ -9,13 +8,14 @@ from os.path import abspath, exists as pexists, join as pjoin, realpath
 import numpy as np
 # the order of import is very important to avoid circular imports
 from neuropredict import __version__, config_neuropredict as cfg
-from neuropredict.base import get_parser_base, organize_inputs
+from neuropredict.base import BaseWorkflow, get_parser_base, organize_inputs
 from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
 from neuropredict.utils import (check_classifier, check_num_procs, not_unspecified,
                                 print_options, save_options,
                                 validate_feature_selection_size,
                                 validate_impute_strategy)
 from neuropredict.datasets import load_datasets, detect_missing_data
+from pyradigm import MultiDatasetRegress
 
 def get_parser_regress():
     """"""
@@ -60,8 +60,8 @@ def parse_args():
     if len(sys.argv) == 3:
         # only if no features were specified to be assessed
         if not any(not_unspecified(getattr(user_args, attr))
-               for attr in ('user_feature_paths', 'data_matrix_paths',
-                            'pyradigm_paths', 'arff_paths')):
+                   for attr in ('user_feature_paths', 'data_matrix_paths',
+                                'pyradigm_paths', 'arff_paths')):
 
             if not_unspecified(user_args.print_opt_dir) and user_args.print_opt_dir:
                 run_dir = realpath(user_args.print_opt_dir)
@@ -72,7 +72,8 @@ def parse_args():
                 res_path = pjoin(out_dir, cfg.file_name_results)
                 if pexists(out_dir) and pexists(res_path):
                     if not_unspecified(user_args.make_vis):
-                        print('\n\nSaving the visualizations to \n{}'.format(out_dir))
+                        print(
+                            '\n\nSaving the visualizations to \n{}'.format(out_dir))
                         make_visualizations(res_path, out_dir)
                 else:
                     raise ValueError('Given folder does not exist, '
@@ -81,7 +82,7 @@ def parse_args():
             sys.exit(0)
 
     user_feature_paths, user_feature_type, fs_subject_dir, meta_data_path, \
-        meta_data_format = organize_inputs(user_args)
+    meta_data_format = organize_inputs(user_args)
 
     if not meta_data_path:
         if user_args.meta_file is not None:
@@ -109,7 +110,7 @@ def parse_args():
         raise IOError('Output folder could not be created.')
 
     train_perc = np.float32(user_args.train_perc)
-    if not ( 0.01 <= train_perc <= 0.99):
+    if not (0.01 <= train_perc <= 0.99):
         raise ValueError("Training percentage {} out of bounds "
                          "- must be >= 0.01 and <= 0.99".format(train_perc))
 
@@ -118,7 +119,6 @@ def parse_args():
         raise ValueError("Atleast 10 repetitions of CV is recommened.")
 
     num_procs = check_num_procs(user_args.num_procs)
-
 
     reduced_dim_size = validate_feature_selection_size(
             user_args.num_features_to_select)
@@ -166,27 +166,29 @@ def cli():
     return
 
 
-def prepare_and_run(subjects, classes, out_dir, options_path,
-                    user_feature_paths, user_feature_type, fs_subject_dir,
-                    train_perc, num_rep_cv, feature_selection_size, impute_strategy,
-                    num_procs,
-                    grid_search_level, classifier, feat_select_method):
+def prepare_and_run(subjects, targets, out_dir, user_options,
+                    user_feature_paths, user_feature_type,
+                    train_perc, num_rep_cv, reduced_dim_size, impute_strategy,
+                    grid_search_level, regressor, dim_red_method, num_procs):
     """"""
 
     multi_ds = load_datasets(user_feature_paths, task_type='regress')
     impute_strategy = detect_missing_data(multi_ds, impute_strategy)
 
-    regr_expt = RegressionExperiment(multi_ds, regressor, impute_strategy,
-                                     dim_red_method,
-                                     reduced_dim_size, train_perc, num_rep_cv,
-                                     grid_search_level, num_procs, user_options)
+    regr_expt = RegressionWorkflow(multi_ds, regressor, impute_strategy,
+                                   dim_red_method, reduced_dim_size, train_perc,
+                                   num_rep_cv, grid_search_level, num_procs,
+                                   user_options)
+
+    regr_expt.run()
 
 
 
 def make_visualizations():
     pass
 
-class RegressionExperiment:
+
+class RegressionWorkflow(BaseWorkflow):
     """
     Class defining an neuropredict experiment to be run.
 
@@ -206,23 +208,24 @@ class RegressionExperiment:
                  num_rep_cv=cfg.default_num_repetitions,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
                  num_procs=cfg.DEFAULT_NUM_PROCS,
-                 user_options=None):
+                 user_options=None,
+                 checkpointing=True):
 
-        self.datasets = datasets
-        self.pred_model = pred_model
-        self.impute_strategy = impute_strategy
-        self.dim_red_method = dim_red_method
-        self.reduced_dim = reduced_dim
-        self.train_perc = train_perc
-        self.num_rep_cv = num_rep_cv
-        self.grid_search_level = grid_search_level
-        self.sub_groups = sub_groups
-        self.num_procs = num_procs
+        super().__init__(datasets,
+                         pred_model=pred_model,
+                         impute_strategy=impute_strategy,
+                         dim_red_method=dim_red_method,
+                         reduced_dim=reduced_dim,
+                         train_perc=train_perc,
+                         num_rep_cv=num_rep_cv,
+                         grid_search_level=grid_search_level,
+                         num_procs=num_procs,
+                         user_options=user_options,
+                         checkpointing=checkpointing)
 
 
     def run(self):
         """Main method that crunches the calculations."""
-
 
 
 if __name__ == '__main__':
