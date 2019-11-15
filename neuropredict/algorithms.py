@@ -765,24 +765,18 @@ def get_pipeline(train_class_sizes, feat_sel_size, num_features,
     return pipeline, param_grid
 
 
-def get_feature_importance(clf_name, clf, dim_red,
+def get_feature_importance(est_name, est, dim_red,
                            num_features, fill_value=np.nan):
     "Extracts the feature importance of input features, if available."
-
-    attr_importance = {'randomforestclassifier': 'feature_importances_',
-                       'extratreesclassifier'  : 'feature_importances_',
-                       'decisiontreeclassifier': 'feature_importances_',
-                       'svm'                   : 'coef_',
-                       'xgboost'               : 'feature_importances_',}
 
     feat_importance = np.full(num_features, fill_value)
 
     if hasattr(dim_red, 'get_support'): # nonlinear dim red won't have this
         index_selected_features = dim_red.get_support(indices=True)
 
-        if hasattr(clf, attr_importance[clf_name]):
+        if hasattr(est, cfg.importance_attr[est_name]):
             feat_importance[index_selected_features] = \
-                getattr(clf, attr_importance[clf_name])
+                getattr(est, cfg.importance_attr[est_name])
 
     return feat_importance
 

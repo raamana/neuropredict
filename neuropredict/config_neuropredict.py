@@ -41,6 +41,11 @@ missing_data_flag_name = 'missing_data'
 
 # # ------- feature importance -------
 
+importance_attr = {'randomforestclassifier': 'feature_importances_',
+                   'extratreesclassifier'  : 'feature_importances_',
+                   'decisiontreeclassifier': 'feature_importances_',
+                   'svm'                   : 'coef_',
+                   'xgboost'               : 'feature_importances_', }
 
 # # ------- classifier
 
