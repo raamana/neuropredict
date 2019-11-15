@@ -202,14 +202,15 @@ class RegressionWorkflow(BaseWorkflow):
                  datasets,
                  pred_model=cfg.default_classifier,
                  impute_strategy=cfg.default_imputation_strategy,
-                 dim_red_method=cfg.default_feat_select_method,
-                 reduced_dim=cfg.default_num_features_to_select,
+                 dim_red_method=cfg.default_dim_red_method,
+                 reduced_dim=cfg.default_reduced_dim_size,
                  train_perc=cfg.default_train_perc,
                  num_rep_cv=cfg.default_num_repetitions,
+                 scoring=cfg.default_metric_set_regression,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
                  num_procs=cfg.DEFAULT_NUM_PROCS,
                  user_options=None,
-                 checkpointing=True):
+                 checkpointing=cfg.default_checkpointing):
 
         super().__init__(datasets,
                          pred_model=pred_model,
@@ -218,14 +219,21 @@ class RegressionWorkflow(BaseWorkflow):
                          reduced_dim=reduced_dim,
                          train_perc=train_perc,
                          num_rep_cv=num_rep_cv,
+                         scoring=scoring,
                          grid_search_level=grid_search_level,
                          num_procs=num_procs,
                          user_options=user_options,
                          checkpointing=checkpointing)
 
+    def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
+        """
+        Evaluate predictions and perf estimates to results class.
 
-    def run(self):
-        """Main method that crunches the calculations."""
+        Prints a quick summary too, as an indication of progress.
+        """
+
+        predicted_targets = pipeline.predict(test_data)
+        self.results.add(run_id, ds_id, predicted_targets, true_targets)
 
 
 if __name__ == '__main__':

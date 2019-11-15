@@ -132,10 +132,16 @@ SEED_RANDOM = 652
 
 PRECISION_METRICS = 2
 
+## workflow
+
+default_checkpointing = True
+
+
 ### performance metrics
 
 default_scoring_metric = 'accuracy'
-
+default_metric_set_classification = ('accuracy', 'roc_auc')
+default_metric_set_regression = ('r2', 'mean_absolute_error')
 
 # misclassifications
 MISCLF_HIST_NUM_BINS = 20
