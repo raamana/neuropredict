@@ -19,9 +19,9 @@ from neuropredict import __version__
 from neuropredict.utils import not_unspecified, check_paths
 from neuropredict.algorithms import make_pipeline
 from neuropredict.datasets import impute_missing_data
-from neuropredict.results import Results
+from neuropredict.results import ClassifyCVResults, RegressCVResults
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
-
+from sklearn.base import is_classifier
 
 class BaseWorkflow(object):
     """Class defining a structure for the neuropredict workflow"""
@@ -58,10 +58,12 @@ class BaseWorkflow(object):
         self.user_options = user_options
         self._checkpointing = checkpointing
 
-        self.results = Results(scoring=self._scoring)
+        if is_classifier(self.pred_model):
+            self.results = ClassifyCVResults(self.pred_model, self._scoring)
+        else:
+            self.results = RegressCVResults(self.pred_model, self._scoring)
 
 
-    @abstractmethod
     def _prepare(self):
         """Checks in inputs, parameters and their combinations"""
 
@@ -87,9 +89,13 @@ class BaseWorkflow(object):
         """Actual CV"""
 
         if self.num_procs > 1:
+            raise NotImplementedError('parallel runs not implemented yet!'
+                                      'Use num_procs=1 for now')
             print('Parallelizing the repetitions of CV with {} processes ...'
                   ''.format(self.num_procs))
             with Manager() as proxy_manager:
+                # TODO these inputs may not need to be shared, as the method is a
+                #  class member and has direct access to the inputs passed here
                 shared_inputs = proxy_manager.list(
                         [self.datasets, self.impute_strategy, self.reduced_dim,
                          self.train_perc, self.user_options.out_dir,
@@ -101,18 +107,12 @@ class BaseWorkflow(object):
                     cv_results = pool.map(partial_func_holdout,
                                           range(self.num_rep_cv))
         else:
-            # switching to regular sequential for loop
-            partial_func_holdout = partial(self._single_run_cv, self.datasets,
-                                           self.impute_strategy, self.reduced_dim,
-                                           self.train_perc,
-                                           self.user_options.out_dir,
-                                           self.grid_search_level, self.pred_model,
-                                           self.dim_red_method)
-            cv_results = [partial_func_holdout(rep_id=rep) for rep in
-                          range(self.num_rep_cv)]
+            # switching to regular sequential for loop to avoid any parallel drama
+            for rep in range(self.num_rep_cv):
+                self._single_run_cv(rep)
 
 
-    def _single_run_cv(self):
+    def _single_run_cv(self, run_id=None):
         """Implements a single run of train, optimize and predict"""
 
         random.shuffle(self._id_list)
@@ -122,17 +122,22 @@ class BaseWorkflow(object):
         for ds_id, (train_data, train_targets), (test_data, test_targets) \
                 in self.datasets.get_subsets((train_set, test_set)):
             print('Dataset {}'.format(ds_id))
+
             missing = self.datasets.get_attr(ds_id, cfg.missing_data_flag_name)
-            self._eval_optimized_model_on_test_set(train_data, train_targets,
-                                                   test_data, test_targets, missing)
+            if missing:
+                train_data, test_data = impute_missing_data(
+                        train_data, train_targets, self.impute_strategy, test_data)
+
+            best_pipeline, best_params = self._optimize_pipeline_on_train_set(
+                    train_data, train_targets)
+
+            self._eval_predictions(best_pipeline, test_data, test_targets,
+                                   run_id, ds_id)
 
         # dump results if self._checkpointing = True
 
 
-    def _eval_optimized_model_on_test_set(self,
-                                          train_data, train_targets,
-                                          test_data, test_targets,
-                                          data_missing):
+    def _optimize_pipeline_on_train_set(self, train_data, train_targets):
         """Optimize model on training set and return predictions on test set."""
 
         pipeline, param_grid = make_pipeline(pred_model=self.pred_model,
@@ -140,10 +145,6 @@ class BaseWorkflow(object):
                                              reduced_dim=self.reduced_dim,
                                              train_set_size=self._train_set_size,
                                              gs_level=self.grid_search_level)
-
-        if data_missing:
-            train_data, test_data = impute_missing_data(
-                    train_data, train_targets, self.impute_strategy, test_data)
 
         best_pipeline, best_params = self._optimize_pipeline(
                 pipeline, train_data, train_targets, param_grid, self.train_perc)
@@ -155,9 +156,7 @@ class BaseWorkflow(object):
         _, best_est = best_pipeline.steps[-1] # the final step in an sklearn pipeline
                                               #  is always an estimator/classifier
 
-        # making predictions on the test set and assessing their performance
-        predicted_test_ids = best_pipeline.predict(test_data)
-        self.results.append(predicted_test_ids, test_targets)
+        return best_pipeline, best_params
 
 
     def _optimize_pipeline(self, pipeline, train_data, train_targets,
@@ -203,12 +202,14 @@ class BaseWorkflow(object):
 
 
     @abstractmethod
-    def _eval_predictions(self, predicted_test_targets, true_test_targets):
-        """Evaluate predictions and perf estimates to results class.
-
-        Prints a quick summary too, as an indication of progress.
+    def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
         """
+        Evaluate predictions and perf estimates to results class.
+        Prints a quick summary too, as an indication of progress.
 
+        Making it abstract to let the child classes decide on what types of
+        predictions to make (probabilistic or not), and how to evaluate them
+        """
 
 
     @abstractmethod
