@@ -127,6 +127,11 @@ SEED_RANDOM = 652
 
 PRECISION_METRICS = 2
 
+### performance metrics
+
+default_scoring_metric = 'accuracy'
+
+
 # misclassifications
 MISCLF_HIST_NUM_BINS = 20
 MISCLF_PERC_THRESH = 0.6

@@ -6,16 +6,237 @@ import sys
 import textwrap
 import traceback
 import warnings
+import random
+import numpy as np
+from os.path import join as pjoin, exists as pexists
+from warnings import catch_warnings, filterwarnings, simplefilter
+from multiprocessing import Pool, Manager
+from functools import partial
 from os.path import abspath, exists as pexists
-
+from abc import abstractmethod
 from neuropredict import config_neuropredict as cfg
 from neuropredict import __version__
 from neuropredict.utils import not_unspecified, check_paths
+from neuropredict.algorithms import make_pipeline
+from neuropredict.datasets import impute_missing_data
+from neuropredict.results import Results
+from sklearn.model_selection import GridSearchCV, ShuffleSplit
+
+
+class BaseWorkflow(object):
+    """Class defining a structure for the neuropredict workflow"""
+
+
+    def __init__(self,
+                 datasets,
+                 pred_model=cfg.default_classifier,
+                 impute_strategy=cfg.default_imputation_strategy,
+                 dim_red_method=cfg.default_feat_select_method,
+                 reduced_dim=cfg.default_num_features_to_select,
+                 train_perc=cfg.default_train_perc,
+                 num_rep_cv=cfg.default_num_repetitions,
+                 scoring=cfg.default_scoring_metric,
+                 grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
+                 out_dir=None,
+                 num_procs=cfg.DEFAULT_NUM_PROCS,
+                 user_options=None,
+                 checkpointing=False
+                 ):
+        """Constructor"""
+
+        self.datasets = datasets
+        self.pred_model = pred_model
+        self.impute_strategy = impute_strategy
+        self.dim_red_method = dim_red_method
+        self.reduced_dim = reduced_dim
+        self.train_perc = train_perc
+        self.num_rep_cv = num_rep_cv
+        self._scoring = scoring
+        self.grid_search_level = grid_search_level
+        self.out_dir = out_dir
+        self.num_procs = num_procs
+        self.user_options = user_options
+        self._checkpointing = checkpointing
+
+        self.results = Results(scoring=self._scoring)
+
+
+    @abstractmethod
+    def _prepare(self):
+        """Checks in inputs, parameters and their combinations"""
+
+        if self.train_perc <= 0.0 or self.train_perc >= 1.0:
+            raise ValueError('Train perc > 0.0 and < 1.0')
+
+        self._id_list = list(self.datasets.samplet_ids)
+        self._num_samples = len(self._id_list)
+        self._train_set_size = np.int64(np.floor(self._num_samples * self.train_perc))
+        self._train_set_size = max(1, min(self._num_samples, self._train_set_size))
+
+
+    def run(self):
+        """Full run of workflow"""
+
+        self._prepare()
+        self._run_cv()
+        self.save()
+        self.summarize()
+
+
+    def _run_cv(self):
+        """Actual CV"""
+
+        if self.num_procs > 1:
+            print('Parallelizing the repetitions of CV with {} processes ...'
+                  ''.format(self.num_procs))
+            with Manager() as proxy_manager:
+                shared_inputs = proxy_manager.list(
+                        [self.datasets, self.impute_strategy, self.reduced_dim,
+                         self.train_perc, self.user_options.out_dir,
+                         self.grid_search_level, self.pred_model,
+                         self.dim_red_method])
+                partial_func_holdout = partial(self._single_run_cv, *shared_inputs)
+
+                with Pool(processes=self.num_procs) as pool:
+                    cv_results = pool.map(partial_func_holdout,
+                                          range(self.num_rep_cv))
+        else:
+            # switching to regular sequential for loop
+            partial_func_holdout = partial(self._single_run_cv, self.datasets,
+                                           self.impute_strategy, self.reduced_dim,
+                                           self.train_perc,
+                                           self.user_options.out_dir,
+                                           self.grid_search_level, self.pred_model,
+                                           self.dim_red_method)
+            cv_results = [partial_func_holdout(rep_id=rep) for rep in
+                          range(self.num_rep_cv)]
+
+
+    def _single_run_cv(self):
+        """Implements a single run of train, optimize and predict"""
+
+        random.shuffle(self._id_list)
+        train_set = self._id_list[:self._train_set_size]
+        test_set = list(set(self._id_list) - set(train_set))
+
+        for ds_id, (train_data, train_targets), (test_data, test_targets) \
+                in self.datasets.get_subsets((train_set, test_set)):
+            print('Dataset {}'.format(ds_id))
+            missing = self.datasets.get_attr(ds_id, cfg.missing_data_flag_name)
+            self._eval_optimized_model_on_test_set(train_data, train_targets,
+                                                   test_data, test_targets, missing)
+
+        # dump results if self._checkpointing = True
+
+
+    def _eval_optimized_model_on_test_set(self,
+                                          train_data, train_targets,
+                                          test_data, test_targets,
+                                          data_missing):
+        """Optimize model on training set and return predictions on test set."""
+
+        pipeline, param_grid = make_pipeline(pred_model=self.pred_model,
+                                             dim_red_method=self.dim_red_method,
+                                             reduced_dim=self.reduced_dim,
+                                             train_set_size=self._train_set_size,
+                                             gs_level=self.grid_search_level)
+
+        if data_missing:
+            train_data, test_data = impute_missing_data(
+                    train_data, train_targets, self.impute_strategy, test_data)
+
+        best_pipeline, best_params = self._optimize_pipeline(
+                pipeline, train_data, train_targets, param_grid, self.train_perc)
+
+        # assuming order in pipeline construction :
+        #   - step 0 : preprocessing (robust scaling)
+        #   - step 1 : dim reducer method
+        _, best_drm = best_pipeline.steps[1]
+        _, best_est = best_pipeline.steps[-1] # the final step in an sklearn pipeline
+                                              #  is always an estimator/classifier
+
+        # making predictions on the test set and assessing their performance
+        predicted_test_ids = best_pipeline.predict(test_data)
+        self.results.append(predicted_test_ids, test_targets)
+
+
+    def _optimize_pipeline(self, pipeline, train_data, train_targets,
+                           param_grid, train_perc_inner_cv):
+        """Optimizes a given pipeline on the given dataset"""
+
+        # TODO perhaps k-fold is a better inner CV,
+        #   which guarantees full use of training set with fewer repeats?
+        inner_cv = ShuffleSplit(n_splits=cfg.INNER_CV_NUM_SPLITS,
+                                train_size=train_perc_inner_cv,
+                                test_size=1.0 - train_perc_inner_cv)
+        # inner_cv = RepeatedKFold(n_splits=cfg.INNER_CV_NUM_FOLDS,
+        #   n_repeats=cfg.INNER_CV_NUM_REPEATS)
+
+        # gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,
+        #                   n_jobs=cfg.GRIDSEARCH_NUM_JOBS,
+        #                   pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)
+
+        # not specifying n_jobs to avoid any kind of parallelism (joblib) from within
+        # sklearn to avoid potentially bad interactions with outer parallelization
+        # with builtin multiprocessing library
+        gs = GridSearchCV(estimator=pipeline,
+                          param_grid=param_grid,
+                          cv=inner_cv,
+                          scoring=self._scoring,
+                          refit=cfg.refit_best_model_on_ALL_training_set)
+
+        # ignoring some not-so-critical warnings
+        with catch_warnings():
+            filterwarnings(action='once', category=UserWarning, module='joblib',
+                           message='Multiprocessing-backed parallel loops cannot be '
+                                   'nested, setting n_jobs=1')
+            filterwarnings(action='once', category=UserWarning,
+                           message='Some inputs do not have OOB scores')
+            np.seterr(divide='ignore', invalid='ignore')
+            filterwarnings(action='once', category=RuntimeWarning,
+                           message='invalid value encountered in true_divide')
+            simplefilter(action='once', category=DeprecationWarning)
+
+            gs.fit(train_data, train_targets)
+
+        return gs.best_estimator_, gs.best_params_
+
+
+    @abstractmethod
+    def _eval_predictions(self, predicted_test_targets, true_test_targets):
+        """Evaluate predictions and perf estimates to results class.
+
+        Prints a quick summary too, as an indication of progress.
+        """
+
+
+
+    @abstractmethod
+    def save(self):
+        """Saves the results and state to disk."""
+
+
+    @abstractmethod
+    def load(self):
+        """Mechanism to reload results.
+
+        Useful for check-pointing, and restore upon crash etc
+        """
+
+
+    @abstractmethod
+    def summarize(self):
+        """Simple summary of the results produced, for logging and user info"""
+
+
+    @abstractmethod
+    def visualize(self):
+        """Method to produce all the relevant visualizations based on the results
+        from this workflow."""
 
 
 def get_parser_base():
     "Parser to specify arguments and their defaults."
-
 
     help_text_pyradigm_paths = textwrap.dedent("""
     Path(s) to pyradigm datasets.
@@ -224,10 +445,10 @@ def get_parser_base():
                                 help=help_text_user_defined_folder)
 
     user_feat_args.add_argument("-d", "--data_matrix_paths", action="store",
-                              dest="data_matrix_paths",
-                              nargs='+',
-                              default=None,
-                              help=help_text_data_matrix)
+                                dest="data_matrix_paths",
+                                nargs='+',
+                                default=None,
+                                help=help_text_data_matrix)
 
     cv_args = parser.add_argument_group(title='Cross-validation',
                                         description='Parameters related to '
@@ -251,7 +472,7 @@ def get_parser_base():
                          default=cfg.default_reduced_dim_size,
                          help=help_text_dimensionality_red_size)
 
-    cv_args.add_argument("-g", "--gs_level", action="store", dest="gs_level", 
+    cv_args.add_argument("-g", "--gs_level", action="store", dest="gs_level",
                          default="light", help=help_text_gs_level,
                          choices=cfg.GRIDSEARCH_LEVELS, type=str.lower)
 
