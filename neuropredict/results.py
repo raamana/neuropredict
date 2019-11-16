@@ -32,8 +32,11 @@ class CVResults(object):
         """
 
         for name, score_func in self.metric_set.items():
-            self.metric_val[name][(run_id, dataset_id)] = score_func(
-                    true_targets, predicted)
+            score = score_func(true_targets, predicted)
+            self.metric_val[name][(run_id, dataset_id)] = score
+            # quick summary print
+            print('CV run {:<3} dataset {:<20} : {:>20} {:.3f}'
+                  ''.format(run_id, dataset_id, name, score))
 
     def add_attr(self, run_id, dataset_id, name, value):
         """
