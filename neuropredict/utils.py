@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import pickle
+from collections.abc import Iterable
 from neuropredict import config_neuropredict as cfg
 import numpy as np
 import os.path
@@ -531,3 +532,15 @@ def impute_missing_data(train_data, train_labels, strategy, test_data):
     imputer.fit(train_data, train_labels)
 
     return imputer.transform(train_data), imputer.transform(test_data)
+
+
+def is_iterable_but_not_str(input_obj, min_length=1):
+    """Boolean check for iterables that are not strings and of a minimum length"""
+
+    if not (not isinstance(input_obj, str) and isinstance(input_obj, Iterable)):
+        return False
+
+    if len(input_obj) < min_length:
+        return False
+    else:
+        return True

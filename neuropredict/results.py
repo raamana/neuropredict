@@ -8,8 +8,8 @@ import numpy as np
 from neuropredict import config_neuropredict as cfg
 from abc import abstractmethod
 from neuropredict.algorithms import get_estimator_by_name
-from sklearn.metrics.scorer import check_scoring, \
-    _check_multimetric_scoring as _check_multimetric
+from neuropredict.utils import is_iterable_but_not_str
+
 
 class CVResults(object):
     """
@@ -22,7 +22,8 @@ class CVResults(object):
         "Constructor."
 
         estimator = get_estimator_by_name(estimator_name)
-        self.metric_set, is_multimetric = _check_multimetric(estimator, metric_set)
+        if is_iterable_but_not_str(metric_set):
+            self.metric_set = {func.__name__: func for func in metric_set}
         self.metric_val = {name: dict() for name in self.metric_set.keys()}
 
         self._attr = dict()
