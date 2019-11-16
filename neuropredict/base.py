@@ -16,10 +16,8 @@ from os.path import abspath, exists as pexists
 from abc import abstractmethod
 from neuropredict import config_neuropredict as cfg
 from neuropredict import __version__
-from neuropredict.utils import not_unspecified, check_paths
 from neuropredict.utils import not_unspecified, check_paths, impute_missing_data
 from neuropredict.algorithms import make_pipeline
-from neuropredict.datasets import impute_missing_data
 from neuropredict.results import ClassifyCVResults, RegressCVResults
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 from sklearn.base import is_classifier
@@ -567,7 +565,8 @@ def organize_inputs(user_args):
     meta_data_supplied = False
     meta_data_format = None
 
-    if not_unspecified(user_args.fs_subject_dir):
+    if hasattr(user_args, 'fs_subject_dir') and \
+        not_unspecified(user_args.fs_subject_dir):
         fs_subject_dir = abspath(user_args.fs_subject_dir)
         if not pexists(fs_subject_dir):
             raise IOError("Given Freesurfer directory doesn't exist.")
@@ -582,25 +581,29 @@ def organize_inputs(user_args):
                              'arff_paths']
     not_none_count = 0
     for format in mutually_excl_formats:
-        if not_unspecified(getattr(user_args, format)):
+        if  hasattr(user_args, format) and \
+                not_unspecified(getattr(user_args, format)):
             not_none_count = not_none_count + 1
     if not_none_count > 1:
         raise ValueError('Only one of the following formats can be specified:\n'
                          '{}'.format(mutually_excl_formats))
 
-    if not_unspecified(user_args.user_feature_paths):
+    if hasattr(user_args, 'user_feature_paths') and \
+        not_unspecified(user_args.user_feature_paths):
         user_feature_paths = check_paths(user_args.user_feature_paths,
                                          path_type='user defined (dir_of_dirs)')
         atleast_one_feature_specified = True
         user_feature_type = 'dir_of_dirs'
 
-    elif not_unspecified(user_args.data_matrix_paths):
+    elif hasattr(user_args, 'data_matrix_paths') and \
+        not_unspecified(user_args.data_matrix_paths):
         user_feature_paths = check_paths(user_args.data_matrix_paths,
                                          path_type='data matrix')
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
 
-    elif not_unspecified(user_args.pyradigm_paths):
+    elif hasattr(user_args, 'pyradigm_paths') and \
+        not_unspecified(user_args.pyradigm_paths):
         user_feature_paths = check_paths(user_args.pyradigm_paths,
                                          path_type='pyradigm')
         atleast_one_feature_specified = True
@@ -608,7 +611,8 @@ def organize_inputs(user_args):
         meta_data_format = 'pyradigm'
         user_feature_type = 'pyradigm'
 
-    elif not_unspecified(user_args.arff_paths):
+    elif hasattr(user_args, 'arff_paths') and \
+        not_unspecified(user_args.arff_paths):
         user_feature_paths = check_paths(user_args.arff_paths, path_type='ARFF')
         atleast_one_feature_specified = True
         user_feature_type = 'arff'
