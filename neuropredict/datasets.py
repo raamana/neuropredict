@@ -68,17 +68,3 @@ def detect_missing_data(multi_ds,
     return impute_strategy
 
 
-def impute_missing_data(train_data, train_labels, strategy, test_data):
-    """
-    Imputes missing values in train/test data matrices using the given strategy,
-    based on train data alone.
-
-    """
-
-    from sklearn.impute import SimpleImputer
-    # TODO integrate and use the missingdata pkg (with more methods) when time permits
-    imputer = SimpleImputer(missing_values=cfg.missing_value_identifier,
-                            strategy=strategy)
-    imputer.fit(train_data, train_labels)
-
-    return imputer.transform(train_data), imputer.transform(test_data)

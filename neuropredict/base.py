@@ -17,6 +17,7 @@ from abc import abstractmethod
 from neuropredict import config_neuropredict as cfg
 from neuropredict import __version__
 from neuropredict.utils import not_unspecified, check_paths
+from neuropredict.utils import not_unspecified, check_paths, impute_missing_data
 from neuropredict.algorithms import make_pipeline
 from neuropredict.datasets import impute_missing_data
 from neuropredict.results import ClassifyCVResults, RegressCVResults

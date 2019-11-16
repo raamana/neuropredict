@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-from neuropredict.datasets import impute_missing_data
-
 __all__ = ['run', 'load_results', 'save_results']
 
 import os
@@ -26,9 +24,10 @@ if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
     from neuropredict.algorithms import get_pipeline, get_feature_importance
     from neuropredict.reports import report_best_params, export_results
-    from neuropredict.utils import check_feature_sets_are_comparable, \
-        check_params_rhst, balanced_accuracy, \
-        load_options, sub_group_identifier, make_numeric_labels
+    from neuropredict.utils import (check_feature_sets_are_comparable,
+                                    check_params_rhst, balanced_accuracy,
+                                    load_options, sub_group_identifier,
+                                    make_numeric_labels, impute_missing_data)
     from neuropredict.io import load_pyradigms
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
