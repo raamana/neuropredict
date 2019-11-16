@@ -48,7 +48,8 @@ def export_results(dict_to_save, out_dir, options_path):
     # pred_prob_per_class
 
     user_options = load_options(out_dir, options_path)
-    print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'.format(msg1=msg1, msg2=msg2))
+    print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'
+                                                  ''.format(msg1=msg1, msg2=msg2))
 
     print('')
     try:
@@ -62,18 +63,22 @@ def export_results(dict_to_save, out_dir, options_path):
 
         # conf mat
         for mm in range(num_datasets):
-            confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'.format(method_names[mm]))
-            reshaped_matrix = np.reshape(confusion_matrix[:, :, :, mm], [num_rep_cv, num_classes * num_classes])
+            confmat_path = pjoin(exp_dir, 'confusion_matrix_{}.csv'
+                                          ''.format(method_names[mm]))
+            reshaped_matrix = np.reshape(confusion_matrix[:, :, :, mm],
+                                         [num_rep_cv, num_classes * num_classes])
             np.savetxt(confmat_path, reshaped_matrix,
                        delimiter=cfg.DELIMITER, fmt=cfg.EXPORT_FORMAT,
-                       comments='shape of confusion matrix: num_repetitions x num_classes^2')
+                       comments='shape of confusion matrix: '
+                                'num_repetitions x num_classes^2')
         print_aligned_msg('confusion matrices', 'Done.')
 
         # misclassfiication rates
         avg_cfmat, misclf_rate = visualize.compute_pairwise_misclf(confusion_matrix)
         num_datasets = misclf_rate.shape[0]
         for mm in range(num_datasets):
-            cmp_misclf_path = pjoin(exp_dir, 'average_misclassification_rates_{}.csv'.format(method_names[mm]))
+            cmp_misclf_path = pjoin(exp_dir, 'average_misclassification_rates_{}.csv'
+                                             ''.format(method_names[mm]))
             np.savetxt(cmp_misclf_path,
                        misclf_rate[mm, :],
                        fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER)
@@ -82,7 +87,8 @@ def export_results(dict_to_save, out_dir, options_path):
         # feature importance
         if user_options['classifier_name'].lower() in cfg.clfs_with_feature_importance:
             for mm in range(num_datasets):
-                featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'.format(method_names[mm]))
+                featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'
+                                              ''.format(method_names[mm]))
                 np.savetxt(featimp_path,
                            feature_importances_rf[mm],
                            fmt=cfg.EXPORT_FORMAT, delimiter=cfg.DELIMITER,
@@ -94,9 +100,11 @@ def export_results(dict_to_save, out_dir, options_path):
             print('\tCurrent predictive model does not provide them.')
 
         # subject-wise misclf frequencies
-        perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
+        perc_misclsfd, _, _, _ = visualize.compute_perc_misclf_per_sample(
+                num_times_misclfd, num_times_tested)
         for mm in range(num_datasets):
-            subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'.format(method_names[mm]))
+            subwise_misclf_path = pjoin(exp_dir, 'subject_misclf_freq_{}.csv'
+                                                 ''.format(method_names[mm]))
             # TODO there must be a more elegant way to write dict to CSV
             with open(subwise_misclf_path, 'w') as smf:
                 for sid, val in perc_misclsfd[mm].items():
@@ -113,7 +121,7 @@ def export_results(dict_to_save, out_dir, options_path):
 def report_best_params(best_params, method_names, out_dir):
     "Prints out the most frequently selected parameter values and saves them to disk."
 
-    # best_params : list of num_reps elements, each a list of num_datasets dictionaries
+    # best_params : list of num_reps elements, each a list of num_datasets dicts
     num_reps = len(best_params)
     param_names = list(best_params[0][0].keys())
 
@@ -135,7 +143,8 @@ def report_best_params(best_params, method_names, out_dir):
             pcounter = Counter(param_values[label][param])
             # most_common returns a list of tuples, with value and its frequency
             most_freq_values[label][param] = pcounter.most_common(1)[0][0]
-            print('    {:{mw}} : {}'.format(param, most_freq_values[label][param], mw=maxwidth))
+            print('    {:{mw}} : {}'
+                  ''.format(param, most_freq_values[label][param], mw=maxwidth))
         print('')
 
     # saving them
@@ -168,13 +177,15 @@ def export_results_from_disk(results_file_path, out_dir, options_path):
     """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-        best_params, feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
-        confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, positive_class = \
-        classifier_name, feat_select_method = rhst.load_results(results_file_path)
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, best_params,\
+    feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
+    confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, \
+    positive_class = classifier_name, feat_select_method = rhst.load_results(
+        results_file_path)
 
     locals_var_dict = locals()
-    dict_to_save = {var: locals_var_dict[var] for var in cfg.rhst_data_variables_to_persist}
+    dict_to_save = {var: locals_var_dict[var]
+                    for var in cfg.rhst_data_variables_to_persist}
     export_results(dict_to_save, out_dir, options_path)
 
     return
