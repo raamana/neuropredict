@@ -3,11 +3,37 @@ __all__ = ['get_pipeline', 'get_feature_importance',]
 import numpy as np
 import sklearn
 from neuropredict import config_neuropredict as cfg
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from sklearn.svm import SVC, SVR
+from sklearn.ensemble import (ExtraTreesClassifier, RandomForestClassifier,
+                              RandomForestRegressor, ExtraTreesRegressor,
+                              GradientBoostingRegressor)
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.linear_model import BayesianRidge
 from sklearn.feature_selection import (SelectKBest, VarianceThreshold, f_classif,
                                        mutual_info_classif)
 from sklearn.pipeline import Pipeline
-from sklearn.tree import DecisionTreeClassifier
+
+
+def get_estimator_by_name(est_name):
+    """Returns an usable sklearn Estimator identified by name"""
+
+    map_to_method = dict(randomforestclassifier=RandomForestClassifier,
+                         extratreesclassifier=ExtraTreesClassifier,
+                         decisiontreeclassifier=DecisionTreeClassifier,
+                         svm=SVC,
+                         svr=SVR,
+                         randomforestregressor=RandomForestRegressor,
+                         extratreesregressor=ExtraTreesRegressor,
+                         decisiontreeregressor=DecisionTreeRegressor,
+                         gaussianprocessregressor=GaussianProcessRegressor,
+                         gradientboostingregressor=GradientBoostingRegressor,
+                         kernelridge=KernelRidge,
+                         bayesianridge=BayesianRidge,
+                         )
+
+    return map_to_method.get(est_name.lower(), 'Estimator_Not_Processed_Yet')
 
 
 def make_parameter_grid(estimator_name=None, named_ranges=None):
@@ -370,7 +396,6 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
                          ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
-    from sklearn.svm import SVC
     clf = SVC(probability=True)
 
     return clf, clf_name, param_grid

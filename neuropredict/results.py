@@ -7,7 +7,9 @@ Module defining methods and classes needed to manage results produced.
 import numpy as np
 from neuropredict import config_neuropredict as cfg
 from abc import abstractmethod
-from sklearn.metrics.scorer import check_scoring, _check_multimetric_scoring
+from neuropredict.algorithms import get_estimator_by_name
+from sklearn.metrics.scorer import check_scoring, \
+    _check_multimetric_scoring as _check_multimetric
 
 class CVResults(object):
     """
@@ -15,11 +17,11 @@ class CVResults(object):
     """
 
     def __init__(self,
-                 estimator=cfg.default_classifier,
+                 estimator_name=cfg.default_classifier,
                  metric_set=(cfg.default_scoring_metric, )):
         "Constructor."
 
-        self.metric_set = _check_multimetric_scoring(estimator, metric_set)
+        estimator = get_estimator_by_name(estimator_name)
         self.metric_val = {name: dict() for name in self.metric_set.keys()}
 
         self._attr = dict()
@@ -72,7 +74,7 @@ class ClassifyCVResults(CVResults):
                  metric_set=cfg.default_metric_set_classification):
         "Constructor."
 
-        super().__init__(estimator=estimator, metric_set=metric_set)
+        super().__init__(estimator_name=estimator, metric_set=metric_set)
 
         self._conf_mat = dict() # confusion matrix
         self._misclf_samplets = dict() # list of misclassified samplets
@@ -118,7 +120,7 @@ class RegressCVResults(CVResults):
                  metric_set=cfg.default_metric_set_regression):
         "Constructor."
 
-        super().__init__(estimator=estimator, metric_set=metric_set)
+        super().__init__(estimator_name=estimator, metric_set=metric_set)
 
 
     def dump(self, out_dir):
