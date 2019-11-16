@@ -9,13 +9,12 @@ import numpy as np
 # the order of import is very important to avoid circular imports
 from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.base import BaseWorkflow, get_parser_base, organize_inputs
+from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
-from neuropredict.utils import (check_regressor, check_num_procs, not_unspecified,
-                                print_options, save_options,
-                                validate_feature_selection_size,
+from neuropredict.utils import (check_num_procs, check_regressor, not_unspecified,
+                                print_options, validate_feature_selection_size,
                                 validate_impute_strategy)
-from neuropredict.datasets import load_datasets, detect_missing_data
-from pyradigm import MultiDatasetRegress
+
 
 def get_parser_regress():
     """"""
@@ -72,8 +71,7 @@ def parse_args():
                 res_path = pjoin(out_dir, cfg.file_name_results)
                 if pexists(out_dir) and pexists(res_path):
                     if not_unspecified(user_args.make_vis):
-                        print(
-                            '\n\nSaving the visualizations to \n{}'.format(out_dir))
+                        print('\n\nSaving visualizations to\n{}'.format(out_dir))
                         make_visualizations(res_path, out_dir)
                 else:
                     raise ValueError('Given folder does not exist, '
@@ -139,7 +137,6 @@ def parse_args():
                        reduced_dim_size, num_procs,
                        grid_search_level, regressor, dim_red_method]
 
-
     # options_path = save_options(options_to_save, out_dir)
     options_path = None
 
@@ -196,7 +193,6 @@ def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
     regr_expt.run()
 
 
-
 def make_visualizations():
     pass
 
@@ -225,7 +221,6 @@ class RegressionWorkflow(BaseWorkflow):
                  num_procs=cfg.DEFAULT_NUM_PROCS,
                  user_options=None,
                  checkpointing=cfg.default_checkpointing):
-
         super().__init__(datasets,
                          pred_model=pred_model,
                          impute_strategy=impute_strategy,
@@ -239,6 +234,7 @@ class RegressionWorkflow(BaseWorkflow):
                          num_procs=num_procs,
                          user_options=user_options,
                          checkpointing=checkpointing)
+
 
     def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
         """

@@ -37,7 +37,8 @@ def check_params_rhst(dataset_path_file, out_results_dir,
         out_results_dir = realpath(out_results_dir)
         os.makedirs(out_results_dir, exist_ok=True)
     except:
-        raise IOError('Error in checking or creating output directiory. Ensure write permissions!')
+        raise IOError('Error in checking or creating output directiory. '
+                      'Ensure write permissions!')
 
     num_repetitions = int(num_repetitions)
     if not np.isfinite(num_repetitions):

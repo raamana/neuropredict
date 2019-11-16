@@ -1,27 +1,22 @@
 from __future__ import print_function
 
 import argparse
-import os
-import sys
-import textwrap
-import traceback
-import warnings
 import random
-import numpy as np
-from os.path import join as pjoin, exists as pexists
-from warnings import catch_warnings, filterwarnings, simplefilter
-from multiprocessing import Pool, Manager
-from functools import partial
-from os.path import abspath, exists as pexists
+import textwrap
 from abc import abstractmethod
-from neuropredict import config_neuropredict as cfg
-from neuropredict import __version__
-from neuropredict.utils import not_unspecified, check_paths, impute_missing_data, \
-    validate_feature_selection_size
-from neuropredict.algorithms import make_pipeline, compute_reduced_dimensionality
+from functools import partial
+from multiprocessing import Manager, Pool
+from os.path import abspath, exists as pexists
+from warnings import catch_warnings, filterwarnings, simplefilter
+
+import numpy as np
+from neuropredict import __version__, config_neuropredict as cfg
+from neuropredict.algorithms import compute_reduced_dimensionality, make_pipeline
 from neuropredict.results import ClassifyCVResults, RegressCVResults
-from sklearn.model_selection import GridSearchCV, ShuffleSplit
+from neuropredict.utils import check_paths, impute_missing_data, not_unspecified
 from sklearn.base import is_classifier
+from sklearn.model_selection import GridSearchCV, ShuffleSplit
+
 
 class BaseWorkflow(object):
     """Class defining a structure for the neuropredict workflow"""

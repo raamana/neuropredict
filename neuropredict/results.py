@@ -4,9 +4,9 @@ Module defining methods and classes needed to manage results produced.
 
 """
 
-import numpy as np
-from neuropredict import config_neuropredict as cfg
 from abc import abstractmethod
+
+from neuropredict import config_neuropredict as cfg
 from neuropredict.algorithms import get_estimator_by_name
 from neuropredict.utils import is_iterable_but_not_str
 
@@ -16,9 +16,10 @@ class CVResults(object):
     Class to store and organize the results for a CV run.
     """
 
+
     def __init__(self,
                  estimator_name=cfg.default_classifier,
-                 metric_set=(cfg.default_scoring_metric, )):
+                 metric_set=(cfg.default_scoring_metric,)):
         "Constructor."
 
         estimator = get_estimator_by_name(estimator_name)
@@ -60,12 +61,15 @@ class CVResults(object):
     def save(self):
         "Method to persist the results to disk."
 
+
     def load(self):
         "Method to load previously saved results e.g. to redo visualizations"
+
 
     @abstractmethod
     def dump(self, out_dir):
         """Method for quick dump, for checkpointing purposes"""
+
 
     @abstractmethod
     def export(self):
@@ -75,6 +79,7 @@ class CVResults(object):
 class ClassifyCVResults(CVResults):
     """Custom CVResults class to accommodate classification-specific evaluation."""
 
+
     def __init__(self,
                  estimator=cfg.default_classifier,
                  metric_set=cfg.default_metric_set_classification):
@@ -82,8 +87,8 @@ class ClassifyCVResults(CVResults):
 
         super().__init__(estimator_name=estimator, metric_set=metric_set)
 
-        self._conf_mat = dict() # confusion matrix
-        self._misclf_samplets = dict() # list of misclassified samplets
+        self._conf_mat = dict()  # confusion matrix
+        self._misclf_samplets = dict()  # list of misclassified samplets
 
 
     def add_diagnostics(self, run_id, dataset_id, conf_mat, misclfd_ids):
