@@ -131,6 +131,8 @@ class BaseWorkflow(object):
             best_pipeline, best_params, feat_importance = \
                 self._optimize_pipeline_on_train_set(train_data, train_targets)
 
+            self.results.add_attr(run_id, ds_id, 'feat_importance', feat_importance)
+
             self._eval_predictions(best_pipeline, test_data, test_targets,
                                    run_id, ds_id)
 
