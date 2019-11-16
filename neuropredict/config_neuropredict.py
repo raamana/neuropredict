@@ -139,8 +139,14 @@ default_checkpointing = True
 
 ### performance metrics
 
+from sklearn.metrics import roc_auc_score
+def roc_auc_score_weighted(true_labels, predicted_proba_per_class):
+    """Wrapper around sklearn roc_auc_score to ensure it is weighted."""
+    return roc_auc_score(true_labels, predicted_proba_per_class, average='weighted')
+
+
 default_scoring_metric = 'accuracy'
-default_metric_set_classification = ('accuracy', 'roc_auc')
+default_metric_set_classification = ('accuracy', roc_auc_score_weighted)
 default_metric_set_regression = ('r2', 'mean_absolute_error')
 
 # misclassifications
