@@ -385,7 +385,7 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
                              ''.format(feature_select_method,
                                        cfg.feature_selection_size_methods))
     else:
-        if dim_in_data is not None:
+        if dim_in_data is None:
             upper_limit = np.Inf
         else:
             upper_limit = dim_in_data

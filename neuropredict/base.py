@@ -16,8 +16,9 @@ from os.path import abspath, exists as pexists
 from abc import abstractmethod
 from neuropredict import config_neuropredict as cfg
 from neuropredict import __version__
-from neuropredict.utils import not_unspecified, check_paths, impute_missing_data
-from neuropredict.algorithms import make_pipeline
+from neuropredict.utils import not_unspecified, check_paths, impute_missing_data, \
+    validate_feature_selection_size
+from neuropredict.algorithms import make_pipeline, compute_reduced_dimensionality
 from neuropredict.results import ClassifyCVResults, RegressCVResults
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 from sklearn.base import is_classifier
@@ -118,7 +119,7 @@ class BaseWorkflow(object):
         train_set = self._id_list[:self._train_set_size]
         test_set = list(set(self._id_list) - set(train_set))
 
-        for ds_id, (train_data, train_targets), (test_data, test_targets) \
+        for ds_id, ((train_data, train_targets), (test_data, test_targets))\
                 in self.datasets.get_subsets((train_set, test_set)):
             print('Dataset {}'.format(ds_id))
 
@@ -141,9 +142,11 @@ class BaseWorkflow(object):
     def _optimize_pipeline_on_train_set(self, train_data, train_targets):
         """Optimize model on training set and return predictions on test set."""
 
+        reduced_dim = compute_reduced_dimensionality(
+                self.reduced_dim, self._train_set_size, train_data.shape[1])
         pipeline, param_grid = make_pipeline(pred_model=self.pred_model,
                                              dim_red_method=self.dim_red_method,
-                                             reduced_dim=self.reduced_dim,
+                                             reduced_dim=reduced_dim,
                                              train_set_size=self._train_set_size,
                                              gs_level=self.grid_search_level)
 
@@ -200,8 +203,7 @@ class BaseWorkflow(object):
         # with builtin multiprocessing library
         gs = GridSearchCV(estimator=pipeline,
                           param_grid=param_grid,
-                          cv=inner_cv,
-                          scoring=self._scoring,
+                          cv=inner_cv, # TODO using default scoring metric?
                           refit=cfg.refit_best_model_on_ALL_training_set)
 
         # ignoring some not-so-critical warnings
