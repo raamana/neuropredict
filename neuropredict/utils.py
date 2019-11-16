@@ -87,7 +87,7 @@ def check_classifier(clf_name=cfg.default_classifier):
 
     clf_name = clf_name.lower()
     if clf_name not in cfg.classifier_choices:
-        raise ValueError('Classifier not recognized : {}\n'
+        raise ValueError('Predictive model not recognized : {}\n'
                          'Choose one of: {}'
                          ''.format(clf_name, cfg.classifier_choices))
 
@@ -103,6 +103,29 @@ def check_classifier(clf_name=cfg.default_classifier):
                                         cfg.additional_modules_reqd[clf_name]))
 
     return clf_name
+
+
+def check_regressor(est_name=cfg.default_regressor):
+    """Validates classifier choice, and ensures necessary modules are installed."""
+
+    est_name = est_name.lower()
+    if est_name not in cfg.regressor_choices:
+        raise ValueError('Predictive model not recognized : {}\n'
+                         'Choose one of: {}'
+                         ''.format(est_name, cfg.regressor_choices))
+
+    if est_name in cfg.additional_modules_reqd:
+        try:
+            from importlib import import_module
+            import_module(cfg.additional_modules_reqd[est_name])
+        except ImportError:
+            raise ImportError('choosing model {} requires installation of '
+                              'another package. Try running\n'
+                              'pip install -U {} '
+                              ''.format(est_name,
+                                        cfg.additional_modules_reqd[est_name]))
+
+    return est_name
 
 
 def check_feature_sets_are_comparable(datasets,

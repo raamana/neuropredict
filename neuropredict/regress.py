@@ -10,7 +10,7 @@ import numpy as np
 from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.base import BaseWorkflow, get_parser_base, organize_inputs
 from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
-from neuropredict.utils import (check_classifier, check_num_procs, not_unspecified,
+from neuropredict.utils import (check_regressor, check_num_procs, not_unspecified,
                                 print_options, save_options,
                                 validate_feature_selection_size,
                                 validate_impute_strategy)
@@ -121,7 +121,7 @@ def parse_args():
     num_procs = check_num_procs(user_args.num_procs)
 
     reduced_dim_size = validate_feature_selection_size(
-            user_args.num_features_to_select)
+            user_args.reduced_dim_size)
 
     impute_strategy = validate_impute_strategy(user_args.impute_strategy)
 
@@ -130,7 +130,7 @@ def parse_args():
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'
                          ''.format(cfg.GRIDSEARCH_LEVELS))
 
-    regressor = check_classifier(user_args.regressor)
+    regressor = check_regressor(user_args.regressor)
     dim_red_method = user_args.dim_red_method.lower()
 
     # saving the validated and expanded values to disk for later use.
@@ -138,7 +138,10 @@ def parse_args():
                        user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
                        reduced_dim_size, num_procs,
                        grid_search_level, regressor, dim_red_method]
-    options_path = save_options(options_to_save, out_dir)
+
+
+    # options_path = save_options(options_to_save, out_dir)
+    options_path = None
 
     return sample_ids, classes, out_dir, options_path, \
            user_feature_paths, user_feature_type, \
@@ -158,27 +161,37 @@ def cli():
     num_procs, grid_search_level, regressor, dim_red_method = parse_args()
 
     print('Running neuropredict version {}'.format(__version__))
-    prepare_and_run(subjects, classes, out_dir, user_feature_paths,
-                    user_feature_type, train_perc, num_rep_cv, reduced_dim_size,
-                    impute_strategy, grid_search_level, regressor, dim_red_method,
-                    num_procs, user_options)
+    prepare_and_run(user_feature_paths, user_feature_type, train_perc,
+                    num_rep_cv, reduced_dim_size, impute_strategy,
+                    grid_search_level, regressor, dim_red_method,
+                    num_procs, out_dir, user_options)
 
     return
 
 
-def prepare_and_run(subjects, targets, out_dir, user_options,
-                    user_feature_paths, user_feature_type,
-                    train_perc, num_rep_cv, reduced_dim_size, impute_strategy,
-                    grid_search_level, regressor, dim_red_method, num_procs):
+def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
+                    num_rep_cv, reduced_dim_size, impute_strategy, grid_search_level,
+                    regressor, dim_red_method, num_procs, out_dir, user_options):
     """"""
 
     multi_ds = load_datasets(user_feature_paths, task_type='regress')
+    print(multi_ds)
     impute_strategy = detect_missing_data(multi_ds, impute_strategy)
 
-    regr_expt = RegressionWorkflow(multi_ds, regressor, impute_strategy,
-                                   dim_red_method, reduced_dim_size, train_perc,
-                                   num_rep_cv, grid_search_level, num_procs,
-                                   user_options)
+    scoring = cfg.default_metric_set_regression
+    regr_expt = RegressionWorkflow(multi_ds,
+                                   pred_model=regressor,
+                                   impute_strategy=impute_strategy,
+                                   dim_red_method=dim_red_method,
+                                   reduced_dim=reduced_dim_size,
+                                   train_perc=train_perc,
+                                   num_rep_cv=num_rep_cv,
+                                   scoring=scoring,
+                                   grid_search_level=grid_search_level,
+                                   out_dir=out_dir,
+                                   num_procs=num_procs,
+                                   user_options=user_options,
+                                   checkpointing=True)
 
     regr_expt.run()
 
@@ -208,6 +221,7 @@ class RegressionWorkflow(BaseWorkflow):
                  num_rep_cv=cfg.default_num_repetitions,
                  scoring=cfg.default_metric_set_regression,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
+                 out_dir=None,
                  num_procs=cfg.DEFAULT_NUM_PROCS,
                  user_options=None,
                  checkpointing=cfg.default_checkpointing):
@@ -221,6 +235,7 @@ class RegressionWorkflow(BaseWorkflow):
                          num_rep_cv=num_rep_cv,
                          scoring=scoring,
                          grid_search_level=grid_search_level,
+                         out_dir=out_dir,
                          num_procs=num_procs,
                          user_options=user_options,
                          checkpointing=checkpointing)
