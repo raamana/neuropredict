@@ -56,6 +56,10 @@ class CVResults(object):
         "Method to load previously saved results e.g. to redo visualizations"
 
     @abstractmethod
+    def dump(self, out_dir):
+        """Method for quick dump, for checkpointing purposes"""
+
+    @abstractmethod
     def export(self):
         "Method to export the results to different formats (e.g. pyradigm or CSV)"
 
@@ -88,6 +92,23 @@ class ClassifyCVResults(CVResults):
         raise NotImplementedError()
 
 
+    def dump(self, out_dir):
+        """Method for quick dump, for checkpointing purposes"""
+
+        from os.path import join as pjoin, exists
+        from neuropredict.utils import make_time_stamp
+        import pickle
+        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
+                                  ''.format(make_time_stamp()))
+        if exists(out_path):
+            from os import remove
+            remove(out_path)
+        with open(out_path, 'wb') as df:
+            to_save = [self.metric_set, self.metric_val, self._attr,
+                       self._conf_mat, self._misclf_samplets]
+            pickle.dump(to_save, df)
+
+
 class RegressCVResults(CVResults):
     """Custom CVResults class to accommodate classification-specific evaluation."""
 
@@ -98,3 +119,19 @@ class RegressCVResults(CVResults):
         "Constructor."
 
         super().__init__(estimator=estimator, metric_set=metric_set)
+
+
+    def dump(self, out_dir):
+        """Method for quick dump, for checkpointing purposes"""
+
+        from os.path import join as pjoin, exists
+        from neuropredict.utils import make_time_stamp
+        import pickle
+        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
+                                  ''.format(make_time_stamp()))
+        if exists(out_path):
+            from os import remove
+            remove(out_path)
+        with open(out_path, 'wb') as df:
+            to_save = [self.metric_set, self.metric_val, self._attr]
+            pickle.dump(to_save, df)
