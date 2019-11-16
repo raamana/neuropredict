@@ -146,8 +146,14 @@ def roc_auc_score_weighted(true_labels, predicted_proba_per_class):
 
 
 default_scoring_metric = 'accuracy'
-default_metric_set_classification = ('accuracy', roc_auc_score_weighted)
-default_metric_set_regression = ('r2', 'mean_absolute_error')
+
+# allowed names: sorted(sklearn.metrics.SCORERS.keys())
+
+default_metric_set_classification = ('accuracy',
+                                     roc_auc_score_weighted)
+default_metric_set_regression = ('r2',
+                                 # find out why prefix neg_ is needed
+                                 'neg_mean_absolute_error')
 
 # misclassifications
 MISCLF_HIST_NUM_BINS = 20

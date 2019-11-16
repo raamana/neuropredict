@@ -22,6 +22,7 @@ class CVResults(object):
         "Constructor."
 
         estimator = get_estimator_by_name(estimator_name)
+        self.metric_set, is_multimetric = _check_multimetric(estimator, metric_set)
         self.metric_val = {name: dict() for name in self.metric_set.keys()}
 
         self._attr = dict()
