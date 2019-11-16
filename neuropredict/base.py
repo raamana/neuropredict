@@ -121,7 +121,7 @@ class BaseWorkflow(object):
 
         for ds_id, ((train_data, train_targets), (test_data, test_targets))\
                 in self.datasets.get_subsets((train_set, test_set)):
-            print('Dataset {}'.format(ds_id))
+            # print('Dataset {}'.format(ds_id))
 
             missing = self.datasets.get_attr(ds_id, cfg.missing_data_flag_name)
             if missing:

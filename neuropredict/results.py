@@ -34,12 +34,16 @@ class CVResults(object):
          coming from different repetitions of CV.
         """
 
+        msgs = list()
+        msgs.append('CV run {:<3} dataset {:<20} :'.format(run_id, dataset_id))
         for name, score_func in self.metric_set.items():
             score = score_func(true_targets, predicted)
             self.metric_val[name][(run_id, dataset_id)] = score
-            # quick summary print
-            print('CV run {:<3} dataset {:<20} : {:>20} {:.3f}'
-                  ''.format(run_id, dataset_id, name, score))
+            msgs.append(' {:>20} {:8.3f}'.format(name, score))
+
+        # quick summary print
+        print(' '.join(msgs))
+
 
     def add_attr(self, run_id, dataset_id, name, value):
         """
