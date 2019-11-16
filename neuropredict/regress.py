@@ -251,5 +251,33 @@ class RegressionWorkflow(BaseWorkflow):
         self.results.add(run_id, ds_id, predicted_targets, true_targets)
 
 
+    def save(self):
+        """Method to save the workflow and results."""
+
+        print('\n\n---\nNOT SAVING RESULTS DURING DEV VERSION\n----\n\n')
+
+
+    def load(self):
+        """Mechanism to reload results.
+
+        Useful for check-pointing, and restore upon crash etc
+        """
+
+        raise NotImplementedError()
+
+
+    def summarize(self):
+        """Simple summary of the results produced, for logging and user info"""
+
+        print('\n\n---\nNOT SUMMARIZING RESULTS DURING DEV VERSION\n----\n\n')
+
+
+    def visualize(self):
+        """Method to produce all the relevant visualizations based on the results
+        from this workflow."""
+
+        raise NotImplementedError()
+
+
 if __name__ == '__main__':
     cli()
