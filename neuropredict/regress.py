@@ -148,16 +148,13 @@ def parse_args():
 
 
 def cli():
-    """
-    Main entry point.
-
-    """
+    """ Main entry point."""
 
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \
     num_procs, grid_search_level, regressor, dim_red_method = parse_args()
 
-    print('Running neuropredict version {}'.format(__version__))
+    print('Running neuropredict version {} for Regression'.format(__version__))
     prepare_and_run(user_feature_paths, user_feature_type, train_perc,
                     num_rep_cv, reduced_dim_size, impute_strategy,
                     grid_search_level, regressor, dim_red_method,

@@ -739,7 +739,7 @@ def cli():
     feature_selection_size, impute_strategy, num_procs, \
     grid_search_level, classifier, feat_select_method = parse_args()
 
-    print('Running neuropredict version {}'.format(__version__))
+    print('Running neuropredict version {} for Classification'.format(__version__))
     prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
