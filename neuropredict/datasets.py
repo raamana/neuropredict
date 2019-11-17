@@ -1,19 +1,24 @@
 """Module to load, check and combine datasets."""
 
 import numpy as np
+from warnings import warn
 from pyradigm import MultiDatasetClassify, MultiDatasetRegress
 from neuropredict import config_neuropredict as cfg
 from neuropredict.base import MissingDataException
 
-def load_datasets(path_list, task_type='classify'):
+def load_datasets(path_list, task_type='classify', name=None, subgroup=None):
     """Method to manage multiple input datasets."""
 
     task_type = task_type.lower()
 
     if task_type in ('classify',):
-        multi_ds = MultiDatasetClassify(dataset_spec=path_list)
+        multi_ds = MultiDatasetClassify(dataset_spec=path_list, name=name,
+                                        subgroup=subgroup)
     elif task_type in ('regress',):
-        multi_ds = MultiDatasetRegress(dataset_spec=path_list)
+        if subgroup is not None:
+            warn('Invalid specification of subgroup for regression datasets/tasks.'
+                 ' Ignoring it.')
+        multi_ds = MultiDatasetRegress(dataset_spec=path_list, name=name)
     else:
         raise ValueError('Invalid task type. Choose either classify or regress')
 
