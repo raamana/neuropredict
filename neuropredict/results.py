@@ -5,7 +5,7 @@ Module defining methods and classes needed to manage results produced.
 """
 
 from abc import abstractmethod
-
+import numpy as np
 from neuropredict import config_neuropredict as cfg
 from neuropredict.algorithms import get_estimator_by_name
 from neuropredict.utils import is_iterable_but_not_str
@@ -27,6 +27,7 @@ class CVResults(object):
             self.metric_set = {func.__name__: func for func in metric_set}
         self.metric_val = {name: dict() for name in self.metric_set.keys()}
 
+        self._count = 0
         self._attr = dict()
 
 
@@ -46,6 +47,9 @@ class CVResults(object):
         # quick summary print
         print(' '.join(msgs))
 
+        # counting
+        self._count += 1
+
 
     def add_attr(self, run_id, dataset_id, name, value):
         """
@@ -57,6 +61,33 @@ class CVResults(object):
 
         self._attr[(run_id, dataset_id)][name] = value
 
+
+    def _metric_summary(self):
+        """for FYI"""
+
+        if self._count > 0:
+            summary = list()
+            for metric, distr in self.metric_val.items():
+                median = np.median(distr)
+                SD = np.std(distr)
+                summary.append(' {} : median {} SD {}'.format(metric, median, SD))
+            return '\n'.join(summary)
+        else:
+            return 'No results added so far!'
+
+
+    def __str__(self):
+        """Simple summary"""
+
+        return 'Metrics : {}\n # runs : {}\n {}' \
+               ''.format(', '.join(self.metric_set.keys()), self._count,
+                         self._metric_summary())
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __format__(self, format_spec):
+        return self.__str__()
 
     def save(self):
         "Method to persist the results to disk."
