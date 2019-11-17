@@ -6,7 +6,7 @@ import textwrap
 import traceback
 import warnings
 from os.path import abspath, basename, exists as pexists, join as pjoin, realpath
-
+from os import makedirs
 import matplotlib.pyplot as plt
 import numpy as np
 # the order of import is very important to avoid circular imports
@@ -14,9 +14,11 @@ from neuropredict import __version__, config_neuropredict as cfg, rhst, visualiz
 from neuropredict.base import BaseWorkflow, organize_inputs
 from neuropredict.freesurfer import (aseg_stats_subcortical,
                                      aseg_stats_whole_brain)
+from neuropredict.datasets import load_datasets, detect_missing_data
 from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
                              get_features, get_metadata, get_metadata_in_pyradigm,
-                             get_pyradigm, saved_dataset_matches)
+                             get_pyradigm, saved_dataset_matches,
+                             process_pyradigm, process_arff)
 from neuropredict.utils import (check_classifier, check_num_procs, load_options,
                                 make_dataset_filename, not_unspecified,
                                 print_options, save_options,
@@ -66,6 +68,9 @@ class ClassificationWorkflow(BaseWorkflow):
                          num_procs=num_procs,
                          user_options=user_options,
                          checkpointing=checkpointing)
+
+        self.out_dir = out_dir
+        makedirs(self.out_dir, exist_ok=True)
 
         self._positive_class = positive_class
         self._target_set = list(uniquify_in_order(self.datasets.targets.values()))
@@ -575,12 +580,8 @@ def import_datasets(method_list, out_dir, subjects, classes,
 
     """
 
-
     def clean_str(string):
         return ' '.join(string.strip().split(' _-:\n\r\t'))
-
-
-    from neuropredict.io import process_pyradigm, process_arff
 
     method_names = list()
     outpath_list = list()
@@ -604,7 +605,6 @@ def import_datasets(method_list, out_dir, subjects, classes,
                 method_name = cur_method.__name__
 
             out_name = make_dataset_filename(method_name)
-
             out_path_cur_dataset = pjoin(out_dir, out_name)
             if not saved_dataset_matches(out_path_cur_dataset, subjects, classes):
                 # noinspection PyTypeChecker
@@ -620,32 +620,26 @@ def import_datasets(method_list, out_dir, subjects, classes,
     if len(set(outpath_list)) < len(outpath_list):
         raise RuntimeError('Duplicate paths to input dataset found!\n'
                            'Try distinguish inputs further. Otherwise report this '
-                           'bug '
-                           '@ github.com/raamana/neuropredict/issues/new')
-
-    dataset_paths_file = pjoin(out_dir, 'datasetlist.' + combined_name + '.txt')
-    with open(dataset_paths_file, 'w') as dpf:
-        dpf.writelines('\n'.join(outpath_list))
+                           'bug @ github.com/raamana/neuropredict/issues/new')
 
     print('\nData import is done.\n\n')
 
-    return method_names, dataset_paths_file, missing_data_flag, impute_strategy
+    return method_names, outpath_list
 
 
 def prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size,
-                    user_impute_strategy, num_procs,
+                    impute_strategy, num_procs,
                     grid_search_level, classifier, feat_select_method):
     "Organizes the inputs and prepares them for CV"
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
                                                 user_feature_type)
-
-    method_names, dataset_paths_file, missing_flag, impute_strategy = \
-        import_datasets(method_list, out_dir, subjects, classes,
-                        feature_dir, user_feature_type, user_impute_strategy)
+    method_names, outpath_list = import_datasets(method_list, out_dir, subjects,
+                                                 classes, feature_dir,
+                                                 user_feature_type)
 
     print('Requested processing for the following subgroups:'
           '\n{}\n'.format('\n'.join([','.join(sg) for sg in sub_group_list])))
@@ -653,15 +647,17 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
     # iterating through the given set of subgroups
     num_sg = len(sub_group_list)
     for sgi, sub_group in enumerate(sub_group_list):
-        print('{}\nProcessing subgroup : {} ({}/{})'
-              '\n{}'.format('-' * 80, ','.join(sub_group), sgi + 1, num_sg,
-                            '-' * 80))
-        out_dir_sg = pjoin(out_dir,
-                           sub_group_identifier(sub_group, sg_index=sgi + 1))
+        print('{}\nProcessing subgroup : {} ({}/{})\n{}'
+              ''.format('-' * 80, ','.join(sub_group), sgi + 1, num_sg, '-' * 80))
+        sub_group_id = sub_group_identifier(sub_group, sg_index=sgi + 1)
+        out_dir_sg = pjoin(out_dir, sub_group_id)
 
-        datasets = MultiDatasetClassify(dataset_spec=dataset_paths_file,
-                                        sub_groups=sub_group)
-        clf_expt = ClassificationWorkflow(datasets=datasets,
+        multi_ds = load_datasets(outpath_list, task_type='classify',
+                                 subgroup=sub_group, name=sub_group_id)
+        print(multi_ds)
+        impute_strategy = detect_missing_data(multi_ds, impute_strategy)
+
+        clf_expt = ClassificationWorkflow(datasets=multi_ds,
                                           pred_model=classifier,
                                           impute_strategy=impute_strategy,
                                           dim_red_method=feat_select_method,
@@ -675,6 +671,8 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
                                           num_procs=num_procs,
                                           user_options=options_path,
                                           checkpointing=cfg.default_checkpointing)
+
+        clf_expt.run()
 
         # print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         # make_visualizations(results_file_path, out_dir_sg, options_path)

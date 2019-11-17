@@ -67,8 +67,8 @@ def detect_missing_data(multi_ds,
         # disabling the imputation altogether if there is no missing data
         impute_strategy = None
         if user_impute_strategy in ('raise', None):
-            print('Ignoring imputation strategy chosen,'
-                  ' as no missing data were found!')
+            print('\nIgnoring imputation strategy chosen,'
+                  ' as no missing data were found!\n')
 
     return impute_strategy
 
