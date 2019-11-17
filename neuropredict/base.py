@@ -87,6 +87,25 @@ class BaseWorkflow(object):
         self._train_set_size = np.int64(np.floor(self._num_samples * self.train_perc))
         self._train_set_size = max(1, min(self._num_samples, self._train_set_size))
 
+        self._summarize_expt()
+
+
+    def _summarize_expt(self):
+        """Summarize the experiment for user info"""
+
+        print('\nCURRENT EXPERIMENT:\n{line}'.format(line='-'*50))
+        print('Training percentage      : {:.2}'.format(self.train_perc))
+        print('Number of CV repetitions : {}'.format(self.num_rep_cv))
+        print('Predictive model chosen  : {}'.format(self.pred_model))
+        print('Dim reduction method     : {}'.format(self.dim_red_method))
+        print('Level of grid search     : {}'.format(self.grid_search_level))
+        print('Number of processors     : {}'.format(self.num_procs))
+        print('Saving the results to \n   {}'.format(self.out_dir))
+
+        print('\nEstimated chance accuracy : {:.3f}\n'
+              ''.format(chance_accuracy(list(self.datasets.target_sizes.values()),
+                                        'balanced')))
+
 
     def run(self):
         """Full run of workflow"""
