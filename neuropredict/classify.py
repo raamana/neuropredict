@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 # the order of import is very important to avoid circular imports
 from neuropredict import __version__, config_neuropredict as cfg, rhst, visualize
-from neuropredict.base import BaseWorkflow, MissingDataException, organize_inputs
+from neuropredict.base import BaseWorkflow, organize_inputs
 from neuropredict.freesurfer import (aseg_stats_subcortical,
                                      aseg_stats_whole_brain)
 from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
@@ -529,8 +529,7 @@ def make_method_list(fs_subject_dir, user_feature_paths,
 
 
 def import_datasets(method_list, out_dir, subjects, classes,
-                    feature_path, feature_type='dir_of_dirs',
-                    user_impute_strategy=cfg.default_imputation_strategy):
+                    feature_path, feature_type='dir_of_dirs'):
     """
     Imports all the specified feature sets and organizes them into datasets.
 
@@ -585,7 +584,6 @@ def import_datasets(method_list, out_dir, subjects, classes,
 
     method_names = list()
     outpath_list = list()
-    missing_data_flag = list()  # boolean flag for each dataset
 
     for mm, cur_method in enumerate(method_list):
         if cur_method in [get_pyradigm]:
@@ -615,50 +613,8 @@ def import_datasets(method_list, out_dir, subjects, classes,
                                                     out_dir, out_name,
                                                     cur_method, feature_type)
 
-        # checking for presence of any missing data
-        data_mat, targets, ids = load_dataset(out_path_cur_dataset).data_and_labels()
-        is_nan = np.isnan(data_mat)
-        if is_nan.any():
-            data_missing_here = True
-            num_sub_with_md = np.sum(is_nan.sum(axis=1) > 0)
-            num_var_with_md = np.sum(is_nan.sum(axis=0) > 0)
-            if user_impute_strategy == 'raise':
-                raise MissingDataException(
-                        '{}/{} subjects with missing data found in {}/{} features\n'
-                        '\tin {} dataset at {}\n'
-                        '\tFill them and rerun, '
-                        'or choose one of the available imputation strategies: {}'
-                        ''.format(num_sub_with_md, data_mat.shape[0],
-                                  num_var_with_md, data_mat.shape[1],
-                                  method_name, out_path_cur_dataset,
-                                  cfg.avail_imputation_strategies))
-        else:
-            data_missing_here = False
-
         method_names.append(clean_str(method_name))
         outpath_list.append(out_path_cur_dataset)
-        missing_data_flag.append(data_missing_here)
-
-    # finalizing the imputation strategy
-    if any(missing_data_flag):
-        print('\nOne or more of the input datasets have missing data!')
-        if user_impute_strategy == 'raise':
-            raise MissingDataException('Fill them and rerun, '
-                                       'or choose one of the available '
-                                       'imputation strategies: {}'
-                                       ''.format(cfg.avail_imputation_strategies))
-        else:
-            impute_strategy = user_impute_strategy
-            print('The imputation strategy chosen is: {}'.format(impute_strategy))
-    else:
-        # disabling the imputation altogether if there is no missing data
-        impute_strategy = None
-        if user_impute_strategy in ('raise', None):
-            print(
-                'Ignoring imputation strategy chosen, as no missing data were '
-                'found!')
-
-    combined_name = uniq_combined_name(method_names)
 
     # checking if there are any duplicates
     if len(set(outpath_list)) < len(outpath_list):
