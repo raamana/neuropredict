@@ -13,8 +13,9 @@ import numpy as np
 from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.algorithms import compute_reduced_dimensionality, make_pipeline
 from neuropredict.results import ClassifyCVResults, RegressCVResults
-from neuropredict.utils import check_paths, impute_missing_data, not_unspecified
-from sklearn.base import is_classifier
+from neuropredict.utils import check_paths, impute_missing_data, not_unspecified, \
+    check_num_procs, chance_accuracy
+from sklearn.base import is_classifier, BaseEstimator
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 
 
@@ -62,8 +63,24 @@ class BaseWorkflow(object):
     def _prepare(self):
         """Checks in inputs, parameters and their combinations"""
 
+        self.num_rep_cv = int(self.num_rep_cv)
+        if not np.isfinite(self.num_rep_cv):
+            raise ValueError("Infinite number of repetitions is not recommended!")
+
+        if self.num_rep_cv <= 1:
+            raise ValueError("More than 1 repetition is necessary!")
+
         if self.train_perc <= 0.0 or self.train_perc >= 1.0:
             raise ValueError('Train perc > 0.0 and < 1.0')
+
+        self.num_procs = check_num_procs(self.num_procs)
+
+        if self.grid_search_level.lower() not in cfg.GRIDSEARCH_LEVELS:
+            raise ValueError('Unrecognized level of grid search.'
+                             ' Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
+
+        # TODO for API use, pred_model and dim_reducer must be validated here again
+        # if not isinstance(self.pred_model, BaseEstimator):
 
         self._id_list = list(self.datasets.samplet_ids)
         self._num_samples = len(self._id_list)
