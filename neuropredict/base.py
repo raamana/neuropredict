@@ -6,7 +6,7 @@ import textwrap
 from abc import abstractmethod
 from functools import partial
 from multiprocessing import Manager, Pool
-from os.path import abspath, exists as pexists
+from os.path import abspath, exists as pexists, join as pjoin
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import numpy as np
@@ -121,9 +121,10 @@ class BaseWorkflow(object):
 
         self._prepare()
         self._run_cv()
-        self.save()
+        out_results_path = self.save()
         self.summarize()
 
+        return out_results_path
 
     def _run_cv(self):
         """Actual CV"""
@@ -274,9 +275,22 @@ class BaseWorkflow(object):
         """
 
 
-    @abstractmethod
     def save(self):
         """Saves the results and state to disk."""
+
+        out_dict = { var : getattr(self, var) for var in cfg.results_to_save}
+        out_results_path = pjoin(self.out_dir, cfg.results_file_name)
+        try:
+            import pickle
+            with open(out_results_path, 'wb') as res_fid:
+                pickle.dump(out_dict, res_fid)
+        except:
+            raise IOError('Error saving the results to disk!\nOut path:{}'
+                          ''.format(out_results_path))
+        else:
+            print('Results saved to {}'.format(out_results_path))
+
+        return out_results_path
 
 
     @abstractmethod

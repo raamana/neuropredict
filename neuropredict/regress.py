@@ -187,7 +187,7 @@ def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
                                    user_options=user_options,
                                    checkpointing=True)
 
-    regr_expt.run()
+    out_results_path = regr_expt.run()
 
 
 def make_visualizations():
@@ -245,12 +245,6 @@ class RegressionWorkflow(BaseWorkflow):
         self.results.add(run_id, ds_id, predicted_targets, true_targets)
 
 
-    def save(self):
-        """Method to save the workflow and results."""
-
-        print('\n\n---\nNOT SAVING RESULTS DURING DEV VERSION\n----\n\n')
-
-
     def load(self):
         """Mechanism to reload results.
 
@@ -263,7 +257,7 @@ class RegressionWorkflow(BaseWorkflow):
     def summarize(self):
         """Simple summary of the results produced, for logging and user info"""
 
-        print('\n\n---\nNOT SUMMARIZING RESULTS DURING DEV VERSION\n----\n\n')
+        print(self.results)
 
 
     def visualize(self):

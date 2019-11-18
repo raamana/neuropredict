@@ -115,22 +115,6 @@ class ClassificationWorkflow(BaseWorkflow):
                                      true_targets[predicted_targets != true_targets])
 
 
-    def save(self):
-        """Method to save the workflow and results."""
-
-        out_dict = { var : getattr(self, var) for var in cfg.results_to_save}
-        out_results_path = pjoin(self.out_dir, cfg.results_file_name)
-        try:
-            import pickle
-            with open(out_results_path, 'wb') as res_fid:
-                pickle.dump(out_dict, res_fid)
-        except:
-            raise IOError('Error saving the results to disk!\nOut path:{}'
-                          ''.format(out_results_path))
-
-        return out_results_path
-
-
     def load(self):
         """Mechanism to reload results.
 
@@ -713,7 +697,7 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
                                           user_options=options_path,
                                           checkpointing=cfg.default_checkpointing)
 
-        clf_expt.run()
+        out_results_path = clf_expt.run()
 
         # print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         # make_visualizations(results_file_path, out_dir_sg, options_path)
