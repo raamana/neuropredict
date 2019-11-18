@@ -103,9 +103,19 @@ NUM_PREDICTORS_STEP = 2
 MAX_MIN_LEAFSIZE = 5
 LEAF_SIZE_STEP = 2
 
-#### workflow
+#### new workflow
 
 workflow_types = ('classify', 'regress')
+results_file_name = 'results_neuropredict.pkl'
+options_file_name = 'options_neuropredict.pkl'
+best_params_file_name = 'best_params_neuropredict.pkl'
+
+results_to_save = ['_checkpointing', '_id_list', '_num_samples',
+                   '_positive_class', '_positive_class_index', '_scoring',
+                   '_target_set', '_train_set_size', '_workflow_type',
+                   'dim_red_method', 'grid_search_level', 'impute_strategy',
+                   'num_procs', 'num_rep_cv', 'out_dir', 'pred_model',
+                   'reduced_dim', 'results', 'train_perc', 'user_options']
 
 # CV
 default_num_repetitions=200
