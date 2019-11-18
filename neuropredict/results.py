@@ -23,7 +23,19 @@ class CVResults(object):
                  dataset_ids='dataset1'):
         "Constructor."
 
-        estimator = get_estimator_by_name(estimator_name)
+        if num_rep < 1 or not np.isfinite(num_rep):
+            raise ValueError('num_rep must be a finite integer.')
+        self.num_rep = np.int64(num_rep)
+
+        if dataset_ids is not None:
+            if is_iterable_but_not_str(dataset_ids):
+                self._dataset_ids = dataset_ids
+            else:
+                self._dataset_ids = (dataset_ids, )
+        else:
+            # assuming only one feature/dataset
+            self._dataset_ids = ('dataset1', )
+
         if is_iterable_but_not_str(metric_set):
             self.metric_set = {func.__name__: func for func in metric_set}
             self.metric_val = dict()
