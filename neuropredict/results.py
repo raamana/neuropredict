@@ -107,14 +107,15 @@ class CVResults(object):
         if self._count > 0:
             summary = list()
             for metric, mdict in self.metric_val.items():
+                summary.append('\n{metric:<{mmw}}'.format(metric=metric,
+                                                          mmw=self._max_width_metric))
                 for ds, distr in mdict.items():
                     median = np.nanmedian(distr)
                     SD = np.nanstd(distr)
-                    summary.append('{ds:>{mds}} {metric:>{mmw}}'
-                                   ' : median {median:10.4f} SD {SD:10.4f}'
-                                   ''.format(ds=ds, metric=metric, median=median,
-                                             SD=SD, mds=self._max_width_ds_ids,
-                                             mmw=self._max_width_metric))
+                    summary.append('\t{ds:>{mds}} '
+                                   ' : median {median:<7.4f} SD {SD:<7.4f}'
+                                   ''.format(ds=ds, median=median,
+                                             SD=SD, mds=self._max_width_ds_ids))
             return '\n'.join(summary)
         else:
             return 'No results added so far!'
@@ -123,7 +124,7 @@ class CVResults(object):
     def __str__(self):
         """Simple summary"""
 
-        return 'Metrics : {}\n # runs : {}, # datasets : {}\n {}' \
+        return 'Metrics : {}\n # runs : {}, # datasets : {}\n{}' \
                ''.format(', '.join(self.metric_set.keys()), self._count,
                          len(self._dataset_ids), self._metric_summary())
 
