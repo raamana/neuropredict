@@ -74,7 +74,8 @@ class ClassificationWorkflow(BaseWorkflow):
                          grid_search_level=grid_search_level,
                          num_procs=num_procs,
                          user_options=user_options,
-                         checkpointing=checkpointing)
+                         checkpointing=checkpointing,
+                         workflow_type='classify')
 
         self.out_dir = out_dir
         makedirs(self.out_dir, exist_ok=True)

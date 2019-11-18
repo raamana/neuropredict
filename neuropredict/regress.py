@@ -230,7 +230,8 @@ class RegressionWorkflow(BaseWorkflow):
                          out_dir=out_dir,
                          num_procs=num_procs,
                          user_options=user_options,
-                         checkpointing=checkpointing)
+                         checkpointing=checkpointing,
+                         workflow_type='regress')
 
 
     def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):

@@ -36,7 +36,8 @@ class BaseWorkflow(object):
                  out_dir=None,
                  num_procs=cfg.DEFAULT_NUM_PROCS,
                  user_options=None,
-                 checkpointing=False
+                 checkpointing=False,
+                 workflow_type='classify'
                  ):
         """Constructor"""
 
@@ -53,6 +54,11 @@ class BaseWorkflow(object):
         self.num_procs = num_procs
         self.user_options = user_options
         self._checkpointing = checkpointing
+        workflow_type = workflow_type.lower()
+        if workflow_type not in cfg.workflow_types:
+            raise ValueError('Invalid workflow. Must be one of {}'
+                             ''.format(cfg.workflow_types))
+        self._workflow_type = workflow_type
 
         if is_classifier(self.pred_model):
             self.results = ClassifyCVResults(self.pred_model, self._scoring)
