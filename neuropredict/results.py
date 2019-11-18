@@ -67,6 +67,8 @@ class CVResults(object):
          coming from different repetitions of CV.
         """
 
+        self.add_attr(run_id, dataset_id, 'predicted_targets', predicted)
+
         msgs = list()
         msgs.append('CV run {:<3} dataset {did:<{dlen}} :'
                     ''.format(run_id, did=dataset_id, dlen=self._max_width_ds_ids))
