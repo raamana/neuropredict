@@ -278,7 +278,7 @@ class BaseWorkflow(object):
     def save(self):
         """Saves the results and state to disk."""
 
-        out_dict = { var : getattr(self, var) for var in cfg.results_to_save}
+        out_dict = { var : getattr(self, var, None) for var in cfg.results_to_save}
         out_results_path = pjoin(self.out_dir, cfg.results_file_name)
         try:
             import pickle
