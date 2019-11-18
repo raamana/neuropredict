@@ -111,7 +111,7 @@ class ClassificationWorkflow(BaseWorkflow):
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
                                     labels=self._target_set)  # to control row order
-        self.results.add_diagnostics(conf_mat,
+        self.results.add_diagnostics(run_id, ds_id, conf_mat,
                                      true_targets[predicted_targets != true_targets])
 
 
