@@ -257,7 +257,7 @@ class RegressionWorkflow(BaseWorkflow):
     def summarize(self):
         """Simple summary of the results produced, for logging and user info"""
 
-        print(self.results)
+        print('\n{}\n'.format(self.results))
 
 
     def visualize(self):

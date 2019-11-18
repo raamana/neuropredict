@@ -108,7 +108,7 @@ class BaseWorkflow(object):
         print('Dim reduction method     : {}'.format(self.dim_red_method))
         print('Level of grid search     : {}'.format(self.grid_search_level))
         print('Number of processors     : {}'.format(self.num_procs))
-        print('Saving the results to \n   {}'.format(self.out_dir))
+        print('Saving the results to \n {}\n'.format(self.out_dir))
 
         if self._workflow_type == 'classify':
             print('\nEstimated chance accuracy : {:.3f}\n'
@@ -288,7 +288,7 @@ class BaseWorkflow(object):
             raise IOError('Error saving the results to disk!\nOut path:{}'
                           ''.format(out_results_path))
         else:
-            print('Results saved to {}'.format(out_results_path))
+            print('\nResults saved to {}\n'.format(out_results_path))
 
         return out_results_path
 
