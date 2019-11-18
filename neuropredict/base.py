@@ -110,9 +110,10 @@ class BaseWorkflow(object):
         print('Number of processors     : {}'.format(self.num_procs))
         print('Saving the results to \n   {}'.format(self.out_dir))
 
-        print('\nEstimated chance accuracy : {:.3f}\n'
-              ''.format(chance_accuracy(list(self.datasets.target_sizes.values()),
-                                        'balanced')))
+        if self._workflow_type == 'classify':
+            print('\nEstimated chance accuracy : {:.3f}\n'
+                  ''.format(chance_accuracy(list(self.datasets.target_sizes.values()),
+                                            'balanced')))
 
 
     def run(self):
