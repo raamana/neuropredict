@@ -143,7 +143,7 @@ class ClassificationWorkflow(BaseWorkflow):
     def summarize(self):
         """Simple summary of the results produced, for logging and user info"""
 
-        print('\n\n---\nNOT SUMMARIZING RESULTS DURING DEV VERSION\n----\n\n')
+        print(self.results)
 
 
     def visualize(self):
@@ -717,7 +717,7 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
 
         # print('\n\nSaving the visualizations to \n{}'.format(out_dir))
         # make_visualizations(results_file_path, out_dir_sg, options_path)
-        # print('\n')
+        print('\n')
 
     return
 
