@@ -60,10 +60,12 @@ class BaseWorkflow(object):
                              ''.format(cfg.workflow_types))
         self._workflow_type = workflow_type
 
-        if is_classifier(self.pred_model):
-            self.results = ClassifyCVResults(self.pred_model, self._scoring)
+        if self._workflow_type == 'classify':
+            self.results = ClassifyCVResults(self._scoring, self.num_rep_cv,
+                                             self.datasets.modality_ids)
         else:
-            self.results = RegressCVResults(self.pred_model, self._scoring)
+            self.results = RegressCVResults(self._scoring, self.num_rep_cv,
+                                            self.datasets.modality_ids)
 
 
     def _prepare(self):

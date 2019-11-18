@@ -18,18 +18,36 @@ class CVResults(object):
 
 
     def __init__(self,
-                 estimator_name=cfg.default_classifier,
-                 metric_set=(cfg.default_scoring_metric,)):
+                 metric_set=(cfg.default_scoring_metric,),
+                 num_rep=cfg.default_num_repetitions,
+                 dataset_ids='dataset1'):
         "Constructor."
 
         estimator = get_estimator_by_name(estimator_name)
         if is_iterable_but_not_str(metric_set):
             self.metric_set = {func.__name__: func for func in metric_set}
-        self.metric_val = {name: dict() for name in self.metric_set.keys()}
+            self.metric_val = dict()
+        else:
+            raise ValueError('metric_set must be a list of predefined metric names')
+
+        # initializing arrays
+        for m_name in self.metric_set.keys():
+            self._init_new_metric(m_name)
 
         self._count = 0
         self._attr = dict()
 
+        # pretty print options
+        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])
+        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids])
+
+
+    def _init_new_metric(self, name):
+        """Initializes a new metric with an array for all datasets"""
+
+        if name not in self.metric_val:
+            self.metric_val[name] = {ds_id: np.full((self.num_rep,), np.NaN)
+                                       for ds_id in self._dataset_ids}
 
     def add(self, run_id, dataset_id, predicted, true_targets):
         """
@@ -41,7 +59,7 @@ class CVResults(object):
         msgs.append('CV run {:<3} dataset {:<20} :'.format(run_id, dataset_id))
         for name, score_func in self.metric_set.items():
             score = score_func(true_targets, predicted)
-            self.metric_val[name][(run_id, dataset_id)] = score
+            self.metric_val[name][dataset_id][run_id] = score
             msgs.append(' {:>20} {:8.3f}'.format(name, score))
 
         # quick summary print
@@ -51,15 +69,24 @@ class CVResults(object):
         self._count += 1
 
 
+    def add_metric(self, run_id, dataset_id, name, value):
+        """Helper to add a metric directly"""
+
+        if name not in self.metric_val:
+            self._init_new_metric(name)
+
+        self.metric_val[name][dataset_id][run_id] = value
+
+
     def add_attr(self, run_id, dataset_id, name, value):
         """
         Method to store miscellaneous attributes for post-hoc analyses,
         """
 
-        if (run_id, dataset_id) not in self._attr:
-            self._attr[(run_id, dataset_id)] = dict()
+        if name not in self._attr:
+            self._attr[name] = dict()
 
-        self._attr[(run_id, dataset_id)][name] = value
+        self._attr[name][(dataset_id, run_id)] = value
 
 
     def _metric_summary(self):
@@ -112,11 +139,13 @@ class ClassifyCVResults(CVResults):
 
 
     def __init__(self,
-                 estimator=cfg.default_classifier,
-                 metric_set=cfg.default_metric_set_classification):
+                 metric_set=cfg.default_metric_set_classification,
+                 num_rep=cfg.default_num_repetitions,
+                 dataset_ids=None):
         "Constructor."
 
-        super().__init__(estimator_name=estimator, metric_set=metric_set)
+        super().__init__(metric_set=metric_set, num_rep=num_rep,
+                         dataset_ids=dataset_ids)
 
         self._conf_mat = dict()  # confusion matrix
         self._misclf_samplets = dict()  # list of misclassified samplets
@@ -158,11 +187,13 @@ class RegressCVResults(CVResults):
 
 
     def __init__(self,
-                 estimator=cfg.default_regressor,
-                 metric_set=cfg.default_metric_set_regression):
+                 metric_set=cfg.default_metric_set_regression,
+                 num_rep=cfg.default_num_repetitions,
+                 dataset_ids=None):
         "Constructor."
 
-        super().__init__(estimator_name=estimator, metric_set=metric_set)
+        super().__init__(metric_set=metric_set, num_rep=num_rep,
+                         dataset_ids=dataset_ids)
 
 
     def dump(self, out_dir):
