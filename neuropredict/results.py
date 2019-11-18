@@ -29,7 +29,7 @@ class CVResults(object):
 
         if dataset_ids is not None:
             if is_iterable_but_not_str(dataset_ids):
-                self._dataset_ids = dataset_ids
+                self._dataset_ids = tuple(dataset_ids)
             else:
                 self._dataset_ids = (dataset_ids, )
         else:
@@ -218,6 +218,13 @@ class RegressCVResults(CVResults):
 
         super().__init__(metric_set=metric_set, num_rep=num_rep,
                          dataset_ids=dataset_ids)
+
+
+    def add_diagnostics(self, run_id, dataset_id, true_targets, predicted):
+        """Method to save the confusion matrix from each prediction run"""
+
+        residuals = predicted - true_targets
+        self.add_attr(run_id, dataset_id, 'residuals', residuals)
 
 
     def dump(self, out_dir):

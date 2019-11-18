@@ -243,6 +243,7 @@ class RegressionWorkflow(BaseWorkflow):
 
         predicted_targets = pipeline.predict(test_data)
         self.results.add(run_id, ds_id, predicted_targets, true_targets)
+        self.results.add_diagnostics(run_id, ds_id, true_targets, predicted_targets)
 
 
     def load(self):
