@@ -106,10 +106,15 @@ class CVResults(object):
 
         if self._count > 0:
             summary = list()
-            for metric, distr in self.metric_val.items():
-                median = np.median(distr)
-                SD = np.std(distr)
-                summary.append(' {} : median {} SD {}'.format(metric, median, SD))
+            for metric, mdict in self.metric_val.items():
+                for ds, distr in mdict.items():
+                    median = np.nanmedian(distr)
+                    SD = np.nanstd(distr)
+                    summary.append('{ds:>{mds}} {metric:>{mmw}}'
+                                   ' : median {median:10.4f} SD {SD:10.4f}'
+                                   ''.format(ds=ds, metric=metric, median=median,
+                                             SD=SD, mds=self._max_width_ds_ids,
+                                             mmw=self._max_width_metric))
             return '\n'.join(summary)
         else:
             return 'No results added so far!'
@@ -118,15 +123,18 @@ class CVResults(object):
     def __str__(self):
         """Simple summary"""
 
-        return 'Metrics : {}\n # runs : {}\n {}' \
+        return 'Metrics : {}\n # runs : {}, # datasets : {}\n {}' \
                ''.format(', '.join(self.metric_set.keys()), self._count,
-                         self._metric_summary())
+                         len(self._dataset_ids), self._metric_summary())
+
 
     def __repr__(self):
         return self.__str__()
 
+
     def __format__(self, format_spec):
         return self.__str__()
+
 
     def save(self):
         "Method to persist the results to disk."
