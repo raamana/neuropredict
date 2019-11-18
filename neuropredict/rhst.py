@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from neuropredict.classify import check_positive_class
+
 __all__ = ['run', 'load_results', 'save_results']
 
 import os
@@ -542,18 +544,6 @@ def get_pretty_print_options(method_names, num_datasets):
     print_options = pretty_print(max_width_method_names, ndigits_ndatasets)
 
     return print_options
-
-
-def check_positive_class(class_set, positive_class=None):
-    """Checks the provided positive class, and returns its index"""
-
-    if positive_class is None:
-        positive_class = class_set[-1]
-    elif positive_class not in class_set:
-        raise ValueError('Chosen positive class does not exist in the dataset')
-    pos_class_index = class_set.index(positive_class)
-
-    return positive_class, pos_class_index
 
 
 def remap_labels(datasets, common_ds, class_set):

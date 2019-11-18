@@ -28,8 +28,15 @@ from neuropredict.utils import (check_classifier, check_num_procs, load_options,
                                 validate_impute_strategy)
 from pyradigm.multiple import MultiDatasetClassify
 from pyradigm.utils import load_dataset
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score
 
+def auc_weighted(true_labels, predicted_proba_per_class):
+    """Wrapper around sklearn roc_auc_score to ensure it is weighted."""
+
+    return roc_auc_score(true_labels, predicted_proba_per_class, average='weighted')
+
+auc_metric_name = auc_weighted.__name__
+predict_proba_name = 'predict_proba'
 
 class ClassificationWorkflow(BaseWorkflow):
     """
@@ -72,13 +79,17 @@ class ClassificationWorkflow(BaseWorkflow):
         self.out_dir = out_dir
         makedirs(self.out_dir, exist_ok=True)
 
-        self._positive_class = positive_class
-        self._target_set = list(uniquify_in_order(self.datasets.targets.values()))
-        # set does not preserve order, sorting makes it stable across sessions
+        # order of target_set is crucial, for AUC computation as well as confusion
+        # matrix row/column, hence making it a tuple to prevent accidental mutation
+        #  ordering them in order of their appearance in also important: uniquify!
+        self._target_set = tuple(uniquify_in_order(self.datasets.targets.values()))
+        self._positive_class, self._positive_class_index = \
+            check_positive_class(self._target_set, positive_class)
 
 
     def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
-        """Evaluate predictions and perf estimates to results class.
+        """
+        Evaluate predictions and perf estimates to results class.
 
         Prints a quick summary too, as an indication of progress.
         """
@@ -86,10 +97,14 @@ class ClassificationWorkflow(BaseWorkflow):
         predicted_targets = pipeline.predict(test_data)
         self.results.add(run_id, ds_id, predicted_targets, true_targets)
 
-        predict_proba_name = 'predict_proba'
         if hasattr(pipeline, predict_proba_name):
             predicted_prob = pipeline.predict_proba(test_data)
             self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
+            # TODO it is possible the column order in predicted_prob may not match
+            #   the order in self._target_set
+            auc = auc_weighted(true_targets,
+                               predicted_prob[:,self._positive_class_index])
+            self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
                                     labels=self._target_set)  # to control row order
@@ -479,6 +494,19 @@ def validate_class_set(classes, subgroups, positive_class=None):
     return class_set, sub_group_list, positive_class
 
 
+def check_positive_class(class_set, positive_class=None):
+    """Checks the provided positive class, and returns its index"""
+
+    if positive_class is None:
+        positive_class = class_set[-1]
+    elif positive_class not in class_set:
+        raise ValueError('Chosen positive class {} does not exist in the dataset,'
+                         ' with classes {}'.format(positive_class, class_set))
+    pos_class_index = class_set.index(positive_class)
+
+    return positive_class, pos_class_index
+
+
 def make_method_list(fs_subject_dir, user_feature_paths,
                      user_feature_type='dir_of_dirs'):
     """
@@ -698,8 +726,7 @@ def cli():
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size, impute_strategy,
-                    num_procs,
-                    grid_search_level, classifier, feat_select_method)
+                    num_procs, grid_search_level, classifier, feat_select_method)
 
     return
 
