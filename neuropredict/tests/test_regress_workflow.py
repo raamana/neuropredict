@@ -26,17 +26,15 @@ out_dir = realpath(pjoin(test_dir, '..', 'tests', 'scratch_regress'))
 if not pexists(out_dir):
     os.makedirs(out_dir)
 
-min_size=50
-max_size=100
+min_size=300
+max_size=500
 max_dim = 100
-num_repetitions = 20
-min_rep_per_class = 20
 
 min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 10
+num_rep_cv = 50
 red_dim = 'sqrt'
 estimator = 'randomforestregressor'
 dr_method = 'variancethreshold' # 'selectkbest_f_classif'

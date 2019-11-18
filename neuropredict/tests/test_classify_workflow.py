@@ -2,19 +2,15 @@ import os
 import shlex
 import sys
 from os.path import abspath, dirname, exists as pexists, join as pjoin, realpath
-from sys import version_info
 
 import numpy as np
 
 sys.dont_write_bytecode = True
 
-from pytest import raises
-
 if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
-from neuropredict import config_neuropredict as cfg
 from neuropredict.classify import cli
 from pyradigm import ClassificationDataset
 from pyradigm.utils import make_random_ClfDataset
@@ -28,17 +24,16 @@ if not pexists(out_dir):
 
 min_num_classes = 3
 max_num_classes = 10
-max_class_size = 40
+max_class_size = 200
 
 max_dim = 100
-num_repetitions = 20
 min_rep_per_class = 20
 
 min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 10
+num_rep_cv = 50
 red_dim = 'sqrt'
 estimator = 'randomforestclassifier'
 dr_method = 'variancethreshold'  # 'selectkbest_f_classif'
