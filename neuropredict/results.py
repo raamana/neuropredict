@@ -50,8 +50,8 @@ class CVResults(object):
         self._attr = dict()
 
         # pretty print options
-        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])
-        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids])
+        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])+1
+        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids])+1
 
 
     def _init_new_metric(self, name):
@@ -68,7 +68,8 @@ class CVResults(object):
         """
 
         msgs = list()
-        msgs.append('CV run {:<3} dataset {:<20} :'.format(run_id, dataset_id))
+        msgs.append('CV run {:<3} dataset {did:<{dlen}} :'
+                    ''.format(run_id, did=dataset_id, dlen=self._max_width_ds_ids))
         for name, score_func in self.metric_set.items():
             score = score_func(true_targets, predicted)
             self.metric_val[name][dataset_id][run_id] = score
