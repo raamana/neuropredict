@@ -101,11 +101,13 @@ class ClassificationWorkflow(BaseWorkflow):
         if hasattr(pipeline, predict_proba_name):
             predicted_prob = pipeline.predict_proba(test_data)
             self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
-            # TODO it is possible the column order in predicted_prob may not match
-            #   the order in self._target_set
-            auc = auc_weighted(true_targets,
-                               predicted_prob[:,self._positive_class_index])
-            self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
+
+            if len(self._target_set) == 2:
+                # TODO it is possible the column order in predicted_prob may not match
+                #   the order in self._target_set
+                auc = auc_weighted(true_targets,
+                                   predicted_prob[:,self._positive_class_index])
+                self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
                                     labels=self._target_set)  # to control row order
