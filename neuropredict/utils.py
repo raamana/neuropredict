@@ -13,6 +13,10 @@ from time import localtime, strftime
 
 __re_delimiters_word = '_|:|; |, |\*|\n'
 
+def round_(array):
+    """Shorthand for a rounding function with a controlled precision"""
+    return np.round(array, cfg.PRECISION_METRICS)
+
 def check_params_rhst(dataset_path_file, out_results_dir,
                       num_repetitions, train_perc,
                       sub_groups, num_procs, grid_search_level,

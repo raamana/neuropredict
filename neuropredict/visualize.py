@@ -18,7 +18,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg, rhst
-    from neuropredict.utils import chance_accuracy
+    from neuropredict.utils import chance_accuracy, round_
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -685,7 +685,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     num_repetitions = metric.shape[0]
     num_datasets = metric.shape[1]
     if len(labels) < num_datasets:
-        raise ValueError("Insufficient number of labels for {} features!".format(num_datasets))
+        raise ValueError("Insufficient number of labels for {} features!"
+                         "".format(num_datasets))
     method_ticks = 1.0 + np.arange(num_datasets)
 
     fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
@@ -702,8 +703,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
 
-    lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), cfg.PRECISION_METRICS)
-    upper_lim = np.round(np.min([ 1.01, metric.max() ]), cfg.PRECISION_METRICS)
+    lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
+    upper_lim = round_(np.min([ 1.01, metric.max() ]))
     step_tick = 0.05
     ax.set_ylim(lower_lim, upper_lim)
 
@@ -712,23 +713,25 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     # ax.set_xticklabels(labels, rotation=45)  # 'vertical'
 
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
+
     # add a tick for chance accuracy and/or % of majority class
     # given the classifier trained on stratified set, we must use the balanced version
     chance_acc = chance_accuracy(class_sizes, 'balanced')
 
     # rounding to ensure improved labels
-    chance_acc = np.round(chance_acc, cfg.PRECISION_METRICS)
-    ytick_loc = np.round(np.append(ytick_loc, chance_acc), cfg.PRECISION_METRICS)
+    chance_acc = round_(chance_acc)
+    ytick_loc = round_(np.append(ytick_loc, chance_acc))
+    plt.text(0.05, chance_acc, 'chance accuracy')
 
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
-    plt.text(0.05, chance_acc, 'chance accuracy')
     plt.ylabel(metric_label, fontsize=cfg.FONT_SIZE)
 
     plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
 
     # numbered labels
-    numbered_labels = ['{} {}'.format(int(ix),lbl) for ix, lbl in zip(method_ticks,labels)]
+    numbered_labels = ['{} {}'.format(int(ix),lbl)
+                       for ix, lbl in zip(method_ticks,labels)]
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
