@@ -3,10 +3,11 @@ from __future__ import print_function
 import argparse
 import random
 import textwrap
+import pickle
 from abc import abstractmethod
 from functools import partial
 from multiprocessing import Manager, Pool
-from os.path import abspath, exists as pexists, join as pjoin
+from os.path import abspath, exists as pexists, join as pjoin, getsize
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import numpy as np
@@ -95,6 +96,8 @@ class BaseWorkflow(object):
         self._train_set_size = np.int64(np.floor(self._num_samples * self.train_perc))
         self._train_set_size = max(1, min(self._num_samples, self._train_set_size))
 
+        self._out_results_path = pjoin(self.out_dir, cfg.results_file_name)
+
         self._summarize_expt()
 
 
@@ -108,7 +111,6 @@ class BaseWorkflow(object):
         print('Dim reduction method     : {}'.format(self.dim_red_method))
         print('Level of grid search     : {}'.format(self.grid_search_level))
         print('Number of processors     : {}'.format(self.num_procs))
-        print('Saving the results to \n {}\n'.format(self.out_dir))
 
         if self._workflow_type == 'classify':
             print('\nEstimated chance accuracy : {:.3f}\n'
@@ -120,11 +122,19 @@ class BaseWorkflow(object):
         """Full run of workflow"""
 
         self._prepare()
-        self._run_cv()
-        out_results_path = self.save()
+
+        if pexists(self._out_results_path) and getsize(self._out_results_path) > 0:
+            print('Loading results from:\n {}\n'.format(self.out_dir))
+            self.load()
+        else:
+            print('Saving results to: \n {}\n'.format(self.out_dir))
+            self._run_cv()
+            self.save()
+
         self.summarize()
 
-        return out_results_path
+        return self._out_results_path
+
 
     def _run_cv(self):
         """Actual CV"""
@@ -279,26 +289,40 @@ class BaseWorkflow(object):
         """Saves the results and state to disk."""
 
         out_dict = { var : getattr(self, var, None) for var in cfg.results_to_save}
-        out_results_path = pjoin(self.out_dir, cfg.results_file_name)
+
         try:
-            import pickle
-            with open(out_results_path, 'wb') as res_fid:
+            with open(self._out_results_path, 'wb') as res_fid:
                 pickle.dump(out_dict, res_fid)
         except:
             raise IOError('Error saving the results to disk!\nOut path:{}'
-                          ''.format(out_results_path))
+                          ''.format(self._out_results_path))
         else:
-            print('\nResults saved to {}\n'.format(out_results_path))
+            print('\nResults saved to {}\n'.format(self._out_results_path))
 
-        return out_results_path
+        return self._out_results_path
 
 
-    @abstractmethod
     def load(self):
         """Mechanism to reload results.
 
         Useful for check-pointing, and restore upon crash etc
         """
+
+        try:
+            with open(self._out_results_path, 'rb') as res_fid:
+                loaded_results = pickle.load(res_fid)
+        except:
+            raise IOError('Error load the results from path: {}'
+                          ''.format(self._out_results_path))
+        else:
+            print('\nResults loaded from {}\n'.format(self._out_results_path))
+
+        for var in cfg.results_to_save:
+            setattr(self, var, loaded_results[var])
+
+        # TODO need some simple validation to ensure loaded results are usable
+
+        print()
 
 
     @abstractmethod

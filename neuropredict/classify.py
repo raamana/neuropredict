@@ -115,15 +115,6 @@ class ClassificationWorkflow(BaseWorkflow):
                                      true_targets[predicted_targets != true_targets])
 
 
-    def load(self):
-        """Mechanism to reload results.
-
-        Useful for check-pointing, and restore upon crash etc
-        """
-
-        raise NotImplementedError()
-
-
     def summarize(self):
         """Simple summary of the results produced, for logging and user info"""
 
