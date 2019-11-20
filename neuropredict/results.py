@@ -50,6 +50,10 @@ class CVResults(object):
         self.attr = dict()
         self.meta = dict()
 
+        # sharing the target values
+        self.true_targets = dict()
+        self.predicted_targets = dict()
+
         # pretty print options
         self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])+1
         self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids])+1
@@ -68,7 +72,8 @@ class CVResults(object):
          coming from different repetitions of CV.
         """
 
-        self.add_attr(run_id, dataset_id, 'predicted_targets', predicted)
+        self.true_targets[(dataset_id, run_id)] = true_targets
+        self.predicted_targets[(dataset_id,run_id)] = predicted
 
         msgs = list()
         msgs.append('CV run {:<3} dataset {did:<{dlen}} :'
