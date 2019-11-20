@@ -549,3 +549,14 @@ def is_iterable_but_not_str(input_obj, min_length=1):
         return False
     else:
         return True
+
+
+def median_of_medians(metric_array, axis=0):
+    """Compute median of medians for each row/columsn"""
+
+    if len(metric_array.shape) > 2:
+        raise ValueError('Input array can only be 2D!')
+
+    medians_along_axis = np.nanmedian(metric_array, axis=axis)
+
+    return np.median(medians_along_axis)

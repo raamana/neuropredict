@@ -11,9 +11,10 @@ from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.base import BaseWorkflow, get_parser_base, organize_inputs
 from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
-from neuropredict.utils import (check_num_procs, check_regressor, not_unspecified,
+from neuropredict.utils import (check_num_procs, check_regressor,
+                                not_unspecified,
                                 print_options, validate_feature_selection_size,
-                                validate_impute_strategy)
+                                validate_impute_strategy, median_of_medians)
 from neuropredict.visualize import compare_distributions, residuals_plot
 
 def get_parser_regress():
@@ -312,17 +313,6 @@ class RegressionWorkflow(BaseWorkflow):
             out_list.extend(in_dict[(ds_id, rep)])
 
         return np.array(out_list)
-
-
-def median_of_medians(metric_array, axis=0):
-    """Compute median of medians for each row/columsn"""
-
-    if len(metric_array.shape) > 2:
-        raise ValueError('Input array can only be 2D!')
-
-    medians_along_axis = np.nanmedian(metric_array, axis=axis)
-
-    return np.median(medians_along_axis)
 
 
 if __name__ == '__main__':
