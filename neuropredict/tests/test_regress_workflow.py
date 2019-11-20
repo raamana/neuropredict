@@ -34,7 +34,7 @@ min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 50
+num_rep_cv = 20
 red_dim = 'sqrt'
 estimator = 'randomforestregressor'
 dr_method = 'variancethreshold' # 'selectkbest_f_classif'

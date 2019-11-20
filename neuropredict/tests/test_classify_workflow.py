@@ -33,7 +33,7 @@ min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 50
+num_rep_cv = 20
 red_dim = 'sqrt'
 estimator = 'randomforestclassifier'
 dr_method = 'variancethreshold'  # 'selectkbest_f_classif'
@@ -48,19 +48,28 @@ def new_dataset_with_same_ids_targets(in_ds):
         out_ds.add_samplet(id_, np.random.rand(feat_dim), target=in_ds.targets[id_])
     return out_ds
 
+import random
+random.seed(42) # to save time for local tests
 
 out_path = os.path.join(out_dir, 'random_clf_ds1.pkl')
-ds_one = make_random_ClfDataset(max_num_classes=max_num_classes, stratified=True,
-                                max_class_size=max_class_size, max_dim=max_dim,
-                                min_num_classes=min_num_classes)
+if pexists(out_path):
+    ds_one = ClassificationDataset(dataset_path=out_path)
+else:
+    ds_one = make_random_ClfDataset(max_num_classes=max_num_classes,
+                                    stratified=True,
+                                    max_class_size=max_class_size,
+                                    max_dim=max_dim,
+                                    min_num_classes=min_num_classes)
 ds_one.save(out_path)
 
 A = 0
 B = 1
 C = 2
 if ds_one.num_targets > 2:
-    sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
-                                       ds_one.target_set[A], ds_one.target_set[C],
+    # sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
+    #                                    ds_one.target_set[A], ds_one.target_set[C],
+    #                                    ','.join(ds_one.target_set))
+    sg_list =  '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
                                        ','.join(ds_one.target_set))
 else:
     sg_list = ','.join(ds_one.target_set)
