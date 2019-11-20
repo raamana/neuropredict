@@ -153,16 +153,19 @@ default_checkpointing = True
 
 ### performance metrics
 
-from sklearn.metrics import roc_auc_score, accuracy_score, \
-    r2_score, mean_absolute_error
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, \
+    r2_score, mean_absolute_error, explained_variance_score, mean_squared_error
 
 default_scoring_metric = 'accuracy'
 
 # allowed names: sorted(sklearn.metrics.SCORERS.keys())
 
-default_metric_set_classification = (accuracy_score,)
+default_metric_set_classification = (accuracy_score,
+                                     balanced_accuracy_score)
 default_metric_set_regression = (r2_score,
-                                 mean_absolute_error)
+                                 mean_absolute_error,
+                                 explained_variance_score,
+                                 mean_squared_error)
 
 # misclassifications
 MISCLF_HIST_NUM_BINS = 20
