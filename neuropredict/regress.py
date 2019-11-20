@@ -14,7 +14,7 @@ from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
 from neuropredict.utils import (check_num_procs, check_regressor, not_unspecified,
                                 print_options, validate_feature_selection_size,
                                 validate_impute_strategy)
-from neuropredict.visualize import compare_distributions
+from neuropredict.visualize import compare_distributions, residuals_plot
 
 def get_parser_regress():
     """"""
@@ -216,6 +216,7 @@ class RegressionWorkflow(BaseWorkflow):
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
                  out_dir=None,
                  num_procs=cfg.DEFAULT_NUM_PROCS,
+                 show_predicted_in_residuals_plot=False,
                  user_options=None,
                  checkpointing=cfg.default_checkpointing):
         super().__init__(datasets,
@@ -232,6 +233,9 @@ class RegressionWorkflow(BaseWorkflow):
                          user_options=user_options,
                          checkpointing=checkpointing,
                          workflow_type='regress')
+
+        # offering a choice of true vs. predicted target in the residuals plot
+        self._show_predicted_in_residuals_plot = show_predicted_in_residuals_plot
 
 
     def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
