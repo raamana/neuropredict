@@ -279,7 +279,36 @@ class RegressionWorkflow(BaseWorkflow):
                                   upper_lim_y=None)
 
     def _plot_residuals_vs_target(self):
-        """"""
+        """Important diagnostic plot for regression analyses"""
+
+        if self._show_predicted_in_residuals_plot:
+            target_type = 'Predicted targets'
+        else:
+            target_type = 'True targets'
+
+        residuals, targets = dict(), dict()
+        for index, ds_id in enumerate(self.datasets.modality_ids):
+            residuals[ds_id] = self._unroll(self.results.residuals, ds_id)
+            if self._show_predicted_in_residuals_plot:
+                targets[ds_id] = self._unroll(self.results.predicted_targets, ds_id)
+            else:
+                targets[ds_id] = self._unroll(self.results.true_targets, ds_id)
+
+        file_suffix = target_type.replace(' ', '_').lower()
+        fig_out_path = pjoin(self._fig_out_dir, 'residuals_vs_{}'.format(file_suffix))
+        residuals_plot(residuals, targets, fig_out_path, target_type)
+
+
+
+    def _unroll(self, in_dict, ds_id):
+        """structure reformat"""
+
+        out_list = list()
+        for rep in range(self.num_rep_cv):
+            out_list.extend(in_dict[(ds_id, rep)])
+
+        return np.array(out_list)
+
 
 def median_of_medians(metric_array, axis=0):
     """Compute median of medians for each row/columsn"""

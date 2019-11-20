@@ -837,5 +837,33 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     return
 
 
+def residuals_plot(residuals, targets, fig_out_path, target_type='True targets'):
+    """Important diagnostic plot for predictive regression analysis"""
+
+    fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
+    num_datasets = len(residuals)
+
+    from matplotlib.cm import get_cmap
+    cmap = get_cmap('Set1', max(num_datasets+1, 9))
+
+    ds_labels = list(residuals.keys())
+    for index, ds_id in enumerate(ds_labels):
+        h_path_coll = ax.scatter(targets[ds_id], residuals[ds_id],
+                                 label=ds_id, c=cmap.colors[index])
+
+    leg = ax.legend(ds_labels)
+    baseline = ax.axhline(y=0)  # baseline or "0" line
+    ax.set_xlabel(target_type)
+    ax.set_ylabel('Residuals')
+
+    fig.savefig(fig_out_path + '.pdf',
+                bbox_extra_artists=(leg,baseline),
+                bbox_inches='tight')
+
+    plt.show()
+    # plt.close()
+    print()
+
+
 if __name__ == '__main__':
     pass
