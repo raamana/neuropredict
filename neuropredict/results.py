@@ -47,7 +47,8 @@ class CVResults(object):
             self._init_new_metric(m_name)
 
         self._count = 0
-        self._attr = dict()
+        self.attr = dict()
+        self.meta = dict()
 
         # pretty print options
         self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])+1
@@ -98,10 +99,20 @@ class CVResults(object):
         Method to store miscellaneous attributes for post-hoc analyses,
         """
 
-        if name not in self._attr:
-            self._attr[name] = dict()
+        if name not in self.attr:
+            self.attr[name] = dict()
 
-        self._attr[name][(dataset_id, run_id)] = value
+        self.attr[name][(dataset_id, run_id)] = value
+
+
+    def add_meta(self, name, value):
+        """
+        Method to store experiment-wise meta data (for all runs and datasets).
+
+        Examples include class_set, model and optimization strategies
+        """
+
+        self.meta[name] = value
 
 
     def _metric_summary(self):
@@ -201,7 +212,7 @@ class ClassifyCVResults(CVResults):
             from os import remove
             remove(out_path)
         with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self._attr,
+            to_save = [self.metric_set, self.metric_val, self.attr, self.meta,
                        self._conf_mat, self._misclf_samplets]
             pickle.dump(to_save, df)
 
@@ -239,5 +250,5 @@ class RegressCVResults(CVResults):
             from os import remove
             remove(out_path)
         with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self._attr]
+            to_save = [self.metric_set, self.metric_val, self.attr, self.meta]
             pickle.dump(to_save, df)

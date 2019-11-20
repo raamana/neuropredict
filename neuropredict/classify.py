@@ -87,6 +87,9 @@ class ClassificationWorkflow(BaseWorkflow):
         self._positive_class, self._positive_class_index = \
             check_positive_class(self._target_set, positive_class)
 
+        self.results.meta['target_set'] = self._target_set
+        self.results.meta['positive_class'] = self._positive_class
+
 
     def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
         """
