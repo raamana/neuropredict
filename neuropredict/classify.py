@@ -22,10 +22,11 @@ from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
 from neuropredict.utils import (check_classifier, check_num_procs, load_options,
                                 make_dataset_filename, not_unspecified,
                                 print_options, save_options,
-                                sub_group_identifier, uniq_combined_name,
-                                uniquify_in_order,
+                                sub_group_identifier, median_of_medians,
+                                uniquify_in_order, chance_accuracy,
                                 validate_feature_selection_size,
                                 validate_impute_strategy)
+from neuropredict.visualize import compare_distributions
 from pyradigm.multiple import MultiDatasetClassify
 from pyradigm.utils import load_dataset
 from sklearn.metrics import confusion_matrix, roc_auc_score
@@ -80,6 +81,9 @@ class ClassificationWorkflow(BaseWorkflow):
         self.out_dir = out_dir
         makedirs(self.out_dir, exist_ok=True)
 
+        self._fig_out_dir = pjoin(self.out_dir, 'figures')
+        makedirs(self._fig_out_dir, exist_ok=True)
+
         # order of target_set is crucial, for AUC computation as well as confusion
         # matrix row/column, hence making it a tuple to prevent accidental mutation
         #  ordering them in order of their appearance in also important: uniquify!
@@ -128,7 +132,44 @@ class ClassificationWorkflow(BaseWorkflow):
         """Method to produce all the relevant visualizations based on the results
         from this workflow."""
 
-        raise NotImplementedError()
+        self._compare_metric_distr()
+        self._viz_confusion_matrices()
+        self._compare_misclf_rate()
+        self._feature_imortance_plot()
+
+    def _compare_metric_distr(self):
+        """Main perf comparion plot"""
+
+        for metric, m_data in self.results.metric_val.items():
+            consolidated = np.empty((self.num_rep_cv, len(m_data)))
+            for index, ds_id in enumerate(self.datasets.modality_ids):
+                consolidated[:, index] = m_data[ds_id]
+
+            fig_out_path = pjoin(self._fig_out_dir, 'compare_{}'.format(metric))
+            if metric.lower().contains('accuracy'):
+                horiz_line_loc = self._chance_accuracy
+                horiz_line_label = 'chance accuracy'
+            else:
+                horiz_line_loc = None
+                horiz_line_label = None
+            compare_distributions(consolidated, self.datasets.modality_ids,
+                                  fig_out_path, y_label=metric,
+                                  horiz_line_loc=horiz_line_loc,
+                                  horiz_line_label=horiz_line_label,
+                                  upper_lim_y=1.01, ytick_step=0.05)
+
+    def _viz_confusion_matrices(self):
+        """Confusion matrices for each feature set"""
+
+        print()
+
+    def _compare_misclf_rate(self):
+        """Misclassification rate plot"""
+
+    def _feature_imortance_plot(self):
+        """Bar plot comparing feature importances"""
+
+
 
 
 def make_visualizations(results_file_path, out_dir, options_path=None):
