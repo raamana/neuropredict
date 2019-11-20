@@ -187,15 +187,15 @@ class ClassifyCVResults(CVResults):
         super().__init__(metric_set=metric_set, num_rep=num_rep,
                          dataset_ids=dataset_ids)
 
-        self._conf_mat = dict()  # confusion matrix
-        self._misclf_samplets = dict()  # list of misclassified samplets
+        self.confusion_mat = dict()  # confusion matrix
+        self.misclfd_samplets = dict()  # list of misclassified samplets
 
 
     def add_diagnostics(self, run_id, dataset_id, conf_mat, misclfd_ids):
         """Method to save the confusion matrix from each prediction run"""
 
-        self._conf_mat[(run_id, dataset_id)] = conf_mat
-        self._misclf_samplets[(run_id, dataset_id)] = misclfd_ids
+        self.confusion_mat[(dataset_id, run_id)] = conf_mat
+        self.misclfd_samplets[(dataset_id, run_id)] = misclfd_ids
 
 
     def export(self):
@@ -218,7 +218,7 @@ class ClassifyCVResults(CVResults):
             remove(out_path)
         with open(out_path, 'wb') as df:
             to_save = [self.metric_set, self.metric_val, self.attr, self.meta,
-                       self._conf_mat, self._misclf_samplets]
+                       self.confusion_mat, self.misclfd_samplets]
             pickle.dump(to_save, df)
 
 
