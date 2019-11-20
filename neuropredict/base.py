@@ -132,6 +132,7 @@ class BaseWorkflow(object):
             self.save()
 
         self.summarize()
+        self.visualize()
 
         return self._out_results_path
 
@@ -179,6 +180,8 @@ class BaseWorkflow(object):
                 train_data, test_data = impute_missing_data(
                         train_data, train_targets, self.impute_strategy, test_data)
 
+            # covariate regression / deconfounding
+
             best_pipeline, best_params, feat_importance = \
                 self._optimize_pipeline_on_train_set(train_data, train_targets)
 
@@ -187,7 +190,9 @@ class BaseWorkflow(object):
             self._eval_predictions(best_pipeline, test_data, test_targets,
                                    run_id, ds_id)
 
-        # dump results if self._checkpointing = True
+        # dump results if checkpointing is requested
+        if self._checkpointing:
+            self.results.dump(self.out_dir)
 
 
     def _optimize_pipeline_on_train_set(self, train_data, train_targets):

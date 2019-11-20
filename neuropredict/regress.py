@@ -14,7 +14,7 @@ from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
 from neuropredict.utils import (check_num_procs, check_regressor, not_unspecified,
                                 print_options, validate_feature_selection_size,
                                 validate_impute_strategy)
-
+from neuropredict.visualize import compare_distributions
 
 def get_parser_regress():
     """"""
@@ -256,7 +256,40 @@ class RegressionWorkflow(BaseWorkflow):
         """Method to produce all the relevant visualizations based on the results
         from this workflow."""
 
-        raise NotImplementedError()
+        self._fig_out_dir = pjoin(self.out_dir, 'figures')
+        os.makedirs(self._fig_out_dir, exist_ok=True)
+
+        self._compare_metric_distrib()
+        self._plot_residuals_vs_target()
+
+
+    def _compare_metric_distrib(self):
+        """Plot comparing the distributions of different metrics"""
+
+        for metric, m_data in self.results.metric_val.items():
+            consolidated = np.empty((self.num_rep_cv, len(m_data)))
+            for index, ds_id in enumerate(self.datasets.modality_ids):
+                consolidated[:, index] = m_data[ds_id]
+
+            fig_out_path = pjoin(self._fig_out_dir, 'compare_{}'.format(metric))
+            compare_distributions(consolidated, self.datasets.modality_ids,
+                                  fig_out_path, y_label=metric,
+                                  horiz_line_loc=median_of_medians(consolidated),
+                                  horiz_line_label='median of medians',
+                                  upper_lim_y=None)
+
+    def _plot_residuals_vs_target(self):
+        """"""
+
+def median_of_medians(metric_array, axis=0):
+    """Compute median of medians for each row/columsn"""
+
+    if len(metric_array.shape) > 2:
+        raise ValueError('Input array can only be 2D!')
+
+    medians_along_axis = np.nanmedian(metric_array, axis=axis)
+
+    return np.median(medians_along_axis)
 
 
 if __name__ == '__main__':
