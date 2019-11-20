@@ -60,7 +60,7 @@ else:
                                     max_class_size=max_class_size,
                                     max_dim=max_dim,
                                     min_num_classes=min_num_classes)
-ds_one.save(out_path)
+    ds_one.save(out_path)
 
 A = 0
 B = 1
