@@ -420,8 +420,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
 
 def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, out_path):
     """
-    Produces a bar plot comparing the the misclassfication rate of all feature sets for different pairwise
-    classifications.
+    Produces a bar plot comparing the the misclassfication rate of all feature
+    sets for different pairwise classifications.
     
     Parameters
     ----------
@@ -726,6 +726,91 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
     plt.ylabel(metric_label, fontsize=cfg.FONT_SIZE)
+
+    plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
+
+    # numbered labels
+    numbered_labels = ['{} {}'.format(int(ix),lbl)
+                       for ix, lbl in zip(method_ticks,labels)]
+
+    # putting legends outside the plot below.
+    fig.subplots_adjust(bottom=0.2)
+    leg = ax.legend(numbered_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
+    # setting colors manually as plot has been through arbitray jumps
+    for ix, lh in enumerate(leg.legendHandles):
+        lh.set_color(cmap(ix))
+
+    leg.set_frame_on(False) # making leg background transparent
+
+    # fig.savefig(output_path + '.png', transparent=True, dpi=300,
+    #             bbox_extra_artists=(leg,), bbox_inches='tight')
+
+    fig.savefig(output_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
+
+    plt.close()
+
+    return
+
+
+def compare_distributions(metric, labels, output_path, y_label='metric',
+                          horiz_line_loc=None, horiz_line_label=None,
+                          upper_lim_y=1.01, ytick_step=None):
+    """
+    Distribution plots of various metrics such as balanced accuracy!
+
+    metric is expected to be ndarray of size [num_repetitions, num_datasets]
+
+    upper_lim_y = None would make it automatic and adapt to given metric distribution
+    upper_lim_y = 1.01 and ytick_step = 0.05 are targeted for Accuracy/AUC metrics,
+        in classification applications
+
+    """
+
+    num_repetitions = metric.shape[0]
+    num_datasets = metric.shape[1]
+    if len(labels) < num_datasets:
+        raise ValueError("Insufficient number of labels for {} features!"
+                         "".format(num_datasets))
+    method_ticks = 1.0 + np.arange(num_datasets)
+
+    fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
+    line_coll = ax.violinplot(metric, widths=cfg.violin_width,
+                              bw_method=cfg.violin_bandwidth,
+                              showmedians=True, showextrema=False,
+                              positions=method_ticks)
+
+    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+    for cc, ln in enumerate(line_coll['bodies']):
+        ln.set_facecolor(cmap(cc))
+        ln.set_label(labels[cc])
+
+    ax.tick_params(axis='both', which='major', labelsize=15)
+    ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
+
+    # lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
+    lower_lim = round_(metric.min())
+    if upper_lim_y is not None:
+        upper_lim = round_(np.min([ upper_lim_y, metric.max() ]))
+    else:
+        upper_lim = round_(metric.max())
+    ax.set_ylim(lower_lim, upper_lim)
+
+    ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
+    ax.set_xticks(method_ticks)
+    # ax.set_xticklabels(labels, rotation=45)  # 'vertical'
+
+    if ytick_step is None:
+        ytick_loc = ax.get_yticks()
+    else:
+        ytick_loc = np.arange(lower_lim, upper_lim, ytick_step)
+
+    if horiz_line_loc is not None:
+        ytick_loc = round_(np.append(ytick_loc, horiz_line_loc))
+        plt.text(0.05, horiz_line_loc, horiz_line_label)
+
+    ax.set_yticks(ytick_loc)
+    ax.set_yticklabels(ytick_loc)
+    plt.ylabel(y_label, fontsize=cfg.FONT_SIZE)
 
     plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
 
