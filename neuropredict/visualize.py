@@ -226,7 +226,7 @@ def confusion_matrices(cfmat_array, class_labels,
     Entries in confusin matrix can be turned into percentages with `display_perc=True`.
 
     Use a separate method to iteratve over multiple datasets.
-    confusion_matrix dime: [num_classes, num_classes, num_repetitions, num_datasets]
+    confusion_matrix dime: [num_repetitions, num_classes, num_classes, num_datasets]
 
     Parameters
     ----------
@@ -245,11 +245,12 @@ def confusion_matrices(cfmat_array, class_labels,
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
         raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+                         " Need [num_repetitions, num_classes, num_classes, num_datasets]."
+                         " Given shape : {}".format(cfmat_array.shape))
 
     np.set_printoptions(2)
     for dd in range(num_datasets):
-        output_path = base_output_path + '_' + method_names[dd]
+        output_path = base_output_path + '_' + str(method_names[dd])
         output_path.replace(' ', '_')
 
         # mean confusion over CV trials
