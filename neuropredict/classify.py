@@ -26,7 +26,7 @@ from neuropredict.utils import (check_classifier, check_num_procs, load_options,
                                 uniquify_in_order, chance_accuracy,
                                 validate_feature_selection_size,
                                 validate_impute_strategy)
-from neuropredict.visualize import compare_distributions
+from neuropredict.visualize import compare_distributions, confusion_matrices
 from pyradigm.multiple import MultiDatasetClassify
 from pyradigm.utils import load_dataset
 from sklearn.metrics import confusion_matrix, roc_auc_score
@@ -146,7 +146,7 @@ class ClassificationWorkflow(BaseWorkflow):
                 consolidated[:, index] = m_data[ds_id]
 
             fig_out_path = pjoin(self._fig_out_dir, 'compare_{}'.format(metric))
-            if metric.lower().contains('accuracy'):
+            if 'accuracy' in metric.lower():
                 horiz_line_loc = self._chance_accuracy
                 horiz_line_label = 'chance accuracy'
             else:
@@ -161,7 +161,20 @@ class ClassificationWorkflow(BaseWorkflow):
     def _viz_confusion_matrices(self):
         """Confusion matrices for each feature set"""
 
-        print()
+        # forcing a tuple to ensure the order, in compound array and in viz's
+        ds_id_order = tuple(self.datasets.modality_ids)
+        num_datasets = len(ds_id_order)
+        num_classes  = len(self._target_set)
+        conf_mat_all = np.empty((self.num_rep_cv, num_classes, num_classes,
+                                 num_datasets))
+        for idx, ds in enumerate(ds_id_order):
+            for run in range(self.num_rep_cv):
+                conf_mat_all[run, :, :, idx] = self.results.confusion_mat[(ds, run)]
+
+        cm_out_fig_path = pjoin(self._fig_out_dir, 'confusion_matrix')
+        confusion_matrices(conf_mat_all, self._target_set, ds_id_order,
+                           cm_out_fig_path)
+
 
     def _compare_misclf_rate(self):
         """Misclassification rate plot"""
