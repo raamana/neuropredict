@@ -235,12 +235,14 @@ class RegressCVResults(CVResults):
         super().__init__(metric_set=metric_set, num_rep=num_rep,
                          dataset_ids=dataset_ids)
 
+        self.residuals = dict()
+
 
     def add_diagnostics(self, run_id, dataset_id, true_targets, predicted):
         """Method to save the confusion matrix from each prediction run"""
 
         residuals = predicted - true_targets
-        self.add_attr(run_id, dataset_id, 'residuals', residuals)
+        self.residuals[(dataset_id, run_id)] = residuals
 
 
     def dump(self, out_dir):
