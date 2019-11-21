@@ -838,32 +838,42 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     return
 
 
-def residuals_plot(residuals, targets, fig_out_path, target_type='True targets'):
+def multi_scatter_plot(y_data, x_data, fig_out_path,
+                       y_label='Residuals',
+                       x_label='True targets',
+                       show_zero_line=False,
+                       trend_line=None):
     """Important diagnostic plot for predictive regression analysis"""
 
     fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
-    num_datasets = len(residuals)
+    num_datasets = len(y_data)
 
     from matplotlib.cm import get_cmap
     cmap = get_cmap('Set1', max(num_datasets+1, 9))
 
-    ds_labels = list(residuals.keys())
+    ds_labels = list(y_data.keys())
     for index, ds_id in enumerate(ds_labels):
-        h_path_coll = ax.scatter(targets[ds_id], residuals[ds_id],
+        h_path_coll = ax.scatter(x_data[ds_id], y_data[ds_id], alpha=0.8,
                                  label=ds_id, c=cmap.colors[index])
 
     leg = ax.legend(ds_labels)
-    baseline = ax.axhline(y=0)  # baseline or "0" line
-    ax.set_xlabel(target_type)
-    ax.set_ylabel('Residuals')
+    extra_artists = [leg, ]
+
+    if show_zero_line: # helpful for residuals plot
+        baseline = ax.axhline(y=0, color='black')
+        extra_artists.append(baseline)
+
+    if trend_line is not None:
+        tline = ax.axhline(y=trend_line, color='black', label='median of medians')
+        extra_artists.append(tline)
+
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
 
     fig.savefig(fig_out_path + '.pdf',
-                bbox_extra_artists=(leg,baseline),
+                bbox_extra_artists=extra_artists,
                 bbox_inches='tight')
-
-    plt.show()
-    # plt.close()
-    print()
+    plt.close()
 
 
 if __name__ == '__main__':
