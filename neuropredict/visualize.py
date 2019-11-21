@@ -319,7 +319,8 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
     avg_cfmat = np.mean(conf_mat_array, axis=0)
 
     # percentage confusion relative to class size
-    class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
+    class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1),
+                                                           num_classes, 1))
     avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
     # making it human readable : 0-100%
     avg_cfmat_perc100 = 100 * np.around(avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
@@ -333,8 +334,8 @@ def compute_pairwise_misclf(cfmat_array):
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
@@ -353,7 +354,9 @@ def compute_pairwise_misclf(cfmat_array):
     return avg_cfmat, misclf_rate
 
 
-def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, method_labels, out_path):
+def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
+                                                class_labels, method_labels,
+                                                out_path):
     """
     Produces a parallel coordinate plot (unravelling the cobweb plot) 
     comparing the the misclassfication rate of all feature sets 
@@ -374,8 +377,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
@@ -386,7 +389,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
         if ii != jj:
-            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+            misclf_ax_labels.append("{} --> {}"
+                                    "".format(class_labels[ii], class_labels[jj]))
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
@@ -419,7 +423,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     return
 
 
-def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, out_path):
+def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels,
+                                    out_path):
     """
     Produces a bar plot comparing the the misclassfication rate of all feature
     sets for different pairwise classifications.
@@ -439,8 +444,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -451,7 +456,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
         if ii != jj:
-            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+            misclf_ax_labels.append("{} --> {}"
+                                    "".format(class_labels[ii], class_labels[jj]))
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
@@ -485,8 +491,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
 
 def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     """
-    Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
-    classifications.
+    Produces a cobweb plot comparing the the misclassfication rate
+    of all feature sets for different pairwise classifications.
     
     Parameters
     ----------
@@ -503,8 +509,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -513,7 +519,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
         if ii != jj:
-            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+            misclf_ax_labels.append("{} --> {}"
+                                    "".format(class_labels[ii], class_labels[jj]))
 
     theta = 2 * np.pi * np.linspace(0, 1 -1.0/num_misclf_axes, num_misclf_axes)
 
@@ -577,12 +584,14 @@ def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
     num_samples   = len(num_times_tested[0].keys())
     num_datasets  = len(num_times_tested)
     perc_misclsfd = [None]*num_datasets
-    never_tested  = list() # since train/test samples are same across different feature sets
+    never_tested  = list() # since train/test samples are the same
+                           # across different feature sets
     for dd in range(num_datasets):
         perc_misclsfd[dd] = dict()
         for sid in num_times_misclfd[dd].keys():
             if num_times_tested[dd][sid] > 0:
-                perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) / np.float64(num_times_tested[dd][sid])
+                perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) \
+                                         / np.float64(num_times_tested[dd][sid])
             else:
                 never_tested.append(sid)
 
@@ -591,8 +600,8 @@ def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
     return perc_misclsfd, never_tested, num_samples, num_datasets
 
 
-def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath,
-                                 separate_plots = False):
+def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels,
+                                 outpath, separate_plots = False):
     """
     Summary of most/least frequently misclassified subjects for further analysis
 
@@ -606,16 +615,19 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
 
         cur_ylim = ax_h.get_ylim()
         line_thresh, = ax_h.plot([count_thresh, count_thresh],
-                            cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
+                                 cur_ylim, 'k--',
+                                 linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
         ax_h.set_ylim(cur_ylim)
         ax_h.set_ylabel('number of subjects')
         ax_h.set_xlabel('percentage of misclassification')
 
     # computing the percentage of misclassification per subject
-    perc_misclsfd, never_tested, num_samples, num_datasets = compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
+    perc_misclsfd, never_tested, num_samples, num_datasets = \
+        compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
 
     if len(never_tested) > 0:
-        warnings.warn(' {} subjects were never selected for testing.'.format(len(never_tested)))
+        warnings.warn(' {} subjects were never selected for testing.'
+                      ''.format(len(never_tested)))
         nvpath = outpath + '_never_tested_samples.txt'
         with open(nvpath,'w') as nvf:
             nvf.writelines('\n'.join(never_tested))
@@ -630,10 +642,12 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         fig, ax_h = plt.subplots(figsize=[12, 9])
 
     for dd in range(num_datasets):
-        # calculating percentage of most frequently misclassified subjects in each dataset
-        most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh]
+        # calculating perc of most frequently misclassified subjects in each dataset
+        most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys()
+                             if perc_misclsfd[dd][sid] > count_thresh]
         perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / len(perc_misclsfd[dd])
-        this_method_label = "{} - {:.1f}% ".format(method_labels[dd], perc_most_freq_misclsfd)
+        this_method_label = "{} - {:.1f}%" \
+                            "".format(method_labels[dd], perc_most_freq_misclsfd)
         if dd == 0:
             this_method_label = this_method_label + 'most frequently misclassfied'
 
@@ -849,7 +863,7 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
     num_datasets = len(y_data)
 
     from matplotlib.cm import get_cmap
-    cmap = get_cmap('Set1', max(num_datasets+1, 9))
+    cmap = get_cmap(cfg.CMAP_DATASETS, max(num_datasets+1, 9))
 
     ds_labels = list(y_data.keys())
     for index, ds_id in enumerate(ds_labels):
