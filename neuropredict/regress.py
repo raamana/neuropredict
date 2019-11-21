@@ -296,10 +296,8 @@ class RegressionWorkflow(BaseWorkflow):
         residuals, true_targets, predicted = dict(), dict(), dict()
         for index, ds_id in enumerate(self.datasets.modality_ids):
             residuals[ds_id] = self._unroll(self.results.residuals, ds_id)
-            predicted[ds_id] = self._unroll(self.results.predicted_targets,
-                                          ds_id)
-            true_targets[ds_id] = self._unroll(self.results.true_targets,
-                                               ds_id)
+            predicted[ds_id] = self._unroll(self.results.predicted_targets, ds_id)
+            true_targets[ds_id] = self._unroll(self.results.true_targets, ds_id)
             target_medians.append(np.median(true_targets[ds_id]))
 
         if self._show_predicted_in_residuals_plot:

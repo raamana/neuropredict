@@ -881,14 +881,14 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
                                  alpha=cfg.alpha_regression_targets,
                                  label=ds_id, c=color)
         if show_hist:
-            hist_ax.hist(y_data[ds_id], orientation="horizontal",
+            hist_ax.hist(y_data[ds_id], density=True, orientation="horizontal",
                          color=color, bins=cfg.num_bins_hist,
                          alpha=cfg.alpha_regression_targets,)
 
     if show_hist:
         hist_ax.yaxis.tick_right()
         hist_ax.grid(False, axis="x")
-        hist_ax.set_xlabel("Distribution")
+        hist_ax.set_xlabel("Density")
 
     # switching focus to the right axis
     plt.sca(ax)
