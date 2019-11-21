@@ -167,6 +167,9 @@ default_metric_set_regression = (r2_score,
                                  explained_variance_score,
                                  mean_squared_error)
 
+alpha_regression_targets = 0.6
+num_bins_hist = 50
+
 # misclassifications
 MISCLF_HIST_NUM_BINS = 20
 MISCLF_PERC_THRESH = 0.6

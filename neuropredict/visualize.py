@@ -856,10 +856,18 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
                        y_label='Residuals',
                        x_label='True targets',
                        show_zero_line=False,
-                       trend_line=None):
+                       trend_line=None,
+                       show_hist=True):
     """Important diagnostic plot for predictive regression analysis"""
 
-    fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
+    if show_hist:
+        fig, axes = plt.subplots(nrows=1, ncols=2, sharey=True,
+                               gridspec_kw=dict(width_ratios=(4.5, 1)),
+                               figsize=cfg.COMMON_FIG_SIZE)
+        ax = axes[0]
+        hist_ax = axes[1]
+    else:
+        fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
     num_datasets = len(y_data)
 
     from matplotlib.cm import get_cmap
@@ -867,8 +875,21 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
 
     ds_labels = list(y_data.keys())
     for index, ds_id in enumerate(ds_labels):
-        h_path_coll = ax.scatter(x_data[ds_id], y_data[ds_id], alpha=0.8,
+        h_path_coll = ax.scatter(x_data[ds_id], y_data[ds_id],
+                                 alpha=cfg.alpha_regression_targets,
                                  label=ds_id, c=cmap.colors[index])
+        if show_hist:
+            hist_ax.hist(y_data[ds_id], orientation="horizontal",
+                         color=cmap.colors[index], bins=cfg.num_bins_hist,
+                         alpha=cfg.alpha_regression_targets,)
+
+    if show_hist:
+        hist_ax.yaxis.tick_right()
+        hist_ax.grid(False, axis="x")
+        hist_ax.set_xlabel("Distribution")
+
+    # switching focus to the right axis
+    plt.sca(ax)
 
     leg = ax.legend(ds_labels)
     extra_artists = [leg, ]
@@ -877,6 +898,9 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
         baseline = ax.axhline(y=0, color='black')
         extra_artists.append(baseline)
 
+        baseline_hist = hist_ax.axhline(y=0, c='black')
+        # extra_artists.append(baseline_hist)
+
     if trend_line is not None:
         tline = ax.axhline(y=trend_line, color='black', label='median of medians')
         extra_artists.append(tline)
@@ -884,8 +908,9 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
 
+    fig.tight_layout()
     fig.savefig(fig_out_path + '.pdf',
-                bbox_extra_artists=extra_artists,
+                # bbox_extra_artists=extra_artists,
                 bbox_inches='tight')
     plt.close()
 

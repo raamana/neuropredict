@@ -283,6 +283,7 @@ class RegressionWorkflow(BaseWorkflow):
                                   horiz_line_label='median of medians',
                                   upper_lim_y=None)
 
+
     def _plot_residuals_vs_target(self):
         """Important diagnostic plot for regression analyses"""
 
@@ -307,11 +308,13 @@ class RegressionWorkflow(BaseWorkflow):
             targets_to_plot = true_targets
         file_suffix = target_type.replace(' ', '_').lower()
         fig_out_path = pjoin(self._fig_out_dir, 'residuals_vs_{}'.format(file_suffix))
-        multi_scatter_plot(y_data=residuals, x_data=targets_to_plot,
-                           show_zero_line=True,
-                           trend_line=None,
+        multi_scatter_plot(y_data=residuals,
+                           x_data=targets_to_plot,
                            fig_out_path=fig_out_path,
-                           y_label='Residuals', x_label=target_type)
+                           y_label='Residuals',
+                           x_label=target_type,
+                           show_zero_line=True, trend_line=None,
+                           show_hist=True)
 
         # variation: predicted vs. target
         fig_out_path = pjoin(self._fig_out_dir, 'predicted_vs_target')
