@@ -3,7 +3,7 @@ import shlex
 import sys
 from os.path import abspath, dirname, exists as pexists, join as pjoin, realpath
 from sys import version_info
-
+import random
 import numpy as np
 
 sys.dont_write_bytecode = True
@@ -20,6 +20,8 @@ from pyradigm import RegressionDataset
 from pyradigm.utils import make_random_RegrDataset
 
 feat_generator = np.random.randn
+
+random.seed(42)
 
 test_dir = dirname(os.path.realpath(__file__))
 out_dir = realpath(pjoin(test_dir, '..', 'tests', 'scratch_regress'))
@@ -51,12 +53,17 @@ def new_dataset_with_same_ids_targets(in_ds):
     return out_ds
 
 out_path = os.path.join(out_dir, 'random_regr_ds1.pkl')
-ds_one = make_random_RegrDataset(min_size=min_size, max_size=max_size,
-                                 max_dim=max_dim)
-ds_one.save(out_path)
+if pexists(out_path):
+    ds_one = RegressionDataset(dataset_path=out_path)
+else:
+    ds_one = make_random_RegrDataset(min_size=min_size, max_size=max_size,
+                                     max_dim=max_dim)
+    ds_one.description = 'ds_one'
+    ds_one.save(out_path)
 
 out_path2 = os.path.join(out_dir, 'random_regr_ds2.pkl')
 ds_two = new_dataset_with_same_ids_targets(ds_one)
+ds_two.description = 'ds_two'
 ds_two.save(out_path2)
 
 sys.argv = shlex.split('np_regress -y {} {} -t {} -n {} -c {} -g {} -o {} '
