@@ -15,7 +15,7 @@ from neuropredict.utils import (check_num_procs, check_regressor,
                                 not_unspecified,
                                 print_options, validate_feature_selection_size,
                                 validate_impute_strategy, median_of_medians)
-from neuropredict.visualize import compare_distributions, residuals_plot
+from neuropredict.visualize import compare_distributions, multi_scatter_plot
 
 def get_parser_regress():
     """"""
@@ -291,18 +291,35 @@ class RegressionWorkflow(BaseWorkflow):
         else:
             target_type = 'True targets'
 
-        residuals, targets = dict(), dict()
+        target_medians = list()
+        residuals, true_targets, predicted = dict(), dict(), dict()
         for index, ds_id in enumerate(self.datasets.modality_ids):
             residuals[ds_id] = self._unroll(self.results.residuals, ds_id)
-            if self._show_predicted_in_residuals_plot:
-                targets[ds_id] = self._unroll(self.results.predicted_targets, ds_id)
-            else:
-                targets[ds_id] = self._unroll(self.results.true_targets, ds_id)
+            predicted[ds_id] = self._unroll(self.results.predicted_targets,
+                                          ds_id)
+            true_targets[ds_id] = self._unroll(self.results.true_targets,
+                                               ds_id)
+            target_medians.append(np.median(true_targets[ds_id]))
 
+        if self._show_predicted_in_residuals_plot:
+            targets_to_plot = predicted
+        else:
+            targets_to_plot = true_targets
         file_suffix = target_type.replace(' ', '_').lower()
         fig_out_path = pjoin(self._fig_out_dir, 'residuals_vs_{}'.format(file_suffix))
-        residuals_plot(residuals, targets, fig_out_path, target_type)
+        multi_scatter_plot(y_data=residuals, x_data=targets_to_plot,
+                           show_zero_line=True,
+                           trend_line=None,
+                           fig_out_path=fig_out_path,
+                           y_label='Residuals', x_label=target_type)
 
+        # variation: predicted vs. target
+        fig_out_path = pjoin(self._fig_out_dir, 'predicted_vs_target')
+        multi_scatter_plot(y_data=predicted, x_data=true_targets,
+                           fig_out_path=fig_out_path,
+                           y_label='Predicted target',
+                           x_label='True targets',
+                           trend_line=np.median(target_medians))
 
 
     def _unroll(self, in_dict, ds_id):
