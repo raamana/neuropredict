@@ -872,15 +872,17 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
 
     from matplotlib.cm import get_cmap
     cmap = get_cmap(cfg.CMAP_DATASETS, max(num_datasets+1, 9))
+    colors = np.array(cmap.colors)
 
     ds_labels = list(y_data.keys())
     for index, ds_id in enumerate(ds_labels):
+        color = colors[index, np.newaxis, :]
         h_path_coll = ax.scatter(x_data[ds_id], y_data[ds_id],
                                  alpha=cfg.alpha_regression_targets,
-                                 label=ds_id, c=cmap.colors[index])
+                                 label=ds_id, c=color)
         if show_hist:
             hist_ax.hist(y_data[ds_id], orientation="horizontal",
-                         color=cmap.colors[index], bins=cfg.num_bins_hist,
+                         color=color, bins=cfg.num_bins_hist,
                          alpha=cfg.alpha_regression_targets,)
 
     if show_hist:
