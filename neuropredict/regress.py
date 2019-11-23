@@ -11,11 +11,13 @@ from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.base import BaseWorkflow, get_parser_base, organize_inputs
 from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.io import (get_metadata, get_metadata_in_pyradigm)
-from neuropredict.utils import (check_num_procs, check_regressor,
-                                not_unspecified,
-                                print_options, validate_feature_selection_size,
-                                validate_impute_strategy, median_of_medians)
+from neuropredict.utils import (check_covariate_options, check_covariates,
+                                check_num_procs, check_regressor, median_of_medians,
+                                not_unspecified, print_options,
+                                validate_feature_selection_size,
+                                validate_impute_strategy)
 from neuropredict.visualize import compare_distributions, multi_scatter_plot
+
 
 def get_parser_regress():
     """"""
@@ -124,6 +126,9 @@ def parse_args():
 
     impute_strategy = validate_impute_strategy(user_args.impute_strategy)
 
+    covar_list, covar_method = check_covariate_options(
+            user_args.covariates,user_args.covar_method)
+
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'
@@ -145,7 +150,8 @@ def parse_args():
            user_feature_paths, user_feature_type, \
            train_perc, num_rep_cv, \
            reduced_dim_size, impute_strategy, num_procs, \
-           grid_search_level, regressor, dim_red_method
+           grid_search_level, regressor, dim_red_method, \
+           covar_list, covar_method
 
 
 def cli():
@@ -153,12 +159,14 @@ def cli():
 
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \
-    num_procs, grid_search_level, regressor, dim_red_method = parse_args()
+    num_procs, grid_search_level, regressor, dim_red_method, \
+        covar_list, covar_method = parse_args()
 
     print('Running neuropredict version {} for Regression'.format(__version__))
     prepare_and_run(user_feature_paths, user_feature_type, train_perc,
                     num_rep_cv, reduced_dim_size, impute_strategy,
                     grid_search_level, regressor, dim_red_method,
+                    covar_list, covar_method,
                     num_procs, out_dir, user_options)
 
     return
@@ -166,10 +174,14 @@ def cli():
 
 def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
                     num_rep_cv, reduced_dim_size, impute_strategy, grid_search_level,
-                    regressor, dim_red_method, num_procs, out_dir, user_options):
+                    regressor, dim_red_method,
+                    covar_list, covar_method,
+                    num_procs, out_dir, user_options):
     """"""
 
     multi_ds = load_datasets(user_feature_paths, task_type='regress')
+    covariates, deconfounder = check_covariates(multi_ds, covar_list, covar_method)
+
     print(multi_ds)
     impute_strategy = detect_missing_data(multi_ds, impute_strategy)
 
@@ -178,6 +190,8 @@ def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
                                    pred_model=regressor,
                                    impute_strategy=impute_strategy,
                                    dim_red_method=dim_red_method,
+                                   covariates=covariates,
+                                   deconfounder=deconfounder,
                                    reduced_dim=reduced_dim_size,
                                    train_perc=train_perc,
                                    num_rep_cv=num_rep_cv,
@@ -209,6 +223,8 @@ class RegressionWorkflow(BaseWorkflow):
                  datasets,
                  pred_model=cfg.default_classifier,
                  impute_strategy=cfg.default_imputation_strategy,
+                 covariates=None,
+                 deconfounder=cfg.default_deconfounding_method,
                  dim_red_method=cfg.default_dim_red_method,
                  reduced_dim=cfg.default_reduced_dim_size,
                  train_perc=cfg.default_train_perc,
@@ -223,6 +239,8 @@ class RegressionWorkflow(BaseWorkflow):
         super().__init__(datasets,
                          pred_model=pred_model,
                          impute_strategy=impute_strategy,
+                         covariates=covariates,
+                         deconfounder=deconfounder,
                          dim_red_method=dim_red_method,
                          reduced_dim=reduced_dim,
                          train_perc=train_perc,

@@ -39,6 +39,12 @@ avail_imputation_strategies_with_raise = avail_imputation_strategies + \
 
 missing_data_flag_name = 'missing_data'
 
+## -------- covariates -------------
+
+default_covariates = None
+default_deconfounding_method = 'residualize'
+avail_deconfounding_methods = ('residualize', 'augment')
+
 # # ------- feature importance -------
 
 importance_attr = {'randomforestclassifier': 'feature_importances_',

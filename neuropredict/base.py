@@ -28,6 +28,8 @@ class BaseWorkflow(object):
                  datasets,
                  pred_model=cfg.default_classifier,
                  impute_strategy=cfg.default_imputation_strategy,
+                 covariates=None,
+                 deconfounder=cfg.default_deconfounding_method,
                  dim_red_method=cfg.default_feat_select_method,
                  reduced_dim=cfg.default_num_features_to_select,
                  train_perc=cfg.default_train_perc,
@@ -45,12 +47,18 @@ class BaseWorkflow(object):
         self.datasets = datasets
         self.pred_model = pred_model
         self.impute_strategy = impute_strategy
+
+        self.covariates = covariates
+        self.deconfounder = deconfounder
+
         self.dim_red_method = dim_red_method
         self.reduced_dim = reduced_dim
+
         self.train_perc = train_perc
         self.num_rep_cv = num_rep_cv
         self._scoring = scoring
         self.grid_search_level = grid_search_level
+
         self.out_dir = out_dir
         self.num_procs = num_procs
         self.user_options = user_options
@@ -516,6 +524,22 @@ def get_parser_base():
 
     """.format(cfg.avail_imputation_strategies))
 
+    help_covariate_list = textwrap.dedent("""
+    List of covariates to be taken into account. They must be present in the 
+    original feature set in pyradigm format. The pyradigm data structure allows 
+    you to specify data type (categorical or numerical) for each covariate/attribute,
+    which is necessary to encode them accurately. 
+
+    """)
+
+    help_covariate_method = textwrap.dedent("""
+    Type of "deconfounding" method to handle covariates. This method would be 
+    trained on the training set features only (not their targets), which is then 
+    used to transform the test set prior to prediction. 
+
+    Available choices: {}
+    """.format(cfg.avail_deconfounding_methods))
+
     help_text_print_options = textwrap.dedent("""
     Prints the options used in the run in an output folder.
 
@@ -592,6 +616,18 @@ def get_parser_base():
                                default=cfg.default_imputation_strategy,
                                help=help_imputation_strategy,
                                choices=cfg.avail_imputation_strategies_with_raise,
+                               type=str.lower)
+
+    pipeline_args.add_argument("-cl", "--covariates", action="store",
+                               dest="covariates",
+                               default=cfg.default_covariates,
+                               help=help_covariate_list,
+                               type=str.lower)
+
+    pipeline_args.add_argument("-cm", "--covar_method", action="store",
+                               dest="covar_method",
+                               default=cfg.default_deconfounding_method,
+                               help=help_covariate_method,
                                type=str.lower)
 
     pipeline_args.add_argument("-dr", "--dim_red_method", action="store",
