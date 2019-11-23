@@ -17,6 +17,44 @@ def round_(array):
     """Shorthand for a rounding function with a controlled precision"""
     return np.round(array, cfg.PRECISION_METRICS)
 
+def check_covariate_options(covar_list, covar_method):
+    """Basic validation of covariate-related user options"""
+
+    if covar_list is not None and not isinstance(covar_list, Iterable):
+        raise ValueError('covariates can only be None or str or list of strings')
+    # actual check for whether they exist in datasets under study will be done
+    # after loading the datasets
+
+    if isinstance(covar_list, str):
+        covar_list = (covar_list, )
+
+    covar_method = covar_method.lower()
+    if covar_method not in cfg.avail_deconfounding_methods:
+        raise ValueError('Unrecognized method to handle covarites/confounds.'
+                         ' Must be one of {}'.format(cfg.avail_deconfounding_methods))
+
+    return covar_list, covar_method
+
+
+def check_covariates(multi_ds, covar_list, deconfounder):
+    """Checks the existence of covariates in the given set of datasets"""
+
+    for covar in covar_list:
+        if covar not in multi_ds.common_attr:
+            raise AttributeError('Covariate {} does not exist in the input datasets'
+                                 ''.format(covar))
+        num_set = len(multi_ds.common_attr[covar])
+        if num_set < multi_ds.num_samplets:
+            raise AttributeError('Covariate {} is only set for only {} of {} '
+                                 'samplets! Double check and fix input datasets.'
+                                 ''.format(covar, num_set, multi_ds.num_samplets))
+
+    # not doing anything with deconfounder for now
+    # validity of covar data types for certain deconf methods can be checked here
+
+    return covar_list, deconfounder
+
+
 def check_params_rhst(dataset_path_file, out_results_dir,
                       num_repetitions, train_perc,
                       sub_groups, num_procs, grid_search_level,
