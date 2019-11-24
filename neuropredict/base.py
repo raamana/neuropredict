@@ -573,18 +573,26 @@ def get_parser_base():
 
     help_covariate_list = textwrap.dedent("""
     List of covariates to be taken into account. They must be present in the 
-    original feature set in pyradigm format. The pyradigm data structure allows 
-    you to specify data type (categorical or numerical) for each covariate/attribute,
-    which is necessary to encode them accurately. 
+    original feature set in pyradigm format, which is required to implement the 
+    deconfounding (covariate regression) properly. The pyradigm data structure 
+    allows you to specify data type (categorical or numerical) for each 
+    covariate/attribute, which is necessary to encode them accurately. 
+    
+    Specify them as a comma-separated list of strings without any spaces or 
+    special characters, exactly as you encoded them in the input pyradigm dataset. 
+    Example: ``-cl age,site``
 
     """)
 
     help_covariate_method = textwrap.dedent("""
-    Type of "deconfounding" method to handle covariates. This method would be 
-    trained on the training set features only (not their targets), which is then 
-    used to transform the test set prior to prediction. 
+    Type of "deconfounding" method to handle confounds/covariates. This method 
+    would be trained on the training set only (not their targets, just features 
+    and covariates). The trained model is then used to deconfound both training 
+    features (prior to fitting the predictive model) and  to transform the test 
+    set prior to making predictions on them. 
 
     Available choices: {}
+    
     """.format(cfg.avail_deconfounding_methods))
 
     help_text_print_options = textwrap.dedent("""
