@@ -224,7 +224,8 @@ class BaseWorkflow(object):
         train_covar, train_encoders = encode(train_covar, train_covar_dtypes)
         test_covar, test_encoders = encode(test_covar, test_covar_dtypes)
 
-        return train_covar, test_covar
+        # column_stack ensures output is a 2D array, needed for sklearn transformers
+        return np.column_stack(train_covar), np.column_stack(test_covar)
 
 
     def _optimize_pipeline_on_train_set(self, train_data, train_targets):
