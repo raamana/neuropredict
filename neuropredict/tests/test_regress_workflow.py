@@ -35,6 +35,13 @@ max_num_modalities = 10
 
 train_perc = 0.5
 num_rep_cv = 20
+
+covar_list = ('age', 'gender', 'dummy')
+covar_types = ('age', 'gender', 'float')
+covar_arg = ','.join(['age', ])
+
+deconf_method = 'residualize'
+
 red_dim = 'sqrt'
 estimator = 'randomforestregressor'
 dr_method = 'variancethreshold'  # 'selectkbest_f_classif'
@@ -48,8 +55,8 @@ if pexists(out_path):
 else:
     ds_one = make_random_RegrDataset(min_size=min_size, max_size=max_size,
                                      max_dim=max_dim,
-                                     attr_names=('age', 'gender', 'dummy'),
-                                     attr_types=('age', 'gender', 'float')
+                                     attr_names=covar_list,
+                                     attr_types=covar_types
                                      )
     ds_one.description = 'ds_one'
     ds_one.save(out_path)
@@ -60,7 +67,8 @@ ds_two.description = 'ds_two'
 ds_two.save(out_path2)
 
 sys.argv = shlex.split('np_regress -y {} {} -t {} -n {} -c {} -g {} -o {} '
-                       '-e {} -dr {} -cl age -cm residualize'
+                       '-e {} -dr {} -cl {} -cm {}'
                        ''.format(out_path, out_path2, train_perc, num_rep_cv,
-                                 num_procs, gs_level, out_dir, estimator, dr_method))
+                                 num_procs, gs_level, out_dir, estimator,
+                                 dr_method, covar_arg, deconf_method))
 cli()
