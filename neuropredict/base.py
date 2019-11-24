@@ -14,9 +14,9 @@ import numpy as np
 from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.algorithms import compute_reduced_dimensionality, make_pipeline
 from neuropredict.results import ClassifyCVResults, RegressCVResults
-from neuropredict.utils import check_paths, impute_missing_data, not_unspecified, \
-    check_num_procs, chance_accuracy
-from sklearn.base import is_classifier, BaseEstimator
+from neuropredict.utils import (chance_accuracy, check_num_procs, check_paths,
+                                impute_missing_data, not_unspecified)
+from confounds.utils import get_deconfounder
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 
 
@@ -243,6 +243,29 @@ class BaseWorkflow(object):
                 self.pred_model, best_pipeline, train_data.shape[1])
 
         return best_pipeline, best_params, feat_importance
+
+
+    def _preprocess_data(self, train_data, test_data,
+                         preproc_name=cfg.default_preprocessing_method):
+        """Separate independent preprocessing of data"""
+
+        preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
+        preproc.fit(train_data)
+        return preproc.transform(train_data), preproc.transform(test_data)
+
+
+    def _deconfound_data(self, train_data, train_covar, test_data, test_covar):
+        """Builds custom composite deconfounder holding both train and test covar"""
+
+        deconf, deconf_name, deconf_param_grid = get_deconfounder(
+                self.deconfounder, self.grid_search_level)
+
+        # training based solely on training set only, both features and confounds
+        # TODO hyper-parameter optim not done for deconfounding methods
+        deconf.fit(train_data, train_covar)
+
+        # returning the deconfounded data
+        return deconf.transform(train_data), deconf.transform(test_data, test_covar)
 
 
     @staticmethod
