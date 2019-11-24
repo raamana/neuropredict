@@ -839,11 +839,11 @@ def make_pipeline(pred_model,
     return pipeline, param_grid
 
 
-def get_deconfounder(method_name, grid_search_level=None):
+def get_deconfounder(xfm_name, grid_search_level=None):
     """Returns a valid sklearn transformer for deconfounding."""
 
-    name = method_name.lower()
-    if name in ('residualize', 'regressout',
+    xfm_name = xfm_name.lower()
+    if xfm_name in ('residualize', 'regressout',
                 'residualize_linear', 'regressout_linear'):
         from confounds.base import Residualize
         xfm = Residualize()
@@ -860,11 +860,11 @@ def get_deconfounder(method_name, grid_search_level=None):
     #     param_list_values = [('param_1', range_param1),
     #                          ('criterion_2', criteria),
     #                          ]
-    elif name in ('augment', 'pad'):
+    elif xfm_name in ('augment', 'pad'):
         from confounds.base import Augment
         xfm =  Augment()
         param_list_values = []
-    elif name in ('dummy', 'passthrough'):
+    elif xfm_name in ('dummy', 'passthrough'):
         from confounds.base import DummyDeconfounding
         xfm =  DummyDeconfounding()
         param_list_values = []
@@ -872,7 +872,6 @@ def get_deconfounder(method_name, grid_search_level=None):
         raise ValueError('Unrecognized model name! '
                          'Choose one of Residualize, Augment or Dummy.')
 
-    xfm_name = xfm.__name__
     param_grid = make_parameter_grid(xfm_name, param_list_values)
     return xfm, xfm_name, param_grid
 
