@@ -18,7 +18,6 @@ from neuropredict.algorithms import (compute_reduced_dimensionality, encode,
 from neuropredict.results import ClassifyCVResults, RegressCVResults
 from neuropredict.utils import (chance_accuracy, check_num_procs, check_paths,
                                 impute_missing_data, not_unspecified)
-from confounds.utils import get_deconfounder
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
 
 
@@ -268,7 +267,8 @@ class BaseWorkflow(object):
         deconf.fit(train_data, train_covar)
 
         # returning the deconfounded data
-        return deconf.transform(train_data), deconf.transform(test_data, test_covar)
+        return deconf.transform(train_data, train_covar), \
+               deconf.transform(test_data, test_covar)
 
 
     @staticmethod
