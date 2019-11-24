@@ -1,18 +1,20 @@
 from __future__ import print_function
 
 import argparse
+import pickle
 import random
 import textwrap
-import pickle
 from abc import abstractmethod
 from functools import partial
 from multiprocessing import Manager, Pool
-from os.path import abspath, exists as pexists, join as pjoin, getsize
+from os.path import abspath, exists as pexists, getsize, join as pjoin
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import numpy as np
 from neuropredict import __version__, config_neuropredict as cfg
-from neuropredict.algorithms import compute_reduced_dimensionality, make_pipeline
+from neuropredict.algorithms import (compute_reduced_dimensionality, encode,
+                                     make_pipeline, get_preprocessor,
+                                     get_deconfounder)
 from neuropredict.results import ClassifyCVResults, RegressCVResults
 from neuropredict.utils import (chance_accuracy, check_num_procs, check_paths,
                                 impute_missing_data, not_unspecified)
@@ -226,7 +228,7 @@ class BaseWorkflow(object):
 
 
     def _optimize_pipeline_on_train_set(self, train_data, train_targets):
-        """Optimize model on training set and return predictions on test set."""
+        """Optimize model on training set."""
 
         reduced_dim = compute_reduced_dimensionality(
                 self.reduced_dim, self._train_set_size, train_data.shape[1])
@@ -395,7 +397,7 @@ class BaseWorkflow(object):
 
 
 def get_parser_base():
-    "Parser to specify arguments and their defaults."
+    """Parser to specify arguments and their defaults."""
 
     help_text_pyradigm_paths = textwrap.dedent("""
     Path(s) to pyradigm datasets.
@@ -746,9 +748,9 @@ def organize_inputs(user_args):
                              'pyradigm_paths',
                              'arff_paths']
     not_none_count = 0
-    for format in mutually_excl_formats:
-        if  hasattr(user_args, format) and \
-                not_unspecified(getattr(user_args, format)):
+    for fmt in mutually_excl_formats:
+        if  hasattr(user_args, fmt) and \
+                not_unspecified(getattr(user_args, fmt)):
             not_none_count = not_none_count + 1
     if not_none_count > 1:
         raise ValueError('Only one of the following formats can be specified:\n'

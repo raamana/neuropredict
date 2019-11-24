@@ -17,7 +17,7 @@ from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 
 if version_info.major > 2:
-    from neuropredict import config_neuropredict as cfg, rhst
+    from neuropredict import config_neuropredict as cfg
     from neuropredict.utils import chance_accuracy, round_
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')

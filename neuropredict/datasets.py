@@ -6,6 +6,7 @@ from pyradigm import MultiDatasetClassify, MultiDatasetRegress
 from neuropredict import config_neuropredict as cfg
 from neuropredict.base import MissingDataException
 
+
 def load_datasets(path_list, task_type='classify', name=None, subgroup=None):
     """Method to manage multiple input datasets."""
 
