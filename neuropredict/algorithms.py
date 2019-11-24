@@ -946,3 +946,21 @@ def get_RandomForestRegressor(reduced_dim=None,
                                 oob_score=True)
 
     return rfc, clf_name, param_grid
+
+
+def encode(var_list, dtypes):
+    """
+    Utility to help encode/convert data types.
+    Often from categorical to numerical data.
+    """
+
+    encoders = list()
+    for ix, (var, dtype) in enumerate(zip(var_list, dtypes)):
+        if not np.issubdtype(dtype, np.number):
+            enc = OneHotEncoder()
+            var_list[ix] = enc.fit_transform(var)
+            encoders.append(enc)
+        else:
+            encoders.append(None)
+
+    return var_list, encoders
