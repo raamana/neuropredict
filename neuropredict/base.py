@@ -189,7 +189,14 @@ class BaseWorkflow(object):
                 train_data, test_data = impute_missing_data(
                         train_data, train_targets, self.impute_strategy, test_data)
 
-            # covariate regression / deconfounding
+            train_data, test_data = self._preprocess_data(train_data, test_data)
+
+            # covariate regression / deconfounding WITHOUT using target values
+            train_covar, test_covar = self._get_covariate_data(train_set, test_set)
+            train_data, test_data = self._deconfound_data(train_data, train_covar,
+                                                         test_data, test_covar)
+
+            # deconfounding targets could be added here in the future if needed
 
             best_pipeline, best_params, feat_importance = \
                 self._optimize_pipeline_on_train_set(train_data, train_targets)
