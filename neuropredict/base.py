@@ -204,6 +204,20 @@ class BaseWorkflow(object):
             self.results.dump(self.out_dir)
 
 
+    def _get_covariate_data(self, train_set, test_set):
+        """Method to gather and organize covariate data"""
+
+        train_covar, train_covar_dtypes = \
+            self.datasets.get_common_attr(self.covariates, train_set)
+        test_covar, test_covar_dtypes = \
+            self.datasets.get_common_attr(self.covariates, test_set)
+
+        train_covar, train_encoders = encode(train_covar, train_covar_dtypes)
+        test_covar, test_encoders = encode(test_covar, test_covar_dtypes)
+
+        return train_covar, test_covar
+
+
     def _optimize_pipeline_on_train_set(self, train_data, train_targets):
         """Optimize model on training set and return predictions on test set."""
 
