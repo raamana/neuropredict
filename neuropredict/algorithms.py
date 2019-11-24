@@ -836,6 +836,44 @@ def make_pipeline(pred_model,
     return pipeline, param_grid
 
 
+def get_deconfounder(method_name, grid_search_level=None):
+    """Returns a valid sklearn transformer for deconfounding."""
+
+    name = method_name.lower()
+    if name in ('residualize', 'regressout',
+                'residualize_linear', 'regressout_linear'):
+        from confounds.base import Residualize
+        xfm = Residualize()
+        param_list_values = []
+    # elif name in ('residualize_ridge', 'residualize_kernelridge'):
+    #     from confounds.base import Residualize
+    #     xfm =  Residualize(model='KernelRidge')
+    #     param_list_values = [('param_1', range_param1),
+    #                          ('criterion_2', criteria),
+    #                          ]
+    # elif name in ('residualize_gpr', 'residualize_gaussianprocessregression'):
+    #     from confounds.base import Residualize
+    #     xfm =  Residualize(model='GPR')
+    #     param_list_values = [('param_1', range_param1),
+    #                          ('criterion_2', criteria),
+    #                          ]
+    elif name in ('augment', 'pad'):
+        from confounds.base import Augment
+        xfm =  Augment()
+        param_list_values = []
+    elif name in ('dummy', 'passthrough'):
+        from confounds.base import DummyDeconfounding
+        xfm =  DummyDeconfounding()
+        param_list_values = []
+    else:
+        raise ValueError('Unrecognized model name! '
+                         'Choose one of Residualize, Augment or Dummy.')
+
+    xfm_name = xfm.__name__
+    param_grid = make_parameter_grid(xfm_name, param_list_values)
+    return xfm, xfm_name, param_grid
+
+
 def get_RandomForestRegressor(reduced_dim=None,
                               grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
