@@ -19,7 +19,8 @@ from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
                              get_features, get_metadata, get_metadata_in_pyradigm,
                              get_pyradigm, saved_dataset_matches,
                              process_pyradigm, process_arff)
-from neuropredict.utils import (check_classifier, check_num_procs, load_options,
+from neuropredict.utils import (check_covariate_options, check_covariates,
+                                check_classifier, check_num_procs, load_options,
                                 make_dataset_filename, not_unspecified,
                                 print_options, save_options,
                                 sub_group_identifier, median_of_medians,
@@ -53,6 +54,8 @@ class ClassificationWorkflow(BaseWorkflow):
                  datasets,
                  pred_model=cfg.default_classifier,
                  impute_strategy=cfg.default_imputation_strategy,
+                 covariates=None,
+                 deconfounder=cfg.default_deconfounding_method,
                  dim_red_method=cfg.default_dim_red_method,
                  reduced_dim=cfg.default_reduced_dim_size,
                  train_perc=cfg.default_train_perc,
@@ -67,6 +70,8 @@ class ClassificationWorkflow(BaseWorkflow):
         super().__init__(datasets,
                          pred_model=pred_model,
                          impute_strategy=impute_strategy,
+                         covariates=covariates,
+                         deconfounder=deconfounder,
                          dim_red_method=dim_red_method,
                          reduced_dim=reduced_dim,
                          train_perc=train_perc,
@@ -457,6 +462,9 @@ def parse_args():
 
     impute_strategy = validate_impute_strategy(user_args.impute_strategy)
 
+    covar_list, covar_method = check_covariate_options(
+            user_args.covariates,user_args.covar_method)
+
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'
@@ -477,7 +485,8 @@ def parse_args():
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
            feature_selection_size, impute_strategy, num_procs, \
-           grid_search_level, classifier, dim_red_method
+           grid_search_level, classifier, dim_red_method, \
+           covar_list, covar_method
 
 
 def validate_class_set(classes, subgroups, positive_class=None):
@@ -705,11 +714,13 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size,
                     impute_strategy, num_procs,
-                    grid_search_level, classifier, feat_select_method):
+                    grid_search_level, classifier, feat_select_method,
+                    covar_list, covar_method):
     "Organizes the inputs and prepares them for CV"
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
                                                 user_feature_type)
+    # noinspection PyTupleAssignmentBalance
     method_names, outpath_list = import_datasets(method_list, out_dir, subjects,
                                                  classes, feature_dir,
                                                  user_feature_type)
@@ -727,6 +738,10 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
 
         multi_ds = load_datasets(outpath_list, task_type='classify',
                                  subgroup=sub_group, name=sub_group_id)
+
+        covariates, deconfounder = check_covariates(multi_ds, covar_list,
+                                                    covar_method)
+
         print(multi_ds)
         impute_strategy = detect_missing_data(multi_ds, impute_strategy)
 
@@ -734,6 +749,8 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
                                           pred_model=classifier,
                                           impute_strategy=impute_strategy,
                                           dim_red_method=feat_select_method,
+                                          covariates=covariates,
+                                          deconfounder=deconfounder,
                                           reduced_dim=feature_selection_size,
                                           train_perc=train_perc,
                                           num_rep_cv=num_rep_cv,
@@ -764,14 +781,16 @@ def cli():
     user_feature_type, \
     fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
     feature_selection_size, impute_strategy, num_procs, \
-    grid_search_level, classifier, feat_select_method = parse_args()
+    grid_search_level, classifier, feat_select_method,\
+        covar_list, covar_method = parse_args()
 
     print('Running neuropredict version {} for Classification'.format(__version__))
     prepare_and_run(subjects, classes, out_dir, options_path,
                     user_feature_paths, user_feature_type, fs_subject_dir,
                     train_perc, num_rep_cv, positive_class,
                     sub_group_list, feature_selection_size, impute_strategy,
-                    num_procs, grid_search_level, classifier, feat_select_method)
+                    num_procs, grid_search_level, classifier, feat_select_method,
+                    covar_list, covar_method)
 
     return
 
