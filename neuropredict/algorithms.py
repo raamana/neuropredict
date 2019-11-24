@@ -1,3 +1,5 @@
+from sklearn.preprocessing import OneHotEncoder
+
 __all__ = ['get_pipeline', 'get_feature_importance',]
 
 import numpy as np
@@ -812,27 +814,28 @@ def make_pipeline(pred_model,
                   dim_red_method,
                   reduced_dim,
                   train_set_size,
-                  preproc_name='robustscaler',
+                  preproc_name=cfg.default_preprocessing_method,
                   gs_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """Constructor for sklearn pipeline. Generic version of get_pipeline"""
 
-    preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
+    # preproc, preproc_name, preproc_param_grid = get_preprocessor(preproc_name)
     estimator, est_name, est_param_grid = get_estimator(pred_model, reduced_dim,
                                                         gs_level)
     dim_reducer, dr_name, dr_param_grid = get_dim_reducer(train_set_size,
                                                             dim_red_method,
                                                             reduced_dim)
-
     # composite grid of parameters from all steps
     param_grid = est_param_grid.copy()
-    add_new_params(param_grid, preproc_param_grid, est_name, preproc_name)
+    # add_new_params(param_grid, preproc_param_grid, est_name, preproc_name)
+    # add_new_params(param_grid, deconf_param_grid, est_name, deconf_name)
     add_new_params(param_grid, dr_param_grid, est_name, dr_name)
 
-    steps = [(preproc_name, preproc),
+    steps = [
+             # (preproc_name, preproc),
+             # (deconf_name, deconf),
              (dr_name, dim_reducer),
              (est_name, estimator)]
     pipeline = Pipeline(steps)
-
     return pipeline, param_grid
 
 
