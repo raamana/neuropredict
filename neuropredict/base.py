@@ -255,7 +255,8 @@ class BaseWorkflow(object):
         return best_pipeline, best_params, feat_importance
 
 
-    def _preprocess_data(self, train_data, test_data,
+    @staticmethod
+    def _preprocess_data(train_data, test_data,
                          preproc_name=cfg.default_preprocessing_method):
         """Separate independent preprocessing of data"""
 
@@ -302,7 +303,8 @@ class BaseWorkflow(object):
         return feat_importance
 
 
-    def _optimize_pipeline(self, pipeline, train_data, train_targets,
+    @staticmethod
+    def _optimize_pipeline(pipeline, train_data, train_targets,
                            param_grid, train_perc_inner_cv):
         """Optimizes a given pipeline on the given dataset"""
 
