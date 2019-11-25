@@ -25,9 +25,13 @@ neuropredict
    longterm
    installation
    usage_cli
+   usage_clf_cli
+   usage_regr_cli
    examples
    features
    results
+   results_clf
+   results_regr
    faq
    implementation
    citation
