@@ -39,15 +39,19 @@ def check_covariate_options(covar_list, covar_method):
 def check_covariates(multi_ds, covar_list, deconfounder):
     """Checks the existence of covariates in the given set of datasets"""
 
-    for covar in covar_list:
-        if covar not in multi_ds.common_attr:
-            raise AttributeError('Covariate {} does not exist in the input datasets'
-                                 ''.format(covar))
-        num_set = len(multi_ds.common_attr[covar])
-        if num_set < multi_ds.num_samplets:
-            raise AttributeError('Covariate {} is only set for only {} of {} '
-                                 'samplets! Double check and fix input datasets.'
-                                 ''.format(covar, num_set, multi_ds.num_samplets))
+    if covar_list is not None:
+
+        for covar in covar_list:
+            if covar not in multi_ds.common_attr:
+                raise AttributeError('Covariate {} does not exist in input datasets'
+                                     ''.format(covar))
+            num_set = len(multi_ds.common_attr[covar])
+            if num_set < multi_ds.num_samplets:
+                raise AttributeError('Covariate {} is only set for only {} of {} '
+                                     'samplets! Double check and fix input datasets.'
+                                     ''.format(covar, num_set, multi_ds.num_samplets))
+    else:
+        covar_list = ()
 
     # not doing anything with deconfounder for now
     # validity of covar data types for certain deconf methods can be checked here

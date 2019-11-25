@@ -201,9 +201,10 @@ class BaseWorkflow(object):
             train_data, test_data = self._preprocess_data(train_data, test_data)
 
             # covariate regression / deconfounding WITHOUT using target values
-            train_covar, test_covar = self._get_covariate_data(train_set, test_set)
-            train_data, test_data = self._deconfound_data(train_data, train_covar,
-                                                          test_data, test_covar)
+            if len(self.covariates) > 0:
+                train_covar, test_covar = self._get_covariates(train_set, test_set)
+                train_data, test_data = self._deconfound_data(train_data, train_covar,
+                                                              test_data, test_covar)
 
             # deconfounding targets could be added here in the future if needed
 
@@ -220,7 +221,7 @@ class BaseWorkflow(object):
             self.results.dump(self.out_dir)
 
 
-    def _get_covariate_data(self, train_set, test_set):
+    def _get_covariates(self, train_set, test_set):
         """Method to gather and organize covariate data"""
 
         train_covar, train_covar_dtypes = \
@@ -685,6 +686,7 @@ def get_parser_base():
 
     pipeline_args.add_argument("-cl", "--covariates", action="store",
                                dest="covariates",
+                               nargs='+',
                                default=cfg.default_covariates,
                                help=help_covariate_list,
                                type=str.lower)
