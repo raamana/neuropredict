@@ -54,8 +54,7 @@ Frequently Asked Questions
 
 * *Does ``neuropredict`` handle covariates?*
 
-  * Not yet. This feature request is not trivial to implement, as the nature of covariate handling is complex and variety of methods is large.
-  * If you need to, please regress them out (or handle them using another method of your choice) prior to inputting the features.
+  * Yes. Using this requires the use of the `pyradigm <https://github.com/raamana/pyradigm>`_ dataset format, which offers you the ability to add in arbitrary set of attributes for each subject.
 
 
 * *Can I get ROC curves?*

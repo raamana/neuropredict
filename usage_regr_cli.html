@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Regression workflow &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Classification workflow" href="usage_clf_cli.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="regression-workflow">
+<h1>Regression workflow<a class="headerlink" href="#regression-workflow" title="Permalink to this headline">¶</a></h1>
+<p>Once <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> is successful, the usage for this workflow can be obtained by typing either of these following commands in the terminal.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>neuropredict_regress
+np_regress -h
+</pre></div>
+</div>
+<p>Those options are also shown below:</p>
+<p><p>Easy, standardized and comprehensive predictive analysis.</p>
+</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">neuropredict_regress</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">META_FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUT_DIR</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">y</span> <span class="n">PYRADIGM_PATHS</span> <span class="p">[</span><span class="n">PYRADIGM_PATHS</span> <span class="o">...</span><span class="p">]]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">u</span> <span class="n">USER_FEATURE_PATHS</span> <span class="p">[</span><span class="n">USER_FEATURE_PATHS</span> <span class="o">...</span><span class="p">]]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">DATA_MATRIX_PATHS</span> <span class="p">[</span><span class="n">DATA_MATRIX_PATHS</span> <span class="o">...</span><span class="p">]]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">t</span> <span class="n">TRAIN_PERC</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">n</span> <span class="n">NUM_REP_CV</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">k</span> <span class="n">REDUCED_DIM_SIZE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">g</span> <span class="p">{</span><span class="n">none</span><span class="p">,</span><span class="n">light</span><span class="p">,</span><span class="n">exhaustive</span><span class="p">}]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="ow">is</span> <span class="p">{</span><span class="n">median</span><span class="p">,</span><span class="n">mean</span><span class="p">,</span><span class="n">most_frequent</span><span class="p">,</span><span class="k">raise</span><span class="p">}]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">cl</span> <span class="n">COVARIATES</span> <span class="p">[</span><span class="n">COVARIATES</span> <span class="o">...</span><span class="p">]]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">cm</span> <span class="n">COVAR_METHOD</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">dr</span> <span class="p">{</span><span class="n">selectkbest_mutual_info_classif</span><span class="p">,</span><span class="n">selectkbest_f_classif</span><span class="p">,</span><span class="n">variancethreshold</span><span class="p">,</span><span class="n">isomap</span><span class="p">,</span><span class="n">lle</span><span class="p">,</span><span class="n">lle_modified</span><span class="p">,</span><span class="n">lle_hessian</span><span class="p">,</span><span class="n">lle_ltsa</span><span class="p">}]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">z</span> <span class="n">MAKE_VIS</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">NUM_PROCS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">po</span> <span class="n">PRINT_OPT_DIR</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">e</span> <span class="p">{</span><span class="n">randomforestregressor</span><span class="p">,</span><span class="n">extratreesregressor</span><span class="p">,</span><span class="n">decisiontreeregressor</span><span class="p">,</span><span class="n">svr</span><span class="p">,</span><span class="n">kernelridge</span><span class="p">,</span><span class="n">bayesianridge</span><span class="p">,</span><span class="n">gaussianprocessregressor</span><span class="p">,</span><span class="n">gradientboostingregressor</span><span class="p">}]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h2>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="option-list">
+<dt><kbd>-m, --meta_file</kbd></dt>
+<dd><p>Abs path to file containing metadata for subjects to be included for analysis.</p>
+<p>At the minimum, each subject should have an id per row followed by the class
+it belongs to.</p>
+<p>E.g.
+.. parsed-literal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sub001</span><span class="p">,</span><span class="n">control</span>
+<span class="n">sub002</span><span class="p">,</span><span class="n">control</span>
+<span class="n">sub003</span><span class="p">,</span><span class="n">disease</span>
+<span class="n">sub004</span><span class="p">,</span><span class="n">disease</span>
+</pre></div>
+</div>
+</dd>
+<dt><kbd>-o, --out_dir</kbd></dt>
+<dd><p>Output folder to store gathered features &amp; results.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Input data and formats">
+<h2>Input data and formats<a class="headerlink" href="#Input data and formats" title="Permalink to this headline">¶</a></h2>
+<p>Only one of the following types can be specified.</p>
+<dl class="option-list">
+<dt><kbd>-y, --pyradigm_paths</kbd></dt>
+<dd><p>Path(s) to pyradigm datasets.</p>
+<p>Each path is self-contained dataset identifying each sample, its class and
+features.</p>
+</dd>
+<dt><kbd>-u, --user_feature_paths</kbd></dt>
+<dd><p>List of absolute paths to user’s own features.</p>
+<p>Format: Each of these folders contains a separate folder for each subject
+( named after its ID in the metadata file) containing a file called
+features.txt with one number per line. All the subjects (in a given
+folder) must have the number of features ( #lines in file). Different
+parent folders (describing one feature set) can have different number of
+features for each subject, but they must all have the same number of
+subjects (folders) within them.</p>
+<p>Names of each folder is used to annotate the results in visualizations.
+Hence name them uniquely and meaningfully, keeping in mind these figures
+will be included in your papers. For example,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">user_feature_paths</span> <span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">fmri</span><span class="o">/</span> <span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">dti</span><span class="o">/</span> <span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">t1_volumes</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>Only one of <code class="docutils literal notranslate"><span class="pre">--pyradigm_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">user_feature_paths</span></code>,
+<code class="docutils literal notranslate"><span class="pre">data_matrix_path</span></code>
+or <code class="docutils literal notranslate"><span class="pre">arff_paths</span></code> options can be specified.</p>
+</dd>
+<dt><kbd>-d, --data_matrix_paths</kbd></dt>
+<dd><p>List of absolute paths to text files containing one matrix of size N x p  (
+num_samples x num_features).</p>
+<p>Each row in the data matrix file must represent data corresponding to sample
+in the same row of the meta data file (meta data file and data matrix must be
+in row-wise correspondence).</p>
+<p>Name of this file will be used to annotate the results and visualizations.</p>
+<p>E.g. <a href="#id1"><span class="problematic" id="id2">``</span></a>–data_matrix_paths /project/fmri.csv /project/dti.csv
+/project/t1_volumes.csv ``</p>
+<p>Only one of <code class="docutils literal notranslate"><span class="pre">--pyradigm_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">user_feature_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">data_matrix_path</span></code>
+or <code class="docutils literal notranslate"><span class="pre">arff_paths</span></code> options can be specified.</p>
+<dl>
+<dt>File format could be</dt><dd><ul class="simple">
+<li><p>a simple comma-separated text file (with extension .csv or .txt): which can</p></li>
+</ul>
+<dl class="simple">
+<dt>easily be read back with</dt><dd><p>numpy.loadtxt(filepath, delimiter=’,’)
+or</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p>a numpy array saved to disk (with extension .npy or .numpy) that can read</p></li>
+</ul>
+<p>in with numpy.load(filepath).</p>
+<p>One could use <code class="docutils literal notranslate"><span class="pre">numpy.savetxt(data_array,</span> <span class="pre">delimiter=',')</span></code> or <code class="docutils literal notranslate"><span class="pre">numpy.save(</span>
+<span class="pre">data_array)</span></code> to save features.</p>
+<p>File format is inferred from its extension.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
+<div class="section" id="Cross-validation">
+<h2>Cross-validation<a class="headerlink" href="#Cross-validation" title="Permalink to this headline">¶</a></h2>
+<p>Parameters related to training and optimization during cross-validation</p>
+<dl class="option-list">
+<dt><kbd>-t, --train_perc</kbd></dt>
+<dd><p>Percentage of the smallest class to be reserved for training.</p>
+<p>Must be in the interval [0.01 0.99].</p>
+<p>If sample size is sufficiently big, we recommend 0.5.
+If sample size is small, or class imbalance is high, choose 0.8.</p>
+</dd>
+<dt><kbd>-n, --num_rep_cv</kbd></dt>
+<dd><p>Number of repetitions of the repeated-holdout cross-validation.</p>
+<p>The larger the number, more stable the estimates will be.</p>
+</dd>
+<dt><kbd>-k, --reduced_dim_size</kbd></dt>
+<dd><p>Number of features to select as part of feature selection. Options:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘tenth’</p></li>
+<li><p>‘sqrt’</p></li>
+<li><p>‘log2’</p></li>
+<li><p>‘all’</p></li>
+</ul>
+</div></blockquote>
+<p>Default: ‘tenth’ of the number of samples in the training set.</p>
+<p>For example, if your dataset has 90 samples, you chose 50 percent for training
+(default), then Y will have 90*.5=45 samples in training set, leading to 5
+features to be selected for taining. If you choose a fixed integer, ensure all
+the feature sets under evaluation have atleast that many features.</p>
+</dd>
+<dt><kbd>-g, --gs_level</kbd></dt>
+<dd><p>Possible choices: none, light, exhaustive</p>
+<p>Flag to specify the level of grid search during hyper-parameter optimization
+on the training set.</p>
+<p>Allowed options are : ‘none’, ‘light’ and ‘exhaustive’, in the order of how
+many values/values will be optimized. More parameters and more values demand
+more resources and much longer time for optimization.</p>
+<p>The ‘light’ option tries to “folk wisdom” to try least number of values (no
+more than one or two), for the parameters for the given classifier. (e.g. a
+lage number say 500 trees for a random forest optimization). The ‘light’ will
+be the fastest and should give a “rough idea” of predictive performance. The
+‘exhaustive’ option will try to most parameter values for the most parameters
+that can be optimized.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Predictive Model">
+<h2>Predictive Model<a class="headerlink" href="#Predictive Model" title="Permalink to this headline">¶</a></h2>
+<p>Parameters of pipeline comprising the predictive model</p>
+<dl class="option-list">
+<dt><kbd>-is, --impute_strategy</kbd></dt>
+<dd><p>Possible choices: median, mean, most_frequent, raise</p>
+<p>Strategy to impute any missing data (as encoded by NaNs).</p>
+<p>Default: ‘raise’, which raises an error if there is any missing data anywhere.
+Currently available imputation strategies are: (‘median’, ‘mean’, ‘most_frequent’)</p>
+</dd>
+<dt><kbd>-cl, --covariates</kbd></dt>
+<dd><p>List of covariates to be taken into account. They must be present in the
+original feature set in pyradigm format, which is required to implement the
+deconfounding (covariate regression) properly. The pyradigm data structure
+allows you to specify data type (categorical or numerical) for each
+covariate/attribute, which is necessary to encode them accurately.</p>
+<p>Specify them as a comma-separated list of strings without any spaces or
+special characters, exactly as you encoded them in the input pyradigm dataset.
+Example: <code class="docutils literal notranslate"><span class="pre">-cl</span> <span class="pre">age,site</span></code></p>
+</dd>
+<dt><kbd>-cm, --covar_method</kbd></dt>
+<dd><p>Type of “deconfounding” method to handle confounds/covariates. This method
+would be trained on the training set only (not their targets, just features
+and covariates). The trained model is then used to deconfound both training
+features (prior to fitting the predictive model) and  to transform the test
+set prior to making predictions on them.</p>
+<p>Available choices: (‘residualize’, ‘augment’)</p>
+</dd>
+<dt><kbd>-dr, --dim_red_method</kbd></dt>
+<dd><p>Possible choices: selectkbest_mutual_info_classif, selectkbest_f_classif, variancethreshold, isomap, lle, lle_modified, lle_hessian, lle_ltsa</p>
+<p>Feature selection, or dimensionality reduction method to apply prior to
+training the classifier.</p>
+<p><strong>NOTE</strong>: when feature ‘selection’ methods are used, we are able to keep track
+of which features in the original input space were slected and hence visualize
+their feature importance after the repetitions of CV. When the more generic
+‘dimensionality reduction’ methods are used, features often get transformed to
+new subspaces, wherein the link to original features is lost, and hence
+importance values for original input features can not be computed and hence
+are not visualized.</p>
+<p>Default: ‘VarianceThreshold’, removing features with 0.001 percent of lowest
+variance (zeros etc).</p>
+</dd>
+<dt><kbd>-e, --regressor</kbd></dt>
+<dd><p>Possible choices: randomforestregressor, extratreesregressor, decisiontreeregressor, svr, kernelridge, bayesianridge, gaussianprocessregressor, gradientboostingregressor</p>
+<p>String specifying one of the implemented regressors.
+(Regressors are carefully chosen to allow for the comprehensive report
+provided by neuropredict).</p>
+<p>Default: ‘RandomForestRegressor’</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Visualization">
+<h2>Visualization<a class="headerlink" href="#Visualization" title="Permalink to this headline">¶</a></h2>
+<p>Parameters related to generating visualizations</p>
+<dl class="option-list">
+<dt><kbd>-z, --make_vis</kbd></dt>
+<dd><p>Option to make visualizations from existing results in the given path.
+This is helpful when neuropredict failed to generate result figures
+automatically
+e.g. on a HPC cluster, or another environment when DISPLAY is either not
+available.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="Computing">
+<h2>Computing<a class="headerlink" href="#Computing" title="Permalink to this headline">¶</a></h2>
+<p>Parameters related to computations/debugging</p>
+<dl class="option-list">
+<dt><kbd>-c, --num_procs</kbd></dt>
+<dd><p>Number of CPUs to use to parallelize CV repetitions.</p>
+<p>Default : 4.</p>
+<p>Number of CPUs will be capped at the number available on the machine if higher
+is requested.</p>
+</dd>
+<dt><kbd>--po, --print_options</kbd></dt>
+<dd><p>Prints the options used in the run in an output folder.</p>
+</dd>
+<dt><kbd>-v, --version</kbd></dt>
+<dd><p>show program’s version number and exit</p>
+</dd>
+</dl>
+</div>
+<hr class="docutils" />
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Regression workflow</a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+<li><a class="reference internal" href="#Input data and formats">Input data and formats</a></li>
+<li><a class="reference internal" href="#Cross-validation">Cross-validation</a></li>
+<li><a class="reference internal" href="#Predictive Model">Predictive Model</a></li>
+<li><a class="reference internal" href="#Visualization">Visualization</a></li>
+<li><a class="reference internal" href="#Computing">Computing</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage_clf_cli.html"
+                        title="previous chapter">Classification workflow</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="next chapter">Examples</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

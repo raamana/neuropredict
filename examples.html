@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Examples &#8212; neuropredict 0.5.2.1 documentation</title>
+    <title>Examples &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -16,17 +16,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Input formats" href="features.html" />
-    <link rel="prev" title="Usage" href="usage_cli.html" />
+    <link rel="prev" title="Regression workflow" href="usage_regr_cli.html" />
     <script type="text/javascript" src="_static/pd.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2.1 documentation</h1>
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2.1 documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -40,7 +40,7 @@
 <div class="section" id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
 <p>If your features are collected into a <code class="docutils literal notranslate"><span class="pre">features.csv</span></code> file (each row is a subject, with features along the columns), running neuropredict is as simple as:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>neuropredict -m /project/meta_data.csv -d /project/features.csv
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>np_classify -m /project/meta_data.csv -d /project/features.csv
 </pre></div>
 </div>
 <p>Where the <code class="docutils literal notranslate"><span class="pre">meta_data.csv</span></code> file specifies which subject belongs to which class. For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):</p>
@@ -131,8 +131,8 @@ Different classes in the training set are stratified to match the smallest class
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="usage_cli.html"
-                        title="previous chapter">Usage</a></p>
+  <p class="topless"><a href="usage_regr_cli.html"
+                        title="previous chapter">Regression workflow</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="features.html"
                         title="next chapter">Input formats</a></p>

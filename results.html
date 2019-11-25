@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Report &#8212; neuropredict 0.5.2.1 documentation</title>
+    <title>Report &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -15,18 +15,18 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="next" title="Results from Classification run" href="results_clf.html" />
     <link rel="prev" title="Input formats" href="features.html" />
     <script type="text/javascript" src="_static/pd.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2.1 documentation</h1>
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2.1 documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -39,90 +39,16 @@
             
 <div class="section" id="report">
 <h1>Report<a class="headerlink" href="#report" title="Permalink to this headline">¶</a></h1>
-<p>neuropredict produces a comprehensive report, parts of which can be seen in the figure below:</p>
-<a class="reference internal image-reference" href="_images/composite_outputs.png"><img alt="_images/composite_outputs.png" src="_images/composite_outputs.png" style="width: 700px;" /></a>
-<p>The report consists of</p>
+<p>neuropredict produces a comprehensive report for each of the two workflows - check their respective pages for more information:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>distribtions of cross-validated performance (balanced accuracy),</p></li>
-<li><p>confusion matrices for each feature set,</p></li>
-<li><p>intuitive comparison of misclassification rates across multiple features, and</p></li>
-<li><p>misclassification frequency of subjects (for debugging and QC purposes)</p></li>
+<li><p><a class="reference internal" href="results_clf.html"><span class="doc">Results from Classification run</span></a></p></li>
+<li><p><a class="reference internal" href="results_regr.html"><span class="doc">Results from Regression run</span></a></p></li>
 </ul>
 </div></blockquote>
-<div class="section" id="outputs-and-interpretation">
-<h2>Outputs and interpretation<a class="headerlink" href="#outputs-and-interpretation" title="Permalink to this headline">¶</a></h2>
-<p>The output directory (chosen with <code class="docutils literal notranslate"><span class="pre">-o</span></code> flag) contains the following sets of files, whose names are self-explanatory. In each set, there is separate visualization (PDF) or CSV file produced for each feature (named features A, B, C and D below) being studied, for your convenience.</p>
-<p><strong>First</strong>, a set of visualizations in PDF format:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">balanced_accuracy</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">compare_misclf_rates</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">confusion_matrix_FeatureA</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">confusion_matrix_FeatureB</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">confusion_matrix_FeatureC</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">confusion_matrix_FeatureD</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">feature_importance</span><span class="o">.</span><span class="n">pdf</span>
-<span class="n">misclassified_subjects_frequency_histogram</span><span class="o">.</span><span class="n">pdf</span>
-</pre></div>
-</div>
-<p><strong>Second</strong>, a set of CSV files in a subfolder called <code class="docutils literal notranslate"><span class="pre">exported_results</span></code>, which can used for further posthoc statisical analysis or to produce more customised visualizations. The typical contents are shown below - note, filenames may change depending on your input file names.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">average_misclassification_rates_FeatureA</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">average_misclassification_rates_FeatureB</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">average_misclassification_rates_FeatureC</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">average_misclassification_rates_FeatureD</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">balanced_accuracy</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">confusion_matrix_FeatureA</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">confusion_matrix_FeatureB</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">confusion_matrix_FeatureC</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">confusion_matrix_FeatureD</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">feature_importance_FeatureA</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">feature_importance_FeatureB</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">feature_importance_FeatureC</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">feature_importance_FeatureD</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">subject_misclf_freq_FeatureA</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">subject_misclf_freq_FeatureB</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">subject_misclf_freq_FeatureC</span><span class="o">.</span><span class="n">csv</span>
-<span class="n">subject_misclf_freq_FeatureD</span><span class="o">.</span><span class="n">csv</span>
-</pre></div>
-</div>
-<p><strong>Third</strong>, a Python pickle file <code class="docutils literal notranslate"><span class="pre">rhst_results.pkl</span></code> containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where <code class="docutils literal notranslate"><span class="pre">pickle</span></code> files can be read.</p>
-<p><strong>Fourth</strong>, a visualization named <code class="docutils literal notranslate"><span class="pre">misclassified_subjects_frequency_histogram.pdf</span></code>. This plots histogram of misclassification frequency across all subjects (that were used as test subjects), obtained from multiple repetitions of CV. When multiple features are being compared, they are plotted in different colors.</p>
-<p>In addition, a set of files named <code class="docutils literal notranslate"><span class="pre">misclassified_subjects_*_most_frequent.txt</span></code>. Each of these files (for each feature being studied) contain the set of subject IDs that were misclassified most frequently.</p>
-<p>The misclassified frequency visualizations and subject ID lists can help you further dig into why they have been so often misclassified. If classes are expected to be well separated, and some subjects are misclassified consistently (over 60%), you may want to ask these questions:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>are they mislabelled (data entry or human error)?</p></li>
-<li><p>were their data quality controlled properly (preprocessing or QC failure)?</p></li>
-<li><p>what explains their ‘outlier’ status (demographics, neuropsych or something related)?</p></li>
-</ul>
-</div></blockquote>
-<p><strong>Finally</strong>, few miscellaneous set of files that neuropredict relies on to produce the comprehensive report.</p>
-<p>We will walk you through the resulting visualizations one by one, and describe how to interpret them.</p>
-</div>
-<div class="section" id="comparison-of-predictive-accuracy">
-<h2>Comparison of predictive accuracy<a class="headerlink" href="#comparison-of-predictive-accuracy" title="Permalink to this headline">¶</a></h2>
-<p>The following visualization compares the predictive performance of four features, using the balanced accuracy metric. The performance of each feature is shown as a distribution, wherein multiple points in the distribution are obtained from multiple CV repetitions. As you can see,</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>it is important to visualize the full distribution and not just the mean or median, as the distributions are typically wide and usually not normal.</p></li>
-<li><p>to test whether a particular feature is statistically significantly better, a distribution for each feature is necessary to run statistical tests.</p></li>
-</ul>
-</div></blockquote>
-<a class="reference internal image-reference" href="_images/results_interpretation.balanced_accuracy.png"><img alt="_images/results_interpretation.balanced_accuracy.png" src="_images/results_interpretation.balanced_accuracy.png" style="width: 700px;" /></a>
-</div>
-<div class="section" id="comparison-of-misclassification-rates">
-<h2>Comparison of misclassification rates<a class="headerlink" href="#comparison-of-misclassification-rates" title="Permalink to this headline">¶</a></h2>
-<a class="reference internal image-reference" href="_images/results_interpretation.mcr_radar.png"><img alt="_images/results_interpretation.mcr_radar.png" src="_images/results_interpretation.mcr_radar.png" style="width: 700px;" /></a>
-</div>
-<div class="section" id="analysis-of-misclassified-subjects">
-<h2>Analysis of misclassified subjects<a class="headerlink" href="#analysis-of-misclassified-subjects" title="Permalink to this headline">¶</a></h2>
-<p>An example visualization for the sample-wise (or subject-wise) misclassified frequency is shown below:</p>
-<a class="reference internal image-reference" href="_images/misclassified_subjects_frequency_histogram.pdf"><img alt="_images/misclassified_subjects_frequency_histogram.pdf" src="_images/misclassified_subjects_frequency_histogram.pdf" style="width: 700px;" /></a>
-<p>The x-axis represents the percent of misclassfication, while the Y-axis shows the corresponding number of subjects. Of particular interest in this plot is the right-most area, which shows if some subjects have been consistently misclassified (for a given feature A or B) across various repetitions of the CV. A high percentage implies either that subject is at the “borderline” of discrimination (between the classes being studied), or an indication of another potential issue with the input features (processing failures, low quality or reliability of features), or the sample characteristics (mislabelling, incorrect demographic data, confounds), or some other issue that needs to be estalished via further inspection. Hence, it is recommended that the users always look at this point along with all the results generated by <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code>. All the subject/sample IDs that are frequently misclassified are gathered into a set of files named <code class="docutils literal notranslate"><span class="pre">misclassified_subjects_*_most_frequent.txt</span></code>.</p>
-<p>In addition, the properties of this distribution itself, for a particular feature (e.g. A or B in this instance) can provide useful hints into which feature is more useful / reliable. For example, distributions that are too skewed to the right are less preferable among features with similar predictive power. The plot also reports a simple metric (as part of the legend) to compare different features being studied via total amount of misclassification beyond a certain threshold (such as 60% in this case).</p>
 <hr class="docutils" />
 <p>If something is unclear or confusing, or some documentation is missing, please open an <a class="reference external" href="https://github.com/raamana/neuropredict/issues/new">issue on github</a>.</p>
 <p><strong>These docs will be futher improved soon. Stay tuned!</strong></p>
-</div>
 </div>
 
 
@@ -131,23 +57,12 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Report</a><ul>
-<li><a class="reference internal" href="#outputs-and-interpretation">Outputs and interpretation</a></li>
-<li><a class="reference internal" href="#comparison-of-predictive-accuracy">Comparison of predictive accuracy</a></li>
-<li><a class="reference internal" href="#comparison-of-misclassification-rates">Comparison of misclassification rates</a></li>
-<li><a class="reference internal" href="#analysis-of-misclassified-subjects">Analysis of misclassified subjects</a></li>
-</ul>
-</li>
-</ul>
-
   <h4>Previous topic</h4>
   <p class="topless"><a href="features.html"
                         title="previous chapter">Input formats</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="faq.html"
-                        title="next chapter">Frequently Asked Questions</a></p>
+  <p class="topless"><a href="results_clf.html"
+                        title="next chapter">Results from Classification run</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">

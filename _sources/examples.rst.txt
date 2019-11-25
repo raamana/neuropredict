@@ -5,7 +5,7 @@ If your features are collected into a ``features.csv`` file (each row is a subje
 
 .. code-block:: bash
 
-    neuropredict -m /project/meta_data.csv -d /project/features.csv
+    np_classify -m /project/meta_data.csv -d /project/features.csv
 
 
 Where the ``meta_data.csv`` file specifies which subject belongs to which class. For example, if you have a dataset with the following three classes: 5 controls, 6 disease_one and 9 other_disease, all you would need to do is produce a meta data file as shown below (specifying a class label for each subject):

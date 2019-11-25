@@ -2,22 +2,14 @@
 Usage
 -----------------------
 
-The command line interface for neuropredict is strongly recommended (given its focus on batch processing multiple comparisons). If the installation was successful, options could be obtained by typing one of the following commands:
+The command line interface for neuropredict is strongly recommended (given its focus on batch processing multiple comparisons). There are two main interfaces to neuropredict: the :doc:`usage_clf_cli` and the :doc:`usage_regr_cli`. Check their respective pages for instructions on their usage.
 
-.. code-block:: bash
+The high-level differences between the two workflows are the following:
 
-    neuropredict
-    neuropredict -h
-
-
-Those options are also shown below:
-
-.. argparse::
-   :module: neuropredict.run_workflow
-   :func: get_parser
-   :prog: neuropredict
-   :nodefault:
-   :nodefaultconst:
+ - The targets for prediction in the classification workflow are categorical (i.e. health vs. disease, monkey vs. chair etc), whereas in the regression workflow they are continuous (and numerical).
+ - In classification workflow, you can have more than two classes (from now on referred to as targets to be consistent), and hence offer the ability to select a sub-group (subset of classes) for analysis. For example, if your dataset has 4 classes A, B, C, and D, you can choose to analyze one binary comparison A vs. B, and a 3-class comparison B vs. C vs. D with the following flag ``-sg A,B B,C,D``. That concept of sub-grouping does not exist in the regression workflows
+ - In addition, the concepts of class imbalance, and stratifying the training set to control the class sizes in the training and/or test sets exist only in the classification workflow.
+ - The performance metrics change drastically between the two workflows: classification analyses often focus on accuracy, AUC and confusion matrices, whereas regression analyses discuss ``r2``, ``MAE``, explained variance and ``MSE`` etc. Hence, the results saved to disk differ in their structure at the metric level (as well as in additional attributes), and hence needed to be handled separately depending on the workflow.
+ -
 
 
-----------

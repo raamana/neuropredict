@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Frequently Asked Questions &#8212; neuropredict 0.5.2.1 documentation</title>
+    <title>Frequently Asked Questions &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -16,17 +16,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Implemenation details" href="implementation.html" />
-    <link rel="prev" title="Report" href="results.html" />
+    <link rel="prev" title="Results from Regression run" href="results_regr.html" />
     <script type="text/javascript" src="_static/pd.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2.1 documentation</h1>
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2.1 documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -96,8 +96,7 @@
 </li>
 <li><p><em>Does ``neuropredict`` handle covariates?</em></p>
 <ul class="simple">
-<li><p>Not yet. This feature request is not trivial to implement, as the nature of covariate handling is complex and variety of methods is large.</p></li>
-<li><p>If you need to, please regress them out (or handle them using another method of your choice) prior to inputting the features.</p></li>
+<li><p>Yes. Using this requires the use of the <a class="reference external" href="https://github.com/raamana/pyradigm">pyradigm</a> dataset format, which offers you the ability to add in arbitrary set of attributes for each subject.</p></li>
 </ul>
 </li>
 <li><p><em>Can I get ROC curves?</em></p>
@@ -137,8 +136,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="results.html"
-                        title="previous chapter">Report</a></p>
+  <p class="topless"><a href="results_regr.html"
+                        title="previous chapter">Results from Regression run</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="implementation.html"
                         title="next chapter">Implemenation details</a></p>

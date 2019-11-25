@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>rhst &#8212; neuropredict 0.5.2.1 documentation</title>
+    <title>rhst &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
     <link rel="stylesheet" href="../_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -20,11 +20,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2.1 documentation</h1>
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="../index.html">neuropredict 0.5.2.1 documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="../index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
             </li>
                 <li class="nav-item nav-item-1"><a href="index.html"
                         accesskey="U">Module code</a> &#187;</li>
@@ -40,6 +40,8 @@
 <h1>Source code for rhst</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 
+<span class="kn">from</span> <span class="nn">neuropredict.classify</span> <span class="k">import</span> <span class="n">check_positive_class</span>
+
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;load_results&#39;</span><span class="p">,</span> <span class="s1">&#39;save_results&#39;</span><span class="p">]</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
@@ -47,6 +49,7 @@
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">catch_warnings</span><span class="p">,</span> <span class="n">filterwarnings</span><span class="p">,</span> <span class="n">simplefilter</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">namedtuple</span>
 <span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">version_info</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">pjoin</span><span class="p">,</span> <span class="n">exists</span> <span class="k">as</span> <span class="n">pexists</span>
@@ -55,17 +58,18 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="k">import</span> <span class="n">RandomForestClassifier</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">roc_auc_score</span>
-<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">GridSearchCV</span><span class="p">,</span> <span class="n">ShuffleSplit</span><span class="p">,</span> <span class="n">RepeatedKFold</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">GridSearchCV</span><span class="p">,</span> <span class="n">ShuffleSplit</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">pyradigm</span> <span class="k">import</span> <span class="n">MLDataset</span>
 
 <span class="k">if</span> <span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
     <span class="kn">from</span> <span class="nn">neuropredict.algorithms</span> <span class="k">import</span> <span class="n">get_pipeline</span><span class="p">,</span> <span class="n">get_feature_importance</span>
     <span class="kn">from</span> <span class="nn">neuropredict.reports</span> <span class="k">import</span> <span class="n">report_best_params</span><span class="p">,</span> <span class="n">export_results</span>
-    <span class="kn">from</span> <span class="nn">neuropredict.utils</span> <span class="k">import</span> <span class="n">check_feature_sets_are_comparable</span><span class="p">,</span> <span class="n">check_params_rhst</span><span class="p">,</span> <span class="n">balanced_accuracy</span><span class="p">,</span> \
-        <span class="n">load_options</span><span class="p">,</span> <span class="n">sub_group_identifier</span><span class="p">,</span> <span class="n">make_numeric_labels</span>
+    <span class="kn">from</span> <span class="nn">neuropredict.utils</span> <span class="k">import</span> <span class="p">(</span><span class="n">check_feature_sets_are_comparable</span><span class="p">,</span>
+                                    <span class="n">check_params_rhst</span><span class="p">,</span> <span class="n">balanced_accuracy</span><span class="p">,</span>
+                                    <span class="n">load_options</span><span class="p">,</span> <span class="n">sub_group_identifier</span><span class="p">,</span>
+                                    <span class="n">make_numeric_labels</span><span class="p">,</span> <span class="n">impute_missing_data</span><span class="p">)</span>
     <span class="kn">from</span> <span class="nn">neuropredict.io</span> <span class="k">import</span> <span class="n">load_pyradigms</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;neuropredict requires Python 3+.&#39;</span><span class="p">)</span>
@@ -119,49 +123,54 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">label_order_in_conf_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Label order for confusion matrix must be specified for accurate results/visulizations.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Label order for confusion matrix must be specified &#39;</span>
+                         <span class="s1">&#39;for accurate results/visulizations.&#39;</span><span class="p">)</span>
 
-    <span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">train_fs</span><span class="o">.</span><span class="n">data_and_labels</span><span class="p">()</span>
-    <span class="n">test_data_mat</span><span class="p">,</span> <span class="n">true_test_labels</span><span class="p">,</span> <span class="n">test_sample_ids</span> <span class="o">=</span> <span class="n">test_fs</span><span class="o">.</span><span class="n">data_and_labels</span><span class="p">()</span>
+    <span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">train_fs</span><span class="o">.</span><span class="n">data_and_targets</span><span class="p">()</span>
+    <span class="n">test_data_mat</span><span class="p">,</span> <span class="n">true_test_labels</span><span class="p">,</span> <span class="n">test_sample_ids</span> <span class="o">=</span> <span class="n">test_fs</span><span class="o">.</span><span class="n">data_and_targets</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">impute_strategy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">train_data_mat</span><span class="p">,</span> <span class="n">test_data_mat</span> <span class="o">=</span> <span class="n">impute_missing_data</span><span class="p">(</span><span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span>
                                                             <span class="n">impute_strategy</span><span class="p">,</span> <span class="n">test_data_mat</span><span class="p">)</span>
 
-    <span class="n">train_class_sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">train_fs</span><span class="o">.</span><span class="n">class_sizes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">train_class_sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">train_fs</span><span class="o">.</span><span class="n">target_sizes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
     <span class="c1"># TODO look for ways to avoid building this every iter and every dataset.</span>
     <span class="n">pipeline</span><span class="p">,</span> <span class="n">param_grid</span> <span class="o">=</span> <span class="n">get_pipeline</span><span class="p">(</span><span class="n">train_class_sizes</span><span class="p">,</span>
                                         <span class="n">feat_sel_size</span><span class="p">,</span>
                                         <span class="n">train_fs</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span>
-                                        <span class="n">grid_search_level</span><span class="o">=</span><span class="n">grid_search_level</span><span class="p">,</span>
-                                        <span class="n">classifier_name</span><span class="o">=</span><span class="n">classifier_name</span><span class="p">,</span>
-                                        <span class="n">feat_selector_name</span><span class="o">=</span><span class="n">feat_select_method</span><span class="p">)</span>
+                                        <span class="n">gs_level</span><span class="o">=</span><span class="n">grid_search_level</span><span class="p">,</span>
+                                        <span class="n">clfr_name</span><span class="o">=</span><span class="n">classifier_name</span><span class="p">,</span>
+                                        <span class="n">fsr_name</span><span class="o">=</span><span class="n">feat_select_method</span><span class="p">)</span>
 
-    <span class="n">best_pipeline</span><span class="p">,</span> <span class="n">best_params</span> <span class="o">=</span> <span class="n">optimize_pipeline_via_grid_search_CV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span>
-                                                                      <span class="n">param_grid</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">)</span>
-    <span class="c1"># best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat, train_labels,</span>
-    <span class="c1">#     param_grid[&#39;random_forest_clf__min_samples_leaf&#39;], param_grid[&#39;random_forest_clf__max_features&#39;])</span>
+    <span class="n">best_pipeline</span><span class="p">,</span> <span class="n">best_params</span> <span class="o">=</span> <span class="n">optimize_pipeline_via_grid_search_CV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span>
+                                                                      <span class="n">train_data_mat</span><span class="p">,</span>
+                                                                      <span class="n">train_labels</span><span class="p">,</span>
+                                                                      <span class="n">param_grid</span><span class="p">,</span>
+                                                                      <span class="n">train_perc</span><span class="p">)</span>
+    <span class="c1"># best_model, best_params = optimize_RF_via_training_oob_score(train_data_mat,</span>
+    <span class="c1">#     train_labels,</span>
+    <span class="c1">#     param_grid[&#39;random_forest_clf__min_samples_leaf&#39;],</span>
+    <span class="c1">#     param_grid[&#39;random_forest_clf__max_features&#39;])</span>
 
     <span class="c1"># assuming order in pipeline construction :</span>
     <span class="c1">#   - step 0 : preprocessign (robust scaling)</span>
-    <span class="c1">#   - step 1 : feature selector</span>
+    <span class="c1">#   - step 1 : feature selector / dim reducer</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">best_fsr</span> <span class="o">=</span> <span class="n">best_pipeline</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">best_clf</span> <span class="o">=</span> <span class="n">best_pipeline</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># the final step in an sklearn pipeline is always an estimator/classifier</span>
-
-    <span class="c1"># could be useful to compute frequency of selection</span>
-    <span class="n">index_selected_features</span> <span class="o">=</span> <span class="n">best_fsr</span><span class="o">.</span><span class="n">get_support</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">best_clf</span> <span class="o">=</span> <span class="n">best_pipeline</span><span class="o">.</span><span class="n">steps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># the final step in an sklearn pipeline</span>
+                                           <span class="c1">#   is always an estimator/classifier</span>
 
     <span class="c1"># making predictions on the test set and assessing their performance</span>
     <span class="n">pred_test_labels</span> <span class="o">=</span> <span class="n">best_pipeline</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_data_mat</span><span class="p">)</span>
 
-    <span class="c1"># only the selected features (via index_selected_features) get non-nan value</span>
+    <span class="c1"># only the selected features get non-nan value</span>
     <span class="n">feat_importance</span> <span class="o">=</span> <span class="n">get_feature_importance</span><span class="p">(</span><span class="n">classifier_name</span><span class="p">,</span> <span class="n">best_clf</span><span class="p">,</span>
-                                             <span class="n">train_fs</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span> <span class="n">index_selected_features</span><span class="p">)</span>
+                                             <span class="n">best_fsr</span><span class="p">,</span> <span class="n">train_fs</span><span class="o">.</span><span class="n">num_features</span><span class="p">)</span>
 
-    <span class="c1"># TODO NOW test if the gathering of prob data is consistent across multiple calls to this method</span>
+    <span class="c1"># TODO test if the gathering of prob data is consistent</span>
+    <span class="c1">#   across multiple calls to this method</span>
     <span class="c1">#   perhaps by controlling the class order in input</span>
-    <span class="c1"># The order of the classes corresponds to that in the attribute best_model.classes_.</span>
+    <span class="c1"># Order of the classes corresponds to that in the attribute best_model.classes_</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">best_pipeline</span><span class="p">,</span> <span class="s1">&#39;predict_proba&#39;</span><span class="p">):</span>
         <span class="n">pred_prob</span> <span class="o">=</span> <span class="n">best_pipeline</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">test_data_mat</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -177,10 +186,15 @@
            <span class="n">feat_importance</span><span class="p">,</span> <span class="n">best_params</span>
 
 
-<span class="k">def</span> <span class="nf">optimize_RF_via_training_oob_score</span><span class="p">(</span><span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">range_min_leafsize</span><span class="p">,</span> <span class="n">range_num_predictors</span><span class="p">):</span>
-    <span class="s2">&quot;Finds the best parameters just based on out of bag error within the training set (supposed to reflect test error).&quot;</span>
+<span class="k">def</span> <span class="nf">optimize_RF_via_training_oob_score</span><span class="p">(</span><span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span>
+                                       <span class="n">range_min_leafsize</span><span class="p">,</span> <span class="n">range_num_predictors</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Finds the best parameters just based on out of bag error</span>
+<span class="sd">    within the training set (supposed to reflect test error).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">oob_error_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">range_min_leafsize</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">range_num_predictors</span><span class="p">)],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">oob_error_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">range_min_leafsize</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">range_num_predictors</span><span class="p">)],</span>
+                              <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">idx_ls</span><span class="p">,</span> <span class="n">minls</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">range_min_leafsize</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">idx_np</span><span class="p">,</span> <span class="n">num_pred</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">range_num_predictors</span><span class="p">):</span>
@@ -191,45 +205,57 @@
             <span class="n">oob_error_train</span><span class="p">[</span><span class="n">idx_ls</span><span class="p">,</span> <span class="n">idx_np</span><span class="p">]</span> <span class="o">=</span> <span class="n">rf</span><span class="o">.</span><span class="n">oob_score_</span>
 
     <span class="c1"># identifying the best parameters</span>
-    <span class="n">best_idx_ls</span><span class="p">,</span> <span class="n">best_idx_numpred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">oob_error_train</span><span class="o">.</span><span class="n">argmin</span><span class="p">(),</span> <span class="n">oob_error_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">best_idx_ls</span><span class="p">,</span> <span class="n">best_idx_numpred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">oob_error_train</span><span class="o">.</span><span class="n">argmin</span><span class="p">(),</span>
+                                                     <span class="n">oob_error_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">best_minleafsize</span> <span class="o">=</span> <span class="n">range_min_leafsize</span><span class="p">[</span><span class="n">best_idx_ls</span><span class="p">]</span>
     <span class="n">best_num_predictors</span> <span class="o">=</span> <span class="n">range_num_predictors</span><span class="p">[</span><span class="n">best_idx_numpred</span><span class="p">]</span>
     <span class="n">best_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;min_samples_leaf&#39;</span><span class="p">:</span> <span class="n">best_minleafsize</span><span class="p">,</span>
                    <span class="s1">&#39;max_features&#39;</span>    <span class="p">:</span> <span class="n">best_num_predictors</span><span class="p">}</span>
 
     <span class="c1"># training the RF using the best parameters</span>
-    <span class="n">best_rf</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">max_features</span><span class="o">=</span><span class="n">best_num_predictors</span><span class="p">,</span> <span class="n">min_samples_leaf</span><span class="o">=</span><span class="n">best_minleafsize</span><span class="p">,</span>
+    <span class="n">best_rf</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">max_features</span><span class="o">=</span><span class="n">best_num_predictors</span><span class="p">,</span>
+                                     <span class="n">min_samples_leaf</span><span class="o">=</span><span class="n">best_minleafsize</span><span class="p">,</span>
                                      <span class="n">oob_score</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                     <span class="n">n_estimators</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">NUM_TREES</span><span class="p">)</span>  <span class="c1"># , random_state=SEED_RANDOM)</span>
+                                     <span class="n">n_estimators</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">NUM_TREES</span><span class="p">)</span>  <span class="c1">#, random_state=SEED_RANDOM)</span>
     <span class="n">best_rf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">best_rf</span><span class="p">,</span> <span class="n">best_params</span>
 
 
-<span class="k">def</span> <span class="nf">optimize_pipeline_via_grid_search_CV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">param_grid</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">):</span>
-    <span class="s2">&quot;Performs GridSearchCV and returns the best parameters and refitted Pipeline on full dataset with the best parameters.&quot;</span>
+<span class="k">def</span> <span class="nf">optimize_pipeline_via_grid_search_CV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span>
+                                         <span class="n">param_grid</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs GridSearchCV and returns the best parameters</span>
+<span class="sd">    and refitted Pipeline on full dataset with the best parameters.&quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO perhaps k-fold is a better inner CV, which guarantees full use of training set with fewer repeats?</span>
-    <span class="n">inner_cv</span> <span class="o">=</span> <span class="n">ShuffleSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">INNER_CV_NUM_SPLITS</span><span class="p">,</span> <span class="n">train_size</span><span class="o">=</span><span class="n">train_perc</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">train_perc</span><span class="p">)</span>
-    <span class="c1"># inner_cv = RepeatedKFold(n_splits=cfg.INNER_CV_NUM_FOLDS, n_repeats=cfg.INNER_CV_NUM_REPEATS)</span>
+    <span class="c1"># TODO perhaps k-fold is a better inner CV,</span>
+    <span class="c1">#   which guarantees full use of training set with fewer repeats?</span>
+    <span class="n">inner_cv</span> <span class="o">=</span> <span class="n">ShuffleSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">INNER_CV_NUM_SPLITS</span><span class="p">,</span>
+                            <span class="n">train_size</span><span class="o">=</span><span class="n">train_perc</span><span class="p">,</span>
+                            <span class="n">test_size</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">train_perc</span><span class="p">)</span>
+    <span class="c1"># inner_cv = RepeatedKFold(n_splits=cfg.INNER_CV_NUM_FOLDS,</span>
+    <span class="c1">#   n_repeats=cfg.INNER_CV_NUM_REPEATS)</span>
 
     <span class="c1"># gs = GridSearchCV(estimator=pipeline, param_grid=param_grid, cv=inner_cv,</span>
-    <span class="c1">#                   n_jobs=cfg.GRIDSEARCH_NUM_JOBS, pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)</span>
+    <span class="c1">#                   n_jobs=cfg.GRIDSEARCH_NUM_JOBS,</span>
+    <span class="c1">#                   pre_dispatch=cfg.GRIDSEARCH_PRE_DISPATCH)</span>
 
-    <span class="c1"># not specifying n_jobs to avoid any kind of parallelism (joblib) from within sklearn</span>
-    <span class="c1"># to avoid potentially bad interactions with outer parallization with builtin multiprocessing library</span>
+    <span class="c1"># not specifying n_jobs to avoid any kind of parallelism (joblib) from within</span>
+    <span class="c1"># sklearn to avoid potentially bad interactions with outer parallelization</span>
+    <span class="c1"># with builtin multiprocessing library</span>
     <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">param_grid</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">inner_cv</span><span class="p">,</span>
                       <span class="n">refit</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">refit_best_model_on_ALL_training_set</span><span class="p">)</span>
 
     <span class="c1"># ignoring some not-so-critical warnings</span>
-    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s1">&#39;joblib&#39;</span><span class="p">,</span>
-                                <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Multiprocessing-backed parallel loops cannot be nested, setting n_jobs=1&#39;</span><span class="p">)</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Some inputs do not have OOB scores&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s1">&#39;joblib&#39;</span><span class="p">,</span>
+                       <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Multiprocessing-backed parallel loops cannot be &#39;</span>
+                               <span class="s1">&#39;nested, setting n_jobs=1&#39;</span><span class="p">)</span>
+        <span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span>
+                       <span class="n">message</span><span class="o">=</span><span class="s1">&#39;Some inputs do not have OOB scores&#39;</span><span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">,</span>
-                                <span class="n">message</span><span class="o">=</span><span class="s1">&#39;invalid value encountered in true_divide&#39;</span><span class="p">)</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">,</span>
+                       <span class="n">message</span><span class="o">=</span><span class="s1">&#39;invalid value encountered in true_divide&#39;</span><span class="p">)</span>
+        <span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;once&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
 
         <span class="n">gs</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data_mat</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
 
@@ -239,7 +265,8 @@
 <div class="viewcode-block" id="save_results"><a class="viewcode-back" href="../API.html#rhst.save_results">[docs]</a><span class="k">def</span> <span class="nf">save_results</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">dict_of_objects_to_save</span><span class="p">):</span>
     <span class="s2">&quot;Serializes the results to disk.&quot;</span>
 
-    <span class="c1"># LATER choose a more universal serialization method (that could be loaded from a web app)</span>
+    <span class="c1"># LATER choose a more universal serialization method</span>
+    <span class="c1">#   (that could be loaded from a web app)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">out_results_path</span> <span class="o">=</span> <span class="n">pjoin</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">file_name_results</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_results_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">resfid</span><span class="p">:</span>
@@ -285,7 +312,8 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">rf</span><span class="p">:</span>
             <span class="n">results_dict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">rf</span><span class="p">)</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error loading the saved results from </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error loading the saved results from </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">results_dict</span>
 
@@ -308,20 +336,23 @@
             <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
             <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> \
             <span class="n">feature_names</span><span class="p">,</span> <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">,</span> \
-            <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span> \
+            <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">target_sizes</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span> \
             <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span> <span class="o">=</span> \
-                <span class="p">[</span><span class="n">results_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">rhst_data_variables_to_persist</span><span class="p">]</span>
+                <span class="p">[</span><span class="n">results_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var_name</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">rhst_data_variables_to_persist</span><span class="p">]</span>
 
     <span class="k">except</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error loading the saved results from </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Error loading the saved results from </span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span>
+                      <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">results_file_path</span><span class="p">))</span>
 
-    <span class="c1"># TODO need a consolidated way to deal with what variable are saved and in what order</span>
+    <span class="c1"># TODO need a consolidated way to identify the variables saved their order</span>
     <span class="k">return</span> <span class="n">dataset_paths</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> \
            <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
            <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span> \
            <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span><span class="p">,</span> \
-           <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> \
-           <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span></div>
+           <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">target_sizes</span><span class="p">,</span> \
+           <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> \
+           <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span></div>
 
 
 <div class="viewcode-block" id="run"><a class="viewcode-back" href="../API.html#rhst.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">dataset_path_file</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span>
@@ -387,58 +418,70 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">dataset_paths</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> <span class="n">sub_group</span> <span class="o">=</span> <span class="n">check_params_rhst</span><span class="p">(</span><span class="n">dataset_path_file</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span>
-                                                                             <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span> <span class="n">sub_group</span><span class="p">,</span>
-                                                                             <span class="n">num_procs</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span>
-                                                                             <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">)</span>
+    <span class="n">dataset_paths</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> <span class="n">sub_group</span> <span class="o">=</span> \
+        <span class="n">check_params_rhst</span><span class="p">(</span><span class="n">dataset_path_file</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span>
+                          <span class="n">train_perc</span><span class="p">,</span> <span class="n">sub_group</span><span class="p">,</span> <span class="n">num_procs</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span>
+                          <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">)</span>
 
     <span class="c1"># loading datasets</span>
     <span class="n">datasets</span> <span class="o">=</span> <span class="n">load_pyradigms</span><span class="p">(</span><span class="n">dataset_paths</span><span class="p">,</span> <span class="n">sub_group</span><span class="p">)</span>
 
     <span class="c1"># making sure different feature sets are comparable</span>
-    <span class="n">common_ds</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">label_set</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> \
-    <span class="n">num_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">=</span> <span class="n">check_feature_sets_are_comparable</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span>
+    <span class="n">common_ds</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">target_sizes</span><span class="p">,</span> \
+    <span class="n">num_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_features</span> <span class="o">=</span> \
+        <span class="n">check_feature_sets_are_comparable</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span>
     <span class="c1"># TODO warning when num_rep are not suficient: need a heuristic to assess it</span>
 
-    <span class="c1"># re-map the labels (from 1 to n) to ensure numeric labels do not differ</span>
-    <span class="n">datasets</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">pos_class_index</span> <span class="o">=</span> <span class="n">remap_labels</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">)</span>
+    <span class="n">positive_class</span><span class="p">,</span> <span class="n">pos_class_index</span> <span class="o">=</span> <span class="n">check_positive_class</span><span class="p">(</span><span class="n">class_set</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">)</span>
+
+    <span class="c1"># the following is not necessary anymore, as labels are now strings!</span>
+    <span class="c1"># # re-map the labels (from 1 to n) to ensure numeric labels do not differ</span>
+    <span class="c1"># datasets = remap_labels(datasets, common_ds, class_set)</span>
 
     <span class="c1"># determine the common size for training</span>
-    <span class="n">train_size_common</span><span class="p">,</span> <span class="n">total_test_samples</span> <span class="o">=</span> <span class="n">determine_training_size</span><span class="p">(</span><span class="n">train_perc</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+    <span class="n">train_size_common</span><span class="p">,</span> <span class="n">total_test_samples</span> <span class="o">=</span> <span class="n">determine_training_size</span><span class="p">(</span><span class="n">train_perc</span><span class="p">,</span>
+                                                                    <span class="n">target_sizes</span><span class="p">,</span>
+                                                                    <span class="n">num_classes</span><span class="p">)</span>
 
     <span class="c1"># the main parallel loop to crunch optimizations, predictions and evaluations</span>
     <span class="c1"># chunk_size = int(np.ceil(num_repetitions/num_procs))</span>
     <span class="k">if</span> <span class="n">num_procs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parallelizing the repetitions of CV with </span><span class="si">{}</span><span class="s1"> processes ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_procs</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Parallelizing the repetitions of CV with </span><span class="si">{}</span><span class="s1"> processes ...&#39;</span>
+              <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_procs</span><span class="p">))</span>
         <span class="k">with</span> <span class="n">Manager</span><span class="p">()</span> <span class="k">as</span> <span class="n">proxy_manager</span><span class="p">:</span>
-            <span class="n">shared_inputs</span> <span class="o">=</span> <span class="n">proxy_manager</span><span class="o">.</span><span class="n">list</span><span class="p">([</span><span class="n">datasets</span><span class="p">,</span> <span class="n">impute_strategy</span><span class="p">,</span>
-                                                <span class="n">train_size_common</span><span class="p">,</span> <span class="n">feat_sel_size</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span>
-                                                <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">label_set</span><span class="p">,</span>
-                                                <span class="n">method_names</span><span class="p">,</span> <span class="n">pos_class_index</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span>
-                                                <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">])</span>
-            <span class="n">partial_func_holdout</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">holdout_trial_compare_datasets</span><span class="p">,</span> <span class="o">*</span><span class="n">shared_inputs</span><span class="p">)</span>
+            <span class="n">shared_inputs</span> <span class="o">=</span> <span class="n">proxy_manager</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">datasets</span><span class="p">,</span> <span class="n">impute_strategy</span><span class="p">,</span> <span class="n">train_size_common</span><span class="p">,</span> <span class="n">feat_sel_size</span><span class="p">,</span>
+                     <span class="n">train_perc</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span>
+                     <span class="n">class_set</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">pos_class_index</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span>
+                     <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">])</span>
+            <span class="n">partial_func_holdout</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">holdout_trial_compare_datasets</span><span class="p">,</span>
+                                           <span class="o">*</span><span class="n">shared_inputs</span><span class="p">)</span>
 
             <span class="k">with</span> <span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="n">num_procs</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
                 <span class="n">cv_results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">partial_func_holdout</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_repetitions</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># switching to regular sequential for loop</span>
-        <span class="n">partial_func_holdout</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">holdout_trial_compare_datasets</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">impute_strategy</span><span class="p">,</span>
-                                       <span class="n">train_size_common</span><span class="p">,</span> <span class="n">feat_sel_size</span><span class="p">,</span>
-                                       <span class="n">train_perc</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">label_set</span><span class="p">,</span>
-                                       <span class="n">method_names</span><span class="p">,</span> <span class="n">pos_class_index</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span>
+        <span class="n">partial_func_holdout</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">holdout_trial_compare_datasets</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span>
+                                       <span class="n">impute_strategy</span><span class="p">,</span> <span class="n">train_size_common</span><span class="p">,</span>
+                                       <span class="n">feat_sel_size</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span>
+                                       <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span>
+                                       <span class="n">method_names</span><span class="p">,</span> <span class="n">pos_class_index</span><span class="p">,</span>
+                                       <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span>
                                        <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">)</span>
         <span class="n">cv_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">partial_func_holdout</span><span class="p">(</span><span class="n">rep_id</span><span class="o">=</span><span class="n">rep</span><span class="p">)</span> <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_repetitions</span><span class="p">)]</span>
 
     <span class="c1"># re-assemble results into a convenient form</span>
-    <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> <span class="n">confusion_matrix</span><span class="p">,</span> \
-    <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span> \
-    <span class="n">feature_importances_per_rep</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span> <span class="o">=</span> \
-        <span class="n">gather_results_across_trials</span><span class="p">(</span><span class="n">cv_results</span><span class="p">,</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span>
-                                     <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
+    <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
+    <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span>\
+    <span class="n">feature_importances_per_rep</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">num_times_misclfd</span><span class="p">,</span> \
+    <span class="n">num_times_tested</span> <span class="o">=</span> <span class="n">gather_results_across_trials</span><span class="p">(</span>
+        <span class="n">cv_results</span><span class="p">,</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span>
+        <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
 
     <span class="c1"># saving the required variables to disk in a dict</span>
     <span class="n">locals_var_dict</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
-    <span class="n">dict_to_save</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="p">:</span> <span class="n">locals_var_dict</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">rhst_data_variables_to_persist</span><span class="p">}</span>
+    <span class="n">dict_to_save</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="p">:</span> <span class="n">locals_var_dict</span><span class="p">[</span><span class="n">var</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">rhst_data_variables_to_persist</span><span class="p">}</span>
     <span class="n">out_results_path</span> <span class="o">=</span> <span class="n">save_results</span><span class="p">(</span><span class="n">out_results_dir</span><span class="p">,</span> <span class="n">dict_to_save</span><span class="p">)</span>
 
     <span class="n">report_best_params</span><span class="p">(</span><span class="n">best_params</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">)</span>
@@ -446,29 +489,32 @@
     <span class="c1"># exporting the results right away, without waiting for figures</span>
     <span class="n">export_results</span><span class="p">(</span><span class="n">dict_to_save</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">options_path</span><span class="p">)</span>
 
-    <span class="n">summarize_perf</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
+    <span class="n">summarize_perf</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span>
+                   <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">out_results_path</span></div>
 
 
-<span class="k">def</span> <span class="nf">determine_training_size</span><span class="p">(</span><span class="n">train_perc</span><span class="p">,</span> <span class="n">class_sizes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">determine_training_size</span><span class="p">(</span><span class="n">train_perc</span><span class="p">,</span> <span class="n">target_sizes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Computes the maximum training size that the smallest class can provide &quot;&quot;&quot;</span>
 
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Different classes in the training set are stratified to match the smallest class!&quot;</span><span class="p">)</span>
-    <span class="n">train_size_per_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">train_perc</span> <span class="o">*</span> <span class="n">class_sizes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Different classes in the training set are stratified &quot;</span>
+          <span class="s2">&quot;to match the smallest class!&quot;</span><span class="p">)</span>
+    <span class="n">train_size_per_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">train_perc</span> <span class="o">*</span> <span class="n">target_sizes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
     <span class="c1"># per-class</span>
     <span class="n">train_size_common</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">train_size_per_class</span><span class="p">),</span> <span class="n">train_size_per_class</span><span class="p">))</span>
     <span class="c1"># single number</span>
     <span class="n">reduced_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">train_size_common</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reduced_sizes</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error in stratification of training set based on the smallest class!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error in stratification of training set &quot;</span>
+                         <span class="s2">&quot;based on the smallest class!&quot;</span><span class="p">)</span>
     <span class="n">train_size_common</span> <span class="o">=</span> <span class="n">reduced_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">train_size_common</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid state - Zero samples selected for training!&#39;</span>
                          <span class="s1">&#39;Check the class size distribution in dataset!&#39;</span><span class="p">)</span>
 
-    <span class="n">total_test_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">class_sizes</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_classes</span> <span class="o">*</span> <span class="n">train_size_common</span><span class="p">)</span>
+    <span class="n">total_test_samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">target_sizes</span><span class="p">)</span> <span class="o">-</span> <span class="n">num_classes</span> <span class="o">*</span> <span class="n">train_size_common</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">train_size_common</span><span class="p">,</span> <span class="n">total_test_samples</span>
 
@@ -489,27 +535,33 @@
 
 
 <span class="k">def</span> <span class="nf">initialize_result_containers</span><span class="p">(</span><span class="n">common_ds</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span>
-                                 <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">):</span>
+                                 <span class="n">n_repetitions</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Prepare containers for various outputs&quot;&quot;&quot;</span>
 
-    <span class="n">pred_prob_per_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">pred_labels_per_rep_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">test_labels_per_rep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">pred_prob_per_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">,</span>
+                                   <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">pred_labels_per_rep_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">],</span>
+                                     <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">);</span>
+    <span class="n">test_labels_per_rep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">],</span>
+                                  <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
 
-    <span class="n">best_params</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_repetitions</span>
+    <span class="n">best_params</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_repetitions</span>
 
-    <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span> <span class="o">=</span> <span class="n">initialize_misclf_counters</span><span class="p">(</span><span class="n">common_ds</span><span class="o">.</span><span class="n">sample_ids</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">)</span>
+    <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span> <span class="o">=</span> \
+        <span class="n">initialize_misclf_counters</span><span class="p">(</span><span class="n">common_ds</span><span class="o">.</span><span class="n">samplet_ids</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">)</span>
 
     <span class="c1"># multi-class metrics</span>
-    <span class="n">confusion_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">accuracy_balanced</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">auc_weighted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">confusion_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">,</span> <span class="n">n_classes</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">],</span>
+                               <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">accuracy_balanced</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">auc_weighted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">n_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
-    <span class="n">feature_names</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_datasets</span>
-    <span class="n">feature_importances_per_rep</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_repetitions</span>
-    <span class="n">feature_importances_rf</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_datasets</span>
-    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
-        <span class="n">feature_importances_rf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_features</span><span class="p">[</span><span class="n">idx</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">feature_names</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_datasets</span>
+    <span class="n">feature_importances_per_rep</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_repetitions</span>
+    <span class="n">feature_importances_rf</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_datasets</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_datasets</span><span class="p">):</span>
+        <span class="n">feature_importances_rf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">n_repetitions</span><span class="p">,</span> <span class="n">num_features</span><span class="p">[</span><span class="n">idx</span><span class="p">]],</span>
+                                              <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
         <span class="n">feature_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">feature_names</span>
 
     <span class="k">return</span> <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
@@ -523,7 +575,8 @@
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">method_names</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num_datasets</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Insufficient number of names (n=</span><span class="si">{}</span><span class="s1">) &#39;</span>
-                         <span class="s1">&#39;for the given feature sets (n=</span><span class="si">{}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">method_names</span><span class="p">),</span> <span class="n">num_datasets</span><span class="p">))</span>
+                         <span class="s1">&#39;for the given feature sets (n=</span><span class="si">{}</span><span class="s1">).&#39;</span>
+                         <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">method_names</span><span class="p">),</span> <span class="n">num_datasets</span><span class="p">))</span>
 
     <span class="n">max_width_method_names</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">len</span><span class="p">,</span> <span class="n">method_names</span><span class="p">))</span>
     <span class="n">ndigits_ndatasets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">))</span>
@@ -533,62 +586,38 @@
     <span class="k">return</span> <span class="n">print_options</span>
 
 
-<span class="k">def</span> <span class="nf">impute_missing_data</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">strategy</span><span class="p">,</span> <span class="n">test_data</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Imputes missing values in train/test data matrices using the given strategy,</span>
-<span class="sd">    based on train data alone.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="kn">from</span> <span class="nn">sklearn.impute</span> <span class="k">import</span> <span class="n">SimpleImputer</span>
-    <span class="c1"># TODO integrate and use the missingdata pkg (with more methods) when time permits</span>
-    <span class="n">imputer</span> <span class="o">=</span> <span class="n">SimpleImputer</span><span class="p">(</span><span class="n">missing_values</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">missing_value_identifier</span><span class="p">,</span>
-                            <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">)</span>
-    <span class="n">imputer</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">imputer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">train_data</span><span class="p">),</span> <span class="n">imputer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">remap_labels</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span> <span class="n">positive_class</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">remap_labels</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">class_set</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;re-map the labels (from 1 to n) to ensure numeric labels do not differ&quot;&quot;&quot;</span>
 
     <span class="n">numeric_labels</span> <span class="o">=</span> <span class="n">make_numeric_labels</span><span class="p">(</span><span class="n">class_set</span><span class="p">)</span>
 
-    <span class="c1"># finding the numeric label for positive class</span>
-    <span class="c1"># label will also be in the index into the arrays over classes due to construction above</span>
-    <span class="k">if</span> <span class="n">positive_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">positive_class</span> <span class="o">=</span> <span class="n">class_set</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="n">positive_class</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">class_set</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Chosen positive class does not exist in the dataset&#39;</span><span class="p">)</span>
-    <span class="n">pos_class_index</span> <span class="o">=</span> <span class="n">class_set</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">positive_class</span><span class="p">)</span>  <span class="c1"># remapped_class_labels[positive_class]</span>
-
     <span class="n">labels_with_correspondence</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">subid</span> <span class="ow">in</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">sample_ids</span><span class="p">:</span>
-        <span class="n">labels_with_correspondence</span><span class="p">[</span><span class="n">subid</span><span class="p">]</span> <span class="o">=</span> <span class="n">numeric_labels</span><span class="p">[</span><span class="n">common_ds</span><span class="o">.</span><span class="n">classes</span><span class="p">[</span><span class="n">subid</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">subid</span> <span class="ow">in</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">samplet_ids</span><span class="p">:</span>
+        <span class="n">labels_with_correspondence</span><span class="p">[</span><span class="n">subid</span><span class="p">]</span> <span class="o">=</span> <span class="n">numeric_labels</span><span class="p">[</span><span class="n">common_ds</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="n">subid</span><span class="p">]]</span>
 
     <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)):</span>
         <span class="n">datasets</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels_with_correspondence</span>
 
-    <span class="k">return</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">positive_class</span><span class="p">,</span> <span class="n">pos_class_index</span>
+    <span class="k">return</span> <span class="n">datasets</span>
 
 
-<span class="k">def</span> <span class="nf">holdout_trial_compare_datasets</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">impute_strategy</span><span class="p">,</span>
-                                   <span class="n">train_size_common</span><span class="p">,</span> <span class="n">feat_sel_size</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span>
-                                   <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features_per_dataset</span><span class="p">,</span>
-                                   <span class="n">label_set</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">pos_class_index</span><span class="p">,</span>
-                                   <span class="n">out_results_dir</span><span class="p">,</span> <span class="n">grid_search_level</span><span class="p">,</span>
-                                   <span class="n">classifier_name</span><span class="p">,</span> <span class="n">feat_select_method</span><span class="p">,</span> <span class="n">rep_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">holdout_trial_compare_datasets</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">impute_strategy</span><span class="p">,</span> <span class="n">train_size_common</span><span class="p">,</span>
+                                   <span class="n">feat_sel_size</span><span class="p">,</span> <span class="n">train_perc</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span>
+                                   <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features_per_dataset</span><span class="p">,</span> <span class="n">class_set</span><span class="p">,</span>
+                                   <span class="n">method_names</span><span class="p">,</span> <span class="n">pos_class_index</span><span class="p">,</span> <span class="n">out_results_dir</span><span class="p">,</span>
+                                   <span class="n">grid_search_level</span><span class="p">,</span> <span class="n">classifier_name</span><span class="p">,</span>
+                                   <span class="n">feat_select_method</span><span class="p">,</span> <span class="n">rep_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Runs a single iteration of optimizing the chosen pipeline on the chosen training set,</span>
-<span class="sd">    and evaluations on the given test set.</span>
+<span class="sd">    Runs a single iteration of optimizing the chosen pipeline on the chosen</span>
+<span class="sd">    training set, and evaluations on the given test set.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    datasets</span>
 
 <span class="sd">    impute_strategy : str</span>
-<span class="sd">        Strategy to handle the missing data: whether to raise an error if data is missing, or</span>
-<span class="sd">            to impute them using the method chosen here.</span>
+<span class="sd">        Strategy to handle the missing data: whether to raise an error if data is</span>
+<span class="sd">        missing, or to impute them using the method chosen here.</span>
 
 <span class="sd">    train_size_common</span>
 <span class="sd">    feat_sel_size</span>
@@ -596,7 +625,7 @@
 <span class="sd">    total_test_samples</span>
 <span class="sd">    num_classes</span>
 <span class="sd">    num_features_per_dataset</span>
-<span class="sd">    label_set</span>
+<span class="sd">    class_set</span>
 <span class="sd">    method_names</span>
 <span class="sd">    pos_class_index</span>
 <span class="sd">    out_results_dir</span>
@@ -604,7 +633,8 @@
 
 <span class="sd">    grid_search_level : str</span>
 <span class="sd">        If &#39;light&#39;, grid search resolution will be reduced to speed up optimization.</span>
-<span class="sd">        If &#39;exhaustive&#39;, most values for most parameters will be user for optimization.</span>
+<span class="sd">        If &#39;exhaustive&#39;, broadest range of values for most parameters will be used</span>
+<span class="sd">        for optimization.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -613,10 +643,6 @@
 
     <span class="n">common_ds</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">cfg</span><span class="o">.</span><span class="n">COMMON_DATASET_INDEX</span><span class="p">]</span>
     <span class="n">num_datasets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span>
-
-    <span class="n">pred_prob_per_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">pred_labels_per_rep_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-    <span class="n">true_test_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">total_test_samples</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
     <span class="c1"># multi-class metrics</span>
     <span class="n">confusion_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
@@ -631,7 +657,15 @@
 
     <span class="c1"># set of subjects for training and testing, common for all datasets.</span>
     <span class="n">train_set</span><span class="p">,</span> <span class="n">test_set</span> <span class="o">=</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">train_test_split_ids</span><span class="p">(</span><span class="n">count_per_class</span><span class="o">=</span><span class="n">train_size_common</span><span class="p">)</span>
-    <span class="n">true_test_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">common_ds</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span> <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">test_set</span> <span class="k">if</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span>
+    <span class="c1"># NOTE test labels are the same for all datasets - each feature/model</span>
+    <span class="c1"># combination is being evaluated against the same set of test samplets</span>
+    <span class="n">true_test_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">common_ds</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="n">sid</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">test_set</span> <span class="k">if</span> <span class="n">sid</span> <span class="ow">in</span> <span class="n">common_ds</span><span class="o">.</span><span class="n">targets</span><span class="p">])</span>
+
+    <span class="n">pred_prob_per_class</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">],</span>
+                                  <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">pred_labels_per_rep_fs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">num_datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">],</span>
+                                     <span class="n">dtype</span><span class="o">=</span><span class="n">true_test_labels</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
     <span class="c1"># to uniquely identify this iteration</span>
     <span class="k">if</span> <span class="n">rep_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -642,23 +676,26 @@
 
     <span class="c1"># evaluating each feature/dataset</span>
     <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CV trial </span><span class="si">{rep:6}</span><span class="s2"> feature {index:</span><span class="si">{nd}</span><span class="s2">} {name:&gt;</span><span class="si">{namewidth}</span><span class="s2">} : &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rep</span><span class="o">=</span><span class="n">rep_proc_id</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">dd</span><span class="p">,</span>
-                                                                                    <span class="n">name</span><span class="o">=</span><span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span>
-                                                                                    <span class="n">nd</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">num_digits</span><span class="p">,</span>
-                                                                                    <span class="n">namewidth</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">str_width</span><span class="p">),</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CV trial </span><span class="si">{rep:6}</span><span class="s2"> &quot;</span>
+              <span class="s2">&quot;feature {index:</span><span class="si">{nd}</span><span class="s2">} &quot;</span>
+              <span class="s2">&quot;{name:&gt;</span><span class="si">{namewidth}</span><span class="s2">} : &quot;</span>
+              <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rep</span><span class="o">=</span><span class="n">rep_proc_id</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">dd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span>
+                        <span class="n">nd</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">num_digits</span><span class="p">,</span>
+                        <span class="n">namewidth</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">str_width</span><span class="p">),</span>
               <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
         <span class="c1"># using the same train/test sets for all feature sets.</span>
         <span class="n">train_fs</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">get_subset</span><span class="p">(</span><span class="n">train_set</span><span class="p">)</span>
         <span class="n">test_fs</span> <span class="o">=</span> <span class="n">datasets</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span><span class="o">.</span><span class="n">get_subset</span><span class="p">(</span><span class="n">test_set</span><span class="p">)</span>
 
-        <span class="n">pred_prob_per_class</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:],</span> <span class="n">true_test_labels</span><span class="p">,</span> \
-        <span class="n">conf_mat</span><span class="p">,</span> <span class="n">misclsfd_ids_this_run</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">feature_importances</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">best_params</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span> <span class="o">=</span> \
+        <span class="n">pred_prob_per_class</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">[</span><span class="n">dd</span><span class="p">,:],</span> \
+        <span class="n">_ignored_true_test_labels</span><span class="p">,</span> <span class="n">conf_mat</span><span class="p">,</span> <span class="n">misclsfd_ids_this_run</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> \
+        <span class="n">feature_importances</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">best_params</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span> <span class="o">=</span> \
             <span class="n">eval_optimized_model_on_testset</span><span class="p">(</span><span class="n">train_fs</span><span class="p">,</span> <span class="n">test_fs</span><span class="p">,</span>
                                             <span class="n">impute_strategy</span><span class="o">=</span><span class="n">impute_strategy</span><span class="p">,</span>
                                             <span class="n">train_perc</span><span class="o">=</span><span class="n">train_perc</span><span class="p">,</span>
                                             <span class="n">feat_sel_size</span><span class="o">=</span><span class="n">feat_sel_size</span><span class="p">,</span>
-                                            <span class="n">label_order_in_conf_matrix</span><span class="o">=</span><span class="n">label_set</span><span class="p">,</span>
+                                            <span class="n">label_order_in_conf_matrix</span><span class="o">=</span><span class="n">class_set</span><span class="p">,</span>
                                             <span class="n">grid_search_level</span><span class="o">=</span><span class="n">grid_search_level</span><span class="p">,</span>
                                             <span class="n">classifier_name</span><span class="o">=</span><span class="n">classifier_name</span><span class="p">,</span>
                                             <span class="n">feat_select_method</span><span class="o">=</span><span class="n">feat_select_method</span><span class="p">)</span>
@@ -669,7 +706,8 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;balanced accuracy: </span><span class="si">{:.4f}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">[</span><span class="n">dd</span><span class="p">]),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_classes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">auc_weighted</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">true_test_labels</span><span class="p">,</span> <span class="n">pred_prob_per_class</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:,</span> <span class="n">pos_class_index</span><span class="p">],</span>
+            <span class="n">auc_weighted</span><span class="p">[</span><span class="n">dd</span><span class="p">]</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">true_test_labels</span><span class="p">,</span>
+                                             <span class="n">pred_prob_per_class</span><span class="p">[</span><span class="n">dd</span><span class="p">,</span> <span class="p">:,</span> <span class="n">pos_class_index</span><span class="p">],</span>
                                              <span class="n">average</span><span class="o">=</span><span class="s1">&#39;weighted&#39;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1"> weighted AUC: </span><span class="si">{:.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">auc_weighted</span><span class="p">[</span><span class="n">dd</span><span class="p">]),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
@@ -677,7 +715,8 @@
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
-    <span class="n">results_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">true_test_labels</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span>
+    <span class="n">results_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">true_test_labels</span><span class="p">,</span>
+                    <span class="n">accuracy_balanced</span><span class="p">,</span>
                     <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">feature_importances</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span>
                     <span class="n">misclsfd_ids_this_run</span><span class="p">,</span> <span class="n">test_set</span><span class="p">]</span>
 
@@ -714,21 +753,23 @@
 
 
 <span class="k">def</span> <span class="nf">gather_results_across_trials</span><span class="p">(</span><span class="n">cv_results</span><span class="p">,</span> <span class="n">common_ds</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span>
-                                 <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">):</span>
+                                 <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span>
+                                 <span class="n">num_features</span><span class="p">):</span>
     <span class="s2">&quot;Reorganizes list of indiv CV trial results into rectangular arrays.&quot;</span>
 
-    <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> <span class="n">confusion_matrix</span><span class="p">,</span> \
-    <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span> \
-    <span class="n">feature_importances_per_rep</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> \
-    <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span> <span class="o">=</span> <span class="n">initialize_result_containers</span><span class="p">(</span><span class="n">common_ds</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span>
-                                                                       <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span>
-                                                                       <span class="n">num_datasets</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
+    <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
+    <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span>\
+    <span class="n">feature_importances_per_rep</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">num_times_misclfd</span><span class="p">,</span> \
+    <span class="n">num_times_tested</span> <span class="o">=</span> <span class="n">initialize_result_containers</span><span class="p">(</span>
+        <span class="n">common_ds</span><span class="p">,</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">total_test_samples</span><span class="p">,</span> <span class="n">num_repetitions</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_features</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">rep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_repetitions</span><span class="p">):</span>
         <span class="c1"># unpacking each rep</span>
-        <span class="n">_rep_pred_prob_per_class</span><span class="p">,</span> <span class="n">_rep_pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">_rep_true_test_labels</span><span class="p">,</span> \
-        <span class="n">_rep_accuracy_balanced</span><span class="p">,</span> <span class="n">_rep_confusion_matrix</span><span class="p">,</span> <span class="n">_rep_auc_weighted</span><span class="p">,</span> <span class="n">_rep_feature_importances</span><span class="p">,</span> \
-        <span class="n">_rep_best_params</span><span class="p">,</span> <span class="n">_rep_misclsfd_ids_this_run</span><span class="p">,</span> <span class="n">_rep_test_set</span> <span class="o">=</span> <span class="n">cv_results</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span>
+        <span class="n">_rep_pred_prob_per_class</span><span class="p">,</span> <span class="n">_rep_pred_labels_per_rep_fs</span><span class="p">,</span> \
+        <span class="n">_rep_true_test_labels</span><span class="p">,</span> <span class="n">_rep_accuracy_balanced</span><span class="p">,</span> <span class="n">_rep_confusion_matrix</span><span class="p">,</span> \
+        <span class="n">_rep_auc_weighted</span><span class="p">,</span> <span class="n">_rep_feature_importances</span><span class="p">,</span> <span class="n">_rep_best_params</span><span class="p">,</span> \
+        <span class="n">_rep_misclsfd_ids_this_run</span><span class="p">,</span> <span class="n">_rep_test_set</span> <span class="o">=</span> <span class="n">cv_results</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span>
 
         <span class="n">pred_prob_per_class</span><span class="p">[</span><span class="n">rep</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_rep_pred_prob_per_class</span>
         <span class="n">pred_labels_per_rep_fs</span><span class="p">[</span><span class="n">rep</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">_rep_pred_labels_per_rep_fs</span>
@@ -746,12 +787,14 @@
         <span class="c1"># this variable is not being saved/used in any other way.</span>
         <span class="n">feature_importances_per_rep</span><span class="p">[</span><span class="n">rep</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rep_feature_importances</span>
 
-    <span class="k">return</span> <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> <span class="n">confusion_matrix</span><span class="p">,</span> \
-           <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> <span class="n">feature_names</span><span class="p">,</span> \
-           <span class="n">feature_importances_per_rep</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span>
+    <span class="k">return</span> <span class="n">pred_prob_per_class</span><span class="p">,</span> <span class="n">pred_labels_per_rep_fs</span><span class="p">,</span> <span class="n">test_labels_per_rep</span><span class="p">,</span> \
+           <span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">best_params</span><span class="p">,</span> \
+           <span class="n">feature_names</span><span class="p">,</span> <span class="n">feature_importances_per_rep</span><span class="p">,</span> <span class="n">feature_importances_rf</span><span class="p">,</span> \
+           <span class="n">num_times_misclfd</span><span class="p">,</span> <span class="n">num_times_tested</span>
 
 
-<span class="k">def</span> <span class="nf">summarize_perf</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">summarize_perf</span><span class="p">(</span><span class="n">accuracy_balanced</span><span class="p">,</span> <span class="n">auc_weighted</span><span class="p">,</span> <span class="n">method_names</span><span class="p">,</span>
+                   <span class="n">num_classes</span><span class="p">,</span> <span class="n">num_datasets</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Prints median performance for each feature set&quot;&quot;&quot;</span>
 
     <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
@@ -768,10 +811,10 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Median performance summary:&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_datasets</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">feature {index:</span><span class="si">{nd}</span><span class="s2">} {name:&gt;</span><span class="si">{namewidth}</span><span class="s2">} : &quot;</span>
-              <span class="s2">&quot;balanced accuracy </span><span class="si">{accuracy:2.2f}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">dd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span>
-                                                          <span class="n">accuracy</span><span class="o">=</span><span class="n">median_bal_acc</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span>
-                                                          <span class="n">namewidth</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">str_width</span><span class="p">,</span>
-                                                          <span class="n">nd</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">num_digits</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+              <span class="s2">&quot;balanced accuracy </span><span class="si">{accuracy:2.2f}</span><span class="s2"> &quot;</span>
+              <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">dd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">method_names</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span> <span class="n">accuracy</span><span class="o">=</span><span class="n">median_bal_acc</span><span class="p">[</span><span class="n">dd</span><span class="p">],</span>
+                        <span class="n">namewidth</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">str_width</span><span class="p">,</span>
+                        <span class="n">nd</span><span class="o">=</span><span class="n">print_options</span><span class="o">.</span><span class="n">num_digits</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_classes</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2"> AUC </span><span class="si">{auc:2.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">auc</span><span class="o">=</span><span class="n">median_wtd_auc</span><span class="p">[</span><span class="n">dd</span><span class="p">]),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>About &#8212; neuropredict 0.5.2.1 documentation</title>
+    <title>About &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -22,11 +22,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2.1 documentation</h1>
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2.1 documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -53,8 +53,9 @@
 <li><p>You don’t have to code when you use neurpredict - saves you a lot of headache with development and debugging!</p></li>
 <li><p>You don’t have to learn how the machine learning toolkits work and the nitty-gritty of their APIs. This can be daunting and time-consuming, and can likely lead to bad choices made in terms of how proper cross-validation is done.</p></li>
 <li><p>Toolkits like scikit-learn are geared towards developers (focusing on the API to support most generic uses), but not focused easing your workflow, esp. when analyzing and comparing many feature sets.</p></li>
+<li><p>Generic libraries like scikit-learn focus only on a single feature set (X, y), and hence presents an additonal burden (and a big barrier for those without expert programming skills) when trying to compare the performance of multiple feature sets</p></li>
 <li><p>Comprehensive analysis of misclassified subjects (histogram at top right in figure below) in different pairs of classes is not in the interest of other toolkits and not possible without significant rewriting of many underlying components of scikit-learn.</p></li>
-<li><p>Thorough analysis of  misclassification rates for different feature sets (radar plot at bottom right in figure below) is not possible in scikit-learn without significant development (which only provides basic metrics of classifier performance)..</p></li>
+<li><p>Thorough diagnostics of results produced e.g. misclassification rates for different feature sets (radar plot at bottom right in figure below) in the classification workflow, or the residual plots in regression workflow are simply not possible in scikit-learn. Some require significant software development effort (which only provides basic metrics of classifier performance)..</p></li>
 <li><p>Methods and tools for <strong>statistical comparison of multiple features</strong> (and models) is missing in other toolkits, and which is a priority for neuropredict.</p></li>
 </ul>
 </div></blockquote>

@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Results from Regression run &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <link rel="stylesheet" href="_static/pd.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faq.html" />
+    <link rel="prev" title="Results from Classification run" href="results_clf.html" />
+    <script type="text/javascript" src="_static/pd.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  </head><body>
+    <div id="header">
+        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+        <ul>
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            </li>
+        </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<div class="section" id="results-from-regression-run">
+<h1>Results from Regression run<a class="headerlink" href="#results-from-regression-run" title="Permalink to this headline">¶</a></h1>
+<p>neuropredict produces a comprehensive report, parts of which can be seen in the figure below for a <strong>regression</strong> workflow:</p>
+<a class="reference internal image-reference" href="_images/composite_outputs_regr_one.png"><img alt="_images/composite_outputs_regr_one.png" src="_images/composite_outputs_regr_one.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="_images/composite_outputs_regr_two.png"><img alt="_images/composite_outputs_regr_two.png" src="_images/composite_outputs_regr_two.png" style="width: 700px;" /></a>
+<p>The report consists of</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>distribtions of cross-validated performance, for each of dataset, as measured by r2, MAE, MSE and explained variance (if you need other metrics, open an <a class="reference external" href="https://github.com/raamana/neuropredict/issues/new">issue on github</a>).</p></li>
+<li><p>residual plots showing residuals as a function of original target value,</p></li>
+<li><p>prediction plot showing the predicted target value as a function of original target value, and</p></li>
+<li><p>few other diagnostic plots (such as subjects with high frequency of large residuals, an indication of them being an outlier) to be made available soon.</p></li>
+</ul>
+</div></blockquote>
+<p>Each plots contains all the datasets included for comparison in the original neuropredict run.</p>
+<div class="section" id="outputs-and-interpretation">
+<h2>Outputs and interpretation<a class="headerlink" href="#outputs-and-interpretation" title="Permalink to this headline">¶</a></h2>
+<p>The output directory (chosen with <code class="docutils literal notranslate"><span class="pre">-o</span></code> flag) contains the following sets of files, whose names are self-explanatory. In each set, there is separate visualization (PDF) or CSV file produced for each feature (named features A, B, C and D below) being studied, for your convenience.</p>
+<p><strong>First</strong>, a set of visualizations in PDF format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">compare_explained_variance_score</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">compare_mean_absolute_error</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">compare_mean_squared_error</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">compare_r2_score</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">predicted_vs_target</span><span class="o">.</span><span class="n">pdf</span>
+<span class="n">residuals_vs_true_targets</span><span class="o">.</span><span class="n">pdf</span>
+</pre></div>
+</div>
+<p><strong>Second</strong> <em>[TO BE PRODUCED]</em>, a set of CSV files in a subfolder called <code class="docutils literal notranslate"><span class="pre">exported_results</span></code>, which can used for further posthoc statisical analysis or to produce more customised visualizations. The typical contents are shown below - note, filenames may change depending on your input file names.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">explained_variance_score</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">mean_absolute_error</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">mean_squared_error</span><span class="o">.</span><span class="n">csv</span>
+<span class="n">r2_score</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
+</div>
+<p><strong>Third</strong>, a Python pickle file <code class="docutils literal notranslate"><span class="pre">results_neuropredict.pkl</span></code> containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where <code class="docutils literal notranslate"><span class="pre">pickle</span></code> files can be read.</p>
+<p><strong>Finally</strong>, few miscellaneous set of files that neuropredict relies on to produce the comprehensive report.</p>
+<p>We will walk you through the resulting visualizations one by one, and describe how to interpret them.</p>
+<p><strong>INTERPRETATION TO BE ADDED/UPDATED.</strong></p>
+<hr class="docutils" />
+<p>If something is unclear or confusing, or some documentation is missing, please open an <a class="reference external" href="https://github.com/raamana/neuropredict/issues/new">issue on github</a>.</p>
+<p><strong>These docs will be futher improved soon. Stay tuned!</strong></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Results from Regression run</a><ul>
+<li><a class="reference internal" href="#outputs-and-interpretation">Outputs and interpretation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="results_clf.html"
+                        title="previous chapter">Results from Classification run</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="faq.html"
+                        title="next chapter">Frequently Asked Questions</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Pradeep Reddy Raamana.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

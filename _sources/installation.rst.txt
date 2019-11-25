@@ -29,6 +29,7 @@ Python dependencies
  - sklearn
  - nibabel
  - pyradigm
+ - confounds
  - setuptools
  - scipy
  - matplotlib
