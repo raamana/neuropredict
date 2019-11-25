@@ -163,21 +163,6 @@ def cli():
         covar_list, covar_method = parse_args()
 
     print('Running neuropredict version {} for Regression'.format(__version__))
-    prepare_and_run(user_feature_paths, user_feature_type, train_perc,
-                    num_rep_cv, reduced_dim_size, impute_strategy,
-                    grid_search_level, regressor, dim_red_method,
-                    covar_list, covar_method,
-                    num_procs, out_dir, user_options)
-
-    return
-
-
-def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
-                    num_rep_cv, reduced_dim_size, impute_strategy, grid_search_level,
-                    regressor, dim_red_method,
-                    covar_list, covar_method,
-                    num_procs, out_dir, user_options):
-    """"""
 
     multi_ds = load_datasets(user_feature_paths, task_type='regress')
     covariates, deconfounder = check_covariates(multi_ds, covar_list, covar_method)
@@ -203,6 +188,7 @@ def prepare_and_run(user_feature_paths, user_feature_type, train_perc,
                                    checkpointing=True)
 
     out_results_path = regr_expt.run()
+    print('All done.\n')
 
 
 def make_visualizations():

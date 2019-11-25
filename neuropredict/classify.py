@@ -709,14 +709,20 @@ def import_datasets(method_list, out_dir, subjects, classes,
     return method_names, outpath_list
 
 
-def prepare_and_run(subjects, classes, out_dir, options_path,
-                    user_feature_paths, user_feature_type, fs_subject_dir,
-                    train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size,
-                    impute_strategy, num_procs,
-                    grid_search_level, classifier, feat_select_method,
-                    covar_list, covar_method):
-    "Organizes the inputs and prepares them for CV"
+def cli():
+    """
+    Main entry point.
+
+    """
+
+    subjects, classes, out_dir, options_path, user_feature_paths, \
+    user_feature_type, \
+    fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
+    feature_selection_size, impute_strategy, num_procs, \
+    grid_search_level, classifier, feat_select_method,\
+        covar_list, covar_method = parse_args()
+
+    print('Running neuropredict version {} for Classification'.format(__version__))
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
                                                 user_feature_type)
@@ -764,33 +770,8 @@ def prepare_and_run(subjects, classes, out_dir, options_path,
 
         out_results_path = clf_expt.run()
 
-        # print('\n\nSaving the visualizations to \n{}'.format(out_dir))
-        # make_visualizations(results_file_path, out_dir_sg, options_path)
-        print('\n')
+    print('All done.\n')
 
-    return
-
-
-def cli():
-    """
-    Main entry point.
-
-    """
-
-    subjects, classes, out_dir, options_path, user_feature_paths, \
-    user_feature_type, \
-    fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-    feature_selection_size, impute_strategy, num_procs, \
-    grid_search_level, classifier, feat_select_method,\
-        covar_list, covar_method = parse_args()
-
-    print('Running neuropredict version {} for Classification'.format(__version__))
-    prepare_and_run(subjects, classes, out_dir, options_path,
-                    user_feature_paths, user_feature_type, fs_subject_dir,
-                    train_perc, num_rep_cv, positive_class,
-                    sub_group_list, feature_selection_size, impute_strategy,
-                    num_procs, grid_search_level, classifier, feat_select_method,
-                    covar_list, covar_method)
 
     return
 

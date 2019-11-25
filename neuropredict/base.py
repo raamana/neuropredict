@@ -144,6 +144,8 @@ class BaseWorkflow(object):
         self.summarize()
         self.visualize()
 
+        print('Results have been saved to \n\t{}'.format(self._out_results_path))
+
         return self._out_results_path
 
 
