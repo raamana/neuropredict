@@ -9,14 +9,16 @@ import warnings
 from sys import version_info
 
 import matplotlib.pyplot as plt
+import numpy
+import numpy.matlib # to force
 import numpy as np
 import scipy.stats
 from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 
 if version_info.major > 2:
-    from neuropredict import config_neuropredict as cfg, rhst
-    from neuropredict.utils import chance_accuracy
+    from neuropredict import config_neuropredict as cfg
+    from neuropredict.utils import chance_accuracy, round_
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 
@@ -224,7 +226,7 @@ def confusion_matrices(cfmat_array, class_labels,
     Entries in confusin matrix can be turned into percentages with `display_perc=True`.
 
     Use a separate method to iteratve over multiple datasets.
-    confusion_matrix dime: [num_classes, num_classes, num_repetitions, num_datasets]
+    confusion_matrix dime: [num_repetitions, num_classes, num_classes, num_datasets]
 
     Parameters
     ----------
@@ -243,11 +245,12 @@ def confusion_matrices(cfmat_array, class_labels,
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
         raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+                         " Need [num_repetitions, num_classes, num_classes, num_datasets]."
+                         " Given shape : {}".format(cfmat_array.shape))
 
     np.set_printoptions(2)
     for dd in range(num_datasets):
-        output_path = base_output_path + '_' + method_names[dd]
+        output_path = base_output_path + '_' + str(method_names[dd])
         output_path.replace(' ', '_')
 
         # mean confusion over CV trials
@@ -264,17 +267,22 @@ def confusion_matrices(cfmat_array, class_labels,
         fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
 
         im = plt.imshow(avg_cfmat, interpolation='nearest', cmap=cmap)
-        # TODO need a utility compress a super long method name (>50 chars) to < 50 chars
-        #   with ... in the middle
+        # TODO need a utility compress a super long method name
+        #  (>50 chars) to < 50 chars with ... in the middle
         plt.title(method_names[dd])
         plt.colorbar(im, fraction=0.046, pad=0.04)
+
         tick_marks = np.arange(len(class_labels))
         plt.xticks(tick_marks, class_labels, rotation=45)
         plt.yticks(tick_marks, class_labels)
+        left, right, bottom, top = im.get_extent()
+        ax.set(xlim=(left, right), ylim=(bottom, top))
 
         thresh = np.percentile(avg_cfmat, 50)
         for i, j in itertools.product(range(num_classes), range(num_classes)):
-            plt.text(j, i, "{:.{prec}f}%".format(avg_cfmat[i, j], prec=cfg.PRECISION_METRICS),
+            plt.text(j, i,
+                     "{:.{prec}f}%".format(avg_cfmat[i, j],
+                                           prec=cfg.PRECISION_METRICS),
                      horizontalalignment="center", fontsize='large',
                      color="blue" if avg_cfmat[i, j] > thresh else "yellow")
 
@@ -311,7 +319,8 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
     avg_cfmat = np.mean(conf_mat_array, axis=0)
 
     # percentage confusion relative to class size
-    class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1), num_classes, 1))
+    class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1),
+                                                           num_classes, 1))
     avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
     # making it human readable : 0-100%
     avg_cfmat_perc100 = 100 * np.around(avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
@@ -325,8 +334,8 @@ def compute_pairwise_misclf(cfmat_array):
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
@@ -345,7 +354,9 @@ def compute_pairwise_misclf(cfmat_array):
     return avg_cfmat, misclf_rate
 
 
-def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, method_labels, out_path):
+def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
+                                                class_labels, method_labels,
+                                                out_path):
     """
     Produces a parallel coordinate plot (unravelling the cobweb plot) 
     comparing the the misclassfication rate of all feature sets 
@@ -366,8 +377,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
@@ -378,7 +389,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
         if ii != jj:
-            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+            misclf_ax_labels.append("{} --> {}"
+                                    "".format(class_labels[ii], class_labels[jj]))
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
@@ -411,10 +423,11 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array, class_labels, metho
     return
 
 
-def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, out_path):
+def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels,
+                                    out_path):
     """
-    Produces a bar plot comparing the the misclassfication rate of all feature sets for different pairwise
-    classifications.
+    Produces a bar plot comparing the the misclassfication rate of all feature
+    sets for different pairwise classifications.
     
     Parameters
     ----------
@@ -431,8 +444,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -443,7 +456,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
         if ii != jj:
-            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+            misclf_ax_labels.append("{} --> {}"
+                                    "".format(class_labels[ii], class_labels[jj]))
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
@@ -477,8 +491,8 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels, ou
 
 def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     """
-    Produces a cobweb plot comparing the the misclassfication rate of all feature sets for different pairwise
-    classifications.
+    Produces a cobweb plot comparing the the misclassfication rate
+    of all feature sets for different pairwise classifications.
     
     Parameters
     ----------
@@ -495,8 +509,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         "Need [num_classes, num_classes, num_repetitions, num_datasets]")
+        raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]")
 
     num_misclf_axes = num_classes*(num_classes-1)
 
@@ -505,7 +519,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     misclf_ax_labels = list()
     for ii, jj in itertools.product(range(num_classes), range(num_classes)):
         if ii != jj:
-            misclf_ax_labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+            misclf_ax_labels.append("{} --> {}"
+                                    "".format(class_labels[ii], class_labels[jj]))
 
     theta = 2 * np.pi * np.linspace(0, 1 -1.0/num_misclf_axes, num_misclf_axes)
 
@@ -569,12 +584,14 @@ def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
     num_samples   = len(num_times_tested[0].keys())
     num_datasets  = len(num_times_tested)
     perc_misclsfd = [None]*num_datasets
-    never_tested  = list() # since train/test samples are same across different feature sets
+    never_tested  = list() # since train/test samples are the same
+                           # across different feature sets
     for dd in range(num_datasets):
         perc_misclsfd[dd] = dict()
         for sid in num_times_misclfd[dd].keys():
             if num_times_tested[dd][sid] > 0:
-                perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) / np.float64(num_times_tested[dd][sid])
+                perc_misclsfd[dd][sid] = np.float64(num_times_misclfd[dd][sid]) \
+                                         / np.float64(num_times_tested[dd][sid])
             else:
                 never_tested.append(sid)
 
@@ -583,8 +600,8 @@ def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
     return perc_misclsfd, never_tested, num_samples, num_datasets
 
 
-def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels, outpath,
-                                 separate_plots = False):
+def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels,
+                                 outpath, separate_plots = False):
     """
     Summary of most/least frequently misclassified subjects for further analysis
 
@@ -598,16 +615,19 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
 
         cur_ylim = ax_h.get_ylim()
         line_thresh, = ax_h.plot([count_thresh, count_thresh],
-                            cur_ylim, 'k--', linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
+                                 cur_ylim, 'k--',
+                                 linewidth=cfg.MISCLF_HIST_ANNOT_LINEWIDTH)
         ax_h.set_ylim(cur_ylim)
         ax_h.set_ylabel('number of subjects')
         ax_h.set_xlabel('percentage of misclassification')
 
     # computing the percentage of misclassification per subject
-    perc_misclsfd, never_tested, num_samples, num_datasets = compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
+    perc_misclsfd, never_tested, num_samples, num_datasets = \
+        compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
 
     if len(never_tested) > 0:
-        warnings.warn(' {} subjects were never selected for testing.'.format(len(never_tested)))
+        warnings.warn(' {} subjects were never selected for testing.'
+                      ''.format(len(never_tested)))
         nvpath = outpath + '_never_tested_samples.txt'
         with open(nvpath,'w') as nvf:
             nvf.writelines('\n'.join(never_tested))
@@ -622,10 +642,12 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         fig, ax_h = plt.subplots(figsize=[12, 9])
 
     for dd in range(num_datasets):
-        # calculating percentage of most frequently misclassified subjects in each dataset
-        most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys() if perc_misclsfd[dd][sid] > count_thresh]
+        # calculating perc of most frequently misclassified subjects in each dataset
+        most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys()
+                             if perc_misclsfd[dd][sid] > count_thresh]
         perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / len(perc_misclsfd[dd])
-        this_method_label = "{} - {:.1f}% ".format(method_labels[dd], perc_most_freq_misclsfd)
+        this_method_label = "{} - {:.1f}%" \
+                            "".format(method_labels[dd], perc_most_freq_misclsfd)
         if dd == 0:
             this_method_label = this_method_label + 'most frequently misclassfied'
 
@@ -678,7 +700,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     num_repetitions = metric.shape[0]
     num_datasets = metric.shape[1]
     if len(labels) < num_datasets:
-        raise ValueError("Insufficient number of labels for {} features!".format(num_datasets))
+        raise ValueError("Insufficient number of labels for {} features!"
+                         "".format(num_datasets))
     method_ticks = 1.0 + np.arange(num_datasets)
 
     fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
@@ -695,8 +718,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
 
-    lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), cfg.PRECISION_METRICS)
-    upper_lim = np.round(np.min([ 1.01, metric.max() ]), cfg.PRECISION_METRICS)
+    lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
+    upper_lim = round_(np.min([ 1.01, metric.max() ]))
     step_tick = 0.05
     ax.set_ylim(lower_lim, upper_lim)
 
@@ -705,23 +728,25 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     # ax.set_xticklabels(labels, rotation=45)  # 'vertical'
 
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
+
     # add a tick for chance accuracy and/or % of majority class
     # given the classifier trained on stratified set, we must use the balanced version
     chance_acc = chance_accuracy(class_sizes, 'balanced')
 
     # rounding to ensure improved labels
-    chance_acc = np.round(chance_acc, cfg.PRECISION_METRICS)
-    ytick_loc = np.round(np.append(ytick_loc, chance_acc), cfg.PRECISION_METRICS)
+    chance_acc = round_(chance_acc)
+    ytick_loc = round_(np.append(ytick_loc, chance_acc))
+    plt.text(0.05, chance_acc, 'chance accuracy')
 
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
-    plt.text(0.05, chance_acc, 'chance accuracy')
     plt.ylabel(metric_label, fontsize=cfg.FONT_SIZE)
 
     plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
 
     # numbered labels
-    numbered_labels = ['{} {}'.format(int(ix),lbl) for ix, lbl in zip(method_ticks,labels)]
+    numbered_labels = ['{} {}'.format(int(ix),lbl)
+                       for ix, lbl in zip(method_ticks,labels)]
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
@@ -740,6 +765,156 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     plt.close()
 
     return
+
+
+def compare_distributions(metric, labels, output_path, y_label='metric',
+                          horiz_line_loc=None, horiz_line_label=None,
+                          upper_lim_y=1.01, ytick_step=None):
+    """
+    Distribution plots of various metrics such as balanced accuracy!
+
+    metric is expected to be ndarray of size [num_repetitions, num_datasets]
+
+    upper_lim_y = None would make it automatic and adapt to given metric distribution
+    upper_lim_y = 1.01 and ytick_step = 0.05 are targeted for Accuracy/AUC metrics,
+        in classification applications
+
+    """
+
+    num_repetitions = metric.shape[0]
+    num_datasets = metric.shape[1]
+    if len(labels) < num_datasets:
+        raise ValueError("Insufficient number of labels for {} features!"
+                         "".format(num_datasets))
+    method_ticks = 1.0 + np.arange(num_datasets)
+
+    fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
+    line_coll = ax.violinplot(metric, widths=cfg.violin_width,
+                              bw_method=cfg.violin_bandwidth,
+                              showmedians=True, showextrema=False,
+                              positions=method_ticks)
+
+    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+    for cc, ln in enumerate(line_coll['bodies']):
+        ln.set_facecolor(cmap(cc))
+        ln.set_label(labels[cc])
+
+    ax.tick_params(axis='both', which='major', labelsize=15)
+    ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
+
+    # lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
+    lower_lim = round_(metric.min())
+    if upper_lim_y is not None:
+        upper_lim = round_(np.min([ upper_lim_y, metric.max() ]))
+    else:
+        upper_lim = round_(metric.max())
+    ax.set_ylim(lower_lim, upper_lim)
+
+    ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
+    ax.set_xticks(method_ticks)
+    # ax.set_xticklabels(labels, rotation=45)  # 'vertical'
+
+    if ytick_step is None:
+        ytick_loc = ax.get_yticks()
+    else:
+        ytick_loc = np.arange(lower_lim, upper_lim, ytick_step)
+
+    if horiz_line_loc is not None:
+        ytick_loc = round_(np.append(ytick_loc, horiz_line_loc))
+        plt.text(0.05, horiz_line_loc, horiz_line_label)
+
+    ax.set_yticks(ytick_loc)
+    ax.set_yticklabels(ytick_loc)
+    plt.ylabel(y_label, fontsize=cfg.FONT_SIZE)
+
+    plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
+
+    # numbered labels
+    numbered_labels = ['{} {}'.format(int(ix),lbl)
+                       for ix, lbl in zip(method_ticks,labels)]
+
+    # putting legends outside the plot below.
+    fig.subplots_adjust(bottom=0.2)
+    leg = ax.legend(numbered_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
+    # setting colors manually as plot has been through arbitray jumps
+    for ix, lh in enumerate(leg.legendHandles):
+        lh.set_color(cmap(ix))
+
+    leg.set_frame_on(False) # making leg background transparent
+
+    # fig.savefig(output_path + '.png', transparent=True, dpi=300,
+    #             bbox_extra_artists=(leg,), bbox_inches='tight')
+
+    fig.savefig(output_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
+
+    plt.close()
+
+    return
+
+
+def multi_scatter_plot(y_data, x_data, fig_out_path,
+                       y_label='Residuals',
+                       x_label='True targets',
+                       show_zero_line=False,
+                       trend_line=None,
+                       show_hist=True):
+    """Important diagnostic plot for predictive regression analysis"""
+
+    if show_hist:
+        fig, axes = plt.subplots(nrows=1, ncols=2, sharey=True,
+                               gridspec_kw=dict(width_ratios=(4.5, 1)),
+                               figsize=cfg.COMMON_FIG_SIZE)
+        ax = axes[0]
+        hist_ax = axes[1]
+    else:
+        fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
+    num_datasets = len(y_data)
+
+    from matplotlib.cm import get_cmap
+    cmap = get_cmap(cfg.CMAP_DATASETS, max(num_datasets+1, 9))
+    colors = np.array(cmap.colors)
+
+    ds_labels = list(y_data.keys())
+    for index, ds_id in enumerate(ds_labels):
+        color = colors[index, np.newaxis, :]
+        h_path_coll = ax.scatter(x_data[ds_id], y_data[ds_id],
+                                 alpha=cfg.alpha_regression_targets,
+                                 label=ds_id, c=color)
+        if show_hist:
+            hist_ax.hist(y_data[ds_id], density=True, orientation="horizontal",
+                         color=color, bins=cfg.num_bins_hist,
+                         alpha=cfg.alpha_regression_targets,)
+
+    if show_hist:
+        hist_ax.yaxis.tick_right()
+        hist_ax.grid(False, axis="x")
+        hist_ax.set_xlabel("Density")
+
+    # switching focus to the right axis
+    plt.sca(ax)
+
+    leg = ax.legend(ds_labels)
+    extra_artists = [leg, ]
+
+    if show_zero_line: # helpful for residuals plot
+        baseline = ax.axhline(y=0, color='black')
+        extra_artists.append(baseline)
+
+        baseline_hist = hist_ax.axhline(y=0, c='black')
+        # extra_artists.append(baseline_hist)
+
+    if trend_line is not None:
+        tline = ax.axhline(y=trend_line, color='black', label='median of medians')
+        extra_artists.append(tline)
+
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+
+    fig.tight_layout()
+    fig.savefig(fig_out_path + '.pdf',
+                # bbox_extra_artists=extra_artists,
+                bbox_inches='tight')
+    plt.close()
 
 
 if __name__ == '__main__':

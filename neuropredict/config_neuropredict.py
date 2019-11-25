@@ -4,7 +4,8 @@ import numpy as np
 # following affects the maximum num of predictors to be tried in random forest
 PERC_PROB_ERROR_ALLOWED = 0.05
 
-default_num_features_to_select = 'tenth'
+default_reduced_dim_size = 'tenth'
+default_num_features_to_select = default_reduced_dim_size
 feature_selection_size_methods = ('tenth', 'sqrt', 'log2', 'all')
 
 variance_threshold = 0.001
@@ -33,26 +34,68 @@ default_imputation_strategy = 'raise'
 # not supporting 'constant' for now, as it is not popular,
 #   and integrating it requires a bit more software engineering
 avail_imputation_strategies = ('median', 'mean', 'most_frequent')
-avail_imputation_strategies_with_raise = avail_imputation_strategies + (default_imputation_strategy, )
+avail_imputation_strategies_with_raise = avail_imputation_strategies + \
+                                         (default_imputation_strategy, )
+
+missing_data_flag_name = 'missing_data'
+
+## -------- preprocessing ----------
+
+default_preprocessing_method = 'robustscaler'
+
+## -------- covariates -------------
+
+default_covariates = None
+default_deconfounding_method = 'residualize'
+avail_deconfounding_methods = ('residualize', 'augment')
 
 # # ------- feature importance -------
 
+importance_attr = {'randomforestclassifier': 'feature_importances_',
+                   'extratreesclassifier'  : 'feature_importances_',
+                   'decisiontreeclassifier': 'feature_importances_',
+                   'svm'                   : 'coef_',
+                   'xgboost'               : 'feature_importances_', }
 
 # # ------- classifier
 
-__classifier_CHOICES = ('RandomForestClassifier', 'ExtraTreesClassifier',
-                        'DecisionTreeClassifier', 'SVM', 'XGBoost')
+__classifier_CHOICES = ('RandomForestClassifier',
+                        'ExtraTreesClassifier',
+                        'DecisionTreeClassifier',
+                        'SVM',
+                        'XGBoost')
 classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
 
-__feat_sel_CHOICES = ('SelectKBest_mutual_info_classif', 'SelectKBest_f_classif', 'VarianceThreshold')
-feature_selection_choices = [ fsm.lower() for fsm in __feat_sel_CHOICES]
+__regressor_CHOICES = ('RandomForestRegressor',
+                       'ExtraTreesRegressor',
+                       'DecisionTreeRegressor',
+                       'SVR',
+                       'KernelRidge',
+                       'BayesianRidge',
+                       'GaussianProcessRegressor',
+                       'GradientBoostingRegressor'
+                       )
+regressor_choices = [ clf.lower() for clf in __regressor_CHOICES]
+
+__feat_sel_CHOICES = ('SelectKBest_mutual_info_classif',
+                      'SelectKBest_f_classif',
+                      'VarianceThreshold',
+                      )
+__dim_red_CHOICES = ('Isomap', 'LLE', 'LLE_modified', 'LLE_Hessian', 'LLE_LTSA')
+__generic_fs_dr_CHOICES = __feat_sel_CHOICES + __dim_red_CHOICES
+all_dim_red_methods = [fsm.lower() for fsm in __generic_fs_dr_CHOICES]
 
 default_classifier = 'RandomForestClassifier'
-default_feat_select_method = 'VarianceThreshold'
+default_regressor = 'RandomForestRegressor'
+
+default_dim_red_method = 'VarianceThreshold'
+default_feat_select_method = default_dim_red_method
 
 __clfs_with_feature_importance = ('DecisionTreeClassifier',
-                                  'RandomForestClassifier', 'ExtraTreesClassifier',
-                                  'LinearSVM', 'XGBoost')
+                                  'RandomForestClassifier',
+                                  'ExtraTreesClassifier',
+                                  'LinearSVM',
+                                  'XGBoost')
 clfs_with_feature_importance = [ clf.lower() for clf in __clfs_with_feature_importance]
 
 additional_modules_reqd = {'xgboost' : 'xgboost' }
@@ -69,6 +112,20 @@ NUM_PREDICTORS_STEP = 2
 
 MAX_MIN_LEAFSIZE = 5
 LEAF_SIZE_STEP = 2
+
+#### new workflow
+
+workflow_types = ('classify', 'regress')
+results_file_name = 'results_neuropredict.pkl'
+options_file_name = 'options_neuropredict.pkl'
+best_params_file_name = 'best_params_neuropredict.pkl'
+
+results_to_save = ['_checkpointing', '_id_list', '_num_samples',
+                   '_positive_class', '_positive_class_index', '_scoring',
+                   '_target_set', '_train_set_size', '_workflow_type',
+                   'dim_red_method', 'grid_search_level', 'impute_strategy',
+                   'num_procs', 'num_rep_cv', 'out_dir', 'pred_model',
+                   'reduced_dim', 'results', 'train_perc', 'user_options']
 
 # CV
 default_num_repetitions=200
@@ -98,6 +155,30 @@ GRIDSEARCH_LEVEL_DEFAULT = GRIDSEARCH_LEVELS[0]
 SEED_RANDOM = 652
 
 PRECISION_METRICS = 2
+
+## workflow
+
+default_checkpointing = True
+
+
+### performance metrics
+
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, \
+    r2_score, mean_absolute_error, explained_variance_score, mean_squared_error
+
+default_scoring_metric = 'accuracy'
+
+# allowed names: sorted(sklearn.metrics.SCORERS.keys())
+
+default_metric_set_classification = (accuracy_score,
+                                     balanced_accuracy_score)
+default_metric_set_regression = (r2_score,
+                                 mean_absolute_error,
+                                 explained_variance_score,
+                                 mean_squared_error)
+
+alpha_regression_targets = 0.6
+num_bins_hist = 50
 
 # misclassifications
 MISCLF_HIST_NUM_BINS = 20
@@ -137,25 +218,28 @@ default_feature_type = 'list_of_pyradigm_paths'
 # when more than one feature set is given, which one to map everyone to
 COMMON_DATASET_INDEX = 0
 
-rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc', 'num_repetitions', 'num_classes',
-                  'pred_prob_per_class', 'pred_labels_per_rep_fs', 'test_labels_per_rep',
-                  'best_params',
-                  'feature_importances_rf', 'feature_names',
-                  'num_times_misclfd', 'num_times_tested',
-                  'confusion_matrix', 'class_set', 'class_sizes',
-                  'accuracy_balanced', 'auc_weighted', 'positive_class',
-                                  'classifier_name', 'feat_select_method']
+rhst_data_variables_to_persist = ['dataset_paths', 'method_names', 'train_perc',
+                                  'num_repetitions', 'num_classes',
+                                  'pred_prob_per_class', 'pred_labels_per_rep_fs',
+                                  'test_labels_per_rep', 'best_params',
+                                  'feature_importances_rf', 'feature_names',
+                                  'num_times_misclfd', 'num_times_tested',
+                                  'confusion_matrix', 'class_set', 'target_sizes',
+                                  'accuracy_balanced', 'auc_weighted',
+                                  'positive_class', 'classifier_name',
+                                  'feat_select_method']
 
 # TODO decide to where to include eTIV
 # 'eTIV' is not included as it is used to norm subcortical volumes
-freesurfer_whole_brain_stats_to_select = [ 'BrainSegVol', 'BrainSegVolNotVent',
-        'lhCortexVol', 'rhCortexVol',
-        'lhCorticalWhiteMatterVol', 'rhCorticalWhiteMatterVol',
-        'SubCortGrayVol', 'TotalGrayVol',
-        'SupraTentorialVol', 'SupraTentorialVolNotVent',
-        'MaskVol', 'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV',
-        'lhSurfaceHoles', 'rhSurfaceHoles',
-        'eTIV' ]
+freesurfer_whole_brain_stats_to_select = ['BrainSegVol', 'BrainSegVolNotVent',
+                                          'lhCortexVol', 'rhCortexVol',
+                                          'lhCorticalWhiteMatterVol',
+                                          'rhCorticalWhiteMatterVol',
+                                          'SubCortGrayVol', 'TotalGrayVol',
+                                          'SupraTentorialVol',
+                                          'SupraTentorialVolNotVent', 'MaskVol',
+                                          'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV',
+                                          'lhSurfaceHoles', 'rhSurfaceHoles', 'eTIV']
 
 freesurfer_whole_brain_stats_to_ignore = [ 'SurfaceHoles',
                                            'CortexVol',
@@ -163,18 +247,30 @@ freesurfer_whole_brain_stats_to_ignore = [ 'SurfaceHoles',
                                            'CorticalWhiteMatterVol',
                                            'BrainSegVolNotVentSurf']
 
+freesurfer_subcortical_seg_names_to_ignore = ['WM-hypointensities',
+                                              'Left-WM-hypointensities',
+                                              'Right-WM-hypointensities',
+                                              'non-WM-hypointensities',
+                                              'Left-non-WM-hypointensities',
+                                              'Right-non-WM-hypointensities',
+                                              'Optic-Chiasm']
 
-freesurfer_subcortical_seg_names_to_ignore = ['WM-hypointensities', 'Left-WM-hypointensities', 'Right-WM-hypointensities',
-                    'non-WM-hypointensities', 'Left-non-WM-hypointensities', 'Right-non-WM-hypointensities',
-                    'Optic-Chiasm']
-
-freesurfer_subcortical_seg_names = ['Left-Lateral-Ventricle', 'Left-Inf-Lat-Vent', 'Left-Cerebellum-White-Matter',
-                                    'Left-Cerebellum-Cortex', 'Left-Thalamus-Proper', 'Left-Caudate', 'Left-Putamen',
-                                    'Left-Pallidum', '3rd-Ventricle', '4th-Ventricle', 'Brain-Stem', 'Left-Hippocampus',
-                                    'Left-Amygdala', 'CSF', 'Left-Accumbens-area', 'Left-VentralDC', 'Left-vessel',
-                                    'Left-choroid-plexus', 'Right-Lateral-Ventricle', 'Right-Inf-Lat-Vent',
-                                    'Right-Cerebellum-White-Matter', 'Right-Cerebellum-Cortex', 'Right-Thalamus-Proper',
-                                    'Right-Caudate', 'Right-Putamen', 'Right-Pallidum', 'Right-Hippocampus',
-                                    'Right-Amygdala', 'Right-Accumbens-area', 'Right-VentralDC', 'Right-vessel',
-                                    'Right-choroid-plexus', '5th-Ventricle',
-                                    'CC_Posterior', 'CC_Mid_Posterior', 'CC_Central', 'CC_Mid_Anterior', 'CC_Anterior']
+freesurfer_subcortical_seg_names = ['Left-Lateral-Ventricle', 'Left-Inf-Lat-Vent',
+                                    'Left-Cerebellum-White-Matter',
+                                    'Left-Cerebellum-Cortex', 'Left-Thalamus-Proper',
+                                    'Left-Caudate', 'Left-Putamen', 'Left-Pallidum',
+                                    '3rd-Ventricle', '4th-Ventricle', 'Brain-Stem',
+                                    'Left-Hippocampus', 'Left-Amygdala', 'CSF',
+                                    'Left-Accumbens-area', 'Left-VentralDC',
+                                    'Left-vessel', 'Left-choroid-plexus',
+                                    'Right-Lateral-Ventricle', 'Right-Inf-Lat-Vent',
+                                    'Right-Cerebellum-White-Matter',
+                                    'Right-Cerebellum-Cortex',
+                                    'Right-Thalamus-Proper', 'Right-Caudate',
+                                    'Right-Putamen', 'Right-Pallidum',
+                                    'Right-Hippocampus', 'Right-Amygdala',
+                                    'Right-Accumbens-area', 'Right-VentralDC',
+                                    'Right-vessel', 'Right-choroid-plexus',
+                                    '5th-Ventricle', 'CC_Posterior',
+                                    'CC_Mid_Posterior', 'CC_Central',
+                                    'CC_Mid_Anterior', 'CC_Anterior']

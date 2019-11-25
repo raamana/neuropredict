@@ -1,7 +1,7 @@
 from sys import version_info
 
 if version_info.major > 2:
-    from neuropredict import run_workflow
+    from neuropredict import classify
 else:
     raise NotImplementedError('neuropredict requires Python 3 or higher. '
                               'Upgrade to Python 3+ or use [virtual] environments.')
@@ -9,7 +9,7 @@ else:
 def main():
     "Entry point."
 
-    run_workflow.cli()
+    classify.cli()
 
 if __name__ == '__main__':
     main()

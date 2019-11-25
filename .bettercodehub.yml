@@ -1,5 +1,7 @@
 exclude:
 - /neuropredict/_version.py
+- /neuropredict/run_workflow.py
+- /neuropredict/rhst.py
 - /setup.py
 - /versioneer.py
 component_depth: 1
