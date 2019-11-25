@@ -1,36 +1,29 @@
 """Module to define classification-oriented workflows and methods"""
 
 import os
-import sys
 import textwrap
 import traceback
 import warnings
-from os.path import abspath, basename, exists as pexists, join as pjoin, realpath
 from os import makedirs
+from os.path import basename, join as pjoin
+
 import matplotlib.pyplot as plt
 import numpy as np
 # the order of import is very important to avoid circular imports
 from neuropredict import __version__, config_neuropredict as cfg, rhst, visualize
-from neuropredict.base import BaseWorkflow, organize_inputs
+from neuropredict.base import BaseWorkflow, parse_common_args
+from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.freesurfer import (aseg_stats_subcortical,
                                      aseg_stats_whole_brain)
-from neuropredict.datasets import load_datasets, detect_missing_data
 from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
-                             get_features, get_metadata, get_metadata_in_pyradigm,
-                             get_pyradigm, saved_dataset_matches,
-                             process_pyradigm, process_arff)
-from neuropredict.utils import (check_covariate_options, check_covariates,
-                                check_classifier, check_num_procs, load_options,
-                                make_dataset_filename, not_unspecified,
-                                print_options, save_options,
-                                sub_group_identifier, median_of_medians,
-                                uniquify_in_order, chance_accuracy,
-                                validate_feature_selection_size,
-                                validate_impute_strategy)
+                             get_features, get_pyradigm, process_arff,
+                             process_pyradigm, saved_dataset_matches)
+from neuropredict.utils import (check_classifier, check_covariates, load_options,
+                                make_dataset_filename, not_unspecified, save_options,
+                                sub_group_identifier, uniquify_in_order)
 from neuropredict.visualize import compare_distributions, confusion_matrices
-from pyradigm.multiple import MultiDatasetClassify
-from pyradigm.utils import load_dataset
 from sklearn.metrics import confusion_matrix, roc_auc_score
+
 
 def auc_weighted(true_labels, predicted_proba_per_class):
     """Wrapper around sklearn roc_auc_score to ensure it is weighted."""
@@ -379,104 +372,20 @@ def parse_args():
 
     parser = get_parser_classify()
 
-    if len(sys.argv) < 2:
-        print('Too few arguments!')
-        parser.print_help()
-        parser.exit(1)
+    user_args, user_feature_paths, user_feature_type, fs_subject_dir, \
+    meta_data_path, meta_data_format, sample_ids, classes, out_dir, train_perc, \
+    num_rep_cv, num_procs, reduced_dim_size, impute_strategy, covar_list, \
+    covar_method, grid_search_level, dim_red_method = parse_common_args(
+        parser)
 
-    # parsing
-    try:
-        user_args = parser.parse_args()
-    except:
-        parser.exit(1)
-
-    if len(sys.argv) == 3:
-        # only if no features were specified to be assessed
-        if not any(not_unspecified(getattr(user_args, attr))
-                   for attr in ('user_feature_paths', 'data_matrix_paths',
-                                'pyradigm_paths', 'arff_paths')):
-
-            if not_unspecified(user_args.print_opt_dir) and user_args.print_opt_dir:
-                run_dir = realpath(user_args.print_opt_dir)
-                print_options(run_dir)
-
-            if not_unspecified(user_args.make_vis):
-                out_dir = realpath(user_args.make_vis)
-                res_path = pjoin(out_dir, cfg.file_name_results)
-                if pexists(out_dir) and pexists(res_path):
-                    if not_unspecified(user_args.make_vis):
-                        print(
-                            '\n\nSaving the visualizations to \n{}'.format(out_dir))
-                        make_visualizations(res_path, out_dir)
-                else:
-                    raise ValueError('Given folder does not exist, '
-                                     'or has no results file!')
-
-            sys.exit(0)
-
-    user_feature_paths, user_feature_type, fs_subject_dir, meta_data_path, \
-    meta_data_format = organize_inputs(user_args)
-
-    if not meta_data_path:
-        if user_args.meta_file is not None:
-            meta_file = abspath(user_args.meta_file)
-            if not pexists(meta_file):
-                raise IOError("Meta data file doesn't exist.")
-        else:
-            raise ValueError('Metadata file must be provided '
-                             'when not using pyradigm/ARFF inputs.')
-
-        sample_ids, classes = get_metadata(meta_file)
-    else:
-        print('Using meta data from:\n{}'.format(meta_data_path))
-        sample_ids, classes = get_metadata_in_pyradigm(meta_data_path,
-                                                       meta_data_format)
-
-    if user_args.out_dir is not None:
-        out_dir = realpath(user_args.out_dir)
-    else:
-        out_dir = pjoin(realpath(os.getcwd()), cfg.output_dir_default)
-
-    try:
-        os.makedirs(out_dir, exist_ok=True)
-    except:
-        raise IOError('Output folder could not be created.')
-
-    train_perc = np.float32(user_args.train_perc)
-    if not (0.01 <= train_perc <= 0.99):
-        raise ValueError("Training percentage {} out of bounds "
-                         "- must be >= 0.01 and <= 0.99".format(train_perc))
-
-    num_rep_cv = np.int64(user_args.num_rep_cv)
-    if num_rep_cv < 10:
-        raise ValueError("Atleast 10 repetitions of CV is recommened.")
-
-    num_procs = check_num_procs(user_args.num_procs)
-
-    class_set, subgroups, positive_class = validate_class_set(classes,
-                                                              user_args.sub_groups,
-                                                              user_args.positive_class)
-
-    feature_selection_size = validate_feature_selection_size(
-            user_args.reduced_dim_size)
-
-    impute_strategy = validate_impute_strategy(user_args.impute_strategy)
-
-    covar_list, covar_method = check_covariate_options(
-            user_args.covariates,user_args.covar_method)
-
-    grid_search_level = user_args.gs_level.lower()
-    if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
-        raise ValueError('Unrecognized level of grid search. Valid choices: {}'
-                         ''.format(cfg.GRIDSEARCH_LEVELS))
-
+    class_set, subgroups, positive_class = validate_class_set(
+            classes, user_args.sub_groups, user_args.positive_class)
     classifier = check_classifier(user_args.classifier)
-    dim_red_method = user_args.dim_red_method.lower()
 
     # saving the validated and expanded values to disk for later use.
     options_to_save = [sample_ids, classes, out_dir, user_feature_paths,
                        user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
-                       positive_class, subgroups, feature_selection_size, num_procs,
+                       positive_class, subgroups, reduced_dim_size, num_procs,
                        grid_search_level, classifier, dim_red_method]
     options_path = save_options(options_to_save, out_dir)
 
@@ -484,13 +393,13 @@ def parse_args():
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
-           feature_selection_size, impute_strategy, num_procs, \
+           reduced_dim_size, impute_strategy, num_procs, \
            grid_search_level, classifier, dim_red_method, \
            covar_list, covar_method
 
 
 def validate_class_set(classes, subgroups, positive_class=None):
-    "Ensures class names are valid and sub-groups exist."
+    """Ensures class names are valid and sub-groups exist."""
 
     class_set = list(set(classes.values()))
 
@@ -710,10 +619,7 @@ def import_datasets(method_list, out_dir, subjects, classes,
 
 
 def cli():
-    """
-    Main entry point.
-
-    """
+    """ Main entry point. """
 
     subjects, classes, out_dir, options_path, user_feature_paths, \
     user_feature_type, \
