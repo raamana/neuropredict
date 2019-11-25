@@ -69,7 +69,7 @@ def parse_args():
 
 
 def cli():
-    """ Main entry point."""
+    """Main entry point, that logs output to stdout as well as a file in out_dir"""
 
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \
@@ -184,6 +184,7 @@ class RegressionWorkflow(BaseWorkflow):
 
         self._compare_metric_distrib()
         self._plot_residuals_vs_target()
+        self._vis_feature_importance()
 
 
     def _compare_metric_distrib(self):
@@ -240,6 +241,12 @@ class RegressionWorkflow(BaseWorkflow):
                            y_label='Predicted target',
                            x_label='True targets',
                            trend_line=np.median(target_medians))
+
+
+    def _vis_feature_importance(self):
+        """Feature importance plots."""
+
+        print('NOTE: feature importance plots are yet to be implemented.')
 
 
     def _unroll(self, in_dict, ds_id):
