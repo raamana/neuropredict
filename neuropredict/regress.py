@@ -47,7 +47,7 @@ def parse_args():
     meta_data_path, meta_data_format, sample_ids, classes, out_dir, train_perc, \
     num_rep_cv, num_procs, reduced_dim_size, impute_strategy, covar_list, \
     covar_method, grid_search_level, dim_red_method = parse_common_args(
-        parser)
+            parser)
 
     regressor = check_regressor(user_args.regressor)
 
@@ -74,7 +74,7 @@ def cli():
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \
     num_procs, grid_search_level, regressor, dim_red_method, \
-        covar_list, covar_method = parse_args()
+    covar_list, covar_method = parse_args()
 
     print('Running neuropredict version {} for Regression'.format(__version__))
 
@@ -223,7 +223,8 @@ class RegressionWorkflow(BaseWorkflow):
         else:
             targets_to_plot = true_targets
         file_suffix = target_type.replace(' ', '_').lower()
-        fig_out_path = pjoin(self._fig_out_dir, 'residuals_vs_{}'.format(file_suffix))
+        fig_out_path = pjoin(self._fig_out_dir,
+                             'residuals_vs_{}'.format(file_suffix))
         multi_scatter_plot(y_data=residuals,
                            x_data=targets_to_plot,
                            fig_out_path=fig_out_path,

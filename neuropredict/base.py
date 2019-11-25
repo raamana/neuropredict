@@ -119,7 +119,7 @@ class BaseWorkflow(object):
     def _summarize_expt(self):
         """Summarize the experiment for user info"""
 
-        print('\nCURRENT EXPERIMENT:\n{line}'.format(line='-'*50))
+        print('\nCURRENT EXPERIMENT:\n{line}'.format(line='-' * 50))
         print('Training percentage      : {:.2}'.format(self.train_perc))
         print('Number of CV repetitions : {}'.format(self.num_rep_cv))
         print('Predictive model chosen  : {}'.format(self.pred_model))
@@ -189,7 +189,7 @@ class BaseWorkflow(object):
         train_set = self._id_list[:self._train_set_size]
         test_set = list(set(self._id_list) - set(train_set))
 
-        for ds_id, ((train_data, train_targets), (test_data, test_targets))\
+        for ds_id, ((train_data, train_targets), (test_data, test_targets)) \
                 in self.datasets.get_subsets((train_set, test_set)):
             # print('Dataset {}'.format(ds_id))
 
@@ -203,7 +203,7 @@ class BaseWorkflow(object):
             # covariate regression / deconfounding WITHOUT using target values
             train_covar, test_covar = self._get_covariate_data(train_set, test_set)
             train_data, test_data = self._deconfound_data(train_data, train_covar,
-                                                         test_data, test_covar)
+                                                          test_data, test_covar)
 
             # deconfounding targets could be added here in the future if needed
 
@@ -289,7 +289,7 @@ class BaseWorkflow(object):
         #   - step 1 : feature selector / dim reducer
         dim_red = pipeline.steps[1]
         est = pipeline.steps[-1]  # the final step in an sklearn pipeline
-                                  #   is always an estimator/classifier
+        #   is always an estimator/classifier
 
         feat_importance = None
         if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
@@ -325,7 +325,7 @@ class BaseWorkflow(object):
         # with builtin multiprocessing library
         gs = GridSearchCV(estimator=pipeline,
                           param_grid=param_grid,
-                          cv=inner_cv, # TODO using default scoring metric?
+                          cv=inner_cv,  # TODO using default scoring metric?
                           refit=cfg.refit_best_model_on_ALL_training_set)
 
         # ignoring some not-so-critical warnings
@@ -359,7 +359,7 @@ class BaseWorkflow(object):
     def save(self):
         """Saves the results and state to disk."""
 
-        out_dict = { var : getattr(self, var, None) for var in cfg.results_to_save}
+        out_dict = {var: getattr(self, var, None) for var in cfg.results_to_save}
 
         try:
             with open(self._out_results_path, 'wb') as res_fid:
@@ -811,7 +811,7 @@ def parse_common_args(parser):
     impute_strategy = validate_impute_strategy(user_args.impute_strategy)
 
     covar_list, covar_method = check_covariate_options(
-            user_args.covariates,user_args.covar_method)
+            user_args.covariates, user_args.covar_method)
 
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
@@ -824,6 +824,7 @@ def parse_common_args(parser):
            meta_data_path, meta_data_format, sample_ids, classes, out_dir, \
            train_perc, num_rep_cv, num_procs, reduced_dim_size, impute_strategy, \
            covar_list, covar_method, grid_search_level, dim_red_method
+
 
 def organize_inputs(user_args):
     """
@@ -852,7 +853,7 @@ def organize_inputs(user_args):
     meta_data_format = None
 
     if hasattr(user_args, 'fs_subject_dir') and \
-        not_unspecified(user_args.fs_subject_dir):
+            not_unspecified(user_args.fs_subject_dir):
         fs_subject_dir = abspath(user_args.fs_subject_dir)
         if not pexists(fs_subject_dir):
             raise IOError("Given Freesurfer directory doesn't exist.")
@@ -867,7 +868,7 @@ def organize_inputs(user_args):
                              'arff_paths']
     not_none_count = 0
     for fmt in mutually_excl_formats:
-        if  hasattr(user_args, fmt) and \
+        if hasattr(user_args, fmt) and \
                 not_unspecified(getattr(user_args, fmt)):
             not_none_count = not_none_count + 1
     if not_none_count > 1:
@@ -875,21 +876,21 @@ def organize_inputs(user_args):
                          '{}'.format(mutually_excl_formats))
 
     if hasattr(user_args, 'user_feature_paths') and \
-        not_unspecified(user_args.user_feature_paths):
+            not_unspecified(user_args.user_feature_paths):
         user_feature_paths = check_paths(user_args.user_feature_paths,
                                          path_type='user defined (dir_of_dirs)')
         atleast_one_feature_specified = True
         user_feature_type = 'dir_of_dirs'
 
     elif hasattr(user_args, 'data_matrix_paths') and \
-        not_unspecified(user_args.data_matrix_paths):
+            not_unspecified(user_args.data_matrix_paths):
         user_feature_paths = check_paths(user_args.data_matrix_paths,
                                          path_type='data matrix')
         atleast_one_feature_specified = True
         user_feature_type = 'data_matrix'
 
     elif hasattr(user_args, 'pyradigm_paths') and \
-        not_unspecified(user_args.pyradigm_paths):
+            not_unspecified(user_args.pyradigm_paths):
         user_feature_paths = check_paths(user_args.pyradigm_paths,
                                          path_type='pyradigm')
         atleast_one_feature_specified = True
@@ -898,7 +899,7 @@ def organize_inputs(user_args):
         user_feature_type = 'pyradigm'
 
     elif hasattr(user_args, 'arff_paths') and \
-        not_unspecified(user_args.arff_paths):
+            not_unspecified(user_args.arff_paths):
         user_feature_paths = check_paths(user_args.arff_paths, path_type='ARFF')
         atleast_one_feature_specified = True
         user_feature_type = 'arff'

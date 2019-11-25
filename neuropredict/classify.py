@@ -30,8 +30,10 @@ def auc_weighted(true_labels, predicted_proba_per_class):
 
     return roc_auc_score(true_labels, predicted_proba_per_class, average='weighted')
 
+
 auc_metric_name = auc_weighted.__name__
 predict_proba_name = 'predict_proba'
+
 
 class ClassificationWorkflow(BaseWorkflow):
     """
@@ -108,10 +110,10 @@ class ClassificationWorkflow(BaseWorkflow):
             self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
 
             if len(self._target_set) == 2:
-                # TODO it is possible the column order in predicted_prob may not match
-                #   the order in self._target_set
+                # TODO it is possible the column order in predicted_prob may not
+                #  match the order in self._target_set
                 auc = auc_weighted(true_targets,
-                                   predicted_prob[:,self._positive_class_index])
+                                   predicted_prob[:, self._positive_class_index])
                 self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
@@ -135,6 +137,7 @@ class ClassificationWorkflow(BaseWorkflow):
         self._compare_misclf_rate()
         self._feature_imortance_plot()
 
+
     def _compare_metric_distr(self):
         """Main perf comparion plot"""
 
@@ -156,13 +159,14 @@ class ClassificationWorkflow(BaseWorkflow):
                                   horiz_line_label=horiz_line_label,
                                   upper_lim_y=1.01, ytick_step=0.05)
 
+
     def _viz_confusion_matrices(self):
         """Confusion matrices for each feature set"""
 
         # forcing a tuple to ensure the order, in compound array and in viz's
         ds_id_order = tuple(self.datasets.modality_ids)
         num_datasets = len(ds_id_order)
-        num_classes  = len(self._target_set)
+        num_classes = len(self._target_set)
         conf_mat_all = np.empty((self.num_rep_cv, num_classes, num_classes,
                                  num_datasets))
         for idx, ds in enumerate(ds_id_order):
@@ -177,10 +181,9 @@ class ClassificationWorkflow(BaseWorkflow):
     def _compare_misclf_rate(self):
         """Misclassification rate plot"""
 
+
     def _feature_imortance_plot(self):
         """Bar plot comparing feature importances"""
-
-
 
 
 def make_visualizations(results_file_path, out_dir, options_path=None):
@@ -376,7 +379,7 @@ def parse_args():
     meta_data_path, meta_data_format, sample_ids, classes, out_dir, train_perc, \
     num_rep_cv, num_procs, reduced_dim_size, impute_strategy, covar_list, \
     covar_method, grid_search_level, dim_red_method = parse_common_args(
-        parser)
+            parser)
 
     class_set, subgroups, positive_class = validate_class_set(
             classes, user_args.sub_groups, user_args.positive_class)
@@ -552,11 +555,6 @@ def import_datasets(method_list, out_dir, subjects, classes,
         a string identifying the structure of feature set.
         Choices = ('dir_of_dirs', 'data_matrix')
 
-    user_impute_strategy : str
-        Strategy to handle the missing data:
-        whether to raise an error if data is missing,
-        or to impute them using the method chosen here.
-
     Returns
     -------
     method_names : list of str
@@ -571,8 +569,10 @@ def import_datasets(method_list, out_dir, subjects, classes,
 
     """
 
+
     def clean_str(string):
         return ' '.join(string.strip().split(' _-:\n\r\t'))
+
 
     method_names = list()
     outpath_list = list()
@@ -625,8 +625,8 @@ def cli():
     user_feature_type, \
     fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
     feature_selection_size, impute_strategy, num_procs, \
-    grid_search_level, classifier, feat_select_method,\
-        covar_list, covar_method = parse_args()
+    grid_search_level, classifier, feat_select_method, \
+    covar_list, covar_method = parse_args()
 
     print('Running neuropredict version {} for Classification'.format(__version__))
 
@@ -677,7 +677,6 @@ def cli():
         out_results_path = clf_expt.run()
 
     print('All done.\n')
-
 
     return
 
