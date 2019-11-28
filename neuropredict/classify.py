@@ -144,14 +144,18 @@ class ClassificationWorkflow(BaseWorkflow):
         """Main perf comparion plot"""
 
         for metric, m_data in self.results.metric_val.items():
+            metric = metric.lower()
             consolidated = np.empty((self.num_rep_cv, len(m_data)))
             for index, ds_id in enumerate(self.datasets.modality_ids):
                 consolidated[:, index] = m_data[ds_id]
 
             fig_out_path = pjoin(self._fig_out_dir, 'compare_{}'.format(metric))
-            if 'accuracy' in metric.lower():
+            if 'accuracy' in metric:
                 horiz_line_loc = self._chance_accuracy
-                horiz_line_label = 'chance accuracy'
+                horiz_line_label = 'chance'
+            elif 'roc' in metric or 'auc' in metric:
+                horiz_line_loc = 0.5
+                horiz_line_label = 'chance'
             else:
                 horiz_line_loc = None
                 horiz_line_label = None
