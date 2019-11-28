@@ -688,8 +688,7 @@ def get_parser_base():
                                dest="covariates",
                                nargs='+',
                                default=cfg.default_covariates,
-                               help=help_covariate_list,
-                               type=str.lower)
+                               help=help_covariate_list)
 
     pipeline_args.add_argument("-cm", "--covar_method", action="store",
                                dest="covar_method",
