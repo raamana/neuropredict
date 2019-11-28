@@ -144,7 +144,7 @@ class CVResults(object):
         """Simple summary"""
 
         return 'Metrics : {}\n # runs : {}, # datasets : {}\n{}' \
-               ''.format(', '.join(self.metric_set.keys()), self._count,
+               ''.format(', '.join(self.metric_val.keys()), self._count,
                          len(self._dataset_ids), self._metric_summary())
 
 
