@@ -820,9 +820,10 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
         ytick_loc = np.arange(lower_lim, upper_lim, ytick_step)
 
     if horiz_line_loc is not None:
-        ytick_loc = round_(np.append(ytick_loc, horiz_line_loc))
+        ytick_loc = np.append(ytick_loc, horiz_line_loc)
         plt.text(0.05, horiz_line_loc, horiz_line_label)
 
+    ytick_loc = round_(ytick_loc)
     ax.set_yticks(ytick_loc)
     ax.set_yticklabels(ytick_loc)
     plt.ylabel(y_label, fontsize=cfg.FONT_SIZE)
