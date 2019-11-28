@@ -22,16 +22,19 @@ from neuropredict.utils import (check_classifier, check_covariates, load_options
                                 make_dataset_filename, not_unspecified, save_options,
                                 sub_group_identifier, uniquify_in_order)
 from neuropredict.visualize import compare_distributions, confusion_matrices
-from sklearn.metrics import confusion_matrix, roc_auc_score
+from sklearn.metrics import confusion_matrix, roc_curve
+from sklearn.metrics.ranking import auc as auc_sklearn
 
 
-def auc_weighted(true_labels, predicted_proba_per_class):
-    """Wrapper around sklearn roc_auc_score to ensure it is weighted."""
+def area_under_roc(true_labels, predicted_prob_pos_class, pos_class):
+    """Wrapper to avoid relying on sklearn automatic inference of positive class!"""
 
-    return roc_auc_score(true_labels, predicted_proba_per_class, average='weighted')
+    false_pr, true_pr, _thresholds = roc_curve(true_labels, predicted_prob_pos_class,
+                                               pos_label=pos_class)
+    return auc_sklearn(false_pr, true_pr)
 
 
-auc_metric_name = auc_weighted.__name__
+auc_metric_name = area_under_roc.__name__
 predict_proba_name = 'predict_proba'
 
 
@@ -110,10 +113,9 @@ class ClassificationWorkflow(BaseWorkflow):
             self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
 
             if len(self._target_set) == 2:
-                # TODO it is possible the column order in predicted_prob may not
-                #  match the order in self._target_set
-                auc = auc_weighted(true_targets,
-                                   predicted_prob[:, self._positive_class_index])
+                auc = area_under_roc(true_targets,
+                                     predicted_prob[:, self._positive_class_index],
+                                     self._positive_class)
                 self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
