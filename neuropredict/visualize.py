@@ -26,10 +26,10 @@ else:
 def feature_importance_map(feat_imp,
                            method_labels,
                            base_output_path,
-                           feature_names = None,
-                           show_distr = False,
-                           plot_title = 'feature importance',
-                           show_all = False):
+                           feature_names=None,
+                           show_distr=False,
+                           plot_title='feature importance',
+                           show_all=False):
     """
         Generates a map/barplot of feature importance.
 
@@ -56,9 +56,10 @@ def feature_importance_map(feat_imp,
     plot_title : str
         Title of the importance map figure.
     show_all : bool
-        If true, this will attempt to show the importance values for all the features. 
-        Be advised if you have more than 50 features, the figure would illegible.
-        The default is to show only few important features (ranked by their median importance), when there is more than 25 features.
+        If true, this will attempt to show the importance values for all the
+        features. Be advised if you have more than 50 features, the figure would
+        illegible. The default is to show only few important features (ranked by
+        their median importance), when there is more than 25 features.
 
     Returns
     -------
@@ -74,7 +75,7 @@ def feature_importance_map(feat_imp,
         ax = ax.flatten()
     else:
         fig, ax_h = plt.subplots(figsize=[9, 12])
-        ax = [ax_h] # to support indexing
+        ax = [ax_h]  # to support indexing
 
     for dd in range(num_datasets):
 
@@ -88,10 +89,10 @@ def feature_importance_map(feat_imp,
 
         num_features = feat_imp[dd].shape[1]
         if feature_names is None:
-            feat_labels = [ "f{}".format(ix) for ix in num_features]
+            feat_labels = np.array(["f{}".format(ix) for ix in range(num_features)])
         else:
             feat_labels = feature_names[dd]
-            if len(feat_labels)<num_features:
+            if len(feat_labels) < num_features:
                 raise ValueError('Insufficient number of feature labels.')
 
         usable_imp, freq_sel, median_feat_imp, stdev_feat_imp, conf_interval \
@@ -103,10 +104,12 @@ def feature_importance_map(feat_imp,
                   'Use the exported results to plot make importance maps.'
                   ''.format(num_features, method_labels[dd],
                             cfg.max_allowed_num_features_importance_map))
-            sort_indices = np.argsort(median_feat_imp)[::-1] # ascending order, then reversing
-            selected_idx_display = sort_indices[:cfg.max_allowed_num_features_importance_map]
-            usable_imp_display = [ usable_imp[ix] for ix in selected_idx_display ]
-            selected_feat_imp  = median_feat_imp[selected_idx_display]
+            sort_indices = np.argsort(median_feat_imp)[
+                           ::-1]  # ascending order, then reversing
+            selected_idx_display = sort_indices[
+                                   :cfg.max_allowed_num_features_importance_map]
+            usable_imp_display = [usable_imp[ix] for ix in selected_idx_display]
+            selected_feat_imp = median_feat_imp[selected_idx_display]
             selected_imp_stdev = stdev_feat_imp[selected_idx_display]
             selected_conf_interval = conf_interval[selected_idx_display]
             selected_feat_names = feat_labels[selected_idx_display]
@@ -115,15 +118,16 @@ def feature_importance_map(feat_imp,
             selected_idx_display = None
             usable_imp_display = usable_imp
             selected_feat_imp = median_feat_imp
-            selected_imp_stdev= stdev_feat_imp
-            selected_conf_interval=conf_interval
+            selected_imp_stdev = stdev_feat_imp
+            selected_conf_interval = conf_interval
             selected_feat_names = feat_labels
             effective_num_features = num_features
 
         feat_ticks = range(effective_num_features)
 
         plt.sca(ax[dd])
-        # checking whether all features selected equal number of times (needed for violing pl
+        # checking whether all features selected equal number of times (needed for
+        # violing pl
         # violin distribution or stick bar plot?
         if show_distr:
             line_coll = ax[dd].violinplot(usable_imp_display,
@@ -134,21 +138,20 @@ def feature_importance_map(feat_imp,
             cmap = cm.get_cmap(cfg.CMAP_FEAT_IMP, effective_num_features)
             for cc, ln in enumerate(line_coll['bodies']):
                 ln.set_facecolor(cmap(cc))
-                #ln.set_label(feat_labels[cc])
+                # ln.set_label(feat_labels[cc])
         else:
             barwidth = max(0.05, min(0.9, 8.0 / effective_num_features))
             rects = ax[dd].barh(feat_ticks, selected_feat_imp,
-                               height=barwidth, xerr=selected_conf_interval)
+                                height=barwidth, xerr=selected_conf_interval)
 
         ax[dd].tick_params(axis='both', which='major', labelsize=10)
         ax[dd].grid(axis='x', which='major')
 
         ax[dd].set_yticks(feat_ticks)
         ax[dd].set_ylim(np.min(feat_ticks) - 1, np.max(feat_ticks) + 1)
-        ax[dd].set_yticklabels(selected_feat_names) #, rotation=45)  # 'vertical'
+        ax[dd].set_yticklabels(selected_feat_names)  # , rotation=45)  # 'vertical'
         ax[dd].set_title(method_labels[dd])
         print()
-
 
     if num_datasets < len(ax):
         fig.delaxes(ax[-1])
