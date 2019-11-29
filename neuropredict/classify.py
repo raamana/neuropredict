@@ -58,7 +58,7 @@ class ClassificationWorkflow(BaseWorkflow):
                  reduced_dim=cfg.default_reduced_dim_size,
                  train_perc=cfg.default_train_perc,
                  num_rep_cv=cfg.default_num_repetitions,
-                 scoring=cfg.default_scoring_metric,
+                 scoring=cfg.default_metric_set_classification,
                  positive_class=None,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
                  out_dir=None,
