@@ -410,6 +410,27 @@ class BaseWorkflow(object):
         from this workflow."""
 
 
+    def _plot_feature_imortance(self):
+        """Bar plot comparing feature importance"""
+
+        from neuropredict.visualize import feature_importance_map
+        fig_base_out_path = pjoin(self._fig_out_dir, 'feature_importance')
+
+        feat_imp = self.results.attr[cfg.feat_imp_name]
+        out_feat_imp = list()
+        feat_names = list()
+        for idx, ds in enumerate(self.datasets.modality_ids):
+            num_features = feat_imp[(ds, 0)].size
+            fi_arr = np.empty((self.num_rep_cv, num_features))
+            for run in range(self.num_rep_cv):
+                fi_arr[run, :] = feat_imp[(ds, run)]
+            out_feat_imp.append(fi_arr)
+            feat_names.append(self.datasets.feature_names[ds])
+
+        feature_importance_map(out_feat_imp, self.datasets.modality_ids,
+                               fig_base_out_path)
+
+
 def get_parser_base():
     """Parser to specify arguments and their defaults."""
 
