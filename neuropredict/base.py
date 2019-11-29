@@ -127,6 +127,10 @@ class BaseWorkflow(object):
         print('Level of grid search     : {}'.format(self.grid_search_level))
         print('Number of processors     : {}'.format(self.num_procs))
 
+        if len(self.covariates) > 0:
+            print('Covarites selected   : {}'.format(','.join(self.covariates)))
+            print('Deconfoudning method : {}'.format(self.deconfounder))
+
         if self._workflow_type == 'classify':
             self._target_sizes = list(self.datasets.target_sizes.values())
             self._chance_accuracy = chance_accuracy(self._target_sizes, 'balanced')
