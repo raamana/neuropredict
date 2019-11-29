@@ -57,6 +57,8 @@ importance_attr = {'randomforestclassifier': 'feature_importances_',
                    'svm'                   : 'coef_',
                    'xgboost'               : 'feature_importances_', }
 
+feat_imp_name = 'feat_importance'
+
 # # ------- classifier
 
 __classifier_CHOICES = ('RandomForestClassifier',

@@ -188,9 +188,6 @@ class ClassificationWorkflow(BaseWorkflow):
         """Misclassification rate plot"""
 
 
-    def _feature_imortance_plot(self):
-        """Bar plot comparing feature importances"""
-
 
 def make_visualizations(results_file_path, out_dir, options_path=None):
     """
