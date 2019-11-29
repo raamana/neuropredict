@@ -286,10 +286,12 @@ class BaseWorkflow(object):
         "Extracts the feature importance of input features, if available."
 
         # assuming order in pipeline construction :
-        #   - step 0 : preprocessign (robust scaling)
-        #   - step 1 : feature selector / dim reducer
-        dim_red = pipeline.steps[1]
-        est = pipeline.steps[-1]  # the final step in an sklearn pipeline
+        #   - step 0 : feature selector / dim reducer
+        #   - step 1 : estimator
+        # pipeline.steps returns a tuple (name, est_object),
+        #   so [1] is necessary to access the actual object
+        dim_red = pipeline.steps[0][1]
+        est = pipeline.steps[-1][1]  # the final step in an sklearn pipeline
         #   is always an estimator/classifier
 
         feat_importance = None
