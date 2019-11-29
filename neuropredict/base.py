@@ -66,6 +66,8 @@ class BaseWorkflow(object):
         self._scoring = scoring
         self.grid_search_level = grid_search_level
 
+        if out_dir is None:
+            out_dir = getcwd()
         self.out_dir = out_dir
         self.num_procs = num_procs
         self.user_options = user_options
