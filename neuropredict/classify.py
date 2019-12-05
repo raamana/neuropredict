@@ -98,7 +98,8 @@ class ClassificationWorkflow(BaseWorkflow):
         self.results.meta['positive_class'] = self._positive_class
 
 
-    def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
+    def _eval_predictions(self, pipeline, test_data, true_targets,
+                          run_id, ds_id, results):
         """
         Evaluate predictions and perf estimates to results class.
 
@@ -106,21 +107,21 @@ class ClassificationWorkflow(BaseWorkflow):
         """
 
         predicted_targets = pipeline.predict(test_data)
-        self.results.add(run_id, ds_id, predicted_targets, true_targets)
+        results.add(run_id, ds_id, predicted_targets, true_targets)
 
         if hasattr(pipeline, predict_proba_name):
             predicted_prob = pipeline.predict_proba(test_data)
-            self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
+            results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
 
             if len(self._target_set) == 2:
                 auc = area_under_roc(true_targets,
                                      predicted_prob[:, self._positive_class_index],
                                      self._positive_class)
-                self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
+                results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
                                     labels=self._target_set)  # to control row order
-        self.results.add_diagnostics(run_id, ds_id, conf_mat,
+        results.add_diagnostics(run_id, ds_id, conf_mat,
                                      true_targets[predicted_targets != true_targets])
 
 

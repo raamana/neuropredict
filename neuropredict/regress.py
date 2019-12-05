@@ -157,7 +157,8 @@ class RegressionWorkflow(BaseWorkflow):
         self._show_predicted_in_residuals_plot = show_predicted_in_residuals_plot
 
 
-    def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
+    def _eval_predictions(self, pipeline, test_data, true_targets,
+                          run_id, ds_id, results):
         """
         Evaluate predictions and perf estimates to results class.
 
@@ -165,8 +166,8 @@ class RegressionWorkflow(BaseWorkflow):
         """
 
         predicted_targets = pipeline.predict(test_data)
-        self.results.add(run_id, ds_id, predicted_targets, true_targets)
-        self.results.add_diagnostics(run_id, ds_id, true_targets, predicted_targets)
+        results.add(run_id, ds_id, predicted_targets, true_targets)
+        results.add_diagnostics(run_id, ds_id, true_targets, predicted_targets)
 
 
     def summarize(self):

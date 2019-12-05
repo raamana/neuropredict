@@ -165,30 +165,20 @@ class BaseWorkflow(object):
         """Actual CV"""
 
         if self.num_procs > 1:
-            raise NotImplementedError('parallel runs not implemented yet!'
-                                      'Use num_procs=1 for now')
             print('Parallelizing the repetitions of CV with {} processes ...'
                   ''.format(self.num_procs))
             with Manager() as proxy_manager:
-                # TODO these inputs may not need to be shared, as the method is a
-                #  class member and has direct access to the inputs passed here
-                shared_inputs = proxy_manager.list(
-                        [self.datasets, self.impute_strategy, self.reduced_dim,
-                         self.train_perc, self.user_options.out_dir,
-                         self.grid_search_level, self.pred_model,
-                         self.dim_red_method])
-                partial_func_holdout = partial(self._single_run_cv, *shared_inputs)
-
+                shared_inputs = proxy_manager.list([self.results, ])
+                partial_single_run = partial(self._single_run_cv, *shared_inputs)
                 with Pool(processes=self.num_procs) as pool:
-                    cv_results = pool.map(partial_func_holdout,
-                                          range(self.num_rep_cv))
+                    pool.map(partial_single_run, list(range(self.num_rep_cv)))
         else:
-            # switching to regular sequential for loop to avoid any parallel drama
+            # using simple sequential for loop to avoid any parallel processing drama
             for rep in range(self.num_rep_cv):
-                self._single_run_cv(rep)
+                self._single_run_cv(self.results, rep)
 
 
-    def _single_run_cv(self, run_id=None):
+    def _single_run_cv(self, results, run_id=None):
         """Implements a single run of train, optimize and predict"""
 
         random.shuffle(self._id_list)
@@ -217,14 +207,14 @@ class BaseWorkflow(object):
             best_pipeline, best_params, feat_importance = \
                 self._optimize_pipeline_on_train_set(train_data, train_targets)
 
-            self.results.add_attr(run_id, ds_id, 'feat_importance', feat_importance)
+            results.add_attr(run_id, ds_id, 'feat_importance', feat_importance)
 
             self._eval_predictions(best_pipeline, test_data, test_targets,
-                                   run_id, ds_id)
+                                   run_id, ds_id, results)
 
         # dump results if checkpointing is requested
         if self._checkpointing:
-            self.results.dump(self.out_dir)
+            results.dump(self.out_dir)
 
 
     def _get_covariates(self, train_set, test_set):
@@ -355,7 +345,8 @@ class BaseWorkflow(object):
 
 
     @abstractmethod
-    def _eval_predictions(self, pipeline, test_data, true_targets, run_id, ds_id):
+    def _eval_predictions(self, pipeline, test_data, true_targets,
+                          run_id, ds_id, results):
         """
         Evaluate predictions and perf estimates to results class.
         Prints a quick summary too, as an indication of progress.
