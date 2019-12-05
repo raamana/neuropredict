@@ -2,7 +2,8 @@ from __future__ import print_function, division
 
 __all__ = ['feature_importance_map', 'confusion_matrices',
            'freq_hist_misclassifications', 'metric_distribution',
-           'compare_misclf_pairwise_parallel_coord_plot', 'compare_misclf_pairwise', ]
+           'compare_misclf_pairwise_parallel_coord_plot',
+           'compare_misclf_pairwise', ]
 
 import itertools
 import warnings
@@ -10,7 +11,7 @@ from sys import version_info
 
 import matplotlib.pyplot as plt
 import numpy
-import numpy.matlib # to force
+import numpy.matlib  # to force
 import numpy as np
 import scipy.stats
 from matplotlib import cm
@@ -177,11 +178,11 @@ def mean_confidence_interval(data, confidence=0.95):
 
     """
 
-    arr = 1.0*np.array(data, dtype=float)
-    n  = len(arr)
+    arr = 1.0 * np.array(data, dtype=float)
+    n = len(arr)
     mu = np.mean(arr)
     se = scipy.stats.sem(arr)
-    h  = se * scipy.stats.t._ppf((1+confidence)/2., n-1)
+    h = se * scipy.stats.t._ppf((1 + confidence) / 2., n - 1)
 
     return mu, h
 
@@ -227,7 +228,8 @@ def confusion_matrices(cfmat_array, class_labels,
                        cmap=cfg.CMAP_CONFMATX):
     """
     Display routine for the confusion matrix.
-    Entries in confusin matrix can be turned into percentages with `display_perc=True`.
+    Entries in confusin matrix can be turned into percentages with
+    `display_perc=True`.
 
     Use a separate method to iteratve over multiple datasets.
     confusion_matrix dime: [num_repetitions, num_classes, num_classes, num_datasets]
@@ -248,8 +250,8 @@ def confusion_matrices(cfmat_array, class_labels,
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
     if num_classes != cfmat_array.shape[2]:
-        raise ValueError("Invalid dimensions of confusion matrix.\n"
-                         " Need [num_repetitions, num_classes, num_classes, num_datasets]."
+        raise ValueError("Invalid dimensions of confusion matrix.\nNeed "
+                         "[num_repetitions, num_classes, num_classes, num_datasets]."
                          " Given shape : {}".format(cfmat_array.shape))
 
     np.set_printoptions(2)
@@ -367,8 +369,8 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
     """
 
     if conf_mat_array.shape[1] != num_classes or \
-                    conf_mat_array.shape[2] != num_classes or \
-                    len(conf_mat_array.shape) != 3:
+            conf_mat_array.shape[2] != num_classes or \
+            len(conf_mat_array.shape) != 3:
         raise ValueError('Invalid shape of confusion matrix array! '
                          'It must be num_rep x {nc} x {nc}'.format(nc=num_classes))
 
@@ -380,7 +382,8 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
                                                            num_classes, 1))
     avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
     # making it human readable : 0-100%
-    avg_cfmat_perc100 = 100 * np.around(avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
+    avg_cfmat_perc100 = 100 * np.around(avg_cfmat_perc,
+                                        decimals=cfg.PRECISION_METRICS)
 
     return avg_cfmat_perc100
 
@@ -396,16 +399,17 @@ def compute_pairwise_misclf(cfmat_array):
 
     num_misclf_axes = num_classes * (num_classes - 1)
 
-    avg_cfmat  = np.full([num_datasets, num_classes, num_classes], np.nan)
-    misclf_rate= np.full([num_datasets, num_misclf_axes], np.nan)
+    avg_cfmat = np.full([num_datasets, num_classes, num_classes], np.nan)
+    misclf_rate = np.full([num_datasets, num_misclf_axes], np.nan)
     for dd in range(num_datasets):
         # mean confusion over CV trials
-        avg_cfmat[dd, :, :] = mean_over_cv_trials(cfmat_array[:, :, :, dd], num_classes)
+        avg_cfmat[dd, :, :] = mean_over_cv_trials(cfmat_array[:, :, :, dd],
+                                                  num_classes)
 
         count = 0
         for ii, jj in itertools.product(range(num_classes), range(num_classes)):
             if ii != jj:
-                misclf_rate[dd,count] = avg_cfmat[dd, ii, jj]
+                misclf_rate[dd, count] = avg_cfmat[dd, ii, jj]
                 count = count + 1
 
     return avg_cfmat, misclf_rate
@@ -457,7 +461,7 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
     misclf_ax_labels_loc = list()
     handles = list()
 
-    misclf_ax_labels_loc = range(1,num_misclf_axes+1)
+    misclf_ax_labels_loc = range(1, num_misclf_axes + 1)
     for dd in range(num_datasets):
         h = ax.plot(misclf_ax_labels_loc, misclf_rate[dd, :], color=cmap(dd))
         handles.append(h[0])
@@ -467,7 +471,7 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
     ax.set_xticklabels(misclf_ax_labels)
     ax.set_ylabel('misclassification rate (in %)')
     ax.set_xlabel('misclassification type')
-    ax.set_xlim([0.75, num_misclf_axes+0.25])
+    ax.set_xlim([0.75, num_misclf_axes + 0.25])
 
     fig.tight_layout()
 
@@ -504,7 +508,7 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels,
         raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
                          "[num_repetitions, num_classes, num_classes, num_datasets]")
 
-    num_misclf_axes = num_classes*(num_classes-1)
+    num_misclf_axes = num_classes * (num_classes - 1)
 
     out_path.replace(' ', '_')
 
@@ -525,7 +529,7 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels,
     handles = list()
     for mca in range(num_misclf_axes):
         x_pos = np.array(range(num_datasets)) + mca * (num_datasets + 1)
-        h = ax.bar(x_pos, misclf_rate[:,mca], color=cmap(range(num_datasets)))
+        h = ax.bar(x_pos, misclf_rate[:, mca], color=cmap(range(num_datasets)))
         handles.append(h)
         misclf_ax_labels_loc.append(np.mean(x_pos))
 
@@ -569,7 +573,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
         raise ValueError("Invalid dimensions of confusion matrix.\n Shape must be: "
                          "[num_repetitions, num_classes, num_classes, num_datasets]")
 
-    num_misclf_axes = num_classes*(num_classes-1)
+    num_misclf_axes = num_classes * (num_classes - 1)
 
     avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
 
@@ -579,7 +583,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
             misclf_ax_labels.append("{} --> {}"
                                     "".format(class_labels[ii], class_labels[jj]))
 
-    theta = 2 * np.pi * np.linspace(0, 1 -1.0/num_misclf_axes, num_misclf_axes)
+    theta = 2 * np.pi * np.linspace(0, 1 - 1.0 / num_misclf_axes, num_misclf_axes)
 
     fig = plt.figure(figsize=[9, 9])
     cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
@@ -592,21 +596,21 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     ax.set_theta_offset(np.pi / 2.0)
 
     for dd in range(num_datasets):
-        ax.plot(theta, misclf_rate[dd,:], color= cmap(dd),
+        ax.plot(theta, misclf_rate[dd, :], color=cmap(dd),
                 linewidth=cfg.LINE_WIDTH)
         # connecting the last axis to the first to close the loop
         ax.plot([theta[-1], theta[0]],
                 [misclf_rate[dd, -1], misclf_rate[dd, 0]],
                 color=cmap(dd), linewidth=cfg.LINE_WIDTH)
 
-    lbl_handles = ax.set_thetagrids(theta * 360/(2*np.pi),
-                      labels=misclf_ax_labels,
-                      va = 'top',
-                      ha = 'center',
-                      fontsize=cfg.FONT_SIZE)
+    lbl_handles = ax.set_thetagrids(theta * 360 / (2 * np.pi),
+                                    labels=misclf_ax_labels,
+                                    va='top',
+                                    ha='center',
+                                    fontsize=cfg.FONT_SIZE)
 
     ax.grid(linewidth=cfg.LINE_WIDTH)
-    tick_perc = [ '{:.2f}%'.format(tt) for tt in ax.get_yticks() ]
+    tick_perc = ['{:.2f}%'.format(tt) for tt in ax.get_yticks()]
     ax.set_yticklabels(tick_perc, fontsize=cfg.FONT_SIZE)
     # ax.set_yticks(np.arange(100 / num_classes, 100, 10))
     plt.tick_params(axis='both', which='major')
@@ -638,11 +642,11 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
 def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
     "Utility function to compute subject-wise percentage of misclassification."
 
-    num_samples   = len(num_times_tested[0].keys())
-    num_datasets  = len(num_times_tested)
-    perc_misclsfd = [None]*num_datasets
-    never_tested  = list() # since train/test samples are the same
-                           # across different feature sets
+    num_samples = len(num_times_tested[0].keys())
+    num_datasets = len(num_times_tested)
+    perc_misclsfd = [None] * num_datasets
+    never_tested = list()  # since train/test samples are the same
+    # across different feature sets
     for dd in range(num_datasets):
         perc_misclsfd[dd] = dict()
         for sid in num_times_misclfd[dd].keys():
@@ -658,7 +662,7 @@ def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
 
 
 def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_labels,
-                                 outpath, separate_plots = False):
+                                 outpath, separate_plots=False):
     """
     Summary of most/least frequently misclassified subjects for further analysis
 
@@ -666,6 +670,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
 
     num_bins = cfg.MISCLF_HIST_NUM_BINS
     count_thresh = cfg.MISCLF_PERC_THRESH
+
 
     def annnotate_plots(ax_h):
         "Adds axes labels and helpful highlights"
@@ -678,6 +683,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         ax_h.set_ylabel('number of subjects')
         ax_h.set_xlabel('percentage of misclassification')
 
+
     # computing the percentage of misclassification per subject
     perc_misclsfd, never_tested, num_samples, num_datasets = \
         compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested)
@@ -686,12 +692,12 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         warnings.warn(' {} subjects were never selected for testing.'
                       ''.format(len(never_tested)))
         nvpath = outpath + '_never_tested_samples.txt'
-        with open(nvpath,'w') as nvf:
+        with open(nvpath, 'w') as nvf:
             nvf.writelines('\n'.join(never_tested))
 
     # plot frequency histogram per dataset
     if num_datasets > 1 and separate_plots:
-        fig, ax = plt.subplots(int(np.ceil(num_datasets/2.0)), 2,
+        fig, ax = plt.subplots(int(np.ceil(num_datasets / 2.0)), 2,
                                sharey=True,
                                figsize=[12, 9])
         ax = ax.flatten()
@@ -702,7 +708,8 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
         # calculating perc of most frequently misclassified subjects in each dataset
         most_freq_misclfd = [sid for sid in perc_misclsfd[dd].keys()
                              if perc_misclsfd[dd][sid] > count_thresh]
-        perc_most_freq_misclsfd = 100*len(most_freq_misclfd) / len(perc_misclsfd[dd])
+        perc_most_freq_misclsfd = 100 * len(most_freq_misclfd) / len(
+                perc_misclsfd[dd])
         this_method_label = "{} - {:.1f}%" \
                             "".format(method_labels[dd], perc_most_freq_misclsfd)
         if dd == 0:
@@ -715,15 +722,15 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
             ax_h.hist(perc_misclsfd[dd].values(), num_bins)
         else:
             ax_h.hist(list(perc_misclsfd[dd].values()), num_bins,
-                      histtype = 'stepfilled', alpha = cfg.MISCLF_HIST_ALPHA,
-                      label = this_method_label)
+                      histtype='stepfilled', alpha=cfg.MISCLF_HIST_ALPHA,
+                      label=this_method_label)
 
         # for annotation
         if num_datasets > 1 and separate_plots:
             ax_h.set_title(this_method_label)
             annnotate_plots(ax_h)
         else:
-            if dd == num_datasets-1:
+            if dd == num_datasets - 1:
                 ax_h.legend(loc=2)
                 annnotate_plots(ax_h)
 
@@ -775,8 +782,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
 
-    lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
-    upper_lim = round_(np.min([ 1.01, metric.max() ]))
+    lower_lim = round_(np.min([np.float64(0.9 / num_classes), metric.min()]))
+    upper_lim = round_(np.min([1.01, metric.max()]))
     step_tick = 0.05
     ax.set_ylim(lower_lim, upper_lim)
 
@@ -787,7 +794,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
 
     # add a tick for chance accuracy and/or % of majority class
-    # given the classifier trained on stratified set, we must use the balanced version
+    # given the classifier trained on stratified set, we must use the balanced
+    # version
     chance_acc = chance_accuracy(class_sizes, 'balanced')
 
     # rounding to ensure improved labels
@@ -802,8 +810,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
 
     # numbered labels
-    numbered_labels = ['{} {}'.format(int(ix),lbl)
-                       for ix, lbl in zip(method_ticks,labels)]
+    numbered_labels = ['{} {}'.format(int(ix), lbl)
+                       for ix, lbl in zip(method_ticks, labels)]
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
@@ -812,7 +820,7 @@ def metric_distribution(metric, labels, output_path, class_sizes,
     for ix, lh in enumerate(leg.legendHandles):
         lh.set_color(cmap(ix))
 
-    leg.set_frame_on(False) # making leg background transparent
+    leg.set_frame_on(False)  # making leg background transparent
 
     # fig.savefig(output_path + '.png', transparent=True, dpi=300,
     #             bbox_extra_artists=(leg,), bbox_inches='tight')
@@ -862,7 +870,7 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     # lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
     lower_lim = round_(metric.min())
     if upper_lim_y is not None:
-        upper_lim = round_(np.min([ upper_lim_y, metric.max() ]))
+        upper_lim = round_(np.min([upper_lim_y, metric.max()]))
     else:
         upper_lim = round_(metric.max())
     ax.set_ylim(lower_lim, upper_lim)
@@ -888,8 +896,8 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
 
     # numbered labels
-    numbered_labels = ['{} {}'.format(int(ix),lbl)
-                       for ix, lbl in zip(method_ticks,labels)]
+    numbered_labels = ['{} {}'.format(int(ix), lbl)
+                       for ix, lbl in zip(method_ticks, labels)]
 
     # putting legends outside the plot below.
     fig.subplots_adjust(bottom=0.2)
@@ -898,7 +906,7 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     for ix, lh in enumerate(leg.legendHandles):
         lh.set_color(cmap(ix))
 
-    leg.set_frame_on(False) # making leg background transparent
+    leg.set_frame_on(False)  # making leg background transparent
 
     # fig.savefig(output_path + '.png', transparent=True, dpi=300,
     #             bbox_extra_artists=(leg,), bbox_inches='tight')
@@ -920,8 +928,8 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
 
     if show_hist:
         fig, axes = plt.subplots(nrows=1, ncols=2, sharey=True,
-                               gridspec_kw=dict(width_ratios=(4.5, 1)),
-                               figsize=cfg.COMMON_FIG_SIZE)
+                                 gridspec_kw=dict(width_ratios=(4.5, 1)),
+                                 figsize=cfg.COMMON_FIG_SIZE)
         ax = axes[0]
         hist_ax = axes[1]
     else:
@@ -929,7 +937,7 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
     num_datasets = len(y_data)
 
     from matplotlib.cm import get_cmap
-    cmap = get_cmap(cfg.CMAP_DATASETS, max(num_datasets+1, 9))
+    cmap = get_cmap(cfg.CMAP_DATASETS, max(num_datasets + 1, 9))
     colors = np.array(cmap.colors)
 
     ds_labels = list(y_data.keys())
@@ -941,7 +949,7 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
         if show_hist:
             hist_ax.hist(y_data[ds_id], density=True, orientation="horizontal",
                          color=color, bins=cfg.num_bins_hist,
-                         alpha=cfg.alpha_regression_targets,)
+                         alpha=cfg.alpha_regression_targets, )
 
     if show_hist:
         hist_ax.yaxis.tick_right()
@@ -954,7 +962,7 @@ def multi_scatter_plot(y_data, x_data, fig_out_path,
     leg = ax.legend(ds_labels)
     extra_artists = [leg, ]
 
-    if show_zero_line: # helpful for residuals plot
+    if show_zero_line:  # helpful for residuals plot
         baseline = ax.axhline(y=0, color='black')
         extra_artists.append(baseline)
 

@@ -197,7 +197,7 @@ FONT_SIZE_LARGE = 25
 LINE_WIDTH_LARGE = 5
 
 CMAP_DATASETS = 'Dark2'
-CMAP_CONFMATX = 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
+CMAP_CONFMATX = 'cividis' # 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
 
 file_name_results = 'rhst_results.pkl'
 file_name_options = 'options_neuropredict.pkl'
