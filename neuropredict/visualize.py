@@ -846,6 +846,9 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
 
     """
 
+    if not np.isfinite(metric).all():
+        raise ValueError('NaN or Inf found in the input metric array!')
+
     num_repetitions = metric.shape[0]
     num_datasets = metric.shape[1]
     if len(labels) < num_datasets:
