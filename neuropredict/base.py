@@ -115,6 +115,9 @@ class BaseWorkflow(object):
 
         self._out_results_path = pjoin(self.out_dir, cfg.results_file_name)
 
+        self._tmp_dir = pjoin(self.out_dir, 'tmp_dump')
+        makedirs(self._tmp_dir, exist_ok=True)
+
         self._summarize_expt()
 
 
@@ -165,6 +168,10 @@ class BaseWorkflow(object):
         """Actual CV"""
 
         if self.num_procs > 1:
+
+            self._parall_proc = True
+            self._checkpointing = True
+
             print('Parallelizing the repetitions of CV with {} processes ...'
                   ''.format(self.num_procs))
             with Manager() as proxy_manager:
@@ -214,7 +221,7 @@ class BaseWorkflow(object):
 
         # dump results if checkpointing is requested
         if self._checkpointing:
-            results.dump(self.out_dir)
+            results.dump(self._tmp_dir, run_id)
 
 
     def _get_covariates(self, train_set, test_set):

@@ -7,9 +7,11 @@ Module defining methods and classes needed to manage results produced.
 from abc import abstractmethod
 import numpy as np
 from neuropredict import config_neuropredict as cfg
-from neuropredict.algorithms import get_estimator_by_name
 from neuropredict.utils import is_iterable_but_not_str
-
+from os.path import join as pjoin, exists
+from os import remove, listdir
+import pickle
+import fnmatch
 
 class CVResults(object):
     """
@@ -165,8 +167,24 @@ class CVResults(object):
 
 
     @abstractmethod
-    def dump(self, out_dir):
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
+
+
+    def dump(self, out_dir, run_id):
         """Method for quick dump, for checkpointing purposes"""
+
+        out_path = pjoin(out_dir, '{}_{}.pkl'.format(
+                cfg.quick_dump_prefix, run_id))
+        if exists(out_path):
+            remove(out_path)
+        with open(out_path, 'wb') as df:
+            pickle.dump(self._to_save(), df)
+
+
+    @abstractmethod
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
 
 
     @abstractmethod
@@ -204,22 +222,19 @@ class ClassifyCVResults(CVResults):
 
         raise NotImplementedError()
 
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
 
-    def dump(self, out_dir):
-        """Method for quick dump, for checkpointing purposes"""
+        return [self.metric_set, self.metric_val, self.attr, self.meta,
+                self.confusion_mat, self.misclfd_samplets]
 
-        from os.path import join as pjoin, exists
-        from neuropredict.utils import make_time_stamp
-        import pickle
-        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
-                                  ''.format(make_time_stamp()))
-        if exists(out_path):
-            from os import remove
-            remove(out_path)
-        with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self.attr, self.meta,
-                       self.confusion_mat, self.misclfd_samplets]
-            pickle.dump(to_save, df)
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
+
+        dump_list = fnmatch.filter(listdir(dump_dir),
+                                   '{}*.pkl'.format(cfg.quick_dump_prefix))
+        for dump in dump_list:
+            print()
 
 
 class RegressCVResults(CVResults):
@@ -245,17 +260,9 @@ class RegressCVResults(CVResults):
         self.residuals[(dataset_id, run_id)] = residuals
 
 
-    def dump(self, out_dir):
-        """Method for quick dump, for checkpointing purposes"""
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
 
-        from os.path import join as pjoin, exists
-        from neuropredict.utils import make_time_stamp
-        import pickle
-        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
-                                  ''.format(make_time_stamp()))
-        if exists(out_path):
-            from os import remove
-            remove(out_path)
-        with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self.attr, self.meta]
-            pickle.dump(to_save, df)
+        return [self.metric_set, self.metric_val, self.attr, self.meta,
+                self.residuals, ]
+
