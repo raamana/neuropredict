@@ -146,7 +146,7 @@ class ClassificationWorkflow(BaseWorkflow):
         for metric, m_data in self.results.metric_val.items():
             metric = metric.lower()
             consolidated = np.empty((self.num_rep_cv, len(m_data)))
-            for index, ds_id in enumerate(self.datasets.modality_ids):
+            for index, ds_id in enumerate(m_data.keys()):
                 consolidated[:, index] = m_data[ds_id]
 
             fig_out_path = pjoin(self._fig_out_dir, 'compare_{}'.format(metric))
