@@ -15,6 +15,7 @@ import numpy as np
 import scipy.stats
 from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.colors import ListedColormap
 
 if version_info.major > 2:
     from neuropredict import config_neuropredict as cfg
@@ -302,6 +303,59 @@ def confusion_matrices(cfmat_array, class_labels,
     plt.close()
 
     return
+
+
+def vis_single_confusion_matrix(conf_mat,
+                                class_labels=('A', 'B'),
+                                title='Confusion Matrix',
+                                cmap='cividis',
+                                ax=None,
+                                y_label='True class',
+                                x_label='Predicted class'):
+    """Helper to plot a single CM"""
+
+    if not isinstance(cmap, ListedColormap):
+        cmap = cm.get_cmap(cmap)
+        annot_color_low_values = cmap.colors[0]
+        annot_color_high_values = cmap.colors[-1]
+    else:
+        annot_color_low_values = 'white'
+        annot_color_high_values = 'black'
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
+
+    num_classes = conf_mat.shape[0]
+    if num_classes != conf_mat.shape[1]:
+        print('Conf matrix shape is not square!')
+    if len(class_labels) < num_classes:
+        print('Need {} labels. Given {}'.format(num_classes, len(class_labels)))
+
+    im = ax.imshow(conf_mat, interpolation='nearest', cmap=cmap)
+    plt.colorbar(im, fraction=0.046, pad=0.04)
+    tick_marks = np.arange(len(class_labels))
+    plt.xticks(tick_marks, class_labels, rotation=45)
+    plt.yticks(tick_marks, class_labels)
+    left, right, bottom, top = im.get_extent()
+    ax.set(xlim=(left, right), ylim=(bottom, top),
+           xlabel=x_label, ylabel=y_label, title=title)
+
+    thresh = np.percentile(conf_mat, 50)
+    for i, j in itertools.product(range(num_classes), range(num_classes)):
+        try:
+            if conf_mat[i, j] > thresh:
+                val_annot_color = annot_color_low_values
+            else:
+                val_annot_color = annot_color_high_values
+        except:
+            val_annot_color = 'black'
+        annot_str = "{:.{prec}f}%".format(conf_mat[i, j], prec=cfg.PRECISION_METRICS)
+        ax.text(j, i, annot_str, color=val_annot_color,
+                horizontalalignment="center") # , fontsize='large')
+
+    plt.tight_layout()
+
+    return ax
 
 
 def mean_over_cv_trials(conf_mat_array, num_classes):
