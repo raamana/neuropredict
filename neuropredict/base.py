@@ -134,8 +134,8 @@ class BaseWorkflow(object):
         print('Number of processors     : {}'.format(self.num_procs))
 
         if len(self.covariates) > 0:
-            print('Covarites selected   : {}'.format(','.join(self.covariates)))
-            print('Deconfoudning method : {}'.format(self.deconfounder))
+            print('Covarites selected       : {}'.format(', '.join(self.covariates)))
+            print('Deconfoudning method     : {}'.format(self.deconfounder))
 
         if self._workflow_type == 'classify':
             self._target_sizes = list(self.datasets.target_sizes.values())
