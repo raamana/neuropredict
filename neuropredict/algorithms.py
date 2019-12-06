@@ -3,6 +3,7 @@ from sklearn.preprocessing import OneHotEncoder
 __all__ = ['get_pipeline', 'get_feature_importance',]
 
 import numpy as np
+from scipy.sparse import issparse
 import sklearn
 from neuropredict import config_neuropredict as cfg
 from sklearn.svm import SVC, SVR
@@ -952,12 +953,14 @@ def get_RandomForestRegressor(reduced_dim=None,
 
 def encode(var_list, dtypes):
     """
-    Utility to help encode/convert data types.
+    Utility to help encode/convert data types, learning only from training set.
     Often from categorical to numerical data.
     """
 
     encoders = list()
-    for ix, (var, dtype) in enumerate(zip(var_list, dtypes)):
+    for ix, (train, test, dtype) in enumerate(zip(train_list, test_list, dtypes)):
+        train = train.reshape(-1, 1)
+        test  = test.reshape( -1, 1)
         if not np.issubdtype(dtype, np.number):
             enc = OneHotEncoder()
             var_list[ix] = enc.fit_transform(var)
@@ -965,4 +968,13 @@ def encode(var_list, dtypes):
         else:
             encoders.append(None)
 
-    return var_list, encoders
+        if issparse(train):
+            train = train.todense()
+
+        if issparse(test):
+            test = test.todense()
+
+        train_list[ix] = train
+        test_list[ix] = test
+
+    return train_list, test_list, encoders
