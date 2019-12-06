@@ -951,7 +951,7 @@ def get_RandomForestRegressor(reduced_dim=None,
     return rfc, clf_name, param_grid
 
 
-def encode(var_list, dtypes):
+def encode(train_list, test_list, dtypes):
     """
     Utility to help encode/convert data types, learning only from training set.
     Often from categorical to numerical data.
@@ -963,7 +963,10 @@ def encode(var_list, dtypes):
         test  = test.reshape( -1, 1)
         if not np.issubdtype(dtype, np.number):
             enc = OneHotEncoder()
-            var_list[ix] = enc.fit_transform(var)
+            enc.fit(train)
+            train = enc.transform(train)
+            # propagating encoding from training to test
+            test = enc.transform(test)
             encoders.append(enc)
         else:
             encoders.append(None)

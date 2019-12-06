@@ -235,8 +235,13 @@ class BaseWorkflow(object):
         test_covar, test_covar_dtypes = \
             self.datasets.get_common_attr(self.covariates, test_set)
 
-        train_covar, train_encoders = encode(train_covar, train_covar_dtypes)
-        test_covar, test_encoders = encode(test_covar, test_covar_dtypes)
+        if test_covar_dtypes != train_covar_dtypes:
+            raise TypeError('covariate dtypes differ between train and test sets!\n'
+                            ' Train: {}, Test: {}'
+                            ''.format(train_covar_dtypes, test_covar_dtypes))
+
+        train_covar, test_covar, encoders = encode(train_covar, test_covar,
+                                                   train_covar_dtypes)
 
         # column_stack ensures output is a 2D array, needed for sklearn transformers
         return np.column_stack(train_covar), np.column_stack(test_covar)
