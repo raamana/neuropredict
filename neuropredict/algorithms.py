@@ -962,7 +962,9 @@ def encode(train_list, test_list, dtypes):
         train = train.reshape(-1, 1)
         test  = test.reshape( -1, 1)
         if not np.issubdtype(dtype, np.number):
-            enc = OneHotEncoder()
+            # passing in the full spectrum to avoid unknown category error
+            var_spectrum = [np.unique(np.vstack((train, test))), ]
+            enc = OneHotEncoder(categories=var_spectrum)
             enc.fit(train)
             train = enc.transform(train)
             # propagating encoding from training to test
