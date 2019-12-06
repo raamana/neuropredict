@@ -432,6 +432,18 @@ class BaseWorkflow(object):
         fig_base_out_path = pjoin(self._fig_out_dir, 'feature_importance')
 
         feat_imp = self.results.attr[cfg.feat_imp_name]
+
+        # check if the all values are None or NaN
+        unusable = list()
+        for method_fi in feat_imp.values():
+            if method_fi is None:
+                unusable.append(True)
+            else:
+                unusable.append(np.all(np.isnan(method_fi.flatten())))
+        if np.all(unusable): # no feat imp usable/available
+            print('\nFeature importance for this run are not available!\n')
+            return
+
         out_feat_imp = list()
         feat_names = list()
         for idx, ds in enumerate(self.datasets.modality_ids):
