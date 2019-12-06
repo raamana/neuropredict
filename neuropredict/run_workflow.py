@@ -286,7 +286,7 @@ def make_visualizations(results_file_path, out_dir, options_path=None):
     if options_path is not None:
         user_options = load_options(out_dir, options_path)
         if user_options['classifier_name'].lower() not in \
-                cfg.clfs_with_feature_importance:
+                cfg.estimators_with_feature_importance:
             feature_importances_available = False
     else:
         # check if the all values are NaN

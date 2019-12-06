@@ -93,12 +93,17 @@ default_regressor = 'RandomForestRegressor'
 default_dim_red_method = 'VarianceThreshold'
 default_feat_select_method = default_dim_red_method
 
-__clfs_with_feature_importance = ('DecisionTreeClassifier',
-                                  'RandomForestClassifier',
-                                  'ExtraTreesClassifier',
-                                  'LinearSVM',
-                                  'XGBoost')
-clfs_with_feature_importance = [ clf.lower() for clf in __clfs_with_feature_importance]
+__estimators_with_feature_importance = ('DecisionTreeClassifier',
+                                        'RandomForestClassifier',
+                                        'ExtraTreesClassifier',
+                                        'LinearSVM',
+                                        'XGBoost',
+                                        'RandomForestRegressor',
+                                        'ExtraTreesRegressor',
+                                        'DecisionTreeRegressor',
+                                        )
+estimators_with_feature_importance = [clf.lower() for clf in
+                                      __estimators_with_feature_importance]
 
 additional_modules_reqd = {'xgboost' : 'xgboost' }
 
