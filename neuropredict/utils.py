@@ -326,7 +326,7 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
         print('# CPUs requested higher than available {}'.format(avail_cpu_count))
         num_procs = avail_cpu_count
 
-    sys.stdout.flush()
+    # sys.stdout.flush()
 
     return num_procs
 
