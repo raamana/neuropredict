@@ -181,7 +181,7 @@ class RegressionWorkflow(BaseWorkflow):
 
         self._compare_metric_distrib()
         self._plot_residuals_vs_target()
-        self._plot_feature_imortance()
+        self._plot_feature_importance()
 
 
     def _compare_metric_distrib(self):

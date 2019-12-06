@@ -132,7 +132,7 @@ class ClassificationWorkflow(BaseWorkflow):
         self._compare_metric_distr()
         self._viz_confusion_matrices()
         self._compare_misclf_rate()
-        self._plot_feature_imortance()
+        self._plot_feature_importance()
 
 
     def _compare_metric_distr(self):
