@@ -69,6 +69,10 @@ class BaseWorkflow(object):
         if out_dir is None:
             out_dir = getcwd()
         self.out_dir = out_dir
+        self._fig_out_dir = pjoin(self.out_dir, 'figures')
+        makedirs(self.out_dir, exist_ok=True)
+        makedirs(self._fig_out_dir, exist_ok=True)
+
         self.num_procs = num_procs
         self.user_options = user_options
         self._checkpointing = checkpointing
@@ -421,7 +425,7 @@ class BaseWorkflow(object):
         from this workflow."""
 
 
-    def _plot_feature_imortance(self):
+    def _plot_feature_importance(self):
         """Bar plot comparing feature importance"""
 
         from neuropredict.visualize import feature_importance_map

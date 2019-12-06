@@ -179,9 +179,6 @@ class RegressionWorkflow(BaseWorkflow):
         """Method to produce all the relevant visualizations based on the results
         from this workflow."""
 
-        self._fig_out_dir = pjoin(self.out_dir, 'figures')
-        os.makedirs(self._fig_out_dir, exist_ok=True)
-
         self._compare_metric_distrib()
         self._plot_residuals_vs_target()
         self._plot_feature_imortance()

@@ -76,16 +76,11 @@ class ClassificationWorkflow(BaseWorkflow):
                          num_rep_cv=num_rep_cv,
                          scoring=scoring,
                          grid_search_level=grid_search_level,
+                         out_dir=out_dir,
                          num_procs=num_procs,
                          user_options=user_options,
                          checkpointing=checkpointing,
                          workflow_type='classify')
-
-        self.out_dir = out_dir
-        makedirs(self.out_dir, exist_ok=True)
-
-        self._fig_out_dir = pjoin(self.out_dir, 'figures')
-        makedirs(self._fig_out_dir, exist_ok=True)
 
         # order of target_set is crucial, for AUC computation as well as confusion
         # matrix row/column, hence making it a tuple to prevent accidental mutation
