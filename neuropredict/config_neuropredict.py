@@ -127,6 +127,8 @@ results_file_name = 'results_neuropredict.pkl'
 options_file_name = 'options_neuropredict.pkl'
 best_params_file_name = 'best_params_neuropredict.pkl'
 
+prefix_dump = 'cv_results_quick_dump'
+
 results_to_save = ['_checkpointing', '_id_list', '_num_samples',
                    '_positive_class', '_positive_class_index', '_scoring',
                    '_target_set', '_train_set_size', '_workflow_type',

@@ -211,8 +211,8 @@ class ClassifyCVResults(CVResults):
         from os.path import join as pjoin, exists
         from neuropredict.utils import make_time_stamp
         import pickle
-        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
-                                  ''.format(make_time_stamp()))
+        out_path = pjoin(out_dir, '{}_{}.pkl'
+                                  ''.format(cfg.prefix_dump, make_time_stamp()))
         if exists(out_path):
             from os import remove
             remove(out_path)
@@ -251,8 +251,8 @@ class RegressCVResults(CVResults):
         from os.path import join as pjoin, exists
         from neuropredict.utils import make_time_stamp
         import pickle
-        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
-                                  ''.format(make_time_stamp()))
+        out_path = pjoin(out_dir, '{}_{}.pkl'
+                                  ''.format(cfg.prefix_dump, make_time_stamp()))
         if exists(out_path):
             from os import remove
             remove(out_path)

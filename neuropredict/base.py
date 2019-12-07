@@ -70,8 +70,10 @@ class BaseWorkflow(object):
             out_dir = getcwd()
         self.out_dir = out_dir
         self._fig_out_dir = pjoin(self.out_dir, 'figures')
+        self._tmp_dump_dir = pjoin(self.out_dir, 'temp_dump')
         makedirs(self.out_dir, exist_ok=True)
         makedirs(self._fig_out_dir, exist_ok=True)
+        makedirs(self._tmp_dump_dir, exist_ok=True)
 
         self.num_procs = num_procs
         self.user_options = user_options
@@ -228,7 +230,7 @@ class BaseWorkflow(object):
 
         # dump results if checkpointing is requested
         if self._checkpointing:
-            self.results.dump(self.out_dir)
+            self.results.dump(self._tmp_dump_dir)
 
 
     def _get_covariates(self, train_set, test_set):
@@ -387,6 +389,8 @@ class BaseWorkflow(object):
                           ''.format(self._out_results_path))
         else:
             print('\nResults saved to {}\n'.format(self._out_results_path))
+            from os import rmdir
+            rmdir(self._tmp_dump_dir)
 
         return self._out_results_path
 
