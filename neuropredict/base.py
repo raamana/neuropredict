@@ -302,23 +302,27 @@ class BaseWorkflow(object):
     def _get_feature_importance(est_name, pipeline, num_features, fill_value=np.nan):
         "Extracts the feature importance of input features, if available."
 
-        # assuming order in pipeline construction :
-        #   - step 0 : feature selector / dim reducer
-        #   - step 1 : estimator
-        # pipeline.steps returns a tuple (name, est_object),
-        #   so [1] is necessary to access the actual object
-        dim_red = pipeline.steps[0][1]
-        est = pipeline.steps[-1][1]  # the final step in an sklearn pipeline
-        #   is always an estimator/classifier
+        if est_name not in cfg.importance_attr:
+            # some estimators simply do not provide it
+            feat_importance = None
+        else:
+            # assuming order in pipeline construction :
+            #   - step 0 : feature selector / dim reducer
+            #   - step 1 : estimator
+            # pipeline.steps returns a tuple (name, est_object),
+            #   so [1] is necessary to access the actual object
+            dim_red = pipeline.steps[0][1]
+            est = pipeline.steps[-1][1]  # the final step in an sklearn pipeline
+            #   is always an estimator/classifier
 
-        feat_importance = None
-        if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
-            index_selected_features = dim_red.get_support(indices=True)
+            feat_importance = None
+            if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
+                index_selected_features = dim_red.get_support(indices=True)
 
-            if hasattr(est, cfg.importance_attr[est_name]):
-                feat_importance = np.full(num_features, fill_value)
-                feat_importance[index_selected_features] = \
-                    getattr(est, cfg.importance_attr[est_name])
+                if hasattr(est, cfg.importance_attr[est_name]):
+                    feat_importance = np.full(num_features, fill_value)
+                    feat_importance[index_selected_features] = \
+                        getattr(est, cfg.importance_attr[est_name])
 
         return feat_importance
 

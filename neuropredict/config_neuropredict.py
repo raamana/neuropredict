@@ -18,9 +18,11 @@ violin_bandwidth = 0.15
 CMAP_FEAT_IMP = 'hsv'
 max_allowed_num_features_importance_map = 10
 
-# Tree like estimators in sklearn return 0 for features that were never selected for training.
+# Tree like estimators in sklearn return 0 for features that were never selected
+# for training.
 importance_value_to_treated_as_not_selected = 0.0
-# importance values are sorted by value (higher better), so we need to able discard them
+# importance values are sorted by value (higher better), so we need to able
+# discard them
 importance_value_never_tested = -np.Inf
 importance_value_never_tested_stdev = np.nan
 
@@ -29,13 +31,13 @@ large_constant_factor = 1e5
 
 # # ------- missing data imputation strategy -------------
 
-missing_value_identifier = np.NaN #
+missing_value_identifier = np.NaN  #
 default_imputation_strategy = 'raise'
 # not supporting 'constant' for now, as it is not popular,
 #   and integrating it requires a bit more software engineering
 avail_imputation_strategies = ('median', 'mean', 'most_frequent')
 avail_imputation_strategies_with_raise = avail_imputation_strategies + \
-                                         (default_imputation_strategy, )
+                                         (default_imputation_strategy,)
 
 missing_data_flag_name = 'missing_data'
 
@@ -51,11 +53,16 @@ avail_deconfounding_methods = ('residualize', 'augment')
 
 # # ------- feature importance -------
 
-importance_attr = {'randomforestclassifier': 'feature_importances_',
-                   'extratreesclassifier'  : 'feature_importances_',
-                   'decisiontreeclassifier': 'feature_importances_',
-                   'svm'                   : 'coef_',
-                   'xgboost'               : 'feature_importances_', }
+importance_attr = {'randomforestclassifier'   : 'feature_importances_',
+                   'extratreesclassifier'     : 'feature_importances_',
+                   'decisiontreeclassifier'   : 'feature_importances_',
+                   'svm'                      : 'coef_',
+                   'xgboost'                  : 'feature_importances_',
+                   'randomforestregressor'    : 'feature_importances_',
+                   'extratreesregressor'      : 'feature_importances_',
+                   'decisiontreeregressor'    : 'feature_importances_',
+                   'GradientBoostingRegressor': 'feature_importances_',
+                   }
 
 feat_imp_name = 'feat_importance'
 
@@ -66,7 +73,7 @@ __classifier_CHOICES = ('RandomForestClassifier',
                         'DecisionTreeClassifier',
                         'SVM',
                         'XGBoost')
-classifier_choices = [ clf.lower() for clf in __classifier_CHOICES]
+classifier_choices = [clf.lower() for clf in __classifier_CHOICES]
 
 __regressor_CHOICES = ('RandomForestRegressor',
                        'ExtraTreesRegressor',
@@ -77,7 +84,7 @@ __regressor_CHOICES = ('RandomForestRegressor',
                        'GaussianProcessRegressor',
                        'GradientBoostingRegressor'
                        )
-regressor_choices = [ clf.lower() for clf in __regressor_CHOICES]
+regressor_choices = [clf.lower() for clf in __regressor_CHOICES]
 
 __feat_sel_CHOICES = ('SelectKBest_mutual_info_classif',
                       'SelectKBest_f_classif',
@@ -105,13 +112,13 @@ __estimators_with_feature_importance = ('DecisionTreeClassifier',
 estimators_with_feature_importance = [clf.lower() for clf in
                                       __estimators_with_feature_importance]
 
-additional_modules_reqd = {'xgboost' : 'xgboost' }
+additional_modules_reqd = {'xgboost': 'xgboost'}
 
 # defines quantile_range parameter for RobustScaler
 # http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html
 robust_scaler_iqr = (5, 95)
 
-#Parameters specific to random forest classifier optimization
+# Parameters specific to random forest classifier optimization
 NUM_TREES = 250
 NUM_TREES_RANGE = [250, 500]
 NUM_TREES_STEP = 100
@@ -137,7 +144,7 @@ results_to_save = ['_checkpointing', '_id_list', '_num_samples',
                    'reduced_dim', 'results', 'train_perc', 'user_options']
 
 # CV
-default_num_repetitions=200
+default_num_repetitions = 200
 default_train_perc = 0.5
 
 # model optimization
@@ -169,11 +176,11 @@ PRECISION_METRICS = 2
 
 default_checkpointing = True
 
-
 ### performance metrics
 
-from sklearn.metrics import accuracy_score, balanced_accuracy_score, \
-    r2_score, mean_absolute_error, explained_variance_score, mean_squared_error
+from sklearn.metrics import (accuracy_score, balanced_accuracy_score,
+                             r2_score, mean_absolute_error, explained_variance_score,
+                             mean_squared_error)
 
 default_scoring_metric = 'accuracy'
 
@@ -204,7 +211,7 @@ FONT_SIZE_LARGE = 25
 LINE_WIDTH_LARGE = 5
 
 CMAP_DATASETS = 'Dark2'
-CMAP_CONFMATX = 'cividis' # 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
+CMAP_CONFMATX = 'cividis'  # 'viridis' # 'winter' # 'RdYlGn' # 'Blues' # plt.cm.Blues
 
 file_name_results = 'rhst_results.pkl'
 file_name_options = 'options_neuropredict.pkl'
@@ -214,7 +221,7 @@ max_len_identifiers = 75
 
 output_dir_default = 'neuropredict_results'
 temp_results_dir = 'temp_scratch_neuropredict'
-temp_prefix_rhst  = 'trial'
+temp_prefix_rhst = 'trial'
 EXPORT_DIR_NAME = 'exported_results'
 DELIMITER = ','
 EXPORT_FORMAT = '%10.5f'
@@ -250,11 +257,11 @@ freesurfer_whole_brain_stats_to_select = ['BrainSegVol', 'BrainSegVolNotVent',
                                           'BrainSegVol-to-eTIV', 'MaskVol-to-eTIV',
                                           'lhSurfaceHoles', 'rhSurfaceHoles', 'eTIV']
 
-freesurfer_whole_brain_stats_to_ignore = [ 'SurfaceHoles',
-                                           'CortexVol',
-                                           'SupraTentorialVolNotVentVox',
-                                           'CorticalWhiteMatterVol',
-                                           'BrainSegVolNotVentSurf']
+freesurfer_whole_brain_stats_to_ignore = ['SurfaceHoles',
+                                          'CortexVol',
+                                          'SupraTentorialVolNotVentVox',
+                                          'CorticalWhiteMatterVol',
+                                          'BrainSegVolNotVentSurf']
 
 freesurfer_subcortical_seg_names_to_ignore = ['WM-hypointensities',
                                               'Left-WM-hypointensities',
