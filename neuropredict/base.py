@@ -393,8 +393,12 @@ class BaseWorkflow(object):
                           ''.format(self._out_results_path))
         else:
             print('\nResults saved to {}\n'.format(self._out_results_path))
-            from os import rmdir
-            rmdir(self._tmp_dump_dir)
+            from shutil import rmtree
+            try:
+                rmtree(self._tmp_dump_dir, ignore_errors=True)
+            except:
+                print('Error in removing temp dir - remove it yourself:\n{}'
+                      '',format(self._tmp_dump_dir))
 
         return self._out_results_path
 
