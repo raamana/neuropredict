@@ -1,7 +1,7 @@
+pyradigm>=0.6.dev1
 numpy
 sklearn
 nibabel
-pyradigm
 setuptools
 scipy
 matplotlib

@@ -9,33 +9,38 @@ setup(name='neuropredict',
       description='easy and standardized predictive analysis for '
                   'biomarkers, neuroimaging, and beyond',
       long_description='easy and standardized predictive analysis for '
-                  'biomarkers, neuroimaging, and beyond; neuropredict',
+                       'biomarkers, neuroimaging, and beyond; neuropredict',
       author='Pradeep Reddy Raamana',
       author_email='raamana@gmail.com',
       url='https://github.com/raamana/neuropredict',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-      install_requires=['numpy', 'scikit-learn', 'pyradigm', 'nibabel', 'scipy',
-                        'matplotlib', 'setuptools'],
+      install_requires=['numpy',
+                        'scikit-learn',
+                        'pyradigm>=0.6.dev1',
+                        'nibabel',
+                        'scipy',
+                        'matplotlib',
+                        'setuptools'],
       classifiers=[
-              'Intended Audience :: Science/Research',
-              'Programming Language :: Python',
-              'Topic :: Software Development',
-              'Topic :: Scientific/Engineering',
-              'Operating System :: Microsoft :: Windows',
-              'Operating System :: POSIX',
-              'Operating System :: Unix',
-              'Operating System :: MacOS',
-              'Programming Language :: Python :: 3.5',
-              'Programming Language :: Python :: 3.6',
+          'Intended Audience :: Science/Research',
+          'Programming Language :: Python',
+          'Topic :: Software Development',
+          'Topic :: Scientific/Engineering',
+          'Operating System :: Microsoft :: Windows',
+          'Operating System :: POSIX',
+          'Operating System :: Unix',
+          'Operating System :: MacOS',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
           ],
       entry_points={
           "console_scripts": [
-              "neuropredict=neuropredict.__classify__:main", # default is classify
+              "neuropredict=neuropredict.__classify__:main",  # default is classify
               "neuropredict_classify=neuropredict.__classify__:main",
               "neuropredict_regress=neuropredict.__regress__:main",
               "np_classify=neuropredict.__classify__:main",
               "np_regress=neuropredict.__regress__:main",
-          ]
-      }
+              ]
+          }
 
-     )
+      )
