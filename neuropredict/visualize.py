@@ -834,7 +834,8 @@ def metric_distribution(metric, labels, output_path, class_sizes,
 
 def compare_distributions(metric, labels, output_path, y_label='metric',
                           horiz_line_loc=None, horiz_line_label=None,
-                          upper_lim_y=1.01, ytick_step=None):
+                          upper_lim_y=1.01, lower_lim_y=-0.01,
+                          ytick_step=None):
     """
     Distribution plots of various metrics such as balanced accuracy!
 
@@ -870,13 +871,18 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
 
-    # lower_lim = round_(np.min([ np.float64(0.9 / num_classes), metric.min() ]))
-    lower_lim = round_(metric.min())
+    # ---- setting y-axis limits
     if upper_lim_y is not None:
         upper_lim = round_(np.min([upper_lim_y, metric.max()]))
     else:
         upper_lim = round_(metric.max())
+
+    if lower_lim_y is not None:
+        lower_lim = round_(np.max([lower_lim_y, metric.min()]))
+    else:
+        lower_lim = round_(metric.min())
     ax.set_ylim(lower_lim, upper_lim)
+    # ----
 
     ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
     ax.set_xticks(method_ticks)
