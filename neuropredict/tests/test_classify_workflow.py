@@ -37,11 +37,10 @@ max_num_modalities = 10
 train_perc = 0.5
 num_rep_cv = 20
 
-deconf_method = 'residualize'
-
 red_dim = 'sqrt'
-estimator = 'randomforestclassifier'
-dr_method = 'variancethreshold'  # 'selectkbest_f_classif'
+estimator =  'randomforestclassifier' # 'svm' #
+dr_method = 'isomap' # 'selectkbest_f_classif' # 'variancethreshold'  #
+dr_size = 'tenth'
 gs_level = 'none'  # 'light'
 
 num_procs = 1
@@ -50,7 +49,9 @@ random.seed(42)  # to save time for local tests
 
 covar_list = ('age', 'gender', 'dummy')
 covar_types = ('age', 'gender', 'float')
-covar_arg = ','.join(['age', ])
+covar_arg = ' '.join(['age', 'gender'])
+deconf_method = 'residualize'
+
 
 out_path = os.path.join(out_dir, 'random_clf_ds1.pkl')
 if pexists(out_path):
@@ -68,26 +69,29 @@ else:
 A = 0
 B = 1
 C = 2
-if ds_one.num_targets > 2:
-    # sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
-    #                                    ds_one.target_set[A], ds_one.target_set[C],
-    #                                    ','.join(ds_one.target_set))
-    sg_list = '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
-                                ','.join(ds_one.target_set))
-else:
-    sg_list = ','.join(ds_one.target_set)
+# if ds_one.num_targets > 2:
+#     # sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
+#     #                                    ds_one.target_set[A], ds_one.target_set[C],
+#     #                                    ','.join(ds_one.target_set))
+#     sg_list = '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
+#                                 ','.join(ds_one.target_set))
+# else:
+#     sg_list = ','.join(ds_one.target_set)
+
+sg_list = ' class-1,class-4 '
 
 # choosing the class that exists in all subgroups
-positive_class = ds_one.target_set[A]
+positive_class = 'class-4' # ds_one.target_set[A]
 
 out_path2 = os.path.join(out_dir, 'random_clf_ds2.pkl')
 ds_two = dataset_with_new_features_same_everything_else(ds_one, max_dim)
 ds_two.save(out_path2)
 
 sys.argv = shlex.split('np_classify -y {} {} -t {} -n {} -c {} -g {} -o {} '
-                       '-e {} -dr {} --sub_groups {} -p {} -cl {} -cm {}'
+                       '-e {} -dr {} -k {} --sub_groups {} -p {} -cl {} -cm {}'
                        ''.format(out_path, out_path2, train_perc, num_rep_cv,
                                  num_procs, gs_level, out_dir,
-                                 estimator, dr_method, sg_list, positive_class,
+                                 estimator, dr_method, dr_size,
+                                 sg_list, positive_class,
                                  covar_arg, deconf_method))
 cli()
