@@ -197,7 +197,7 @@ class RegressionWorkflow(BaseWorkflow):
                                   fig_out_path, y_label=metric,
                                   horiz_line_loc=median_of_medians(consolidated),
                                   horiz_line_label='median of medians',
-                                  upper_lim_y=None)
+                                  upper_lim_y=None, lower_lim_y=None)
 
 
     def _plot_residuals_vs_target(self):
