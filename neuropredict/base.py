@@ -156,7 +156,23 @@ class BaseWorkflow(object):
             self.load()
         else:
             print('Saving results to: \n {}\n'.format(self.out_dir))
-            self._run_cv()
+
+            # ignoring some not-so-critical warnings
+            with catch_warnings():
+                filterwarnings(action='once', category=UserWarning, module='joblib',
+                               message='Multiprocessing-backed parallel loops '
+                                       'cannot be nested, setting n_jobs=1')
+                filterwarnings(action='once', category=UserWarning,
+                               message='Some inputs do not have OOB scores')
+                filterwarnings(action='once', category=UserWarning,
+                               message='UserWarning: Features * are constant')
+                np.seterr(divide='ignore', invalid='ignore')
+                filterwarnings(action='once', category=RuntimeWarning,
+                               message='invalid value encountered in true_divide')
+                simplefilter(action='once', category=DeprecationWarning)
+                # actual CV
+                self._run_cv()
+
             self.save()
 
         self.summarize()
@@ -351,20 +367,7 @@ class BaseWorkflow(object):
                           param_grid=param_grid,
                           cv=inner_cv,  # TODO using default scoring metric?
                           refit=cfg.refit_best_model_on_ALL_training_set)
-
-        # ignoring some not-so-critical warnings
-        with catch_warnings():
-            filterwarnings(action='once', category=UserWarning, module='joblib',
-                           message='Multiprocessing-backed parallel loops cannot be '
-                                   'nested, setting n_jobs=1')
-            filterwarnings(action='once', category=UserWarning,
-                           message='Some inputs do not have OOB scores')
-            np.seterr(divide='ignore', invalid='ignore')
-            filterwarnings(action='once', category=RuntimeWarning,
-                           message='invalid value encountered in true_divide')
-            simplefilter(action='once', category=DeprecationWarning)
-
-            gs.fit(train_data, train_targets)
+        gs.fit(train_data, train_targets)
 
         return gs.best_estimator_, gs.best_params_
 
