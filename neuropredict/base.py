@@ -130,10 +130,11 @@ class BaseWorkflow(object):
         print('\nCURRENT EXPERIMENT:\n{line}'.format(line='-' * 50))
         print('Training percentage      : {:.2}'.format(self.train_perc))
         print('Number of CV repetitions : {}'.format(self.num_rep_cv))
-        print('Predictive model chosen  : {}'.format(self.pred_model))
-        print('Dim reduction method     : {}'.format(self.dim_red_method))
-        print('Level of grid search     : {}'.format(self.grid_search_level))
         print('Number of processors     : {}'.format(self.num_procs))
+        print('Dim reduction method     : {}'.format(self.dim_red_method))
+        print('Dim reduction size       : {}'.format(self.reduced_dim))
+        print('Predictive model chosen  : {}'.format(self.pred_model))
+        print('Grid search level        : {}'.format(self.grid_search_level))
 
         if len(self.covariates) > 0:
             print('Covarites selected       : {}'.format(', '.join(self.covariates)))
