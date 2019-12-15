@@ -4,7 +4,6 @@ import os
 import textwrap
 import traceback
 import warnings
-from os import makedirs
 from os.path import basename, join as pjoin
 
 import matplotlib.pyplot as plt
@@ -21,7 +20,9 @@ from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
 from neuropredict.utils import (check_classifier, check_covariates, load_options,
                                 make_dataset_filename, not_unspecified, save_options,
                                 sub_group_identifier, uniquify_in_order)
-from neuropredict.visualize import compare_distributions, confusion_matrices
+from neuropredict.visualize import (compare_distributions, compare_misclf_pairwise,
+                                    compare_misclf_pairwise_parallel_coord_plot,
+                                    confusion_matrices)
 from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.metrics.ranking import auc as auc_sklearn
 
@@ -131,7 +132,6 @@ class ClassificationWorkflow(BaseWorkflow):
 
         self._compare_metric_distr()
         self._viz_confusion_matrices()
-        self._compare_misclf_rate()
         self._plot_feature_importance()
 
 
@@ -162,7 +162,7 @@ class ClassificationWorkflow(BaseWorkflow):
 
 
     def _viz_confusion_matrices(self):
-        """Confusion matrices for each feature set"""
+        """Confusion matrices for each feature set, as plots of misclf rate"""
 
         # forcing a tuple to ensure the order, in compound array and in viz's
         ds_id_order = tuple(self.datasets.modality_ids)
@@ -178,9 +178,19 @@ class ClassificationWorkflow(BaseWorkflow):
         confusion_matrices(conf_mat_all, self._target_set, ds_id_order,
                            cm_out_fig_path)
 
+        self._compare_misclf_rate(conf_mat_all, ds_id_order, num_classes)
 
-    def _compare_misclf_rate(self):
+
+    def _compare_misclf_rate(self, conf_mat_all, method_names, num_classes):
         """Misclassification rate plot"""
+
+        fig_path = pjoin(self._fig_out_dir, 'compare_misclf_rates')
+        if num_classes > 2:
+            compare_misclf_pairwise(conf_mat_all, self._target_set, method_names,
+                                    fig_path)
+        elif num_classes == 2:
+            compare_misclf_pairwise_parallel_coord_plot(
+                    conf_mat_all, self._target_set, method_names, fig_path)
 
 
 
