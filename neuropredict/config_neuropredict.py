@@ -98,7 +98,6 @@ default_classifier = 'RandomForestClassifier'
 default_regressor = 'RandomForestRegressor'
 
 default_dim_red_method = 'VarianceThreshold'
-default_feat_select_method = default_dim_red_method
 
 __estimators_with_feature_importance = ('DecisionTreeClassifier',
                                         'RandomForestClassifier',

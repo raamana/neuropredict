@@ -1,22 +1,19 @@
-from sklearn.preprocessing import OneHotEncoder
-
-__all__ = ['get_pipeline', 'get_feature_importance',]
-
 import numpy as np
-from scipy.sparse import issparse
 import sklearn
 from neuropredict import config_neuropredict as cfg
-from sklearn.svm import SVC, SVR
-from sklearn.ensemble import (ExtraTreesClassifier, RandomForestClassifier,
-                              RandomForestRegressor, ExtraTreesRegressor,
-                              GradientBoostingRegressor)
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.linear_model import BayesianRidge
+from scipy.sparse import issparse
+from sklearn.ensemble import (ExtraTreesClassifier, ExtraTreesRegressor,
+                              GradientBoostingRegressor, RandomForestClassifier,
+                              RandomForestRegressor)
 from sklearn.feature_selection import (SelectKBest, VarianceThreshold, f_classif,
                                        mutual_info_classif)
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import BayesianRidge
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.svm import SVC, SVR
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 
 def get_estimator_by_name(est_name):
@@ -727,7 +724,7 @@ def get_preprocessor(preproc_name='RobustScaler'):
 
 def get_pipeline(train_class_sizes, feat_sel_size, num_features,
                  preproc_name='robustscaler',
-                 fsr_name=cfg.default_feat_select_method,
+                 fsr_name=cfg.default_dim_red_method,
                  clfr_name=cfg.default_classifier,
                  gs_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """

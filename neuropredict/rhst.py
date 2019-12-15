@@ -42,7 +42,7 @@ def eval_optimized_model_on_testset(train_fs, test_fs,
                                     train_perc=0.5,
                                     grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
                                     classifier_name=cfg.default_classifier,
-                                    feat_select_method=cfg.default_feat_select_method):
+                                    feat_select_method=cfg.default_dim_red_method):
     """
     Optimize the classifier on the training set and return predictions on test set.
 
@@ -324,7 +324,7 @@ def run(dataset_path_file, method_names, out_results_dir,
         num_procs=4,
         grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
         classifier_name=cfg.default_classifier,
-        feat_select_method=cfg.default_feat_select_method,
+        feat_select_method=cfg.default_dim_red_method,
         options_path=None):
     """
 

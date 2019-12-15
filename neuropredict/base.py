@@ -37,7 +37,7 @@ class BaseWorkflow(object):
                  impute_strategy=cfg.default_imputation_strategy,
                  covariates=None,
                  deconfounder=cfg.default_deconfounding_method,
-                 dim_red_method=cfg.default_feat_select_method,
+                 dim_red_method=cfg.default_dim_red_method,
                  reduced_dim=cfg.default_num_features_to_select,
                  train_perc=cfg.default_train_perc,
                  num_rep_cv=cfg.default_num_repetitions,
