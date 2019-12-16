@@ -59,77 +59,6 @@ def check_covariates(multi_ds, covar_list, deconfounder):
     return covar_list, deconfounder
 
 
-def check_params_rhst(dataset_path_file, out_results_dir,
-                      num_repetitions, train_perc,
-                      sub_groups, num_procs, grid_search_level,
-                      classifier_name, feat_select_method):
-    """Validates inputs and returns paths to feature sets to load"""
-
-    if not pexists(dataset_path_file):
-        raise IOError("File containing dataset paths does not exist.")
-
-    with open(dataset_path_file, 'r') as dpf:
-        dataset_paths = dpf.read().splitlines()
-        # alert for duplicates
-        if len(set(dataset_paths)) < len(dataset_paths):
-            raise RuntimeError('Duplicate paths for input datasets found!\n'
-                               'Try distinguish inputs further. '
-                               'Otherwise report this bug at:'
-                               'github.com/raamana/neuropredict/issues/new')
-        # do not apply set(dataset_paths) to remove duplicates,
-        # as set destroys current order, that is needed to correspond to method_names
-
-    try:
-        out_results_dir = realpath(out_results_dir)
-        os.makedirs(out_results_dir, exist_ok=True)
-    except:
-        raise IOError('Error in checking or creating output directiory. '
-                      'Ensure write permissions!')
-
-    num_repetitions = int(num_repetitions)
-    if not np.isfinite(num_repetitions):
-        raise ValueError("Infinite number of repetitions is not recommended!")
-
-    if num_repetitions <= 1:
-        raise ValueError("More than 1 repetition is necessary!")
-
-    if not 0.01 <= train_perc <= 0.99:
-        raise ValueError("Training percentage {} out of bounds "
-                         "- must be > 0.01 and < 0.99".format(train_perc))
-
-    num_procs = check_num_procs(num_procs)
-
-    # removing empty elements
-    if sub_groups is not None:
-        sub_groups = [ group for group in sub_groups if group]
-    # NOTE: here, we are not ensuring classes in all the subgroups actually exist
-    # in all datasets. That happens when loading data.
-
-    if grid_search_level.lower() not in cfg.GRIDSEARCH_LEVELS:
-        raise ValueError('Unrecognized level of grid search.'
-                         ' Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
-
-    classifier_name = check_classifier(classifier_name)
-
-    if feat_select_method.lower() not in cfg.all_dim_red_methods:
-        raise ValueError('Feature selection method not recognized: {}\n '
-                         'Implemented choices: {}'
-                         ''.format(feat_select_method,
-                                   cfg.all_dim_red_methods))
-
-
-    # printing the chosen options
-    print('Training percentage      : {:.2}'.format(train_perc))
-    print('Number of CV repetitions : {}'.format(num_repetitions))
-    print('Classifier chosen        : {}'.format(classifier_name))
-    print('Feature selection chosen : {}'.format(feat_select_method))
-    print('Level of grid search     : {}'.format(grid_search_level))
-    print('Number of processors     : {}'.format(num_procs))
-    print('Saving the results to \n  {}'.format(out_results_dir))
-
-    return dataset_paths, num_repetitions, num_procs, sub_groups
-
-
 def check_classifier(clf_name=cfg.default_classifier):
     """Validates classifier choice, and ensures necessary modules are installed."""
 
@@ -174,57 +103,6 @@ def check_regressor(est_name=cfg.default_regressor):
                                         cfg.additional_modules_reqd[est_name]))
 
     return est_name
-
-
-def check_feature_sets_are_comparable(datasets,
-                                      common_ds_index=cfg.COMMON_DATASET_INDEX):
-    """Validating all datasets are comparable e.g. with same samples and classes."""
-
-    # looking into the first dataset
-    common_ds = datasets[common_ds_index]
-    target_set, target_sizes = common_ds.summarize()
-
-    common_samples = set(common_ds.samplet_ids)
-
-    num_samples = common_ds.num_samplets
-    num_classes = len(target_set)
-
-    num_datasets = len(datasets)
-    remaining = set(range(num_datasets))
-    remaining.remove(common_ds_index)
-    if num_datasets > 1:
-        for idx in remaining:
-            this_ds = datasets[idx]
-            if num_samples != this_ds.num_samplets:
-                raise ValueError("Number of samples in different datasets differ!")
-            if common_samples != set(this_ds.samplet_ids):
-                raise ValueError("Sample IDs differ across atleast two datasets!\n"
-                                 "All datasets must have the same set of samples, "
-                                 "even if the dimensionality of individual feature "
-                                 "set changes.")
-            if set(target_set) != set(this_ds.targets.values()):
-                raise ValueError("Classes differ among datasets!\n"
-                                 " One dataset: {} \n"
-                                 " Another: {}"
-                                 "".format(set(target_set),
-                                           set(this_ds.targets.values())))
-
-    # displaying info on what is common across datasets
-    common_ds.description = ' ' # this description is not reflective of all datasets
-    dash_line = '-'*25
-    print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'
-          ''.format(line=dash_line, ds=common_ds))
-
-    # choosing 'balanced' or 1/n_c for chance accuracy as training set is stratified
-    print('Estimated chance accuracy : {:.3f}\n'
-          ''.format(chance_accuracy(target_sizes, 'balanced')))
-
-    num_features = np.zeros(num_datasets).astype(np.int64)
-    for idx in range(num_datasets):
-        num_features[idx] = datasets[idx].num_features
-
-    return common_ds, target_set, target_sizes, \
-           num_samples, num_classes, num_datasets, num_features
 
 
 def chance_accuracy(class_sizes, method='imbalanced'):

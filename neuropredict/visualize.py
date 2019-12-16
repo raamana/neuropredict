@@ -1,7 +1,7 @@
-from __future__ import print_function, division
+from __future__ import division, print_function
 
 __all__ = ['feature_importance_map', 'confusion_matrices',
-           'freq_hist_misclassifications', 'metric_distribution',
+           'freq_hist_misclassifications', 'compare_distributions',
            'compare_misclf_pairwise_parallel_coord_plot',
            'compare_misclf_pairwise', ]
 
@@ -10,7 +10,6 @@ import warnings
 from sys import version_info
 
 import matplotlib.pyplot as plt
-import numpy
 import numpy.matlib  # to force
 import numpy as np
 import scipy.stats
@@ -746,87 +745,6 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
     pp1 = PdfPages(outpath + '_frequency_histogram.pdf')
     pp1.savefig()
     pp1.close()
-    plt.close()
-
-    return
-
-
-def metric_distribution(metric, labels, output_path, class_sizes,
-                        num_classes=2, metric_label='balanced accuracy'):
-    """
-
-    Distribution plots of various metrics such as balanced accuracy!
-
-    metric is expected to be ndarray of size [num_repetitions, num_datasets]
-
-    """
-
-    num_repetitions = metric.shape[0]
-    num_datasets = metric.shape[1]
-    if len(labels) < num_datasets:
-        raise ValueError("Insufficient number of labels for {} features!"
-                         "".format(num_datasets))
-    method_ticks = 1.0 + np.arange(num_datasets)
-
-    fig, ax = plt.subplots(figsize=cfg.COMMON_FIG_SIZE)
-    line_coll = ax.violinplot(metric, widths=cfg.violin_width,
-                              bw_method=cfg.violin_bandwidth,
-                              showmedians=True, showextrema=False,
-                              positions=method_ticks)
-
-    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
-    for cc, ln in enumerate(line_coll['bodies']):
-        ln.set_facecolor(cmap(cc))
-        ln.set_label(labels[cc])
-
-    ax.tick_params(axis='both', which='major', labelsize=15)
-    ax.grid(axis='y', which='major', linewidth=cfg.LINE_WIDTH, zorder=0)
-
-    lower_lim = round_(np.min([np.float64(0.9 / num_classes), metric.min()]))
-    upper_lim = round_(np.min([1.01, metric.max()]))
-    step_tick = 0.05
-    ax.set_ylim(lower_lim, upper_lim)
-
-    ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
-    ax.set_xticks(method_ticks)
-    # ax.set_xticklabels(labels, rotation=45)  # 'vertical'
-
-    ytick_loc = np.arange(lower_lim, upper_lim, step_tick)
-
-    # add a tick for chance accuracy and/or % of majority class
-    # given the classifier trained on stratified set, we must use the balanced
-    # version
-    chance_acc = chance_accuracy(class_sizes, 'balanced')
-
-    # rounding to ensure improved labels
-    chance_acc = round_(chance_acc)
-    ytick_loc = round_(np.append(ytick_loc, chance_acc))
-    plt.text(0.05, chance_acc, 'chance accuracy')
-
-    ax.set_yticks(ytick_loc)
-    ax.set_yticklabels(ytick_loc)
-    plt.ylabel(metric_label, fontsize=cfg.FONT_SIZE)
-
-    plt.tick_params(axis='both', which='major', labelsize=cfg.FONT_SIZE)
-
-    # numbered labels
-    numbered_labels = ['{} {}'.format(int(ix), lbl)
-                       for ix, lbl in zip(method_ticks, labels)]
-
-    # putting legends outside the plot below.
-    fig.subplots_adjust(bottom=0.2)
-    leg = ax.legend(numbered_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
-    # setting colors manually as plot has been through arbitray jumps
-    for ix, lh in enumerate(leg.legendHandles):
-        lh.set_color(cmap(ix))
-
-    leg.set_frame_on(False)  # making leg background transparent
-
-    # fig.savefig(output_path + '.png', transparent=True, dpi=300,
-    #             bbox_extra_artists=(leg,), bbox_inches='tight')
-
-    fig.savefig(output_path + '.pdf', bbox_extra_artists=(leg,), bbox_inches='tight')
-
     plt.close()
 
     return
