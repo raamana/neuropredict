@@ -130,6 +130,7 @@ class ClassificationWorkflow(BaseWorkflow):
         self._compare_metric_distr()
         self._viz_confusion_matrices()
         self._plot_feature_importance()
+        self._identify_freq_misclassified()
 
 
     def _compare_metric_distr(self):
@@ -188,6 +189,12 @@ class ClassificationWorkflow(BaseWorkflow):
         elif num_classes == 2:
             compare_misclf_pairwise_parallel_coord_plot(
                     conf_mat_all, self._target_set, method_names, fig_path)
+
+
+    def _identify_freq_misclassified(self):
+        """Diagnostic utility to list frequently misclassified subjects"""
+
+        # TODO pass CVResults data to visualize.freq_hist_misclassifications
 
 
 def get_parser_classify():

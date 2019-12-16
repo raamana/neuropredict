@@ -177,6 +177,7 @@ class RegressionWorkflow(BaseWorkflow):
         self._compare_metric_distrib()
         self._plot_residuals_vs_target()
         self._plot_feature_importance()
+        self._identify_large_residuals()
 
 
     def _compare_metric_distrib(self):
@@ -233,6 +234,20 @@ class RegressionWorkflow(BaseWorkflow):
                            y_label='Predicted target',
                            x_label='True targets',
                            trend_line=np.median(target_medians))
+
+
+    def _identify_large_residuals(self):
+        """
+        Identifying samplets with frequently large residuals (beyond 3SD)
+
+        This may be an indication either those subjects outliers, or
+        something else is wrong in the preparation of features/target/covariates etc
+
+        """
+
+        # TODO implement outlier detection
+        #   1) compute threshold for large residuals (beyond 3SD)
+        #   2) filter samplets by threshold per dataset
 
 
     def _unroll(self, in_dict, ds_id):
