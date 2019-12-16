@@ -6,7 +6,7 @@ import warnings
 from collections import Counter
 from os.path import join as pjoin, exists as pexists, realpath, basename
 import numpy as np
-from neuropredict import config_neuropredict as cfg
+from neuropredict import config as cfg
 from neuropredict.utils import make_dataset_filename
 from pyradigm import BaseDataset, ClassificationDataset
 from pyradigm.utils import load_dataset, load_arff_dataset

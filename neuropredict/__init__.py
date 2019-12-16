@@ -1,7 +1,5 @@
 
-__all__ = ['base', 'classify', 'regress', 'visualize', 'freesurfer', 'cli',
-           'utils', 'algorithms', 'reports', 'io',
-           'config_neuropredict', 'compare', '__version__']
+__all__ = ['base', 'classify', 'regress', 'visualize', 'config', '__version__']
 
 __author__ = 'Pradeep Reddy Raamana, PhD'
 __email__  = 'raamana@gmail.com'
@@ -36,7 +34,7 @@ else:
 
 from sys import version_info
 if version_info.major > 2:
-    from neuropredict import config_neuropredict
+    from neuropredict import config
     from neuropredict import base, classify, regress, visualize
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')

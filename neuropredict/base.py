@@ -13,7 +13,7 @@ from os.path import abspath, exists as pexists, getsize, join as pjoin, realpath
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import numpy as np
-from neuropredict import __version__, config_neuropredict as cfg
+from neuropredict import __version__, config as cfg
 from neuropredict.algorithms import (compute_reduced_dimensionality, encode,
                                      get_deconfounder, get_preprocessor,
                                      make_pipeline)

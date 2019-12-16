@@ -18,7 +18,7 @@ if __name__ == '__main__' and __package__ is None:
     sys.path.append(parent_dir)
 
 if version_info.major > 2:
-    from neuropredict import cli, config_neuropredict as cfg
+    from neuropredict import cli, config as cfg
     from neuropredict.utils import chance_accuracy
 else:
     raise NotImplementedError('neuropredict supports only Python 3+.')

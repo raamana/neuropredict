@@ -1,6 +1,6 @@
 import numpy as np
 import sklearn
-from neuropredict import config_neuropredict as cfg
+from neuropredict import config as cfg
 from scipy.sparse import issparse
 from sklearn.ensemble import (ExtraTreesClassifier, ExtraTreesRegressor,
                               GradientBoostingRegressor, RandomForestClassifier,

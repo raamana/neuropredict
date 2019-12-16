@@ -19,7 +19,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import ListedColormap
 
 if version_info.major > 2:
-    from neuropredict import config_neuropredict as cfg
+    from neuropredict import config as cfg
     from neuropredict.utils import chance_accuracy, round_
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')

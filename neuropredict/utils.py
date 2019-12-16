@@ -4,7 +4,7 @@ import sys
 import re
 import pickle
 from collections.abc import Iterable
-from neuropredict import config_neuropredict as cfg
+from neuropredict import config as cfg
 import numpy as np
 import os.path
 from os.path import join as pjoin, exists as pexists, realpath

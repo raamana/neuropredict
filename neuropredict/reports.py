@@ -7,7 +7,7 @@ from collections import Counter
 from os.path import exists as pexists, join as pjoin
 
 import numpy as np
-from neuropredict import config_neuropredict as cfg, visualize
+from neuropredict import config as cfg, visualize
 from neuropredict.utils import load_options, sub_group_identifier
 
 

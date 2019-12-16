@@ -5,7 +5,7 @@ from os.path import join as pjoin
 
 import numpy as np
 # the order of import is very important to avoid circular imports
-from neuropredict import __version__, config_neuropredict as cfg
+from neuropredict import __version__, config as cfg
 from neuropredict.base import BaseWorkflow, get_parser_base, parse_common_args
 from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.utils import (check_covariates,

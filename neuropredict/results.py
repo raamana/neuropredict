@@ -6,7 +6,7 @@ Module defining methods and classes needed to manage results produced.
 
 from abc import abstractmethod
 import numpy as np
-from neuropredict import config_neuropredict as cfg
+from neuropredict import config as cfg
 from neuropredict.algorithms import get_estimator_by_name
 from neuropredict.utils import is_iterable_but_not_str
 

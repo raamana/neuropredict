@@ -3,7 +3,7 @@ import os
 import shlex
 import sys
 import numpy as np
-from neuropredict import cli as run_cli, config_neuropredict as cfg
+from neuropredict import cli as run_cli, config as cfg
 from neuropredict.base import MissingDataException
 from pytest import raises
 from pyradigm import MLDataset

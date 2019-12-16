@@ -6,7 +6,7 @@ import numpy as np
 from sys import version_info
 
 if version_info.major > 2:
-    from neuropredict import config_neuropredict as cfg
+    from neuropredict import config as cfg
 else:
     raise NotImplementedError('neuropredict supports only Python 3 or higher.')
 
