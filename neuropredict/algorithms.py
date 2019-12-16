@@ -144,7 +144,7 @@ def compute_reduced_dimensionality(size_spec, train_set_size, train_data_dim):
         elif size_spec >= 1.0:
             reduced_dim = train_data_dim
         else:
-            reduced_dim = np.int64(np.floor(train_data_dim / size_spec))
+            reduced_dim = np.int64(np.floor(train_data_dim * size_spec))
     else:
         raise ValueError(
             'Invalid method to choose size of feature selection. '
