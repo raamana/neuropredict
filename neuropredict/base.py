@@ -188,6 +188,7 @@ class BaseWorkflow(object):
         """Actual CV"""
 
         if self.num_procs > 1:
+            # TODO find ways to parallelize - there is a separate branch for this
             raise NotImplementedError('parallel runs not implemented yet!'
                                       'Use num_procs=1 for now')
             print('Parallelizing the repetitions of CV with {} processes ...'

@@ -2,14 +2,11 @@
 
 import os
 import textwrap
-import traceback
-import warnings
 from os.path import basename, join as pjoin
 
-import matplotlib.pyplot as plt
 import numpy as np
 # the order of import is very important to avoid circular imports
-from neuropredict import __version__, config_neuropredict as cfg, rhst, visualize
+from neuropredict import __version__, config_neuropredict as cfg
 from neuropredict.base import BaseWorkflow, parse_common_args
 from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.freesurfer import (aseg_stats_subcortical,
@@ -17,7 +14,7 @@ from neuropredict.freesurfer import (aseg_stats_subcortical,
 from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
                              get_features, get_pyradigm, process_arff,
                              process_pyradigm, saved_dataset_matches)
-from neuropredict.utils import (check_classifier, check_covariates, load_options,
+from neuropredict.utils import (check_classifier, check_covariates,
                                 make_dataset_filename, not_unspecified, save_options,
                                 sub_group_identifier, uniquify_in_order)
 from neuropredict.visualize import (compare_distributions, compare_misclf_pairwise,
@@ -191,96 +188,6 @@ class ClassificationWorkflow(BaseWorkflow):
         elif num_classes == 2:
             compare_misclf_pairwise_parallel_coord_plot(
                     conf_mat_all, self._target_set, method_names, fig_path)
-
-
-
-def make_visualizations(results_file_path, out_dir, options_path=None):
-    """
-    Produces the performance visualizations/comparison plots from the
-    cross-validation results.
-
-    Parameters
-    ----------
-    results_file_path : str
-        Path to file containing results produced by `rhst`
-
-    out_dir : str
-        Path to a folder to store results.
-
-    """
-
-    results_dict = rhst.load_results_dict(results_file_path)
-
-    # using shorter names for readability
-    accuracy_balanced = results_dict['accuracy_balanced']
-    method_names = results_dict['method_names']
-    num_classes = results_dict['num_classes']
-    class_sizes = results_dict['target_sizes']
-    confusion_matrix = results_dict['confusion_matrix']
-    class_order = results_dict['class_set']
-    feature_importances_rf = results_dict['feature_importances_rf']
-    feature_names = results_dict['feature_names']
-    num_times_misclfd = results_dict['num_times_misclfd']
-    num_times_tested = results_dict['num_times_tested']
-
-    num_methods = len(method_names)
-    if len(set(method_names)) < num_methods:
-        method_names = ['m{}_{}'.format(ix, mn)
-                        for ix, mn in enumerate(method_names)]
-
-    feature_importances_available = True
-    if options_path is not None:
-        user_options = load_options(out_dir, options_path)
-        if user_options['classifier_name'].lower() not in \
-                cfg.estimators_with_feature_importance:
-            feature_importances_available = False
-    else:
-        # check if the all values are NaN
-        unusable = [np.all(np.isnan(method_fi.flatten()))
-                    for method_fi in feature_importances_rf]
-        feature_importances_available = not np.all(unusable)
-
-    try:
-
-        balacc_fig_path = pjoin(out_dir, 'balanced_accuracy')
-        visualize.metric_distribution(accuracy_balanced, method_names,
-                                      balacc_fig_path, class_sizes, num_classes,
-                                      "Balanced Accuracy")
-
-        confmat_fig_path = pjoin(out_dir, 'confusion_matrix')
-        visualize.confusion_matrices(confusion_matrix, class_order, method_names,
-                                     confmat_fig_path)
-
-        cmp_misclf_fig_path = pjoin(out_dir, 'compare_misclf_rates')
-        if num_classes > 2:
-            visualize.compare_misclf_pairwise(confusion_matrix, class_order,
-                                              method_names, cmp_misclf_fig_path)
-        elif num_classes == 2:
-            visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix,
-                                                                  class_order,
-                                                                  method_names,
-                                                                  cmp_misclf_fig_path)
-
-        if feature_importances_available:
-            featimp_fig_path = pjoin(out_dir, 'feature_importance')
-            visualize.feature_importance_map(feature_importances_rf, method_names,
-                                             featimp_fig_path, feature_names)
-        else:
-            print('\nCurrent predictive model, and/or dimensionality reduction'
-                  ' method, does not provide (or allow for computing) feature'
-                  ' importance values. Skipping them.')
-
-        misclf_out_path = pjoin(out_dir, 'misclassified_subjects')
-        visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested,
-                                               method_names, misclf_out_path)
-    except:
-        traceback.print_exc()
-        warnings.warn('Error generating the visualizations! Skipping ..')
-
-    # cleaning up
-    plt.close('all')
-
-    return
 
 
 def get_parser_classify():

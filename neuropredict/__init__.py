@@ -1,5 +1,5 @@
 
-__all__ = ['run_workflow', 'rhst', 'visualize', 'freesurfer', 'cli',
+__all__ = ['base', 'classify', 'regress', 'visualize', 'freesurfer', 'cli',
            'utils', 'algorithms', 'reports', 'io',
            'config_neuropredict', 'compare', '__version__']
 
@@ -36,13 +36,8 @@ else:
 
 from sys import version_info
 if version_info.major > 2:
-    # importing config_neuropredict first (before run_workflow)
-    #   to avoid a circular situation (when running run_workflow directly)
     from neuropredict import config_neuropredict
-    from neuropredict import visualize, freesurfer, compare, run_workflow
-    from neuropredict.run_workflow import cli
-    # ^^ importing run_workflow last
-    #   to avoid a circular situation (when running run_workflow directly)
+    from neuropredict import base, classify, regress, visualize
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 

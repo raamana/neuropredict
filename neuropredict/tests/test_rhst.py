@@ -5,6 +5,7 @@ import sys
 from os.path import abspath, dirname, exists as pexists, join as pjoin, realpath
 from sys import version_info
 
+import neuropredict.reports
 import numpy as np
 
 sys.dont_write_bytecode = True
@@ -17,7 +18,7 @@ if __name__ == '__main__' and __package__ is None:
     sys.path.append(parent_dir)
 
 if version_info.major > 2:
-    from neuropredict import rhst, cli, config_neuropredict as cfg
+    from neuropredict import cli, config_neuropredict as cfg
     from neuropredict.utils import chance_accuracy
 else:
     raise NotImplementedError('neuropredict supports only Python 3+.')
@@ -190,7 +191,7 @@ def test_chance_clf_binary_svm():
                                                  classifier, fs_method))
     cli()
 
-    cv_results = rhst.load_results_from_folder(out_dir)
+    cv_results = neuropredict.reports.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
         raise_if_mean_differs_from(result['accuracy_balanced'],
                                    result['target_sizes'],
@@ -220,7 +221,7 @@ def test_separable_100perc():
             sys.argv = shlex.split(cli_str)
             cli()
 
-            cv_results = rhst.load_results_from_folder(out_dir_sep)
+            cv_results = neuropredict.reports.load_results_from_folder(out_dir_sep)
             for sg, result in cv_results.items():
                 raise_if_mean_differs_from(result['accuracy_balanced'],
                                            result['target_sizes'],
@@ -245,7 +246,7 @@ def test_chance_multiclass():
                                      num_procs, gsl, out_dir, clf, fs_method))
     cli()
 
-    cv_results = rhst.load_results_from_folder(out_dir)
+    cv_results = neuropredict.reports.load_results_from_folder(out_dir)
     for sg, result in cv_results.items():
         raise_if_mean_differs_from(result['accuracy_balanced'],
                                    result['target_sizes'],

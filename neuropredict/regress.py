@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import os
 import textwrap
 from os.path import join as pjoin
 
@@ -103,10 +102,6 @@ def cli():
 
     out_results_path = regr_expt.run()
     print('All done.\n')
-
-
-def make_visualizations():
-    pass
 
 
 class RegressionWorkflow(BaseWorkflow):
