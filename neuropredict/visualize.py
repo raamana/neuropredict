@@ -308,11 +308,14 @@ def vis_single_confusion_matrix(conf_mat,
     ax.set(xlim=(left, right), ylim=(bottom, top),
            xlabel=x_label, ylabel=y_label, title=title)
 
-    thresh = np.percentile(conf_mat, 50)
+    max_val = conf_mat.max()
+    val_25p, val_75p = max_val/4, (3*max_val)/4
     for i, j in itertools.product(range(num_classes), range(num_classes)):
         try:
-            if conf_mat[i, j] > thresh:
+            if conf_mat[i, j] >= val_75p:
                 val_annot_color = annot_color_low_values
+            elif conf_mat[i, j] >= val_25p:
+                val_annot_color = 'white' #hardcoded!
             else:
                 val_annot_color = annot_color_high_values
         except:
