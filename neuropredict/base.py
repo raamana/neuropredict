@@ -475,7 +475,7 @@ class BaseWorkflow(object):
             feat_names.append(self.datasets.feature_names[ds])
 
         feature_importance_map(out_feat_imp, self.datasets.modality_ids,
-                               fig_base_out_path)
+                               fig_base_out_path, feature_names=feat_names)
 
 
 def get_parser_base():
