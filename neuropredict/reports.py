@@ -1,4 +1,3 @@
-
 import os
 import pickle
 import shutil
@@ -49,8 +48,8 @@ def export_results(dict_to_save, out_dir, options_path):
     # pred_prob_per_class
 
     user_options = load_options(out_dir, options_path)
-    print_aligned_msg = lambda msg1, msg2 : print('Exporting {msg1:<40} .. {msg2}'
-                                                  ''.format(msg1=msg1, msg2=msg2))
+    print_aligned_msg = lambda msg1, msg2: print('Exporting {msg1:<40} .. {msg2}'
+                                                 ''.format(msg1=msg1, msg2=msg2))
 
     print('')
     try:
@@ -86,7 +85,7 @@ def export_results(dict_to_save, out_dir, options_path):
         print_aligned_msg('misclassfiication rates', 'Done.')
 
         # feature importance
-        if user_options['classifier_name'].lower() in cfg.estimators_with_feature_importance:
+        if user_options['classifier_name'].lower() in cfg.estimators_with_feat_imp:
             for mm in range(num_datasets):
                 featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'
                                               ''.format(method_names[mm]))
@@ -120,14 +119,14 @@ def export_results(dict_to_save, out_dir, options_path):
 
 
 def report_best_params(best_params, method_names, out_dir):
-    "Prints out the most frequently selected parameter values and saves them to disk."
+    """Outputs most frequently selected parameter values to stdout and disk."""
 
     # best_params : list of num_reps elements, each a list of num_datasets dicts
     num_reps = len(best_params)
     param_names = list(best_params[0][0].keys())
 
     # building a list of best values (from each rep) for each parameter
-    param_values = {label : dict() for label in method_names}
+    param_values = {label: dict() for label in method_names}
     for rep in range(num_reps):
         for ds, label in enumerate(method_names):
             param_values[label] = {param: list() for param in param_names}
@@ -136,7 +135,7 @@ def report_best_params(best_params, method_names, out_dir):
 
     # finding frequent values and printing them
     print('\nThe most frequently selected parameter values are: ')
-    most_freq_values = {label : dict() for label in method_names}
+    most_freq_values = {label: dict() for label in method_names}
     maxwidth = 2 + max([len(p) for p in param_names])
     for ds, label in enumerate(method_names):
         print('  For feature set {} : {}'.format(ds, label))
@@ -178,7 +177,7 @@ def export_results_from_disk(results_file_path, out_dir, options_path):
     """
 
     dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, best_params,\
+    pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, best_params, \
     feature_importances_rf, feature_names, num_times_misclfd, num_times_tested, \
     confusion_matrix, class_order, class_sizes, accuracy_balanced, auc_weighted, \
     positive_class = classifier_name, feat_select_method = load_results(

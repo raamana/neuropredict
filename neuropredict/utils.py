@@ -1,15 +1,12 @@
-
-import os
-import sys
-import re
 import pickle
+import re
 from collections.abc import Iterable
-from neuropredict import config as cfg
-import numpy as np
-import os.path
-from os.path import join as pjoin, exists as pexists, realpath
 from multiprocessing import cpu_count
+from os.path import exists as pexists, join as pjoin, realpath
 from time import localtime, strftime
+
+import numpy as np
+from neuropredict import config as cfg
 
 __re_delimiters_word = '_|:|; |, |\*|\n'
 
@@ -431,7 +428,6 @@ def print_options(run_dir):
 
     """
 
-    from neuropredict.utils import load_options
     user_options = load_options(run_dir)
 
     # print(user_options)

@@ -147,11 +147,11 @@ def compute_reduced_dimensionality(size_spec, train_set_size, train_data_dim):
             reduced_dim = np.int64(np.floor(train_data_dim * size_spec))
     else:
         raise ValueError(
-            'Invalid method to choose size of feature selection. '
-            'It can only be '
-            '1) string or '
-            '2) finite integer (< data dimensionality) or '
-            '3) a fraction between 0.0 and 1.0 !')
+                'Invalid method to choose size of feature selection. '
+                'It can only be '
+                '1) string or '
+                '2) finite integer (< data dimensionality) or '
+                '3) a fraction between 0.0 and 1.0 !')
 
     # ensuring it is an integer >= 1
     reduced_dim = np.int64(np.max([reduced_dim, 1]))
@@ -224,7 +224,7 @@ def get_DecisionTreeClassifier(reduced_dim=None,
         range_max_features = ['sqrt', 0.25, reduced_dim]
 
     elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
-        splitter_strategies = ['best',]
+        splitter_strategies = ['best', ]
         split_criteria = ['gini', ]
         range_min_leafsize = [1, ]
         range_max_features = [reduced_dim]
@@ -348,7 +348,7 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
 
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
-        #TODO try pruning values based on their processing time/redundancy
+        # TODO try pruning values based on their processing time/redundancy
         range_penalty = np.power(10.0, range(-3, 6))
         range_kernel = ['linear', 'poly', 'rbf']
         range_degree = [1, 2, 3]
@@ -532,7 +532,7 @@ def get_xgboost(reduced_dim=None,
         range_subsample = [1.0, ]
 
         range_colsample_bytree = [1.0, ]
-        range_learning_rate = [0.3,]
+        range_learning_rate = [0.3, ]
 
         range_num_feature = [reduced_dim]
     else:
@@ -554,11 +554,10 @@ def get_xgboost(reduced_dim=None,
                         max_depth=3,
                         subsample=0.8,
                         predictor='cpu_predictor',
-                        nthread=1, # to avoid interactions with other parallel tasks
+                        nthread=1,  # to avoid interactions with other parallel tasks
                         )
 
     return xgb, clf_name, param_grid
-
 
 
 def get_estimator(est_name=cfg.default_classifier,
@@ -798,7 +797,7 @@ def get_feature_importance(est_name, est, dim_red,
 
     feat_importance = np.full(num_features, fill_value)
 
-    if hasattr(dim_red, 'get_support'): # nonlinear dim red won't have this
+    if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
         index_selected_features = dim_red.get_support(indices=True)
 
         if hasattr(est, cfg.importance_attr[est_name]):
@@ -820,8 +819,8 @@ def make_pipeline(pred_model,
     estimator, est_name, est_param_grid = get_estimator(pred_model, reduced_dim,
                                                         gs_level)
     dim_reducer, dr_name, dr_param_grid = get_dim_reducer(train_set_size,
-                                                            dim_red_method,
-                                                            reduced_dim)
+                                                          dim_red_method,
+                                                          reduced_dim)
     # composite grid of parameters from all steps
     param_grid = est_param_grid.copy()
     # add_new_params(param_grid, preproc_param_grid, est_name, preproc_name)
@@ -829,10 +828,10 @@ def make_pipeline(pred_model,
     add_new_params(param_grid, dr_param_grid, est_name, dr_name)
 
     steps = [
-             # (preproc_name, preproc),
-             # (deconf_name, deconf),
-             (dr_name, dim_reducer),
-             (est_name, estimator)]
+        # (preproc_name, preproc),
+        # (deconf_name, deconf),
+        (dr_name, dim_reducer),
+        (est_name, estimator)]
     pipeline = Pipeline(steps)
     return pipeline, param_grid
 
@@ -842,7 +841,7 @@ def get_deconfounder(xfm_name, grid_search_level=None):
 
     xfm_name = xfm_name.lower()
     if xfm_name in ('residualize', 'regressout',
-                'residualize_linear', 'regressout_linear'):
+                    'residualize_linear', 'regressout_linear'):
         from confounds.base import Residualize
         xfm = Residualize()
         param_list_values = []
@@ -860,11 +859,11 @@ def get_deconfounder(xfm_name, grid_search_level=None):
     #                          ]
     elif xfm_name in ('augment', 'pad'):
         from confounds.base import Augment
-        xfm =  Augment()
+        xfm = Augment()
         param_list_values = []
     elif xfm_name in ('dummy', 'passthrough'):
         from confounds.base import DummyDeconfounding
-        xfm =  DummyDeconfounding()
+        xfm = DummyDeconfounding()
         param_list_values = []
     else:
         raise ValueError('Unrecognized model name! '
@@ -957,7 +956,7 @@ def encode(train_list, test_list, dtypes):
     encoders = list()
     for ix, (train, test, dtype) in enumerate(zip(train_list, test_list, dtypes)):
         train = train.reshape(-1, 1)
-        test  = test.reshape( -1, 1)
+        test = test.reshape(-1, 1)
         if not np.issubdtype(dtype, np.number):
             # passing in the full spectrum to avoid unknown category error
             var_spectrum = [np.unique(np.vstack((train, test))), ]

@@ -5,9 +5,9 @@ Module defining methods and classes needed to manage results produced.
 """
 
 from abc import abstractmethod
+
 import numpy as np
 from neuropredict import config as cfg
-from neuropredict.algorithms import get_estimator_by_name
 from neuropredict.utils import is_iterable_but_not_str
 
 
@@ -31,10 +31,10 @@ class CVResults(object):
             if is_iterable_but_not_str(dataset_ids):
                 self._dataset_ids = tuple(dataset_ids)
             else:
-                self._dataset_ids = (dataset_ids, )
+                self._dataset_ids = (dataset_ids,)
         else:
             # assuming only one feature/dataset
-            self._dataset_ids = ('dataset1', )
+            self._dataset_ids = ('dataset1',)
 
         if is_iterable_but_not_str(metric_set):
             self.metric_set = {func.__name__: func for func in metric_set}
@@ -55,8 +55,8 @@ class CVResults(object):
         self.predicted_targets = dict()
 
         # pretty print options
-        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])+1
-        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids])+1
+        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()]) + 1
+        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids]) + 1
 
 
     def _init_new_metric(self, name):
@@ -64,7 +64,8 @@ class CVResults(object):
 
         if name not in self.metric_val:
             self.metric_val[name] = {ds_id: np.full((self.num_rep,), np.NaN)
-                                       for ds_id in self._dataset_ids}
+                                     for ds_id in self._dataset_ids}
+
 
     def add(self, run_id, dataset_id, predicted, true_targets):
         """
@@ -73,7 +74,7 @@ class CVResults(object):
         """
 
         self.true_targets[(dataset_id, run_id)] = true_targets
-        self.predicted_targets[(dataset_id,run_id)] = predicted
+        self.predicted_targets[(dataset_id, run_id)] = predicted
 
         msgs = list()
         msgs.append('CV run {:<3} dataset {did:<{dlen}} :'

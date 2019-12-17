@@ -406,7 +406,7 @@ class BaseWorkflow(object):
                 rmdir(self._tmp_dump_dir)
             except:
                 print('Error in removing temp dir - remove it yourself:\n{}'
-                      '',format(self._tmp_dump_dir))
+                      '', format(self._tmp_dump_dir))
 
         return self._out_results_path
 
@@ -460,7 +460,7 @@ class BaseWorkflow(object):
                 unusable.append(True)
             else:
                 unusable.append(np.all(np.isnan(method_fi.flatten())))
-        if np.all(unusable): # no feat imp usable/available
+        if np.all(unusable):  # no feat imp usable/available
             print('\nFeature importance for this run are not available!\n')
             return
 

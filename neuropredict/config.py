@@ -108,8 +108,8 @@ __estimators_with_feature_importance = ('DecisionTreeClassifier',
                                         'ExtraTreesRegressor',
                                         'DecisionTreeRegressor',
                                         )
-estimators_with_feature_importance = [clf.lower() for clf in
-                                      __estimators_with_feature_importance]
+estimators_with_feat_imp = [clf.lower() for clf in
+                            __estimators_with_feature_importance]
 
 additional_modules_reqd = {'xgboost': 'xgboost'}
 
