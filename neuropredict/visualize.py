@@ -350,11 +350,8 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
     class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1),
                                                            num_classes, 1))
     avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
-    # making it human readable : 0-100%
-    avg_cfmat_perc100 = 100 * np.around(avg_cfmat_perc,
-                                        decimals=cfg.PRECISION_METRICS)
-
-    return avg_cfmat_perc100
+    # making it human readable : 0-100%, with only 2 decimals
+    return np.around(100*avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
 
 
 def compute_pairwise_misclf(cfmat_array):
