@@ -381,6 +381,19 @@ def compute_pairwise_misclf(cfmat_array):
     return avg_cfmat, misclf_rate
 
 
+def label_misclf_axes(class_labels):
+    """Method to generate labels for misclf axes!"""
+
+    num_classes = len(class_labels)
+    labels = list()
+    # iteration below match that in compute_pairwise_misclf() exactly!!
+    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
+        if ii != jj:
+            labels.append("{} --> {}".format(class_labels[ii], class_labels[jj]))
+
+    return labels
+
+
 def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
                                                 class_labels, method_labels,
                                                 out_path):
@@ -412,12 +425,7 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
     out_path.replace(' ', '_')
 
     avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
-
-    misclf_ax_labels = list()
-    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
-        if ii != jj:
-            misclf_ax_labels.append("{} --> {}"
-                                    "".format(class_labels[ii], class_labels[jj]))
+    misclf_ax_labels = label_misclf_axes(class_labels)
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
@@ -479,12 +487,7 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels,
     out_path.replace(' ', '_')
 
     avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
-
-    misclf_ax_labels = list()
-    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
-        if ii != jj:
-            misclf_ax_labels.append("{} --> {}"
-                                    "".format(class_labels[ii], class_labels[jj]))
+    misclf_ax_labels = label_misclf_axes(class_labels)
 
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
@@ -542,12 +545,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     num_misclf_axes = num_classes * (num_classes - 1)
 
     avg_cfmat, misclf_rate = compute_pairwise_misclf(cfmat_array)
-
-    misclf_ax_labels = list()
-    for ii, jj in itertools.product(range(num_classes), range(num_classes)):
-        if ii != jj:
-            misclf_ax_labels.append("{} --> {}"
-                                    "".format(class_labels[ii], class_labels[jj]))
+    misclf_ax_labels = label_misclf_axes(class_labels)
 
     theta = 2 * np.pi * np.linspace(0, 1 - 1.0 / num_misclf_axes, num_misclf_axes)
 
