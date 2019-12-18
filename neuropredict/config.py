@@ -62,6 +62,7 @@ importance_attr = {'randomforestclassifier'   : 'feature_importances_',
                    'extratreesregressor'      : 'feature_importances_',
                    'decisiontreeregressor'    : 'feature_importances_',
                    'GradientBoostingRegressor': 'feature_importances_',
+                   'XGBoostRegressor'         : 'feature_importances_',
                    }
 
 feat_imp_name = 'feat_importance'
@@ -82,7 +83,8 @@ __regressor_CHOICES = ('RandomForestRegressor',
                        'KernelRidge',
                        'BayesianRidge',
                        'GaussianProcessRegressor',
-                       'GradientBoostingRegressor'
+                       'GradientBoostingRegressor',
+                       'XGBoostRegressor'
                        )
 regressor_choices = [clf.lower() for clf in __regressor_CHOICES]
 
@@ -107,6 +109,7 @@ __estimators_with_feature_importance = ('DecisionTreeClassifier',
                                         'RandomForestRegressor',
                                         'ExtraTreesRegressor',
                                         'DecisionTreeRegressor',
+                                        'XGBoostRegressor',
                                         )
 estimators_with_feat_imp = [clf.lower() for clf in
                             __estimators_with_feature_importance]

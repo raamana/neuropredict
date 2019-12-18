@@ -560,6 +560,86 @@ def get_xgboost(reduced_dim=None,
     return xgb, clf_name, param_grid
 
 
+def get_xgboostregressor(reduced_dim=None,
+                         grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+    """
+    Returns the extremene gradient boosting (XGB) regressor and its parameter grid.
+
+    Parameters
+    ----------
+    reduced_dim : int
+        One of the dimensionalities to be tried.
+
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
+    Returns
+    -------
+
+    """
+
+    grid_search_level = grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
+        # TODO consult literature for better selection of ranges
+        range_max_depth = [2, 6, 10]
+        # range_min_child_weight = []
+        range_gamma = [0, 3, 5, 10]
+        range_subsample = [0.5, 0.75, 1.0]
+
+        range_colsample_bytree = [0.6, 0.8, 1.0]
+        range_learning_rate = [0.15, 0.3, 0.5]
+
+    elif grid_search_level in ['light']:
+        range_max_depth = [2, 6]
+        # range_min_child_weight = []
+        range_gamma = [0, 3, ]
+        range_subsample = [0.5, 1.0]
+
+        range_colsample_bytree = [0.6, 0.8, 1.0]
+        range_learning_rate = [0.15, 0.3, ]
+
+    elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
+        range_max_depth = [2, ]
+        # range_min_child_weight = []
+        range_gamma = [0, ]
+        range_subsample = [1.0, ]
+
+        range_colsample_bytree = [1.0, ]
+        range_learning_rate = [0.3, ]
+
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
+
+    # name clf_model chosen to enable generic selection classifier later on
+    # not optimizing over number of features to save time
+    clf_name = 'xgb_regr'
+    param_list_values = [('max_depth', range_max_depth),
+                         ('learning_rate', range_learning_rate),
+                         ('gamma', range_gamma),
+                         ('colsample_bytree', range_colsample_bytree),
+                         ('subsample', range_subsample),
+                         ]
+    param_grid = make_parameter_grid(clf_name, param_list_values)
+
+    from xgboost import XGBRegressor
+    xgb = XGBRegressor(objective='reg:squarederror',
+                       num_feature=reduced_dim,
+                       max_depth=3,
+                       subsample=0.8,
+                       predictor='cpu_predictor',
+                       n_jobs=1,  # to avoid interactions with other parallel tasks
+                       )
+
+    return xgb, clf_name, param_grid
+
+
 def get_estimator(est_name=cfg.default_classifier,
                   reduced_dim='all',
                   grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
@@ -604,7 +684,8 @@ def get_estimator(est_name=cfg.default_classifier,
                          svm=get_svc,
                          xgboost=get_xgboost,
                          randomforestregressor=get_RandomForestRegressor,
-                         gradientboostingregressor=get_GradientBoostingRegressor)
+                         gradientboostingregressor=get_GradientBoostingRegressor,
+                         xgboostregressor=get_xgboostregressor)
 
     if est_name not in map_to_method:
         raise NotImplementedError('Invalid name for estimator: {}\n'
