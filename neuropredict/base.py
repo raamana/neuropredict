@@ -134,16 +134,16 @@ class BaseWorkflow(object):
         print('Dim reduction method     : {}'.format(self.dim_red_method))
         print('Dim reduction size       : {}'.format(self.reduced_dim))
         print('Predictive model chosen  : {}'.format(self.pred_model))
-        print('Grid search level        : {}'.format(self.grid_search_level))
+        print('Grid search level        : {}\n'.format(self.grid_search_level))
 
         if len(self.covariates) > 0:
             print('Covarites selected       : {}'.format(', '.join(self.covariates)))
-            print('Deconfoudning method     : {}'.format(self.deconfounder))
+            print('Deconfoudning method     : {}\n'.format(self.deconfounder))
 
         if self._workflow_type == 'classify':
             self._target_sizes = list(self.datasets.target_sizes.values())
             self._chance_accuracy = chance_accuracy(self._target_sizes, 'balanced')
-            print('\nEstimated chance accuracy : {:.3f}\n'
+            print('Estimated chance accuracy : {:.3f}\n'
                   ''.format(self._chance_accuracy))
 
 
@@ -851,7 +851,7 @@ def parse_common_args(parser):
 
         sample_ids, classes = get_metadata(meta_file)
     else:
-        print('Using meta data from:\n{}'.format(meta_data_path))
+        print('Using meta data from:\n\t{}\n'.format(meta_data_path))
         sample_ids, classes = get_metadata_in_pyradigm(meta_data_path,
                                                        meta_data_format)
 

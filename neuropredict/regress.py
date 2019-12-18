@@ -70,12 +70,12 @@ def parse_args():
 def cli():
     """Main entry point, that logs output to stdout as well as a file in out_dir"""
 
+    print('\nneuropredict version {} for Regression\n'.format(__version__))
+
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \
-    num_procs, grid_search_level, regressor, dim_red_method, \
-    covar_list, covar_method = parse_args()
-
-    print('Running neuropredict version {} for Regression'.format(__version__))
+    num_procs, grid_search_level, regressor, dim_red_method, covar_list, \
+    covar_method = parse_args()
 
     multi_ds = load_datasets(user_feature_paths, task_type='regress')
     covariates, deconfounder = check_covariates(multi_ds, covar_list, covar_method)

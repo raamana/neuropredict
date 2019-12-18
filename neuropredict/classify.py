@@ -543,14 +543,13 @@ def import_datasets(method_list, out_dir, subjects, classes,
 def cli():
     """ Main entry point. """
 
-    subjects, classes, out_dir, options_path, user_feature_paths, \
-    user_feature_type, \
-    fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-    feature_selection_size, impute_strategy, num_procs, \
-    grid_search_level, classifier, feat_select_method, \
-    covar_list, covar_method = parse_args()
+    print('\nneuropredict version {} for Classification\n'.format(__version__))
 
-    print('Running neuropredict version {} for Classification'.format(__version__))
+    subjects, classes, out_dir, options_path, user_feature_paths, \
+    user_feature_type, fs_subject_dir, train_perc, num_rep_cv, positive_class, \
+    sub_group_list, feature_selection_size, impute_strategy, num_procs, \
+    grid_search_level, classifier, feat_select_method, covar_list, covar_method = \
+        parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
                                                 user_feature_type)
