@@ -461,7 +461,8 @@ def get_RandomForestClassifier(reduced_dim=None,
     clf_name = 'random_forest_clf'
     param_list_values = [('n_estimators', range_num_trees),
                          ('criterion', split_criteria),
-                         # ('min_impurity_decrease',  range_min_impurity), # ignoring this
+                         # ('min_impurity_decrease',  range_min_impurity),
+                         # ignoring this
                          ('min_samples_leaf', range_min_leafsize),
                          ('max_features', range_max_features),
                          ]
@@ -512,8 +513,6 @@ def get_xgboost(reduced_dim=None,
         range_colsample_bytree = [0.6, 0.8, 1.0]
         range_learning_rate = [0.15, 0.3, 0.5]
 
-        range_num_feature = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
-
     elif grid_search_level in ['light']:
         range_max_depth = [2, 6]
         # range_min_child_weight = []
@@ -522,8 +521,6 @@ def get_xgboost(reduced_dim=None,
 
         range_colsample_bytree = [0.6, 0.8, 1.0]
         range_learning_rate = [0.15, 0.3, ]
-
-        range_num_feature = ['sqrt', 0.25, reduced_dim]
 
     elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
         range_max_depth = [2, ]
@@ -534,7 +531,6 @@ def get_xgboost(reduced_dim=None,
         range_colsample_bytree = [1.0, ]
         range_learning_rate = [0.3, ]
 
-        range_num_feature = [reduced_dim]
     else:
         raise ValueError('Unrecognized option to set level of grid search.')
 
@@ -546,7 +542,6 @@ def get_xgboost(reduced_dim=None,
                          ('gamma', range_gamma),
                          ('colsample_bytree', range_colsample_bytree),
                          ('subsample', range_subsample),
-                         ('num_feature', range_num_feature),
                          ]
     param_grid = make_parameter_grid(clf_name, param_list_values)
 
@@ -554,7 +549,7 @@ def get_xgboost(reduced_dim=None,
                         max_depth=3,
                         subsample=0.8,
                         predictor='cpu_predictor',
-                        nthread=1,  # to avoid interactions with other parallel tasks
+                        n_jobs=1,  # to avoid interactions with other parallel tasks
                         )
 
     return xgb, clf_name, param_grid
@@ -1079,7 +1074,7 @@ def get_GradientBoostingRegressor(reduced_dim=None,
 
         range_max_features = ['sqrt', reduced_dim]
         n_iter_no_change = [5, ]
-        validation_fraction =  [0.1, ]
+        validation_fraction = [0.1, ]
 
     elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
         range_num_trees = [250, ]
@@ -1090,7 +1085,7 @@ def get_GradientBoostingRegressor(reduced_dim=None,
 
         range_max_features = [reduced_dim]
         n_iter_no_change = [5, ]
-        validation_fraction =  [0.1, ]
+        validation_fraction = [0.1, ]
     else:
         raise ValueError('Unrecognized option to set level of grid search.')
 
