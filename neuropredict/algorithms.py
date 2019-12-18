@@ -603,11 +603,13 @@ def get_estimator(est_name=cfg.default_classifier,
                          decisiontreeclassifier=get_DecisionTreeClassifier,
                          svm=get_svc,
                          xgboost=get_xgboost,
-                         randomforestregressor=get_RandomForestRegressor)
+                         randomforestregressor=get_RandomForestRegressor,
+                         gradientboostingregressor=get_GradientBoostingRegressor)
 
     if est_name not in map_to_method:
-        raise NotImplementedError('Invalid name or classifier: {} not implemented.'
-                                  ''.format(est_name))
+        raise NotImplementedError('Invalid name for estimator: {}\n'
+                                  'Implemented estimators: {}'
+                                  ''.format(est_name, list(map_to_method.keys())))
 
     est_builder = map_to_method[est_name]
     est, est_name, param_grid = est_builder(reduced_dim, grid_search_level)
@@ -945,6 +947,91 @@ def get_RandomForestRegressor(reduced_dim=None,
                                 oob_score=True)
 
     return rfc, clf_name, param_grid
+
+
+def get_GradientBoostingRegressor(reduced_dim=None,
+                                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+    """
+    Returns the Gradient Boosted Regressor and its parameter grid.
+
+    Parameters
+    ----------
+    reduced_dim : int
+        One of the dimensionalities to be tried.
+
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
+
+    Returns
+    -------
+
+    """
+
+    grid_search_level = grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
+        range_num_trees = [100, 500]
+        losses = ['ls', 'lad', 'huber']  # TODO quantile
+        split_criteria = ['friedman_mse', 'mae', ]
+        range_min_leafsize = [1, 2, 5, 10]
+        range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
+
+        # if user supplied reduced_dim, it will be tried also.
+        # Default None --> all features.
+        range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
+        n_iter_no_change = [5, ]
+        validation_fraction = [0.1, ]
+
+    elif grid_search_level in ['light']:
+        range_num_trees = [250, ]
+        losses = ['ls', 'lad', 'huber']
+        split_criteria = ['friedman_mse', ]
+        range_min_leafsize = [1, 5]
+        range_min_impurity = [0.0, 0.01]
+
+        range_max_features = ['sqrt', reduced_dim]
+        n_iter_no_change = [5, ]
+        validation_fraction =  [0.1, ]
+
+    elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
+        range_num_trees = [250, ]
+        losses = ['huber', ]
+        split_criteria = ['friedman_mse', ]
+        range_min_leafsize = [1, ]
+        range_min_impurity = [0.0, ]
+
+        range_max_features = [reduced_dim]
+        n_iter_no_change = [5, ]
+        validation_fraction =  [0.1, ]
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
+
+    # name clf_model chosen to enable generic selection classifier later on
+    # not optimizing over number of features to save time
+    est_name = 'GBR'
+    param_list_values = [('n_estimators', range_num_trees),
+                         ('loss', losses),
+                         ('criterion', split_criteria),
+                         # ('min_impurity_decrease',  range_min_impurity),
+                         # ignoring this
+                         ('min_samples_leaf', range_min_leafsize),
+                         ('max_features', range_max_features),
+                         ('n_iter_no_change', n_iter_no_change),
+                         ('validation_fraction', validation_fraction),
+                         ]
+    param_grid = make_parameter_grid(est_name, param_list_values)
+
+    gbr = GradientBoostingRegressor(max_features=reduced_dim,
+                                    n_estimators=max(range_num_trees))
+
+    return gbr, est_name, param_grid
 
 
 def encode(train_list, test_list, dtypes):
