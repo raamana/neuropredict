@@ -105,7 +105,7 @@ def get_data_matrix(featpath):
         if file_ext in ['.npy', '.numpy']:
             matrix = np.load(featpath)
         elif file_ext in ['.csv', '.txt']:
-            matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
+            matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER, ndmin=2)
         else:
             raise ValueError(
                 'Invalid or empty file extension : {}\n'
