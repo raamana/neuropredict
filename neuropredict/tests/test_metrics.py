@@ -46,7 +46,7 @@ def test_balanced_accuracy():
         np.fill_diagonal(cm, diag_values)
         computed_acc = balanced_accuracy(cm)
         expected_acc = np.mean(chosen_accuracy)
-        if not np.isclose(computed_acc, expected_acc, atol=1e-3):
+        if not np.isclose(computed_acc, expected_acc, atol=1e-2):
             raise ArithmeticError('accuracy calculations do not match the expected!!\n'
                                   ' Expected : {:.8f}\n'
                                   ' Estimated: {:.8f}\n'
