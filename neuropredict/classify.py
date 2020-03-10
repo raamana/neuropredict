@@ -21,7 +21,7 @@ from neuropredict.visualize import (compare_distributions, compare_misclf_pairwi
                                     compare_misclf_pairwise_parallel_coord_plot,
                                     confusion_matrices)
 from sklearn.metrics import confusion_matrix, roc_curve
-from sklearn.metrics.ranking import auc as auc_sklearn
+from sklearn.metrics import auc as auc_sklearn
 
 
 def area_under_roc(true_labels, predicted_prob_pos_class, pos_class):

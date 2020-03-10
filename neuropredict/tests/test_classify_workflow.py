@@ -124,7 +124,7 @@ def test_chance_clf_binary_svm():
 
         perf = result['results']
 
-        bal_acc_all_dsets = perf.metric_val['balanced_accuracy_score'].values()
+        bal_acc_all_dsets = list(perf.metric_val['balanced_accuracy_score'].values())
         raise_if_mean_differs_from(np.column_stack(bal_acc_all_dsets),
                                    result['_target_sizes'],
                                    eps_chance_acc=eps_chance_acc_binary)

@@ -722,7 +722,7 @@ def get_dim_reducer(total_num_samplets,
 
     dr_name = dr_name.lower()
     if dr_name in ['isomap', ]:
-        from sklearn.manifold.isomap import Isomap
+        from sklearn.manifold import Isomap
         dim_red = Isomap(n_components=reduced_dim)
         dr_param_grid = None
     elif dr_name in ['lle', ]:
