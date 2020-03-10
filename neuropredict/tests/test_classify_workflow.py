@@ -12,10 +12,13 @@ if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
-from neuropredict.classify import cli
+from neuropredict.classify import cli, ClassificationWorkflow as ClfWorkflow
+from neuropredict.results import ClassifyCVResults
 from pyradigm import ClassificationDataset
 from pyradigm.utils import (make_random_ClfDataset,
                             dataset_with_new_features_same_everything_else)
+
+from neuropredict.tests._test_utils import raise_if_mean_differs_from
 
 feat_generator = np.random.randn
 
@@ -25,11 +28,11 @@ if not pexists(out_dir):
     os.makedirs(out_dir)
 
 min_num_classes = 3
-max_num_classes = 10
+max_num_classes = 5
 max_class_size = 200
 
 max_dim = 100
-min_rep_per_class = 20
+min_rep_per_class = 10
 
 min_num_modalities = 3
 max_num_modalities = 10
@@ -81,17 +84,49 @@ else:
 # sg_list = ' class-1,class-4 '
 
 # choosing the class that exists in all subgroups
-positive_class = 'class-4' # ds_one.target_set[A]
+positive_class = ds_one.target_set[A]
 
 out_path2 = os.path.join(out_dir, 'random_clf_ds2.pkl')
 ds_two = dataset_with_new_features_same_everything_else(ds_one, max_dim)
 ds_two.save(out_path2)
 
-sys.argv = shlex.split('np_classify -y {} {} -t {} -n {} -c {} -g {} -o {} '
-                       '-e {} -dr {} -k {} --sub_groups {} -p {} -cl {} -cm {}'
-                       ''.format(out_path, out_path2, train_perc, num_rep_cv,
-                                 num_procs, gs_level, out_dir,
-                                 estimator, dr_method, dr_size,
-                                 sg_list, positive_class,
-                                 covar_arg, deconf_method))
-cli()
+# deciding on tolerances for chance accuracy
+total_num_classes = ds_one.num_targets
+
+eps_chance_acc_binary =0.05
+eps_chance_acc = max(0.02, 0.1 / total_num_classes)
+
+def test_basic_run():
+
+    sys.argv = shlex.split('np_classify -y {} {} -t {} -n {} -c {} -g {} -o {} '
+                           '-e {} -dr {} -k {} --sub_groups {} -p {} -cl {} -cm {}'
+                           ''.format(out_path, out_path2, train_perc, num_rep_cv,
+                                     num_procs, gs_level, out_dir,
+                                     estimator, dr_method, dr_size,
+                                     sg_list, positive_class,
+                                     covar_arg, deconf_method))
+    cli()
+
+
+def test_chance_clf_binary_svm():
+
+    sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} '
+                           '-e {} -dr {}'
+                           ''.format(out_path, out_path2, train_perc,
+                                     min_rep_per_class * ds_two.num_targets,
+                                     num_procs, gs_level, out_dir, estimator,
+                                     dr_method))
+    result_paths = cli()
+    import pickle
+    for sg_id, res_path in result_paths.items():
+        with open(res_path, 'rb') as res_fid:
+            result = pickle.load(res_fid)
+
+        perf = result['results']
+
+        bal_acc_all_dsets = perf.metric_val['balanced_accuracy_score'].values()
+        raise_if_mean_differs_from(np.column_stack(bal_acc_all_dsets),
+                                   result['_target_sizes'],
+                                   eps_chance_acc=eps_chance_acc_binary)
+
+test_chance_clf_binary_svm()
