@@ -69,16 +69,16 @@ else:
 A = 0
 B = 1
 C = 2
-# if ds_one.num_targets > 2:
-#     # sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
-#     #                                    ds_one.target_set[A], ds_one.target_set[C],
-#     #                                    ','.join(ds_one.target_set))
-#     sg_list = '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
-#                                 ','.join(ds_one.target_set))
-# else:
-#     sg_list = ','.join(ds_one.target_set)
+if ds_one.num_targets > 2:
+    # sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
+    #                                    ds_one.target_set[A], ds_one.target_set[C],
+    #                                    ','.join(ds_one.target_set))
+    sg_list = '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
+                                ','.join(ds_one.target_set))
+else:
+    sg_list = ','.join(ds_one.target_set)
 
-sg_list = ' class-1,class-4 '
+# sg_list = ' class-1,class-4 '
 
 # choosing the class that exists in all subgroups
 positive_class = 'class-4' # ds_one.target_set[A]
