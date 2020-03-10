@@ -103,6 +103,8 @@ def cli():
     out_results_path = regr_expt.run()
     print('All done.\n')
 
+    return out_results_path
+
 
 class RegressionWorkflow(BaseWorkflow):
     """
