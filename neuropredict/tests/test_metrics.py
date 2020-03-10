@@ -38,20 +38,21 @@ def test_balanced_accuracy():
 
         cm = np.random.randint(10, 100, (num_classes, num_classes)).astype('float64')
         np.fill_diagonal(cm, 0)
-        class_sizes_without_diag_elemeent = cm.sum(axis=1)
-        chosen_accuracy = np.round(np.random.rand(num_classes), decimals=3)
+        cls_sizes_wout_diag_elem = cm.sum(axis=1)
+        chosen_accuracy = np.random.rand(num_classes)
         factor = chosen_accuracy / (1.0 - chosen_accuracy)
         # filling the diag in order to reach certain level of chosen accuracy
-        diag_values = np.around(class_sizes_without_diag_elemeent * factor).astype('float64')
+        diag_values = np.around(cls_sizes_wout_diag_elem * factor).astype('float64')
         np.fill_diagonal(cm, diag_values)
         computed_acc = balanced_accuracy(cm)
         expected_acc = np.mean(chosen_accuracy)
-        if not np.isclose(computed_acc, expected_acc, atol=1e-4):
+        if not np.isclose(computed_acc, expected_acc, atol=1e-3):
             raise ArithmeticError('accuracy calculations do not match the expected!!\n'
                                   ' Expected : {:.8f}\n'
                                   ' Estimated: {:.8f}\n'
-                                  ' Differ by: {:.8f}\n'.format(expected_acc, computed_acc,
-                                                                expected_acc - computed_acc))
+                                  ' Differ by: {:.8f}\n'
+                                  ''.format(expected_acc, computed_acc,
+                                            expected_acc - computed_acc))
 
 
 test_balanced_accuracy()
