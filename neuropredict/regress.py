@@ -212,6 +212,11 @@ class RegressionWorkflow(BaseWorkflow):
             true_targets[ds_id] = self._unroll(self.results.true_targets, ds_id)
             target_medians.append(np.median(true_targets[ds_id]))
 
+            # residuals[ds_id], predicted[ds_id], true_targets[ds_id] = \
+            #     self._unroll_multi(ds_id, (self.results.residuals,
+            #                                self.results.predicted_targets,
+            #                                self.results.true_targets))
+
         if self._show_predicted_in_residuals_plot:
             targets_to_plot = predicted
         else:
@@ -248,6 +253,18 @@ class RegressionWorkflow(BaseWorkflow):
         # TODO implement outlier detection
         #   1) compute threshold for large residuals (beyond 3SD)
         #   2) filter samplets by threshold per dataset
+
+
+    # def _unroll_multi(self, ds_id, list_of_data_dicts):
+    #     """Ensuring key results are populated identically for the same ds_id!"""
+    #     # TODO likely buggy, double check
+    #     num_metrics = len(list_of_data_dicts)
+    #     out_list = [list(), ] * num_metrics
+    #     for index, in_dict in enumerate(list_of_data_dicts):
+    #         for rep in range(self.num_rep_cv):
+    #             out_list[index].extend(in_dict[(ds_id, rep)])
+    #
+    #     return [ np.array(lst) for lst in out_list ]
 
 
     def _unroll(self, in_dict, ds_id):
