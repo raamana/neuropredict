@@ -5,3 +5,4 @@ nibabel
 setuptools
 scipy
 matplotlib
+confounds
