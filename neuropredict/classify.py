@@ -563,9 +563,11 @@ def cli():
 
     # iterating through the given set of subgroups
     num_sg = len(sub_group_list)
+    result_paths = dict()
     for sgi, sub_group in enumerate(sub_group_list):
-        print('{}\nProcessing subgroup : {} ({}/{})\n{}'
-              ''.format('-' * 80, ','.join(sub_group), sgi + 1, num_sg, '-' * 80))
+        print('{line}\nProcessing subgroup : {id_} ({idx}/{cnt})\n{line}'
+              ''.format(line='-' * 80, id_=','.join(sub_group),
+                        idx=sgi + 1, cnt=num_sg))
         sub_group_id = sub_group_identifier(sub_group, sg_index=sgi + 1)
         out_dir_sg = pjoin(out_dir, sub_group_id)
 
@@ -595,11 +597,11 @@ def cli():
                                           user_options=options_path,
                                           checkpointing=cfg.default_checkpointing)
 
-        out_results_path = clf_expt.run()
+        result_paths[sub_group_id] = clf_expt.run()
 
     print('All done.\n')
 
-    return
+    return result_paths
 
 
 if __name__ == '__main__':
