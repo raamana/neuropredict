@@ -138,12 +138,16 @@ best_params_file_name = 'best_params_neuropredict.pkl'
 
 prefix_dump = 'cv_results_quick_dump'
 
-results_to_save = ['_checkpointing', '_id_list', '_num_samples',
-                   '_positive_class', '_positive_class_index', '_scoring',
-                   '_target_set', '_train_set_size', '_workflow_type',
+results_to_save = ['_workflow_type', '_checkpointing',
+                   '_id_list', '_num_samples',
+                   '_scoring', '_positive_class', '_positive_class_index',
+                   '_target_set', '_train_set_size',
+                   '_target_sizes', '_chance_accuracy',
+                   'covariates', 'deconfounder',
                    'dim_red_method', 'grid_search_level', 'impute_strategy',
                    'num_procs', 'num_rep_cv', 'out_dir', 'pred_model',
-                   'reduced_dim', 'results', 'train_perc', 'user_options']
+                   'reduced_dim', 'results', 'train_perc',
+                   'user_options']
 
 # CV
 default_num_repetitions = 200
