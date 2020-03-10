@@ -954,7 +954,7 @@ def get_deconfounder(xfm_name, grid_search_level=None):
 def get_RandomForestRegressor(reduced_dim=None,
                               grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
-    Returns the Random Forest classifier and its parameter grid.
+    Returns the Random Forest regressor and its parameter grid.
 
     Parameters
     ----------
@@ -989,16 +989,16 @@ def get_RandomForestRegressor(reduced_dim=None,
         range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
 
     elif grid_search_level in ['light']:
-        range_num_trees = [50, 250, ]
-        split_criteria = ['mae', ]
-        range_min_leafsize = [1, 5]
+        range_num_trees = [250, 500]
+        split_criteria = ['mse', ]
+        range_min_leafsize = [1, 2]
         range_min_impurity = [0.0, 0.01]
 
         range_max_features = ['sqrt', 0.25, reduced_dim]
 
     elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
         range_num_trees = [250, ]
-        split_criteria = ['mae', ]
+        split_criteria = ['mse', ]
         range_min_leafsize = [1, ]
         range_min_impurity = [0.0, ]
 
