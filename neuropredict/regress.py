@@ -70,7 +70,9 @@ def parse_args():
 def cli():
     """Main entry point, that logs output to stdout as well as a file in out_dir"""
 
-    print('\nneuropredict version {} for Regression\n'.format(__version__))
+    print('\nneuropredict version {} for Regression'.format(__version__))
+    from datetime import datetime
+    print('\tTime stamp : {}\n'.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \

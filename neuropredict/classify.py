@@ -543,7 +543,9 @@ def import_datasets(method_list, out_dir, subjects, classes,
 def cli():
     """ Main entry point. """
 
-    print('\nneuropredict version {} for Classification\n'.format(__version__))
+    print('\nneuropredict version {} for Classification'.format(__version__))
+    from datetime import datetime
+    print('\tTime stamp : {}\n'.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
 
     subjects, classes, out_dir, options_path, user_feature_paths, \
     user_feature_type, fs_subject_dir, train_perc, num_rep_cv, positive_class, \
