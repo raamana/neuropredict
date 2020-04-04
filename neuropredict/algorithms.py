@@ -357,19 +357,12 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
         range_coef0 = np.sort(np.hstack((np.arange(-100, 101, 50),
                                          np.arange(-1.0, 1.01, 0.25))))
 
-        # if user supplied reduced_dim, it will be tried also.
-        # Default None --> all features.
-        range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
-
     elif grid_search_level in ['light']:
-        range_penalty = np.power(10.0, range(-3, 6, 3))
+        range_penalty = np.power(10.0, range(-3, 5, 1))
         range_kernel = ['rbf']
-        range_gamma = ['auto', ]
-        range_gamma.extend(np.power(2.0, range(-5, 5, 3)))
-        range_coef0 = np.sort(np.hstack((np.arange(-50, 101, 100),
-                                         np.arange(-0.5, 1.01, 1.0))))
-
-        range_max_features = ['sqrt', 0.25, reduced_dim]
+        range_gamma = list() # ['auto', ]
+        range_gamma.extend(np.power(2.0, range(-5, 4, 1)))
+        range_coef0 = [0.0, ]
 
         # setting for sake of completeness, although this will be ignored
         range_degree = [1, ]
@@ -379,8 +372,6 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
         range_kernel = ['rbf']
         range_gamma = ['auto', ]
         range_coef0 = [0.0, ]
-
-        range_max_features = [reduced_dim]
 
         # setting for sake of completeness, although this will be ignored
         range_degree = [0, ]
