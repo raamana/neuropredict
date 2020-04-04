@@ -84,7 +84,7 @@ class ClassificationWorkflow(BaseWorkflow):
         # matrix row/column, hence making it a tuple to prevent accidental mutation
         #  ordering them in order of their appearance in also important: uniquify!
         self._target_set = tuple(uniquify_in_order(self.datasets.targets.values()))
-        self._positive_class, self._positive_class_index = \
+        self._positive_class, _ = \
             check_positive_class(self._target_set, positive_class)
 
         self.results.meta['target_set'] = self._target_set
@@ -104,10 +104,12 @@ class ClassificationWorkflow(BaseWorkflow):
         if hasattr(pipeline, predict_proba_name):
             predicted_prob = pipeline.predict_proba(test_data)
             self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
-
+            # self._positive_class_index is not static as pipeline.classes_ seem
+            # to differ in order from self._target_set
+            pos_cls_idx = np.nonzero(pipeline.classes_==self._positive_class)[0][0]
             if len(self._target_set) == 2:
                 auc = area_under_roc(true_targets,
-                                     predicted_prob[:, self._positive_class_index],
+                                     predicted_prob[:, pos_cls_idx],
                                      self._positive_class)
                 self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
@@ -391,6 +393,8 @@ def check_positive_class(class_set, positive_class=None):
         raise ValueError('Chosen positive class {} does not exist in the dataset,'
                          ' with classes {}'.format(positive_class, class_set))
     pos_class_index = class_set.index(positive_class)
+    # not retaining it in self._positive_class_index as self._target_set is not
+    # guaranteed to be the same as in pipeline.classes_
 
     return positive_class, pos_class_index
 
