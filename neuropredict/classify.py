@@ -549,7 +549,8 @@ def cli():
 
     print('\nneuropredict version {} for Classification'.format(__version__))
     from datetime import datetime
-    print('\tTime stamp : {}\n'.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    init_time = datetime.now()
+    print('\tTime stamp : {}\n'.format(init_time.strftime('%Y-%m-%d %H:%M:%S')))
 
     subjects, classes, out_dir, options_path, user_feature_paths, \
     user_feature_type, fs_subject_dir, train_perc, num_rep_cv, positive_class, \
@@ -605,7 +606,8 @@ def cli():
 
         result_paths[sub_group_id] = clf_expt.run()
 
-    print('All done.\n')
+    timedelta = init_time - datetime.now()
+    print('All done. Elapsed time: {} DD:HH:MM:SS\n'.format(timedelta))
 
     return result_paths
 
