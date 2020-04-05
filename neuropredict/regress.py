@@ -72,7 +72,8 @@ def cli():
 
     print('\nneuropredict version {} for Regression'.format(__version__))
     from datetime import datetime
-    print('\tTime stamp : {}\n'.format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+    init_time = datetime.now()
+    print('\tTime stamp : {}\n'.format(init_time.strftime('%Y-%m-%d %H:%M:%S')))
 
     subjects, classes, out_dir, user_options, user_feature_paths, \
     user_feature_type, train_perc, num_rep_cv, reduced_dim_size, impute_strategy, \
@@ -103,7 +104,8 @@ def cli():
                                    checkpointing=True)
 
     out_results_path = regr_expt.run()
-    print('All done.\n')
+    timedelta = datetime.now() - init_time
+    print('All done. Elapsed time: {} DD:HH:MM:SS\n'.format(timedelta))
 
     return out_results_path
 

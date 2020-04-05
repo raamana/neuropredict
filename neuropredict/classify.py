@@ -606,7 +606,7 @@ def cli():
 
         result_paths[sub_group_id] = clf_expt.run()
 
-    timedelta = init_time - datetime.now()
+    timedelta = datetime.now() - init_time
     print('All done. Elapsed time: {} DD:HH:MM:SS\n'.format(timedelta))
 
     return result_paths
