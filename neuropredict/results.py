@@ -167,6 +167,54 @@ class CVResults(object):
         "Method to load previously saved results e.g. to redo visualizations"
 
 
+    def to_array(self, metric, ds_ids=None):
+        """
+        Consolidates a given metric into a flat array
+
+        Parameters
+        -----------
+        metric : str
+            name of the metric whose values are to be returned
+
+        ds_ids : Iterable
+            List of datasets ids to be queried. This is helpful to return only a
+            desired subset needed, or to control the desired order.
+
+        Returns
+        --------
+        result : ndarray
+            An array of dimensions num_rep_CV X num_datasets
+
+        ds_ids : Iterable
+            List of datasets ids
+
+        Raises
+        ------
+        ValueError
+            If metric, one of the ids in ds_ids, is not recognized or invalid
+        """
+
+        metric = metric.lower()
+        if metric not in self.metric_val:
+            raise ValueError('Unrecognized metric: {}\n\tMust be one of {}'
+                             ''.format(metric, tuple(self.metric_val.keys())))
+
+        if ds_ids is None:
+            ds_ids = self._dataset_ids
+        else:
+            for did in ds_ids:
+                if did not in self._dataset_ids:
+                    raise ValueError('{} not recognized! Choose a dataset from: {}'
+                                     ''.format(did, self._dataset_ids))
+
+        m_data = self.metric_val[metric]
+        consolidated = np.empty((self.num_rep, len(m_data)))
+        for index, ds_id in enumerate(ds_ids):
+            consolidated[:, index] = m_data[ds_id]
+
+        return consolidated, ds_ids
+
+
     @abstractmethod
     def dump(self, out_dir):
         """Method for quick dump, for checkpointing purposes"""
