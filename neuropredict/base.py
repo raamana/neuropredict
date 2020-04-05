@@ -401,9 +401,7 @@ class BaseWorkflow(object):
             # cleanup
             try:
                 from shutil import rmtree
-                from os import rmdir
                 rmtree(self._tmp_dump_dir, ignore_errors=True)
-                rmdir(self._tmp_dump_dir)
             except:
                 print('Error in removing temp dir - remove it yourself:\n{}'
                       ''.format(self._tmp_dump_dir))
