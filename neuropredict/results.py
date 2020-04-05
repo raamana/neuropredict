@@ -125,10 +125,10 @@ class CVResults(object):
         """for FYI"""
 
         if self._count > 0:
-            summary = list()
+            summary = ['\n', ]
             for metric, mdict in self.metric_val.items():
-                summary.append('\n{metric:<{mmw}}'.format(metric=metric,
-                                                          mmw=self._max_width_metric))
+                summary.append('\n{metric:<{mmw}}'
+                               ''.format(metric=metric, mmw=self._max_width_metric))
                 for ds, distr in mdict.items():
                     median = np.nanmedian(distr)
                     SD = np.nanstd(distr)

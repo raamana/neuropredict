@@ -406,7 +406,7 @@ class BaseWorkflow(object):
                 rmdir(self._tmp_dump_dir)
             except:
                 print('Error in removing temp dir - remove it yourself:\n{}'
-                      '', format(self._tmp_dump_dir))
+                      ''.format(self._tmp_dump_dir))
 
         return self._out_results_path
 
