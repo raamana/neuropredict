@@ -149,6 +149,13 @@ results_to_save = ['_workflow_type', '_checkpointing',
                    'reduced_dim', 'results', 'train_perc',
                    'user_options']
 
+### --- CV results class
+
+clf_results_class_variables_to_load = ['_dataset_ids', 'attr', 'confusion_mat',
+                                       'meta', 'metric_set', 'metric_val',
+                                       'misclfd_samplets', 'num_rep', '_count',
+                                       'predicted_targets', 'true_targets']
+
 # CV
 default_num_repetitions = 200
 default_train_perc = 0.5
