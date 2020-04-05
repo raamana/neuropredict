@@ -7,6 +7,8 @@ Module defining methods and classes needed to manage results produced.
 from abc import abstractmethod
 
 import numpy as np
+import pickle
+from pathlib import Path
 from neuropredict import config as cfg
 from neuropredict.utils import is_iterable_but_not_str
 
@@ -160,8 +162,8 @@ class CVResults(object):
     def save(self):
         "Method to persist the results to disk."
 
-
-    def load(self):
+    @abstractmethod
+    def load(self, path):
         "Method to load previously saved results e.g. to redo visualizations"
 
 
@@ -182,11 +184,19 @@ class ClassifyCVResults(CVResults):
     def __init__(self,
                  metric_set=cfg.default_metric_set_classification,
                  num_rep=cfg.default_num_repetitions,
-                 dataset_ids=None):
+                 dataset_ids=None,
+                 path=None):
         "Constructor."
 
-        super().__init__(metric_set=metric_set, num_rep=num_rep,
-                         dataset_ids=dataset_ids)
+        if path is not None:
+            path = Path(path)
+            if not path.exists():
+                raise IOError('Path to load the results from does not exist:\n{}'
+                              ''.format(path))
+            self.load(path)
+        else:
+            super().__init__(metric_set=metric_set, num_rep=num_rep,
+                             dataset_ids=dataset_ids)
 
         self.confusion_mat = dict()  # confusion matrix
         self.misclfd_samplets = dict()  # list of misclassified samplets
@@ -221,6 +231,30 @@ class ClassifyCVResults(CVResults):
             to_save = [self.metric_set, self.metric_val, self.attr, self.meta,
                        self.confusion_mat, self.misclfd_samplets]
             pickle.dump(to_save, df)
+
+
+    def load(self, path):
+        "Method to load previously saved results e.g. to redo visualizations"
+
+        try:
+            with open(path, 'rb') as res_fid:
+                full_results = pickle.load(res_fid)
+        except:
+            raise IOError()
+        else:
+            results = full_results['results']
+            for var in cfg.clf_results_class_variables_to_load:
+                setattr(self, var, getattr(results, var))
+
+            # dynamically computing whats needed
+            self._max_width_metric = max(
+                    [len(mt) for mt in self.metric_set.keys()]) + 1
+            self._max_width_ds_ids = max(
+                    [len(str(ds)) for ds in self._dataset_ids]) + 1
+
+        print()
+
+        return self
 
 
 class RegressCVResults(CVResults):
