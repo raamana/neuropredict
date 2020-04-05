@@ -125,7 +125,7 @@ class CVResults(object):
         """for FYI"""
 
         if self._count > 0:
-            summary = ['\n', ]
+            summary = list()
             for metric, mdict in self.metric_val.items():
                 summary.append('\n{metric:<{mmw}}'
                                ''.format(metric=metric, mmw=self._max_width_metric))
@@ -144,7 +144,7 @@ class CVResults(object):
     def __str__(self):
         """Simple summary"""
 
-        return 'Metrics : {}\n # runs : {}, # datasets : {}\n{}' \
+        return '\n\nMetrics : {}\n # runs : {}, # datasets : {}\n{}' \
                ''.format(', '.join(self.metric_val.keys()), self._count,
                          len(self._dataset_ids), self._metric_summary())
 
