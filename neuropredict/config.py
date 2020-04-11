@@ -149,12 +149,20 @@ results_to_save = ['_workflow_type', '_checkpointing',
                    'reduced_dim', 'results', 'train_perc',
                    'user_options']
 
-### --- CV results class
+### ---------  CV results class  ------------------------------------
 
-clf_results_class_variables_to_load = ['_dataset_ids', 'attr', 'confusion_mat',
-                                       'meta', 'metric_set', 'metric_val',
-                                       'misclfd_samplets', 'num_rep', '_count',
-                                       'predicted_targets', 'true_targets']
+_common_variable_set_to_load = ['_dataset_ids',
+                               'attr', 'meta',
+                               'metric_set', 'metric_val',
+                               'num_rep', '_count',
+                               'predicted_targets', 'true_targets', ]
+
+clf_results_class_variables_to_load = _common_variable_set_to_load + \
+                                      ['confusion_mat', 'misclfd_samplets', ]
+
+regr_results_class_variables_to_load = _common_variable_set_to_load + ['residuals', ]
+
+### ------------------------------------------------------------------------------
 
 # CV
 default_num_repetitions = 200
