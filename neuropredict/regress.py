@@ -105,7 +105,7 @@ def cli():
 
     out_results_path = regr_expt.run()
     timedelta = datetime.now() - init_time
-    print('All done. Elapsed time: {} DD:HH:MM:SS\n'.format(timedelta))
+    print('All done. Elapsed time: {} HH:MM:SS\n'.format(timedelta))
 
     return out_results_path
 
