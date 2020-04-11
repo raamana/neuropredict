@@ -49,9 +49,11 @@ gs_level = 'none'  # 'light'
 
 num_procs = 1
 
-out_path = os.path.join(out_dir, 'random_regr_ds1.pkl')
-if pexists(out_path):
-    ds_one = RegressionDataset(dataset_path=out_path)
+out_path1 = os.path.join(out_dir, 'random_regr_ds1.pkl')
+out_path2 = os.path.join(out_dir, 'random_regr_ds2.pkl')
+if pexists(out_path1) and pexists(out_path2):
+    ds_one = RegressionDataset(dataset_path=out_path1)
+    ds_two = RegressionDataset(dataset_path=out_path2)
 else:
     ds_one = make_random_RegrDataset(min_size=min_size, max_size=max_size,
                                      max_dim=max_dim,
@@ -59,16 +61,15 @@ else:
                                      attr_types=covar_types
                                      )
     ds_one.description = 'ds_one'
-    ds_one.save(out_path)
+    ds_one.save(out_path1)
 
-out_path2 = os.path.join(out_dir, 'random_regr_ds2.pkl')
-ds_two = dataset_with_new_features_same_everything_else(ds_one, max_dim)
-ds_two.description = 'ds_two'
-ds_two.save(out_path2)
+    ds_two = dataset_with_new_features_same_everything_else(ds_one, max_dim)
+    ds_two.description = 'ds_two'
+    ds_two.save(out_path2)
 
 sys.argv = shlex.split('np_regress -y {} {} -t {} -n {} -c {} -g {} -o {} '
                        '-e {} -dr {} -cl {} -cm {}'
-                       ''.format(out_path, out_path2, train_perc, num_rep_cv,
+                       ''.format(out_path1, out_path2, train_perc, num_rep_cv,
                                  num_procs, gs_level, out_dir, estimator,
                                  dr_method, covar_arg, deconf_method))
 cli()

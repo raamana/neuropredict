@@ -56,9 +56,11 @@ covar_arg = ' '.join(['age', 'gender'])
 deconf_method = 'residualize'
 
 
-out_path = os.path.join(out_dir, 'random_clf_ds1.pkl')
-if pexists(out_path):
-    ds_one = ClassificationDataset(dataset_path=out_path)
+out_path1 = os.path.join(out_dir, 'random_clf_ds1.pkl')
+out_path2 = os.path.join(out_dir, 'random_clf_ds2.pkl')
+if pexists(out_path1) and pexists(out_path2):
+    ds_one = ClassificationDataset(dataset_path=out_path1)
+    ds_two = ClassificationDataset(dataset_path=out_path2)
 else:
     ds_one = make_random_ClfDataset(max_num_classes=max_num_classes,
                                     stratified=True,
@@ -67,7 +69,10 @@ else:
                                     min_num_classes=min_num_classes,
                                     attr_names=covar_list,
                                     attr_types=covar_types)
-    ds_one.save(out_path)
+    ds_one.save(out_path1)
+
+    ds_two = dataset_with_new_features_same_everything_else(ds_one, max_dim)
+    ds_two.save(out_path2)
 
 A = 0
 B = 1
@@ -86,9 +91,6 @@ else:
 # choosing the class that exists in all subgroups
 positive_class = ds_one.target_set[A]
 
-out_path2 = os.path.join(out_dir, 'random_clf_ds2.pkl')
-ds_two = dataset_with_new_features_same_everything_else(ds_one, max_dim)
-ds_two.save(out_path2)
 
 # deciding on tolerances for chance accuracy
 total_num_classes = ds_one.num_targets
@@ -100,7 +102,7 @@ def test_basic_run():
 
     sys.argv = shlex.split('np_classify -y {} {} -t {} -n {} -c {} -g {} -o {} '
                            '-e {} -dr {} -k {} --sub_groups {} -p {} -cl {} -cm {}'
-                           ''.format(out_path, out_path2, train_perc, num_rep_cv,
+                           ''.format(out_path1, out_path2, train_perc, num_rep_cv,
                                      num_procs, gs_level, out_dir,
                                      estimator, dr_method, dr_size,
                                      sg_list, positive_class,
@@ -112,7 +114,7 @@ def test_chance_clf_binary_svm():
 
     sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} '
                            '-e {} -dr {}'
-                           ''.format(out_path, out_path2, train_perc,
+                           ''.format(out_path1, out_path2, train_perc,
                                      min_rep_per_class * ds_two.num_targets,
                                      num_procs, gs_level, out_dir, estimator,
                                      dr_method))
