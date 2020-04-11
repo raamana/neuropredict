@@ -1,8 +1,7 @@
 import sys
-from sys import version_info
+from os.path import abspath, dirname
 
 import numpy as np
-from os.path import dirname, abspath
 
 sys.dont_write_bytecode = True
 
@@ -10,10 +9,7 @@ if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
-if version_info.major > 2:
-    from neuropredict.utils import balanced_accuracy
-else:
-    raise NotImplementedError('neuropredict supports only Python 3+.')
+from neuropredict.utils import balanced_accuracy
 
 
 def test_balanced_accuracy():
@@ -47,12 +43,10 @@ def test_balanced_accuracy():
         computed_acc = balanced_accuracy(cm)
         expected_acc = np.mean(chosen_accuracy)
         if not np.isclose(computed_acc, expected_acc, atol=1e-2):
-            raise ArithmeticError('accuracy calculations do not match the expected!!\n'
-                                  ' Expected : {:.8f}\n'
-                                  ' Estimated: {:.8f}\n'
-                                  ' Differ by: {:.8f}\n'
-                                  ''.format(expected_acc, computed_acc,
-                                            expected_acc - computed_acc))
-
-
-test_balanced_accuracy()
+            raise ArithmeticError(
+                'accuracy calculations do not match the expected!!\n'
+                ' Expected : {:.8f}\n'
+                ' Estimated: {:.8f}\n'
+                ' Differ by: {:.8f}\n'
+                ''.format(expected_acc, computed_acc,
+                          expected_acc - computed_acc))

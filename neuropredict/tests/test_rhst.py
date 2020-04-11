@@ -1,4 +1,3 @@
-
 import os
 import shlex
 import sys
@@ -17,11 +16,9 @@ if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
-if version_info.major > 2:
-    from neuropredict import cli, config as cfg
-    from neuropredict.utils import chance_accuracy
-else:
-    raise NotImplementedError('neuropredict supports only Python 3+.')
+from neuropredict import config as cfg
+from neuropredict.classify import cli
+from neuropredict.utils import chance_accuracy
 
 feat_generator = np.random.randn
 
@@ -30,20 +27,21 @@ out_dir = realpath(pjoin(test_dir, '..', 'tests', 'scratch'))
 if not pexists(out_dir):
     os.makedirs(out_dir)
 
-meta_file = os.path.join(out_dir,'meta.csv')
+meta_file = os.path.join(out_dir, 'meta.csv')
 
 meta = list()
 
-def make_random_Dataset(max_num_classes = 20,
-                        max_class_size = 50,
-                        max_dim = 100,
-                        stratified = True):
+
+def make_random_Dataset(max_num_classes=20,
+                        max_class_size=50,
+                        max_dim=100,
+                        stratified=True):
     "Generates a random Dataset for use in testing."
 
     smallest = 10
     max_class_size = max(smallest, max_class_size)
     largest = max(50, max_class_size)
-    largest = max(smallest+3,largest)
+    largest = max(smallest + 3, largest)
 
     if max_num_classes != 2:
         num_classes = np.random.randint(2, max_num_classes, 1)
@@ -57,10 +55,10 @@ def make_random_Dataset(max_num_classes = 20,
                                                 size=[num_classes, 1])
     else:
         class_sizes = np.repeat(np.random.randint(smallest, largest),
-                                                  num_classes)
+                                num_classes)
 
     num_features = np.random.randint(min(3, max_dim), max(3, max_dim), 1)[0]
-    feat_names = [ str(x) for x in range(num_features)]
+    feat_names = [str(x) for x in range(num_features)]
 
     class_ids = list()
     labels = list()
@@ -70,8 +68,8 @@ def make_random_Dataset(max_num_classes = 20,
 
     ds = ClfDataset()
     for cc, class_ in enumerate(class_ids):
-        subids = [ 'sub{:03}-class{:03}'.format(ix,cc)
-                   for ix in range(class_sizes[cc]) ]
+        subids = ['sub{:03}-class{:03}'.format(ix, cc)
+                  for ix in range(class_sizes[cc])]
         for sid in subids:
             ds.add_samplet(samplet_id=sid,
                            features=feat_generator(num_features),
@@ -81,24 +79,23 @@ def make_random_Dataset(max_num_classes = 20,
     return ds
 
 
-def make_fully_separable_classes(max_class_size = 50, max_dim = 100):
-
+def make_fully_separable_classes(max_class_size=50, max_dim=100):
     from sklearn.datasets import make_blobs
 
     random_center = np.random.rand(max_dim)
     cluster_std = 1.5
-    centers =  [random_center, random_center+cluster_std*6]
+    centers = [random_center, random_center + cluster_std * 6]
     blobs_X, blobs_y = make_blobs(n_samples=max_class_size, n_features=max_dim,
-                      centers=centers, cluster_std=cluster_std)
+                                  centers=centers, cluster_std=cluster_std)
 
     unique_labels = np.unique(blobs_y)
-    class_ids = { lbl : str(lbl) for lbl in unique_labels }
+    class_ids = {lbl: str(lbl) for lbl in unique_labels}
 
     new_ds = ClfDataset()
     for index, row in enumerate(blobs_X):
-            new_ds.add_samplet(samplet_id='sub{}'.format(index),
-                               features=row, #label=blobs_y[index],
-                               target=class_ids[blobs_y[index]])
+        new_ds.add_samplet(samplet_id='sub{}'.format(index),
+                           features=row,  # label=blobs_y[index],
+                           target=class_ids[blobs_y[index]])
 
     return new_ds
 
@@ -111,16 +108,15 @@ min_rep_per_class = 20
 
 train_perc = 0.5
 red_dim = 'sqrt'
-classifier = 'randomforestclassifier' # 'svm' # 'extratreesclassifier'
-fs_method = 'variancethreshold' # 'selectkbest_f_classif'
-gs_level = 'none' # 'light'
+classifier = 'randomforestclassifier'  # 'svm' # 'extratreesclassifier'
+fs_method = 'variancethreshold'  # 'selectkbest_f_classif'
+gs_level = 'none'  # 'light'
 
 num_procs = 1
 
-
 # using a really small sample size for faster testing.
 rand_ds = make_random_Dataset(max_num_classes=max_num_classes, stratified=True,
-                              max_class_size = max_class_size, max_dim = max_dim)
+                              max_class_size=max_class_size, max_dim=max_dim)
 
 out_path_multiclass = os.path.join(out_dir, 'multiclass_random_features.pkl')
 rand_ds.save(out_path_multiclass)
@@ -144,7 +140,7 @@ method_names = ['random1', 'another']
 # deciding on tolerances for chance accuracy
 total_num_classes = rand_ds.num_targets
 
-eps_chance_acc_binary =0.05
+eps_chance_acc_binary = 0.05
 eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
 
@@ -169,7 +165,7 @@ def raise_if_mean_differs_from(accuracy_balanced,
 
     # chance calculation expects "average", not median
     mean_bal_acc = np.mean(accuracy_balanced, axis=0)
-    for ma  in mean_bal_acc:
+    for ma in mean_bal_acc:
         print('for {},\n reference level accuracy expected: {} '
               '-- Estimated via CV:  {}'.format(method_descr, reference_level, ma))
         abs_diff = abs(ma - reference_level)
@@ -179,7 +175,6 @@ def raise_if_mean_differs_from(accuracy_balanced,
 
 
 def test_chance_clf_binary_svm():
-
     global ds_path_list, method_names, out_dir, num_repetitions, \
         gs_level, train_perc, num_procs
 
@@ -203,7 +198,8 @@ def test_separable_100perc():
     """
 
     separable_ds = make_fully_separable_classes(max_class_size=100,
-                                                max_dim=np.random.randint(2, max_dim))
+                                                max_dim=np.random.randint(2,
+                                                                          max_dim))
     separable_ds.description = 'fully_separable_dataset'
     out_path_sep = os.path.join(out_dir, 'two_separable_classes.pkl')
     out_dir_sep = os.path.join(out_dir, 'fully_separable_test')
@@ -211,11 +207,12 @@ def test_separable_100perc():
     separable_ds.save(out_path_sep)
 
     nrep = 10
-    gsl = 'none' # to speed up the process
+    gsl = 'none'  # to speed up the process
     for clf_name in cfg.classifier_choices:
         for fs_name in cfg.all_dim_red_methods:
 
-            cli_str = 'neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -dr {}' \
+            cli_str = 'neuropredict -y {} -t {} -n {} -c {} -g {} -o {} -e {} -dr ' \
+                      '{}' \
                       ''.format(out_path_sep, train_perc, nrep, 1, gsl, out_dir_sep,
                                 clf_name, fs_name)
             sys.argv = shlex.split(cli_str)
@@ -225,20 +222,20 @@ def test_separable_100perc():
             for sg, result in cv_results.items():
                 raise_if_mean_differs_from(result['accuracy_balanced'],
                                            result['target_sizes'],
-                                           reference_level=1.0, #comparing to perfect
+                                           reference_level=1.0,
+                                           # comparing to perfect
                                            eps_chance_acc=0.5,
                                            method_descr='{} {}'.format(fs_name,
                                                                        clf_name))
 
 
 def test_chance_multiclass():
-
     global ds_path_list, method_names, out_dir, num_repetitions, \
         gs_level, train_perc, num_procs
 
     clf = 'randomforestclassifier'
     fs_method = 'variancethreshold'
-    nrep = total_num_classes*min_rep_per_class
+    nrep = total_num_classes * min_rep_per_class
     gsl = 'none'  # to speed up the process
     sys.argv = shlex.split('neuropredict -y {} -t {} -n {} -c {} -g {} '
                            '-o {} -e {} -dr {}'
@@ -259,7 +256,7 @@ def test_each_combination_works():
     "Ensures each of combination of feature selection and classifier works."
 
     nrep = 10
-    gsl = 'none' # to speed up the process
+    gsl = 'none'  # to speed up the process
     for clf_name in cfg.classifier_choices:
         for fs_name in cfg.all_dim_red_methods:
             try:
@@ -281,6 +278,7 @@ def test_versioning():
         sys.argv = shlex.split('neuropredict -v')
         cli()
 
+
 def test_vis():
     " ensures the CLI works. "
 
@@ -299,9 +297,9 @@ def test_vis():
     else:
         print('previously computed results not found in \n {}'.format(out_dir))
 
-def test_arff():
 
-    arff_path = realpath(pjoin(dirname(dirname(dirname(__file__))), # 3 levels up
+def test_arff():
+    arff_path = realpath(pjoin(dirname(dirname(dirname(__file__))),  # 3 levels up
                                'example_datasets', 'arff', 'iris.arff'))
     sys.argv = shlex.split('neuropredict -a {} -t {} -n {} -c {} -g {} -o {} '
                            '-e {} -dr {}'.format(arff_path, train_perc,
@@ -323,7 +321,7 @@ def test_print_options():
                                    ''.format(known_out_dir))
             cli()
 
-    known_nonexisting_dir = known_out_dir+'_43_34563$#*$@)'
+    known_nonexisting_dir = known_out_dir + '_43_34563$#*$@)'
     with raises(IOError):
         sys.argv = shlex.split('neuropredict --po {}'
                                ''.format(known_nonexisting_dir))
