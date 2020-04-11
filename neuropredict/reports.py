@@ -85,7 +85,7 @@ def export_results(dict_to_save, out_dir, options_path):
         print_aligned_msg('misclassfiication rates', 'Done.')
 
         # feature importance
-        if user_options['classifier_name'].lower() in cfg.estimators_with_feat_imp:
+        if user_options['pred_model_name'].lower() in cfg.estimators_with_feat_imp:
             for mm in range(num_datasets):
                 featimp_path = pjoin(exp_dir, 'feature_importance_{}.csv'
                                               ''.format(method_names[mm]))

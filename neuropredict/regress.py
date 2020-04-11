@@ -9,7 +9,7 @@ from neuropredict import __version__, config as cfg
 from neuropredict.base import BaseWorkflow, get_parser_base, parse_common_args
 from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.utils import (check_covariates,
-                                check_regressor, median_of_medians)
+                                check_regressor, median_of_medians, save_options)
 from neuropredict.visualize import compare_distributions, multi_scatter_plot
 
 
@@ -53,13 +53,12 @@ def parse_args():
     # saving the validated and expanded values to disk for later use.
     options_to_save = [sample_ids, classes, out_dir, user_feature_paths,
                        user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
+                       None, None, # positive_class, subgroups,
                        reduced_dim_size, num_procs,
                        grid_search_level, regressor, dim_red_method]
+    user_options, options_path = save_options(options_to_save, out_dir)
 
-    # options_path = save_options(options_to_save, out_dir)
-    options_path = None
-
-    return sample_ids, classes, out_dir, options_path, \
+    return sample_ids, classes, out_dir, user_options, \
            user_feature_paths, user_feature_type, \
            train_perc, num_rep_cv, \
            reduced_dim_size, impute_strategy, num_procs, \

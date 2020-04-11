@@ -314,9 +314,9 @@ def parse_args():
                        user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
                        positive_class, subgroups, reduced_dim_size, num_procs,
                        grid_search_level, classifier, dim_red_method]
-    options_path = save_options(options_to_save, out_dir)
+    user_options, options_path = save_options(options_to_save, out_dir)
 
-    return sample_ids, classes, out_dir, options_path, \
+    return sample_ids, classes, out_dir, user_options, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \

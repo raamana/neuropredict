@@ -211,25 +211,25 @@ def save_options(options_to_save, out_dir_in):
 
     sample_ids, classes, out_dir, user_feature_paths, user_feature_type, \
     fs_subject_dir, train_perc, num_rep_cv, positive_class, subgroups, \
-    feature_selection_size, num_procs, grid_search_level, classifier_name, \
-    feat_select_method = options_to_save
+    reduced_dim_size, num_procs, grid_search_level, pred_model_name, \
+    dim_red_method = options_to_save
 
     user_options = {
-        'sample_ids'            : sample_ids,
-        'classes'               : classes,
-        'classifier_name'       : classifier_name,
-        'feat_select_method'    : feat_select_method,
-        'gs_level'              : grid_search_level,
-        'feature_selection_size': feature_selection_size,
-        'num_procs'             : num_procs,
-        'num_rep_cv'            : num_rep_cv,
-        'positive_class'        : positive_class,
-        'sub_groups'            : subgroups,
-        'train_perc'            : train_perc,
-        'fs_subject_dir'        : fs_subject_dir,
-        'user_feature_type'     : user_feature_type,
-        'user_feature_paths'    : user_feature_paths,
-        'out_dir'               : out_dir,}
+        'sample_ids'        : sample_ids,
+        'classes'           : classes,
+        'pred_model_name'   : pred_model_name,
+        'dim_red_method'    : dim_red_method,
+        'gs_level'          : grid_search_level,
+        'reduced_dim_size'  : reduced_dim_size,
+        'num_procs'         : num_procs,
+        'num_rep_cv'        : num_rep_cv,
+        'positive_class'    : positive_class,
+        'sub_groups'        : subgroups,
+        'train_perc'        : train_perc,
+        'fs_subject_dir'    : fs_subject_dir,
+        'user_feature_type' : user_feature_type,
+        'user_feature_paths': user_feature_paths,
+        'out_dir'           : out_dir, }
 
     try:
         options_path = pjoin(out_dir_in, cfg.file_name_options)
@@ -238,7 +238,7 @@ def save_options(options_to_save, out_dir_in):
     except:
         raise IOError('Unable to save the options to\n {}'.format(out_dir_in))
 
-    return options_path
+    return user_options, options_path
 
 
 def load_options(out_dir, options_path=None):
