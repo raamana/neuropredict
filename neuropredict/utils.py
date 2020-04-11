@@ -209,14 +209,14 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
 def save_options(options_to_save, out_dir_in):
     "Helper to save chosen options"
 
-    sample_ids, classes, out_dir, user_feature_paths, user_feature_type, \
+    sample_ids, targets, out_dir, user_feature_paths, user_feature_type, \
     fs_subject_dir, train_perc, num_rep_cv, positive_class, subgroups, \
     reduced_dim_size, num_procs, grid_search_level, pred_model_name, \
     dim_red_method = options_to_save
 
     user_options = {
         'sample_ids'        : sample_ids,
-        'classes'           : classes,
+        'targets'           : targets,
         'pred_model_name'   : pred_model_name,
         'dim_red_method'    : dim_red_method,
         'gs_level'          : grid_search_level,
@@ -433,7 +433,7 @@ def print_options(run_dir):
     # print(user_options)
     print('\n\nOptions used in the run\n{}\n'.format(run_dir))
     for key, val in user_options.items():
-        if key.lower() not in ('sample_ids', 'classes'):
+        if key.lower() not in ('sample_ids', 'targets'):
             print('{:>25} : {}'.format(key, val))
 
     return

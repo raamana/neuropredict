@@ -419,7 +419,7 @@ class BaseWorkflow(object):
             with open(self._out_results_path, 'rb') as res_fid:
                 loaded_results = pickle.load(res_fid)
         except:
-            raise IOError('Error load the results from path: {}'
+            raise IOError('Error loading the results from path: {}'
                           ''.format(self._out_results_path))
         else:
             print('\nResults loaded from {}\n'.format(self._out_results_path))

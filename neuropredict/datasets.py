@@ -2,12 +2,12 @@
 
 import numpy as np
 from warnings import warn
-from pyradigm import MultiDatasetClassify, MultiDatasetRegress
+from pyradigm.multiple import MultiDatasetClassify, MultiDatasetRegress
 from neuropredict import config as cfg
 from neuropredict.base import MissingDataException
 
 
-def load_datasets(path_list, task_type='classify', name=None, subgroup=None):
+def load_datasets(path_list, task_type='classify', name='Dataset', subgroup=None):
     """Method to manage multiple input datasets."""
 
     task_type = task_type.lower()
