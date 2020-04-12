@@ -12,8 +12,7 @@ if __name__ == '__main__' and __package__ is None:
     parent_dir = dirname(dirname(abspath(__file__)))
     sys.path.append(parent_dir)
 
-from neuropredict.classify import cli, ClassificationWorkflow as ClfWorkflow
-from neuropredict.results import ClassifyCVResults
+from neuropredict.classify import cli
 from pyradigm import ClassificationDataset
 from pyradigm.utils import (make_random_ClfDataset,
                             dataset_with_new_features_same_everything_else)
@@ -38,15 +37,14 @@ min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 20
+num_rep_cv = 40
+num_procs = 2
 
 red_dim = 'sqrt'
 estimator =  'randomforestclassifier' # 'svm' #
 dr_method = 'isomap' # 'selectkbest_f_classif' # 'variancethreshold'  #
 dr_size = 'tenth'
 gs_level = 'none'  # 'light'
-
-num_procs = 1
 
 random.seed(42)  # to save time for local tests
 
@@ -81,8 +79,9 @@ if ds_one.num_targets > 2:
     # sg_list =  '{},{} {},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
     #                                    ds_one.target_set[A], ds_one.target_set[C],
     #                                    ','.join(ds_one.target_set))
-    sg_list = '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
-                                ','.join(ds_one.target_set))
+    # sg_list = '{},{} {}'.format(ds_one.target_set[A], ds_one.target_set[B],
+    #                             ','.join(ds_one.target_set))
+    sg_list = ' {},{} '.format(ds_one.target_set[A], ds_one.target_set[B])
 else:
     sg_list = ','.join(ds_one.target_set)
 
@@ -131,4 +130,4 @@ def test_chance_clf_binary_svm():
                                    result['_target_sizes'],
                                    eps_chance_acc=eps_chance_acc_binary)
 
-test_chance_clf_binary_svm()
+test_basic_run()

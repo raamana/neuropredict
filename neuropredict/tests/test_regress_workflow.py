@@ -34,7 +34,8 @@ min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 20
+num_rep_cv = 45
+num_procs = 3
 
 covar_list = ('age', 'gender', 'dummy')
 covar_types = ('age', 'gender', 'float')
@@ -46,8 +47,6 @@ red_dim = 'sqrt'
 estimator = 'randomforestregressor'
 dr_method = 'variancethreshold'  # 'selectkbest_f_classif'
 gs_level = 'none'  # 'light'
-
-num_procs = 1
 
 out_path1 = os.path.join(out_dir, 'random_regr_ds1.pkl')
 out_path2 = os.path.join(out_dir, 'random_regr_ds2.pkl')
