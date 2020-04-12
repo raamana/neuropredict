@@ -397,20 +397,13 @@ class RegressCVResults(CVResults):
         self.residuals[(dataset_id, run_id)] = residuals
 
 
-    def dump(self, out_dir):
-        """Method for quick dump, for checkpointing purposes"""
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
 
-        from os.path import join as pjoin, exists
-        from neuropredict.utils import make_time_stamp
-        import pickle
-        out_path = pjoin(out_dir, '{}_{}.pkl'
-                                  ''.format(cfg.prefix_dump, make_time_stamp()))
-        if exists(out_path):
-            from os import remove
-            remove(out_path)
-        with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self.attr, self.meta]
-            pickle.dump(to_save, df)
+        return [self.predicted_targets, self.true_targets, self.metric_val,
+                self.attr, self.meta,
+                self.residuals]
+
 
     def load(self, path):
         "Method to load previously saved results e.g. to redo visualizations"
@@ -432,3 +425,35 @@ class RegressCVResults(CVResults):
                     [len(str(ds)) for ds in self._dataset_ids]) + 1
 
         return self
+
+
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
+
+        print('Gathering results from disk for {} reps ...'.format(self.num_rep))
+
+        self._count = 0
+        for run in range(self.num_rep):
+            with open(pjoin(dump_dir, self._dump_file_name(run)), 'rb') as df:
+                res = pickle.load(df)
+
+            # unpacking results : order must match that returned by self._to_save()
+            pred_tgts, true_tgts, metr_val, attrs, meta, resids = res
+
+            for ds in self._dataset_ids:
+                self.true_targets[(ds, run)] = true_tgts[(ds, run)]
+                self.predicted_targets[(ds, run)] = pred_tgts[(ds, run)]
+
+                for m_name in self.metric_val.keys():
+                    self.add_metric(run, ds, m_name, metr_val[m_name][ds][run])
+
+                for at_name in attrs.keys():
+                    self.add_attr(run, ds, at_name, attrs[at_name][(ds, run)])
+
+                # TODO find ways to refactor, to reduce reuse of above common code
+                # regression specific
+                self.residuals[(ds, run)] = resids[(ds, run)]
+
+                self._count += 1
+
+        print('  Done.')
