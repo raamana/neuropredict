@@ -94,7 +94,7 @@ positive_class = ds_one.target_set[A]
 # deciding on tolerances for chance accuracy
 total_num_classes = ds_one.num_targets
 
-eps_chance_acc_binary =0.02
+eps_chance_acc_binary =0.04
 eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
 def test_basic_run():

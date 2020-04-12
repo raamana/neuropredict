@@ -10,7 +10,7 @@ install:
   - pip install pytest-cov
 
 script:
-  - travis_wait 999 pytest --verbose --cov=. neuropredict/tests/test_regress_workflow.py neuropredict/tests/test_classify_workflow.py neuropredict/tests/test_metrics.py
+  - travis_wait 999 pytest --verbose --cov=. neuropredict/tests/test_regress_workflow.py neuropredict/tests/test_classify_workflow.py neuropredict/tests/test_metrics.py neuropredict/tests/test_CVResults_classes.py
 
 after_success:
 - codecov
