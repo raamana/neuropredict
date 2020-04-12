@@ -6,8 +6,7 @@ import random
 import sys
 import textwrap
 from abc import abstractmethod
-from functools import partial
-from multiprocessing import Manager, Pool
+from multiprocessing import Pool
 from os import getcwd, makedirs
 from os.path import abspath, exists as pexists, getsize, join as pjoin, realpath
 from warnings import catch_warnings, filterwarnings, simplefilter

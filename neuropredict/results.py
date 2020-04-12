@@ -4,11 +4,13 @@ Module defining methods and classes needed to manage results produced.
 
 """
 
+import pickle
 from abc import abstractmethod
+from os import remove
+from os.path import exists as pexists, join as pjoin
+from pathlib import Path
 
 import numpy as np
-import pickle
-from pathlib import Path
 from neuropredict import config as cfg
 from neuropredict.utils import is_iterable_but_not_str
 
@@ -164,6 +166,7 @@ class CVResults(object):
     def save(self):
         "Method to persist the results to disk."
 
+
     @abstractmethod
     def load(self, path):
         "Method to load previously saved results e.g. to redo visualizations"
@@ -221,9 +224,11 @@ class CVResults(object):
     def _to_save(self):
         """Returns a list of variables to be persisted to disk"""
 
+
     @staticmethod
     def _dump_file_name(run_id):
         return '{}_{}.pkl'.format(cfg.quick_dump_prefix, run_id)
+
 
     def dump(self, out_dir, run_id):
         """Method for quick dump, for checkpointing purposes"""
@@ -235,6 +240,7 @@ class CVResults(object):
             pickle.dump(self._to_save(), df)
 
         print()
+
 
     @abstractmethod
     def gather_dumps(self, dump_dir):
@@ -285,23 +291,6 @@ class ClassifyCVResults(CVResults):
         raise NotImplementedError()
 
 
-    def dump(self, out_dir):
-        """Method for quick dump, for checkpointing purposes"""
-
-        from os.path import join as pjoin, exists
-        from neuropredict.utils import make_time_stamp
-        import pickle
-        out_path = pjoin(out_dir, '{}_{}.pkl'
-                                  ''.format(cfg.prefix_dump, make_time_stamp()))
-        if exists(out_path):
-            from os import remove
-            remove(out_path)
-        with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self.attr, self.meta,
-                       self.confusion_mat, self.misclfd_samplets]
-            pickle.dump(to_save, df)
-
-
     def load(self, path):
         "Method to load previously saved results e.g. to redo visualizations"
 
@@ -320,8 +309,6 @@ class ClassifyCVResults(CVResults):
                     [len(mt) for mt in self.metric_set.keys()]) + 1
             self._max_width_ds_ids = max(
                     [len(str(ds)) for ds in self._dataset_ids]) + 1
-
-        print()
 
         return self
 
