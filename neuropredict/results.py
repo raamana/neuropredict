@@ -218,8 +218,27 @@ class CVResults(object):
 
 
     @abstractmethod
-    def dump(self, out_dir):
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
+
+    @staticmethod
+    def _dump_file_name(run_id):
+        return '{}_{}.pkl'.format(cfg.quick_dump_prefix, run_id)
+
+    def dump(self, out_dir, run_id):
         """Method for quick dump, for checkpointing purposes"""
+
+        out_path = pjoin(out_dir, self._dump_file_name(run_id))
+        if pexists(out_path):
+            remove(out_path)
+        with open(out_path, 'wb') as df:
+            pickle.dump(self._to_save(), df)
+
+        print()
+
+    @abstractmethod
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
 
 
     @abstractmethod

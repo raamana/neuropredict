@@ -238,6 +238,8 @@ file_name_results = 'rhst_results.pkl'
 file_name_options = 'options_neuropredict.pkl'
 file_name_best_param_values = 'best_parameter_values.pkl'
 
+quick_dump_prefix = 'cv_results_quick_dump'
+
 max_len_identifiers = 75
 
 output_dir_default = 'neuropredict_results'

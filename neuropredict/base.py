@@ -75,6 +75,7 @@ class BaseWorkflow(object):
         makedirs(self._fig_out_dir, exist_ok=True)
         makedirs(self._tmp_dump_dir, exist_ok=True)
 
+        self._parall_proc = False
         self.num_procs = num_procs
         self.user_options = user_options
         self._checkpointing = checkpointing
@@ -188,24 +189,13 @@ class BaseWorkflow(object):
         """Actual CV"""
 
         if self.num_procs > 1:
-            # TODO find ways to parallelize - there is a separate branch for this
-            raise NotImplementedError('parallel runs not implemented yet!'
-                                      'Use num_procs=1 for now')
+            self._parall_proc = True
+            self._checkpointing = True
+
             print('Parallelizing the repetitions of CV with {} processes ...'
                   ''.format(self.num_procs))
-            with Manager() as proxy_manager:
-                # TODO these inputs may not need to be shared, as the method is a
-                #  class member and has direct access to the inputs passed here
-                shared_inputs = proxy_manager.list(
-                        [self.datasets, self.impute_strategy, self.reduced_dim,
-                         self.train_perc, self.user_options.out_dir,
-                         self.grid_search_level, self.pred_model,
-                         self.dim_red_method])
-                partial_func_holdout = partial(self._single_run_cv, *shared_inputs)
-
-                with Pool(processes=self.num_procs) as pool:
-                    cv_results = pool.map(partial_func_holdout,
-                                          range(self.num_rep_cv))
+            with Pool(processes=self.num_procs) as pool:
+                pool.map(self._single_run_cv, list(range(self.num_rep_cv)))
         else:
             # switching to regular sequential for loop to avoid any parallel drama
             for rep in range(self.num_rep_cv):
@@ -235,7 +225,6 @@ class BaseWorkflow(object):
                 train_covar, test_covar = self._get_covariates(train_set, test_set)
                 train_data, test_data = self._deconfound_data(train_data, train_covar,
                                                               test_data, test_covar)
-
             # deconfounding targets could be added here in the future if needed
 
             best_pipeline, best_params, feat_importance = \
@@ -247,8 +236,8 @@ class BaseWorkflow(object):
                                    run_id, ds_id)
 
         # dump results if checkpointing is requested
-        if self._checkpointing:
-            self.results.dump(self._tmp_dump_dir)
+        if self._checkpointing or self._parall_proc:
+            self.results.dump(self._tmp_dump_dir, run_id)
 
 
     def _get_covariates(self, train_set, test_set):
@@ -387,6 +376,9 @@ class BaseWorkflow(object):
 
     def save(self):
         """Saves the results and state to disk."""
+
+        if self._parall_proc:
+            self.results.gather_dumps(self._tmp_dump_dir)
 
         out_dict = {var: getattr(self, var, None) for var in cfg.results_to_save}
 
