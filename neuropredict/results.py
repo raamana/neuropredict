@@ -326,6 +326,46 @@ class ClassifyCVResults(CVResults):
         return self
 
 
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
+
+        return [self.predicted_targets, self.true_targets, self.metric_val,
+                self.attr, self.meta,
+                self.confusion_mat, self.misclfd_samplets]
+
+
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
+
+        print('Gathering results from disk for {} reps ...'.format(self.num_rep))
+
+        self._count = 0
+        for run in range(self.num_rep):
+            with open(pjoin(dump_dir, self._dump_file_name(run)), 'rb') as df:
+                res = pickle.load(df)
+
+            # unpacking results : order must match that returned by self._to_save()
+            pred_tgts, true_tgts, metr_val, attrs, meta, conf_mat, misclfd = res
+
+            for ds in self._dataset_ids:
+                self.true_targets[(ds, run)] = true_tgts[(ds, run)]
+                self.predicted_targets[(ds, run)] = pred_tgts[(ds, run)]
+
+                for m_name in self.metric_val.keys():
+                    self.add_metric(run, ds, m_name, metr_val[m_name][ds][run])
+
+                for at_name in attrs.keys():
+                    self.add_attr(run, ds, at_name, attrs[at_name][(ds, run)])
+
+                # classify specific
+                self.add_diagnostics(run, ds, conf_mat[(ds, run)],
+                                     misclfd[(ds, run)])
+
+                self._count += 1
+
+        print('  Done.')
+
+
 class RegressCVResults(CVResults):
     """Custom CVResults class to accommodate classification-specific evaluation."""
 
