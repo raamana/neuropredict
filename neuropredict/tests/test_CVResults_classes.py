@@ -48,8 +48,9 @@ def test_classify():
 
     for rr, rpath in enumerate(result_paths):
         full_results = load_results(rpath)
-        print('testing sub group set {} from {}'
-              ''.format(full_results['user_options']['sub_groups'][rr], rpath))
+        print('testing results from {}'
+              ''.format(rpath))
+              # ''.format(full_results['user_options']['sub_groups'][rr], rpath))
 
         num_datasets = len(full_results['user_options']['user_feature_paths'])
         num_targets = len(full_results['_target_set'])
