@@ -2,15 +2,11 @@
 
 import os
 import textwrap
-import traceback
-import warnings
-from os import makedirs
 from os.path import basename, join as pjoin
 
-import matplotlib.pyplot as plt
 import numpy as np
 # the order of import is very important to avoid circular imports
-from neuropredict import __version__, config_neuropredict as cfg, rhst, visualize
+from neuropredict import __version__, config as cfg
 from neuropredict.base import BaseWorkflow, parse_common_args
 from neuropredict.datasets import detect_missing_data, load_datasets
 from neuropredict.freesurfer import (aseg_stats_subcortical,
@@ -18,20 +14,25 @@ from neuropredict.freesurfer import (aseg_stats_subcortical,
 from neuropredict.io import (get_arff, get_data_matrix, get_dir_of_dirs,
                              get_features, get_pyradigm, process_arff,
                              process_pyradigm, saved_dataset_matches)
-from neuropredict.utils import (check_classifier, check_covariates, load_options,
+from neuropredict.utils import (check_classifier, check_covariates,
                                 make_dataset_filename, not_unspecified, save_options,
                                 sub_group_identifier, uniquify_in_order)
-from neuropredict.visualize import compare_distributions, confusion_matrices
-from sklearn.metrics import confusion_matrix, roc_auc_score
+from neuropredict.visualize import (compare_distributions, compare_misclf_pairwise,
+                                    compare_misclf_pairwise_parallel_coord_plot,
+                                    confusion_matrices)
+from sklearn.metrics import confusion_matrix, roc_curve
+from sklearn.metrics import auc as auc_sklearn
 
 
-def auc_weighted(true_labels, predicted_proba_per_class):
-    """Wrapper around sklearn roc_auc_score to ensure it is weighted."""
+def area_under_roc(true_labels, predicted_prob_pos_class, pos_class):
+    """Wrapper to avoid relying on sklearn automatic inference of positive class!"""
 
-    return roc_auc_score(true_labels, predicted_proba_per_class, average='weighted')
+    false_pr, true_pr, _thresholds = roc_curve(true_labels, predicted_prob_pos_class,
+                                               pos_label=pos_class)
+    return auc_sklearn(false_pr, true_pr)
 
 
-auc_metric_name = auc_weighted.__name__
+auc_metric_name = area_under_roc.__name__
 predict_proba_name = 'predict_proba'
 
 
@@ -55,7 +56,7 @@ class ClassificationWorkflow(BaseWorkflow):
                  reduced_dim=cfg.default_reduced_dim_size,
                  train_perc=cfg.default_train_perc,
                  num_rep_cv=cfg.default_num_repetitions,
-                 scoring=cfg.default_scoring_metric,
+                 scoring=cfg.default_metric_set_classification,
                  positive_class=None,
                  grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT,
                  out_dir=None,
@@ -73,22 +74,17 @@ class ClassificationWorkflow(BaseWorkflow):
                          num_rep_cv=num_rep_cv,
                          scoring=scoring,
                          grid_search_level=grid_search_level,
+                         out_dir=out_dir,
                          num_procs=num_procs,
                          user_options=user_options,
                          checkpointing=checkpointing,
                          workflow_type='classify')
 
-        self.out_dir = out_dir
-        makedirs(self.out_dir, exist_ok=True)
-
-        self._fig_out_dir = pjoin(self.out_dir, 'figures')
-        makedirs(self._fig_out_dir, exist_ok=True)
-
         # order of target_set is crucial, for AUC computation as well as confusion
         # matrix row/column, hence making it a tuple to prevent accidental mutation
         #  ordering them in order of their appearance in also important: uniquify!
         self._target_set = tuple(uniquify_in_order(self.datasets.targets.values()))
-        self._positive_class, self._positive_class_index = \
+        self._positive_class, _ = \
             check_positive_class(self._target_set, positive_class)
 
         self.results.meta['target_set'] = self._target_set
@@ -108,12 +104,13 @@ class ClassificationWorkflow(BaseWorkflow):
         if hasattr(pipeline, predict_proba_name):
             predicted_prob = pipeline.predict_proba(test_data)
             self.results.add_attr(run_id, ds_id, predict_proba_name, predicted_prob)
-
+            # self._positive_class_index is not static as pipeline.classes_ seem
+            # to differ in order from self._target_set
+            pos_cls_idx = np.nonzero(pipeline.classes_==self._positive_class)[0][0]
             if len(self._target_set) == 2:
-                # TODO it is possible the column order in predicted_prob may not
-                #  match the order in self._target_set
-                auc = auc_weighted(true_targets,
-                                   predicted_prob[:, self._positive_class_index])
+                auc = area_under_roc(true_targets,
+                                     predicted_prob[:, pos_cls_idx],
+                                     self._positive_class)
                 self.results.add_metric(run_id, ds_id, auc_metric_name, auc)
 
         conf_mat = confusion_matrix(true_targets, predicted_targets,
@@ -134,22 +131,26 @@ class ClassificationWorkflow(BaseWorkflow):
 
         self._compare_metric_distr()
         self._viz_confusion_matrices()
-        self._compare_misclf_rate()
-        self._feature_imortance_plot()
+        self._plot_feature_importance()
+        self._identify_freq_misclassified()
 
 
     def _compare_metric_distr(self):
         """Main perf comparion plot"""
 
         for metric, m_data in self.results.metric_val.items():
+            metric = metric.lower()
             consolidated = np.empty((self.num_rep_cv, len(m_data)))
-            for index, ds_id in enumerate(self.datasets.modality_ids):
+            for index, ds_id in enumerate(m_data.keys()):
                 consolidated[:, index] = m_data[ds_id]
 
             fig_out_path = pjoin(self._fig_out_dir, 'compare_{}'.format(metric))
-            if 'accuracy' in metric.lower():
+            if 'accuracy' in metric:
                 horiz_line_loc = self._chance_accuracy
-                horiz_line_label = 'chance accuracy'
+                horiz_line_label = 'chance'
+            elif 'roc' in metric or 'auc' in metric:
+                horiz_line_loc = 0.5
+                horiz_line_label = 'chance'
             else:
                 horiz_line_loc = None
                 horiz_line_label = None
@@ -161,7 +162,7 @@ class ClassificationWorkflow(BaseWorkflow):
 
 
     def _viz_confusion_matrices(self):
-        """Confusion matrices for each feature set"""
+        """Confusion matrices for each feature set, as plots of misclf rate"""
 
         # forcing a tuple to ensure the order, in compound array and in viz's
         ds_id_order = tuple(self.datasets.modality_ids)
@@ -177,102 +178,25 @@ class ClassificationWorkflow(BaseWorkflow):
         confusion_matrices(conf_mat_all, self._target_set, ds_id_order,
                            cm_out_fig_path)
 
+        self._compare_misclf_rate(conf_mat_all, ds_id_order, num_classes)
 
-    def _compare_misclf_rate(self):
+
+    def _compare_misclf_rate(self, conf_mat_all, method_names, num_classes):
         """Misclassification rate plot"""
 
-
-    def _feature_imortance_plot(self):
-        """Bar plot comparing feature importances"""
-
-
-def make_visualizations(results_file_path, out_dir, options_path=None):
-    """
-    Produces the performance visualizations/comparison plots from the
-    cross-validation results.
-
-    Parameters
-    ----------
-    results_file_path : str
-        Path to file containing results produced by `rhst`
-
-    out_dir : str
-        Path to a folder to store results.
-
-    """
-
-    results_dict = rhst.load_results_dict(results_file_path)
-
-    # using shorter names for readability
-    accuracy_balanced = results_dict['accuracy_balanced']
-    method_names = results_dict['method_names']
-    num_classes = results_dict['num_classes']
-    class_sizes = results_dict['target_sizes']
-    confusion_matrix = results_dict['confusion_matrix']
-    class_order = results_dict['class_set']
-    feature_importances_rf = results_dict['feature_importances_rf']
-    feature_names = results_dict['feature_names']
-    num_times_misclfd = results_dict['num_times_misclfd']
-    num_times_tested = results_dict['num_times_tested']
-
-    num_methods = len(method_names)
-    if len(set(method_names)) < num_methods:
-        method_names = ['m{}_{}'.format(ix, mn)
-                        for ix, mn in enumerate(method_names)]
-
-    feature_importances_available = True
-    if options_path is not None:
-        user_options = load_options(out_dir, options_path)
-        if user_options['classifier_name'].lower() not in \
-                cfg.clfs_with_feature_importance:
-            feature_importances_available = False
-    else:
-        # check if the all values are NaN
-        unusable = [np.all(np.isnan(method_fi.flatten()))
-                    for method_fi in feature_importances_rf]
-        feature_importances_available = not np.all(unusable)
-
-    try:
-
-        balacc_fig_path = pjoin(out_dir, 'balanced_accuracy')
-        visualize.metric_distribution(accuracy_balanced, method_names,
-                                      balacc_fig_path, class_sizes, num_classes,
-                                      "Balanced Accuracy")
-
-        confmat_fig_path = pjoin(out_dir, 'confusion_matrix')
-        visualize.confusion_matrices(confusion_matrix, class_order, method_names,
-                                     confmat_fig_path)
-
-        cmp_misclf_fig_path = pjoin(out_dir, 'compare_misclf_rates')
+        fig_path = pjoin(self._fig_out_dir, 'compare_misclf_rates')
         if num_classes > 2:
-            visualize.compare_misclf_pairwise(confusion_matrix, class_order,
-                                              method_names, cmp_misclf_fig_path)
+            compare_misclf_pairwise(conf_mat_all, self._target_set, method_names,
+                                    fig_path)
         elif num_classes == 2:
-            visualize.compare_misclf_pairwise_parallel_coord_plot(confusion_matrix,
-                                                                  class_order,
-                                                                  method_names,
-                                                                  cmp_misclf_fig_path)
+            compare_misclf_pairwise_parallel_coord_plot(
+                    conf_mat_all, self._target_set, method_names, fig_path)
 
-        if feature_importances_available:
-            featimp_fig_path = pjoin(out_dir, 'feature_importance')
-            visualize.feature_importance_map(feature_importances_rf, method_names,
-                                             featimp_fig_path, feature_names)
-        else:
-            print('\nCurrent predictive model, and/or dimensionality reduction'
-                  ' method, does not provide (or allow for computing) feature'
-                  ' importance values. Skipping them.')
 
-        misclf_out_path = pjoin(out_dir, 'misclassified_subjects')
-        visualize.freq_hist_misclassifications(num_times_misclfd, num_times_tested,
-                                               method_names, misclf_out_path)
-    except:
-        traceback.print_exc()
-        warnings.warn('Error generating the visualizations! Skipping ..')
+    def _identify_freq_misclassified(self):
+        """Diagnostic utility to list frequently misclassified subjects"""
 
-    # cleaning up
-    plt.close('all')
-
-    return
+        # TODO pass CVResults data to visualize.freq_hist_misclassifications
 
 
 def get_parser_classify():
@@ -390,9 +314,9 @@ def parse_args():
                        user_feature_type, fs_subject_dir, train_perc, num_rep_cv,
                        positive_class, subgroups, reduced_dim_size, num_procs,
                        grid_search_level, classifier, dim_red_method]
-    options_path = save_options(options_to_save, out_dir)
+    user_options, options_path = save_options(options_to_save, out_dir)
 
-    return sample_ids, classes, out_dir, options_path, \
+    return sample_ids, classes, out_dir, user_options, \
            user_feature_paths, user_feature_type, fs_subject_dir, \
            train_perc, num_rep_cv, \
            positive_class, subgroups, \
@@ -469,6 +393,8 @@ def check_positive_class(class_set, positive_class=None):
         raise ValueError('Chosen positive class {} does not exist in the dataset,'
                          ' with classes {}'.format(positive_class, class_set))
     pos_class_index = class_set.index(positive_class)
+    # not retaining it in self._positive_class_index as self._target_set is not
+    # guaranteed to be the same as in pipeline.classes_
 
     return positive_class, pos_class_index
 
@@ -621,14 +547,16 @@ def import_datasets(method_list, out_dir, subjects, classes,
 def cli():
     """ Main entry point. """
 
-    subjects, classes, out_dir, options_path, user_feature_paths, \
-    user_feature_type, \
-    fs_subject_dir, train_perc, num_rep_cv, positive_class, sub_group_list, \
-    feature_selection_size, impute_strategy, num_procs, \
-    grid_search_level, classifier, feat_select_method, \
-    covar_list, covar_method = parse_args()
+    print('\nneuropredict version {} for Classification'.format(__version__))
+    from datetime import datetime
+    init_time = datetime.now()
+    print('\tTime stamp : {}\n'.format(init_time.strftime('%Y-%m-%d %H:%M:%S')))
 
-    print('Running neuropredict version {} for Classification'.format(__version__))
+    subjects, classes, out_dir, options_path, user_feature_paths, \
+    user_feature_type, fs_subject_dir, train_perc, num_rep_cv, positive_class, \
+    sub_group_list, feature_selection_size, impute_strategy, num_procs, \
+    grid_search_level, classifier, feat_select_method, covar_list, covar_method = \
+        parse_args()
 
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
                                                 user_feature_type)
@@ -642,9 +570,11 @@ def cli():
 
     # iterating through the given set of subgroups
     num_sg = len(sub_group_list)
+    result_paths = dict()
     for sgi, sub_group in enumerate(sub_group_list):
-        print('{}\nProcessing subgroup : {} ({}/{})\n{}'
-              ''.format('-' * 80, ','.join(sub_group), sgi + 1, num_sg, '-' * 80))
+        print('{line}\nProcessing subgroup : {id_} ({idx}/{cnt})\n{line}'
+              ''.format(line='-' * 80, id_=','.join(sub_group),
+                        idx=sgi + 1, cnt=num_sg))
         sub_group_id = sub_group_identifier(sub_group, sg_index=sgi + 1)
         out_dir_sg = pjoin(out_dir, sub_group_id)
 
@@ -674,11 +604,12 @@ def cli():
                                           user_options=options_path,
                                           checkpointing=cfg.default_checkpointing)
 
-        out_results_path = clf_expt.run()
+        result_paths[sub_group_id] = clf_expt.run()
 
-    print('All done.\n')
+    timedelta = datetime.now() - init_time
+    print('All done. Elapsed time: {} HH:MM:SS\n'.format(timedelta))
 
-    return
+    return result_paths
 
 
 if __name__ == '__main__':

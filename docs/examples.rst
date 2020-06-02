@@ -99,7 +99,7 @@ You can choose values for many other parameters, and specify the features in few
 
 .. note::
 
-    pyradigm is a python class (data structure) aimed to ease your ML workflow - check it out here: `pyradigm.readthedocs.io <http://pyradigm.readthedocs.io>`_
+    ``pyradigm`` is a python class (data structure) aimed to ease your ML workflow - check it out `here <http://raamana.github.io/pyradigm/>`_.
 
 
 

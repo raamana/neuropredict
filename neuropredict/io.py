@@ -6,7 +6,7 @@ import warnings
 from collections import Counter
 from os.path import join as pjoin, exists as pexists, realpath, basename
 import numpy as np
-from neuropredict import config_neuropredict as cfg
+from neuropredict import config as cfg
 from neuropredict.utils import make_dataset_filename
 from pyradigm import BaseDataset, ClassificationDataset
 from pyradigm.utils import load_dataset, load_arff_dataset
@@ -105,7 +105,7 @@ def get_data_matrix(featpath):
         if file_ext in ['.npy', '.numpy']:
             matrix = np.load(featpath)
         elif file_ext in ['.csv', '.txt']:
-            matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER)
+            matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER, ndmin=2)
         else:
             raise ValueError(
                 'Invalid or empty file extension : {}\n'
@@ -315,54 +315,4 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
         return False
     else:
         return True
-
-
-def load_pyradigms(dataset_paths, sub_group=None):
-    """Reads in a list of datasets in pyradigm format.
-
-    Parameters
-    ----------
-    dataset_paths : iterable
-        List of paths to pyradigm dataset
-
-    sub_group : iterable
-        subset of classes to return. Default: return all classes.
-        If sub_group is given, returns only that subset of classes for all datasets.
-
-    Raises
-    ------
-        ValueError
-            If all the datasets do not contain the request subset of classes.
-
-    """
-
-    if sub_group is not None:
-        sub_group = set(sub_group)
-
-    # loading datasets
-    datasets = list()
-    for fp in dataset_paths:
-        if not pexists(fp):
-            raise IOError("Dataset @ {} does not exist.".format(fp))
-
-        try:
-            # there is an internal validation of dataset
-            ds_in = load_dataset(fp)
-        except:
-            print("Dataset @ {} is not a valid pyradigm dataset!".format(fp))
-            raise
-
-        class_set = set(ds_in.target_set)
-        if sub_group is None or sub_group == class_set:
-            ds_out = ds_in
-        elif sub_group < class_set: # < on sets is an issubset operation
-            ds_out = ds_in.get_class(sub_group)
-        else:
-            raise ValueError('One or more classes in {} does not exist in\n{}'
-                             ''.format(sub_group, fp))
-
-        # add the valid dataset to list
-        datasets.append(ds_out)
-
-    return datasets
 

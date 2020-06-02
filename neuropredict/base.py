@@ -6,14 +6,13 @@ import random
 import sys
 import textwrap
 from abc import abstractmethod
-from functools import partial
-from multiprocessing import Manager, Pool
+from multiprocessing import Pool
 from os import getcwd, makedirs
 from os.path import abspath, exists as pexists, getsize, join as pjoin, realpath
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import numpy as np
-from neuropredict import __version__, config_neuropredict as cfg
+from neuropredict import __version__, config as cfg
 from neuropredict.algorithms import (compute_reduced_dimensionality, encode,
                                      get_deconfounder, get_preprocessor,
                                      make_pipeline)
@@ -37,7 +36,7 @@ class BaseWorkflow(object):
                  impute_strategy=cfg.default_imputation_strategy,
                  covariates=None,
                  deconfounder=cfg.default_deconfounding_method,
-                 dim_red_method=cfg.default_feat_select_method,
+                 dim_red_method=cfg.default_dim_red_method,
                  reduced_dim=cfg.default_num_features_to_select,
                  train_perc=cfg.default_train_perc,
                  num_rep_cv=cfg.default_num_repetitions,
@@ -66,7 +65,16 @@ class BaseWorkflow(object):
         self._scoring = scoring
         self.grid_search_level = grid_search_level
 
+        if out_dir is None:
+            out_dir = getcwd()
         self.out_dir = out_dir
+        self._fig_out_dir = pjoin(self.out_dir, 'figures')
+        self._tmp_dump_dir = pjoin(self.out_dir, 'temp_dump')
+        makedirs(self.out_dir, exist_ok=True)
+        makedirs(self._fig_out_dir, exist_ok=True)
+        makedirs(self._tmp_dump_dir, exist_ok=True)
+
+        self._parall_proc = False
         self.num_procs = num_procs
         self.user_options = user_options
         self._checkpointing = checkpointing
@@ -122,15 +130,20 @@ class BaseWorkflow(object):
         print('\nCURRENT EXPERIMENT:\n{line}'.format(line='-' * 50))
         print('Training percentage      : {:.2}'.format(self.train_perc))
         print('Number of CV repetitions : {}'.format(self.num_rep_cv))
-        print('Predictive model chosen  : {}'.format(self.pred_model))
-        print('Dim reduction method     : {}'.format(self.dim_red_method))
-        print('Level of grid search     : {}'.format(self.grid_search_level))
         print('Number of processors     : {}'.format(self.num_procs))
+        print('Dim reduction method     : {}'.format(self.dim_red_method))
+        print('Dim reduction size       : {}'.format(self.reduced_dim))
+        print('Predictive model chosen  : {}'.format(self.pred_model))
+        print('Grid search level        : {}\n'.format(self.grid_search_level))
+
+        if len(self.covariates) > 0:
+            print('Covarites selected       : {}'.format(', '.join(self.covariates)))
+            print('Deconfoudning method     : {}\n'.format(self.deconfounder))
 
         if self._workflow_type == 'classify':
             self._target_sizes = list(self.datasets.target_sizes.values())
             self._chance_accuracy = chance_accuracy(self._target_sizes, 'balanced')
-            print('\nEstimated chance accuracy : {:.3f}\n'
+            print('Estimated chance accuracy : {:.3f}\n'
                   ''.format(self._chance_accuracy))
 
 
@@ -144,7 +157,23 @@ class BaseWorkflow(object):
             self.load()
         else:
             print('Saving results to: \n {}\n'.format(self.out_dir))
-            self._run_cv()
+
+            # ignoring some not-so-critical warnings
+            with catch_warnings():
+                filterwarnings(action='once', category=UserWarning, module='joblib',
+                               message='Multiprocessing-backed parallel loops '
+                                       'cannot be nested, setting n_jobs=1')
+                filterwarnings(action='once', category=UserWarning,
+                               message='Some inputs do not have OOB scores')
+                filterwarnings(action='once', category=UserWarning,
+                               message='UserWarning: Features * are constant')
+                np.seterr(divide='ignore', invalid='ignore')
+                filterwarnings(action='once', category=RuntimeWarning,
+                               message='invalid value encountered in true_divide')
+                simplefilter(action='once', category=DeprecationWarning)
+                # actual CV
+                self._run_cv()
+
             self.save()
 
         self.summarize()
@@ -159,23 +188,13 @@ class BaseWorkflow(object):
         """Actual CV"""
 
         if self.num_procs > 1:
-            raise NotImplementedError('parallel runs not implemented yet!'
-                                      'Use num_procs=1 for now')
+            self._parall_proc = True
+            self._checkpointing = True
+
             print('Parallelizing the repetitions of CV with {} processes ...'
                   ''.format(self.num_procs))
-            with Manager() as proxy_manager:
-                # TODO these inputs may not need to be shared, as the method is a
-                #  class member and has direct access to the inputs passed here
-                shared_inputs = proxy_manager.list(
-                        [self.datasets, self.impute_strategy, self.reduced_dim,
-                         self.train_perc, self.user_options.out_dir,
-                         self.grid_search_level, self.pred_model,
-                         self.dim_red_method])
-                partial_func_holdout = partial(self._single_run_cv, *shared_inputs)
-
-                with Pool(processes=self.num_procs) as pool:
-                    cv_results = pool.map(partial_func_holdout,
-                                          range(self.num_rep_cv))
+            with Pool(processes=self.num_procs) as pool:
+                pool.map(self._single_run_cv, list(range(self.num_rep_cv)))
         else:
             # switching to regular sequential for loop to avoid any parallel drama
             for rep in range(self.num_rep_cv):
@@ -205,7 +224,6 @@ class BaseWorkflow(object):
                 train_covar, test_covar = self._get_covariates(train_set, test_set)
                 train_data, test_data = self._deconfound_data(train_data, train_covar,
                                                               test_data, test_covar)
-
             # deconfounding targets could be added here in the future if needed
 
             best_pipeline, best_params, feat_importance = \
@@ -217,8 +235,8 @@ class BaseWorkflow(object):
                                    run_id, ds_id)
 
         # dump results if checkpointing is requested
-        if self._checkpointing:
-            self.results.dump(self.out_dir)
+        if self._checkpointing or self._parall_proc:
+            self.results.dump(self._tmp_dump_dir, run_id)
 
 
     def _get_covariates(self, train_set, test_set):
@@ -229,8 +247,13 @@ class BaseWorkflow(object):
         test_covar, test_covar_dtypes = \
             self.datasets.get_common_attr(self.covariates, test_set)
 
-        train_covar, train_encoders = encode(train_covar, train_covar_dtypes)
-        test_covar, test_encoders = encode(test_covar, test_covar_dtypes)
+        if test_covar_dtypes != train_covar_dtypes:
+            raise TypeError('covariate dtypes differ between train and test sets!\n'
+                            ' Train: {}, Test: {}'
+                            ''.format(train_covar_dtypes, test_covar_dtypes))
+
+        train_covar, test_covar, encoders = encode(train_covar, test_covar,
+                                                   train_covar_dtypes)
 
         # column_stack ensures output is a 2D array, needed for sklearn transformers
         return np.column_stack(train_covar), np.column_stack(test_covar)
@@ -285,21 +308,27 @@ class BaseWorkflow(object):
     def _get_feature_importance(est_name, pipeline, num_features, fill_value=np.nan):
         "Extracts the feature importance of input features, if available."
 
-        # assuming order in pipeline construction :
-        #   - step 0 : preprocessign (robust scaling)
-        #   - step 1 : feature selector / dim reducer
-        dim_red = pipeline.steps[1]
-        est = pipeline.steps[-1]  # the final step in an sklearn pipeline
-        #   is always an estimator/classifier
+        if est_name not in cfg.importance_attr:
+            # some estimators simply do not provide it
+            feat_importance = None
+        else:
+            # assuming order in pipeline construction :
+            #   - step 0 : feature selector / dim reducer
+            #   - step 1 : estimator
+            # pipeline.steps returns a tuple (name, est_object),
+            #   so [1] is necessary to access the actual object
+            dim_red = pipeline.steps[0][1]
+            est = pipeline.steps[-1][1]  # the final step in an sklearn pipeline
+            #   is always an estimator/classifier
 
-        feat_importance = None
-        if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
-            index_selected_features = dim_red.get_support(indices=True)
+            feat_importance = None
+            if hasattr(dim_red, 'get_support'):  # nonlinear dim red won't have this
+                index_selected_features = dim_red.get_support(indices=True)
 
-            if hasattr(est, cfg.importance_attr[est_name]):
-                feat_importance = np.full(num_features, fill_value)
-                feat_importance[index_selected_features] = \
-                    getattr(est, cfg.importance_attr[est_name])
+                if hasattr(est, cfg.importance_attr[est_name]):
+                    feat_importance = np.full(num_features, fill_value)
+                    feat_importance[index_selected_features] = \
+                        getattr(est, cfg.importance_attr[est_name])
 
         return feat_importance
 
@@ -328,20 +357,7 @@ class BaseWorkflow(object):
                           param_grid=param_grid,
                           cv=inner_cv,  # TODO using default scoring metric?
                           refit=cfg.refit_best_model_on_ALL_training_set)
-
-        # ignoring some not-so-critical warnings
-        with catch_warnings():
-            filterwarnings(action='once', category=UserWarning, module='joblib',
-                           message='Multiprocessing-backed parallel loops cannot be '
-                                   'nested, setting n_jobs=1')
-            filterwarnings(action='once', category=UserWarning,
-                           message='Some inputs do not have OOB scores')
-            np.seterr(divide='ignore', invalid='ignore')
-            filterwarnings(action='once', category=RuntimeWarning,
-                           message='invalid value encountered in true_divide')
-            simplefilter(action='once', category=DeprecationWarning)
-
-            gs.fit(train_data, train_targets)
+        gs.fit(train_data, train_targets)
 
         return gs.best_estimator_, gs.best_params_
 
@@ -360,6 +376,9 @@ class BaseWorkflow(object):
     def save(self):
         """Saves the results and state to disk."""
 
+        if self._parall_proc:
+            self.results.gather_dumps(self._tmp_dump_dir)
+
         out_dict = {var: getattr(self, var, None) for var in cfg.results_to_save}
 
         try:
@@ -370,6 +389,13 @@ class BaseWorkflow(object):
                           ''.format(self._out_results_path))
         else:
             print('\nResults saved to {}\n'.format(self._out_results_path))
+            # cleanup
+            try:
+                from shutil import rmtree
+                rmtree(self._tmp_dump_dir, ignore_errors=True)
+            except:
+                print('Error in removing temp dir - remove it yourself:\n{}'
+                      ''.format(self._tmp_dump_dir))
 
         return self._out_results_path
 
@@ -384,7 +410,7 @@ class BaseWorkflow(object):
             with open(self._out_results_path, 'rb') as res_fid:
                 loaded_results = pickle.load(res_fid)
         except:
-            raise IOError('Error load the results from path: {}'
+            raise IOError('Error loading the results from path: {}'
                           ''.format(self._out_results_path))
         else:
             print('\nResults loaded from {}\n'.format(self._out_results_path))
@@ -406,6 +432,39 @@ class BaseWorkflow(object):
     def visualize(self):
         """Method to produce all the relevant visualizations based on the results
         from this workflow."""
+
+
+    def _plot_feature_importance(self):
+        """Bar plot comparing feature importance"""
+
+        from neuropredict.visualize import feature_importance_map
+        fig_base_out_path = pjoin(self._fig_out_dir, 'feature_importance')
+
+        feat_imp = self.results.attr[cfg.feat_imp_name]
+
+        # check if the all values are None or NaN
+        unusable = list()
+        for method_fi in feat_imp.values():
+            if method_fi is None:
+                unusable.append(True)
+            else:
+                unusable.append(np.all(np.isnan(method_fi.flatten())))
+        if np.all(unusable):  # no feat imp usable/available
+            print('\nFeature importance for this run are not available!\n')
+            return
+
+        out_feat_imp = list()
+        feat_names = list()
+        for idx, ds in enumerate(self.datasets.modality_ids):
+            num_features = feat_imp[(ds, 0)].size
+            fi_arr = np.empty((self.num_rep_cv, num_features))
+            for run in range(self.num_rep_cv):
+                fi_arr[run, :] = feat_imp[(ds, run)]
+            out_feat_imp.append(fi_arr)
+            feat_names.append(self.datasets.feature_names[ds])
+
+        feature_importance_map(out_feat_imp, self.datasets.modality_ids,
+                               fig_base_out_path, feature_names=feat_names)
 
 
 def get_parser_base():
@@ -688,8 +747,7 @@ def get_parser_base():
                                dest="covariates",
                                nargs='+',
                                default=cfg.default_covariates,
-                               help=help_covariate_list,
-                               type=str.lower)
+                               help=help_covariate_list)
 
     pipeline_args.add_argument("-cm", "--covar_method", action="store",
                                dest="covar_method",
@@ -782,7 +840,7 @@ def parse_common_args(parser):
 
         sample_ids, classes = get_metadata(meta_file)
     else:
-        print('Using meta data from:\n{}'.format(meta_data_path))
+        print('Using meta data from:\n\t{}\n'.format(meta_data_path))
         sample_ids, classes = get_metadata_in_pyradigm(meta_data_path,
                                                        meta_data_format)
 

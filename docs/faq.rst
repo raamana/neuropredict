@@ -4,7 +4,7 @@ Frequently Asked Questions
 
 * *What is the overarching goal for neuropredict?*
 
-    * To offer a comprehensive report on predictive analysis effortlessly!
+    * To offer a comprehensive report on predictive analysis effortlessly while following all the best practices!
 
     * Aiming to interface directly with the outputs of various neuroimaging tools
 
@@ -20,8 +20,8 @@ Frequently Asked Questions
 
 * *Can I use a different classifier?*
 
-    * Yes. User can choose among few techniques offered by scikit-learn and similar toolboxes [to be added].
-    * `Let me know <http://github.com/raamana/neuropredict/issues/new>`_ if you would like something that's not already integrated. As long as it is implemented in python, we will integrate it.
+    * Yes. User can choose among few techniques offered by ``scikit-learn``, ``xgboost``
+    * We plan to support any useful machine learning library as well. `Let me know <http://github.com/raamana/neuropredict/issues/new>`_ if you would like something that's not already integrated. As long as it is implemented in python, we will integrate it.
 
 
 * *Why did you pick random forests to be the default classifier?*
@@ -52,9 +52,10 @@ Frequently Asked Questions
   * ``neuropredict`` is designed such that another classifier or combination of classifiers could easily be plugged in. We may be adding an option to integrate one of the following options to automatically select a classifier with the highest performance: `scikit-optimize <https://github.com/scikit-optimize/scikit-optimize>`_, `auto_ml <https://github.com/ClimbsRocks/auto_ml>`_ and `tpot <https://github.com/rhiever/tpot>`_ etc.
 
 
-* *Does ``neuropredict`` handle covariates?*
+* *Does neuropredict handle covariates?*
 
-  * Yes. Using this requires the use of the `pyradigm <https://github.com/raamana/pyradigm>`_ dataset format, which offers you the ability to add in arbitrary set of attributes for each subject.
+  * **Yes**. In fact, this is a unique feature for neuropredict, that is simply not possible in scikit-learn by itself due to some design limitations.
+  * Using this features requires the use of the `pyradigm data structures <http://raamana.github.io/pyradigm/>`_, which offers you the ability to add in arbitrary set of attributes for each subject.
 
 
 * *Can I get ROC curves?*

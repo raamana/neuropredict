@@ -4,10 +4,14 @@ Module defining methods and classes needed to manage results produced.
 
 """
 
+import pickle
 from abc import abstractmethod
+from os import remove
+from os.path import exists as pexists, join as pjoin
+from pathlib import Path
+
 import numpy as np
-from neuropredict import config_neuropredict as cfg
-from neuropredict.algorithms import get_estimator_by_name
+from neuropredict import config as cfg
 from neuropredict.utils import is_iterable_but_not_str
 
 
@@ -31,10 +35,10 @@ class CVResults(object):
             if is_iterable_but_not_str(dataset_ids):
                 self._dataset_ids = tuple(dataset_ids)
             else:
-                self._dataset_ids = (dataset_ids, )
+                self._dataset_ids = (dataset_ids,)
         else:
             # assuming only one feature/dataset
-            self._dataset_ids = ('dataset1', )
+            self._dataset_ids = ('dataset1',)
 
         if is_iterable_but_not_str(metric_set):
             self.metric_set = {func.__name__: func for func in metric_set}
@@ -55,8 +59,8 @@ class CVResults(object):
         self.predicted_targets = dict()
 
         # pretty print options
-        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()])+1
-        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids])+1
+        self._max_width_metric = max([len(mt) for mt in self.metric_set.keys()]) + 1
+        self._max_width_ds_ids = max([len(str(ds)) for ds in self._dataset_ids]) + 1
 
 
     def _init_new_metric(self, name):
@@ -64,7 +68,8 @@ class CVResults(object):
 
         if name not in self.metric_val:
             self.metric_val[name] = {ds_id: np.full((self.num_rep,), np.NaN)
-                                       for ds_id in self._dataset_ids}
+                                     for ds_id in self._dataset_ids}
+
 
     def add(self, run_id, dataset_id, predicted, true_targets):
         """
@@ -72,8 +77,10 @@ class CVResults(object):
          coming from different repetitions of CV.
         """
 
+        # TODO should we ensure dataset_id exists already in self._dataset_ids?
+        #   what do when run_id > self.num_reps
         self.true_targets[(dataset_id, run_id)] = true_targets
-        self.predicted_targets[(dataset_id,run_id)] = predicted
+        self.predicted_targets[(dataset_id, run_id)] = predicted
 
         msgs = list()
         msgs.append('CV run {:<3} dataset {did:<{dlen}} :'
@@ -126,8 +133,8 @@ class CVResults(object):
         if self._count > 0:
             summary = list()
             for metric, mdict in self.metric_val.items():
-                summary.append('\n{metric:<{mmw}}'.format(metric=metric,
-                                                          mmw=self._max_width_metric))
+                summary.append('\n{metric:<{mmw}}'
+                               ''.format(metric=metric, mmw=self._max_width_metric))
                 for ds, distr in mdict.items():
                     median = np.nanmedian(distr)
                     SD = np.nanstd(distr)
@@ -143,8 +150,8 @@ class CVResults(object):
     def __str__(self):
         """Simple summary"""
 
-        return 'Metrics : {}\n # runs : {}, # datasets : {}\n{}' \
-               ''.format(', '.join(self.metric_set.keys()), self._count,
+        return '\n\nMetrics : {}\n # runs : {}, # datasets : {}\n{}' \
+               ''.format(', '.join(self.metric_val.keys()), self._count,
                          len(self._dataset_ids), self._metric_summary())
 
 
@@ -160,13 +167,84 @@ class CVResults(object):
         "Method to persist the results to disk."
 
 
-    def load(self):
+    @abstractmethod
+    def load(self, path):
         "Method to load previously saved results e.g. to redo visualizations"
 
 
+    def to_array(self, metric, ds_ids=None):
+        """
+        Consolidates a given metric into a flat array
+
+        Parameters
+        -----------
+        metric : str
+            name of the metric whose values are to be returned
+
+        ds_ids : Iterable
+            List of datasets ids to be queried. This is helpful to return only a
+            desired subset needed, or to control the desired order.
+
+        Returns
+        --------
+        result : ndarray
+            An array of dimensions num_rep_CV X num_datasets
+
+        ds_ids : Iterable
+            List of datasets ids
+
+        Raises
+        ------
+        ValueError
+            If metric, one of the ids in ds_ids, is not recognized or invalid
+        """
+
+        metric = metric.lower()
+        if metric not in self.metric_val:
+            raise ValueError('Unrecognized metric: {}\n\tMust be one of {}'
+                             ''.format(metric, tuple(self.metric_val.keys())))
+
+        if ds_ids is None:
+            ds_ids = self._dataset_ids
+        else:
+            for did in ds_ids:
+                if did not in self._dataset_ids:
+                    raise ValueError('{} not recognized! Choose a dataset from: {}'
+                                     ''.format(did, self._dataset_ids))
+
+        m_data = self.metric_val[metric]
+        consolidated = np.empty((self.num_rep, len(m_data)))
+        for index, ds_id in enumerate(ds_ids):
+            consolidated[:, index] = m_data[ds_id]
+
+        return consolidated, ds_ids
+
+
     @abstractmethod
-    def dump(self, out_dir):
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
+
+
+    @staticmethod
+    def _dump_file_name(run_id):
+        return '{}_{}.pkl'.format(cfg.quick_dump_prefix, run_id)
+
+
+    def dump(self, out_dir, run_id):
         """Method for quick dump, for checkpointing purposes"""
+
+        out_path = pjoin(out_dir, self._dump_file_name(run_id))
+        if pexists(out_path):
+            remove(out_path)
+        with open(out_path, 'wb') as df:
+            pickle.dump(self._to_save(), df)
+
+        print()
+
+
+    @abstractmethod
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
 
 
     @abstractmethod
@@ -181,11 +259,19 @@ class ClassifyCVResults(CVResults):
     def __init__(self,
                  metric_set=cfg.default_metric_set_classification,
                  num_rep=cfg.default_num_repetitions,
-                 dataset_ids=None):
+                 dataset_ids=None,
+                 path=None):
         "Constructor."
 
-        super().__init__(metric_set=metric_set, num_rep=num_rep,
-                         dataset_ids=dataset_ids)
+        if path is not None:
+            path = Path(path)
+            if not path.exists():
+                raise IOError('Path to load the results from does not exist:\n{}'
+                              ''.format(path))
+            self.load(path)
+        else:
+            super().__init__(metric_set=metric_set, num_rep=num_rep,
+                             dataset_ids=dataset_ids)
 
         self.confusion_mat = dict()  # confusion matrix
         self.misclfd_samplets = dict()  # list of misclassified samplets
@@ -205,21 +291,66 @@ class ClassifyCVResults(CVResults):
         raise NotImplementedError()
 
 
-    def dump(self, out_dir):
-        """Method for quick dump, for checkpointing purposes"""
+    def load(self, path):
+        "Method to load previously saved results e.g. to redo visualizations"
 
-        from os.path import join as pjoin, exists
-        from neuropredict.utils import make_time_stamp
-        import pickle
-        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
-                                  ''.format(make_time_stamp()))
-        if exists(out_path):
-            from os import remove
-            remove(out_path)
-        with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self.attr, self.meta,
-                       self.confusion_mat, self.misclfd_samplets]
-            pickle.dump(to_save, df)
+        try:
+            with open(path, 'rb') as res_fid:
+                full_results = pickle.load(res_fid)
+        except:
+            raise IOError()
+        else:
+            results = full_results['results']
+            for var in cfg.clf_results_class_variables_to_load:
+                setattr(self, var, getattr(results, var))
+
+            # dynamically computing whats needed
+            self._max_width_metric = max(
+                    [len(mt) for mt in self.metric_set.keys()]) + 1
+            self._max_width_ds_ids = max(
+                    [len(str(ds)) for ds in self._dataset_ids]) + 1
+
+        return self
+
+
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
+
+        return [self.predicted_targets, self.true_targets, self.metric_val,
+                self.attr, self.meta,
+                self.confusion_mat, self.misclfd_samplets]
+
+
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
+
+        print('Gathering results from disk for {} reps ...'.format(self.num_rep))
+
+        self._count = 0
+        for run in range(self.num_rep):
+            with open(pjoin(dump_dir, self._dump_file_name(run)), 'rb') as df:
+                res = pickle.load(df)
+
+            # unpacking results : order must match that returned by self._to_save()
+            pred_tgts, true_tgts, metr_val, attrs, meta, conf_mat, misclfd = res
+
+            for ds in self._dataset_ids:
+                self.true_targets[(ds, run)] = true_tgts[(ds, run)]
+                self.predicted_targets[(ds, run)] = pred_tgts[(ds, run)]
+
+                for m_name in self.metric_val.keys():
+                    self.add_metric(run, ds, m_name, metr_val[m_name][ds][run])
+
+                for at_name in attrs.keys():
+                    self.add_attr(run, ds, at_name, attrs[at_name][(ds, run)])
+
+                # classify specific
+                self.add_diagnostics(run, ds, conf_mat[(ds, run)],
+                                     misclfd[(ds, run)])
+
+                self._count += 1
+
+        print('  Done.')
 
 
 class RegressCVResults(CVResults):
@@ -229,11 +360,19 @@ class RegressCVResults(CVResults):
     def __init__(self,
                  metric_set=cfg.default_metric_set_regression,
                  num_rep=cfg.default_num_repetitions,
-                 dataset_ids=None):
+                 dataset_ids=None,
+                 path=None):
         "Constructor."
 
-        super().__init__(metric_set=metric_set, num_rep=num_rep,
-                         dataset_ids=dataset_ids)
+        if path is not None:
+            path = Path(path)
+            if not path.exists():
+                raise IOError('Path to load the results from does not exist:\n{}'
+                              ''.format(path))
+            self.load(path)
+        else:
+            super().__init__(metric_set=metric_set, num_rep=num_rep,
+                             dataset_ids=dataset_ids)
 
         self.residuals = dict()
 
@@ -245,17 +384,63 @@ class RegressCVResults(CVResults):
         self.residuals[(dataset_id, run_id)] = residuals
 
 
-    def dump(self, out_dir):
-        """Method for quick dump, for checkpointing purposes"""
+    def _to_save(self):
+        """Returns a list of variables to be persisted to disk"""
 
-        from os.path import join as pjoin, exists
-        from neuropredict.utils import make_time_stamp
-        import pickle
-        out_path = pjoin(out_dir, 'cv_results_quick_dump_{}.pkl'
-                                  ''.format(make_time_stamp()))
-        if exists(out_path):
-            from os import remove
-            remove(out_path)
-        with open(out_path, 'wb') as df:
-            to_save = [self.metric_set, self.metric_val, self.attr, self.meta]
-            pickle.dump(to_save, df)
+        return [self.predicted_targets, self.true_targets, self.metric_val,
+                self.attr, self.meta,
+                self.residuals]
+
+
+    def load(self, path):
+        "Method to load previously saved results e.g. to redo visualizations"
+
+        try:
+            with open(path, 'rb') as res_fid:
+                full_results = pickle.load(res_fid)
+        except:
+            raise IOError()
+        else:
+            results = full_results['results']
+            for var in cfg.regr_results_class_variables_to_load:
+                setattr(self, var, getattr(results, var))
+
+            # dynamically computing whats needed
+            self._max_width_metric = max(
+                    [len(mt) for mt in self.metric_set.keys()]) + 1
+            self._max_width_ds_ids = max(
+                    [len(str(ds)) for ds in self._dataset_ids]) + 1
+
+        return self
+
+
+    def gather_dumps(self, dump_dir):
+        """Gather results from various 'quick dumps' in a directory"""
+
+        print('Gathering results from disk for {} reps ...'.format(self.num_rep))
+
+        self._count = 0
+        for run in range(self.num_rep):
+            with open(pjoin(dump_dir, self._dump_file_name(run)), 'rb') as df:
+                res = pickle.load(df)
+
+            # unpacking results : order must match that returned by self._to_save()
+            pred_tgts, true_tgts, metr_val, attrs, meta, resids = res
+
+            for ds in self._dataset_ids:
+                self.true_targets[(ds, run)] = true_tgts[(ds, run)]
+                self.predicted_targets[(ds, run)] = pred_tgts[(ds, run)]
+
+                for m_name in self.metric_val.keys():
+                    self.add_metric(run, ds, m_name, metr_val[m_name][ds][run])
+
+                for at_name in attrs.keys():
+                    self.add_attr(run, ds, at_name, attrs[at_name][(ds, run)])
+
+                # TODO find ways to refactor, to reduce reuse of above common code
+                # regression specific
+                self.residuals[(ds, run)] = resids[(ds, run)]
+
+                self._count += 1
+
+        print('  Done.')
