@@ -2,10 +2,11 @@
 Citation
 --------
 
-If ``neuropredict`` helped you in your research in one way or another, please consider citing one or more of the following, which were essential building blocks of neuropredict. *Thank you*.
+If ``neuropredict`` helped you in your research in one way or another, please consider citing one or more of the following, which were essential building blocks of neuropredict. *Thank you for recognizing open source contributions*.
 
- - Raamana et al. (2017, November 18). ``neuropredict``: easy machine learning and standardized predictive analysis of biomarkers (Version 0.4.5). Zenodo. http://doi.org/10.5281/zenodo.1058993
- - Raamana et al., (2017), Python class defining a machine learning dataset ensuring key-based correspondence and maintaining integrity, Journal of Open Source Software, 2(17), 382, doi:10.21105/joss.00382
+ - Pradeep Reddy Raamana, (2017). *``neuropredict``: easy machine learning and standardized predictive analysis of biomarkers*, http://doi.org/10.5281/zenodo.1058993
+ - Raamana et al., (2017), *Python class defining a machine learning dataset ensuring key-based correspondence and maintaining integrity*, Journal of Open Source Software, 2(17), 382, doi:10.21105/joss.00382
+ - Pradeep Reddy Raamana, (2020), *Conquering confounds and covariates in machine learning with the python library confounds*, http://doi.org/10.5281/zenodo.3701528
 
 
 Bibtex entries
@@ -37,4 +38,13 @@ Bibtex entries
         year    ={2017}
     }
 
+    @software{Raamana2020confounds,
+      author       = {Pradeep Reddy Raamana},
+      title        = {{Conquering confounds and covariates in machine
+                       learning with the python library confounds}},
+      month        = mar,
+      year         = 2020,
+      doi          = {10.5281/zenodo.3701528},
+      url          = {https://doi.org/10.5281/zenodo.3701528}
+    }
 

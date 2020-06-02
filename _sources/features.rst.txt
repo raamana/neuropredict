@@ -4,7 +4,8 @@ Input formats
 
 Currently supported:
 
- * `pyradigm`'s `MLDataset <http://pyradigm.readthedocs.io>`_ (**highly recommended**)
+ * ``pyradigm``'s `data structures <http://raamana.github.io/pyradigm/>`_ (**highly recommended**)
+    * for advanced features of handling covariates/confounds, this is required!
  * Arbitary/user-defined format (see below)
  * CSV files (with samples along rows and features along columns)
  * Weka's `ARFF <https://www.cs.waikato.ac.nz/ml/weka/arff.html>`_
@@ -12,12 +13,15 @@ Currently supported:
 
 ------------
 
-Formats specific to neuroimaging:
+
+Formats specific to **neuroimaging**:
 
  * Freesurfer
 
   * Subcortical volumes
   * Wholebrain Aseg stats
+
+------------
 
 
 In development (stay tuned)
@@ -31,7 +35,7 @@ In development (stay tuned)
  * DT-MRI features
  * task-free fMRI features
  * HCP datasets
- * Weka's ARFF format
+
 
 Interfaces to Neuroimaging tools
 --------------------------------
@@ -103,4 +107,3 @@ The example for a dataset with 2 controls and 2 disease sujects with 5 features 
     0.564961631104
 
 
-----------

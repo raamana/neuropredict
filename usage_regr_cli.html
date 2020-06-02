@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Regression workflow &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <title>Regression workflow &#8212; neuropredict 0.6 documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -22,11 +22,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+        <h1>neuropredict 0.6 documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.6 documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -59,7 +59,7 @@ np_regress -h
                             <span class="p">[</span><span class="o">-</span><span class="n">dr</span> <span class="p">{</span><span class="n">selectkbest_mutual_info_classif</span><span class="p">,</span><span class="n">selectkbest_f_classif</span><span class="p">,</span><span class="n">variancethreshold</span><span class="p">,</span><span class="n">isomap</span><span class="p">,</span><span class="n">lle</span><span class="p">,</span><span class="n">lle_modified</span><span class="p">,</span><span class="n">lle_hessian</span><span class="p">,</span><span class="n">lle_ltsa</span><span class="p">}]</span>
                             <span class="p">[</span><span class="o">-</span><span class="n">z</span> <span class="n">MAKE_VIS</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">NUM_PROCS</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">po</span> <span class="n">PRINT_OPT_DIR</span><span class="p">]</span>
                             <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span>
-                            <span class="p">[</span><span class="o">-</span><span class="n">e</span> <span class="p">{</span><span class="n">randomforestregressor</span><span class="p">,</span><span class="n">extratreesregressor</span><span class="p">,</span><span class="n">decisiontreeregressor</span><span class="p">,</span><span class="n">svr</span><span class="p">,</span><span class="n">kernelridge</span><span class="p">,</span><span class="n">bayesianridge</span><span class="p">,</span><span class="n">gaussianprocessregressor</span><span class="p">,</span><span class="n">gradientboostingregressor</span><span class="p">}]</span>
+                            <span class="p">[</span><span class="o">-</span><span class="n">e</span> <span class="p">{</span><span class="n">randomforestregressor</span><span class="p">,</span><span class="n">extratreesregressor</span><span class="p">,</span><span class="n">decisiontreeregressor</span><span class="p">,</span><span class="n">svr</span><span class="p">,</span><span class="n">kernelridge</span><span class="p">,</span><span class="n">bayesianridge</span><span class="p">,</span><span class="n">gaussianprocessregressor</span><span class="p">,</span><span class="n">gradientboostingregressor</span><span class="p">,</span><span class="n">xgboostregressor</span><span class="p">}]</span>
 </pre></div>
 </div>
 <div class="section" id="Named Arguments">
@@ -232,7 +232,7 @@ are not visualized.</p>
 variance (zeros etc).</p>
 </dd>
 <dt><kbd>-e, --regressor</kbd></dt>
-<dd><p>Possible choices: randomforestregressor, extratreesregressor, decisiontreeregressor, svr, kernelridge, bayesianridge, gaussianprocessregressor, gradientboostingregressor</p>
+<dd><p>Possible choices: randomforestregressor, extratreesregressor, decisiontreeregressor, svr, kernelridge, bayesianridge, gaussianprocessregressor, gradientboostingregressor, xgboostregressor</p>
 <p>String specifying one of the implemented regressors.
 (Regressors are carefully chosen to allow for the comprehensive report
 provided by neuropredict).</p>

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>API Reference &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <title>API Reference &#8212; neuropredict 0.5.2+167.gb6f2db5.dirty documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -20,11 +20,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+        <h1>neuropredict 0.5.2+167.gb6f2db5.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+167.gb6f2db5.dirty documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -39,213 +39,6 @@
 <h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
 <p>neuropredict (designed with the goal of not needing the user to code) is designed primarily be working on the command line.
 Hence, it is recommended to follow <a class="reference internal" href="usage_cli.html"><span class="doc">Usage</span></a>, although you can peek into its internal API and provide us with any feedback you may have.</p>
-<span class="target" id="module-run_workflow"></span><p>neuropredict : easy and comprehensive predictive analysis.</p>
-<dl class="function">
-<dt id="run_workflow.run">
-<code class="sig-prename descclassname">run_workflow.</code><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">feature_sets</em>, <em class="sig-param">feature_type='list_of_pyradigm_paths'</em>, <em class="sig-param">meta_data=None</em>, <em class="sig-param">output_dir=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">train_perc=0.5</em>, <em class="sig-param">num_repetitions=200</em>, <em class="sig-param">positive_class=None</em>, <em class="sig-param">feat_sel_size='tenth'</em>, <em class="sig-param">sub_groups='all'</em>, <em class="sig-param">grid_search_level='none'</em>, <em class="sig-param">num_procs=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_workflow.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_workflow.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate comprehensive report on the predictive performance
-for different feature sets and statistically compare them.</p>
-<p>Main entry point for API access.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
-<dt><strong>feature_sets</strong><span class="classifier">list</span></dt><dd><dl>
-<dt>The input can be specified in either of the following ways:</dt><dd><ul class="simple">
-<li><p>list of paths to pyradigm datasets saved on disk</p></li>
-<li><dl class="simple">
-<dt>path to a file containing list of paths</dt><dd><p>(each line containing path to a valid MLDataset)</p>
-</dd>
-</dl>
-</li>
-<li><p>list of MLDatasets that are already loaded</p></li>
-<li><dl class="simple">
-<dt>list of tuples (to specify multiple features),</dt><dd><p>each element containing (X, y) i.e. data and target labels</p>
-</dd>
-</dl>
-</li>
-<li><p>a single tuple containing (X, y) i.e. data and target labels</p></li>
-<li><p>list of paths to CSV files, each containing one type of features.</p></li>
-</ul>
-<p>When specifying multiple sets of input features, ensure:
-- all of them contain the same number of samples
-- each sample belongs to same class across all feature sets.</p>
-</dd>
-</dl>
-</dd>
-<dt><strong>feature_type</strong><span class="classifier">str</span></dt><dd><p>String identifying the type of features as described above. It could be:
-‘list_of_pyradigm_paths’, ‘pyradigm_list’,
-‘list_of_tuples’, ‘tuple’, ‘list_of_csv_paths’</p>
-</dd>
-<dt><strong>meta_data</strong><span class="classifier">multiple</span></dt><dd><p>The meta data can be specified in either of the following ways:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>a path to a meta data file (see <a class="reference internal" href="features.html"><span class="doc">Input formats</span></a> page)</p></li>
-<li><p>a dict keyed in by sample IDs with values representing their classes.</p></li>
-<li><dl class="simple">
-<dt>None, if meta data is already specified in <code class="docutils literal notranslate"><span class="pre">feature_sets</span></code> input</dt><dd><p>e.g. with pyradigms</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-</dd>
-<dt><strong>pipeline</strong><span class="classifier">str or object</span></dt><dd><p>If a string, it identifying one of the implemented classifiers
-e.g. ‘RandomForestClassifier’ or ‘ExtraTreesClassifier’
-If an object, it must be a sciki-learn pipeline describing the sequence of
-steps.
-This is typically a set of feature selections or dim. reduction steps
-followed by an estimator (classifier).</p>
-<p>See <a class="reference external" href="http://scikit-learn.org/stable/modules/pipeline.html#pipeline">http://scikit-learn.org/stable/modules/pipeline.html#pipeline</a> for more
-details.</p>
-<dl class="simple">
-<dt>Default: None, which leads to the selection of a Random Forest classifier,</dt><dd><p>with robust scaling, followed by removal of low variance features.</p>
-</dd>
-</dl>
-</dd>
-<dt><strong>method_names</strong><span class="classifier">list</span></dt><dd><p>A list of names to denote the different feature sets</p>
-</dd>
-<dt><strong>out_results_dir</strong><span class="classifier">str</span></dt><dd><p>Path to output directory to save the cross validation results to.
-If not specified, a new directory named ‘neuropredict’ will be created
-in the current directory.</p>
-</dd>
-<dt><strong>train_perc</strong><span class="classifier">float, optional</span></dt><dd><p>Percetange of subjects to train the classifier on.
-The percentage is applied to the size of the smallest class to estimate
-the number of subjects from each class to be reserved for training.
-The smallest class is chosen to avoid class-imbalance in the training set.
-Default: 0.8 (80%).</p>
-</dd>
-<dt><strong>positive_class</strong><span class="classifier">str</span></dt><dd><p>Name of the class to be treated as positive in calculation of AUC</p>
-</dd>
-<dt><strong>feat_sel_size</strong><span class="classifier">str or int</span></dt><dd><p>Number of features to select as part of feature selection. Options:</p>
-<blockquote>
-<div><blockquote>
-<div><ul class="simple">
-<li><p>‘tenth’</p></li>
-<li><p>‘sqrt’</p></li>
-<li><p>‘log2’</p></li>
-<li><p>‘all’</p></li>
-</ul>
-</div></blockquote>
-<p>Default: ‘tenth’ of the number of samples in the training set. For
-example, if your dataset has 90 samples, you chose 50 percent for
-training (default),  then Y will have 90*.5=45 samples in training
-set, leading to 5 features to be selected for taining. If you choose a
-fixed integer, ensure all the feature sets under evaluation have
-atleast that many features.</p>
-</div></blockquote>
-</dd>
-<dt><strong>num_repetitions</strong><span class="classifier">int, optional</span></dt><dd><p>Number of repetitions of cross-validation estimation. Default: 200.</p>
-</dd>
-<dt><strong>num_procs</strong><span class="classifier">int, optional</span></dt><dd><p>Number of CPUs to use to parallelize CV repetitions.</p>
-<p>Default : 4. Number of CPUs will be capped at the number available on the
-machine if higher is requested.</p>
-</dd>
-<dt><strong>sub_groups</strong><span class="classifier">list</span></dt><dd><p>This option allows the user to study different combinations of classes in
-a multi-class (N&gt;2) dataset. For example, in a dataset with 3 classes CN,
-FTD and AD, two studies of pair-wise combinations can be studied
-separately with the following flag <code class="docutils literal notranslate"><span class="pre">--sub_groups</span> <span class="pre">CN,FTD</span> <span class="pre">CN,AD</span></code>. This
-allows the user to focus on few interesting subgroups depending on their
-dataset/goal.</p>
-<p>Format: Different subgroups must be separated by space, and each sub-group
-must be a comma-separated list of class names defined in the meta data
-file. Hence it is strongly recommended to use class names without any
-spaces, commas, hyphens and special characters, and ideally just
-alphanumeric characters separated by underscores. Any number of subgroups
-can be specified, but each subgroup must have atleast two distinct classes.</p>
-<p>Default: <code class="docutils literal notranslate"><span class="pre">'all'</span></code>, leading to inclusion of all available classes in a
-all-vs-all multi-class setting.</p>
-</dd>
-<dt><strong>grid_search_level</strong><span class="classifier">str</span></dt><dd><p>Flag to specify the level of grid search during hyper-parameter
-optimization on the training set.
-Allowed options are : ‘none’, ‘light’ and ‘exhaustive’, in the order of
-how many values/values will be optimized.</p>
-<p>More parameters and more values demand more resources and much longer time
-for optimization.</p>
-<p>The ‘light’ option tries to use “folk wisdom” to try least number of
-values (no more than one or two), for the parameters for the given
-classifier e.g. a lage number say 500 trees for a random forest
-optimization. The ‘light’ option will be the fastest and should give a
-“rough idea” of predictive performance. The ‘exhaustive’ option will try
-to most parameter values for the most parameters that can be optimized.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>results_path</strong><span class="classifier">str</span></dt><dd><p>Path to pickle file containing full set of CV results.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="run_workflow.cli">
-<code class="sig-prename descclassname">run_workflow.</code><code class="sig-name descname">cli</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/run_workflow.html#cli"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#run_workflow.cli" title="Permalink to this definition">¶</a></dt>
-<dd><p>Main entry point.</p>
-</dd></dl>
-
-<span class="target" id="module-rhst"></span><dl class="function">
-<dt id="rhst.run">
-<code class="sig-prename descclassname">rhst.</code><code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">dataset_path_file</em>, <em class="sig-param">method_names</em>, <em class="sig-param">out_results_dir</em>, <em class="sig-param">train_perc=0.8</em>, <em class="sig-param">num_repetitions=200</em>, <em class="sig-param">positive_class=None</em>, <em class="sig-param">sub_group=None</em>, <em class="sig-param">feat_sel_size='tenth'</em>, <em class="sig-param">impute_strategy='raise'</em>, <em class="sig-param">missing_flag=None</em>, <em class="sig-param">num_procs=4</em>, <em class="sig-param">grid_search_level='none'</em>, <em class="sig-param">classifier_name='RandomForestClassifier'</em>, <em class="sig-param">feat_select_method='VarianceThreshold'</em>, <em class="sig-param">options_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rhst.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rhst.run" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
-<dt><strong>dataset_path_file</strong><span class="classifier">str</span></dt><dd><p>path to file containing list of paths (each containing a valid MLDataset).</p>
-</dd>
-<dt><strong>method_names</strong><span class="classifier">list</span></dt><dd><p>A list of names to denote the different feature extraction methods</p>
-</dd>
-<dt><strong>out_results_dir</strong><span class="classifier">str</span></dt><dd><p>Path to output directory to save the cross validation results to.</p>
-</dd>
-<dt><strong>train_perc</strong><span class="classifier">float or numpy.float, optional</span></dt><dd><p>Percetange of subjects to train the classifier on.
-The percentage is applied to the size of the smallest class to estimate
-the number of subjects from each class to be reserved for training.
-The smallest class is chosen to avoid class-imbalance in the training set.</p>
-<p>Default: 0.8 (80%).</p>
-</dd>
-<dt><strong>num_repetitions</strong><span class="classifier">int or numpy.int, optional</span></dt><dd><p>Number of repetitions of cross-validation estimation. Default: 200.</p>
-</dd>
-<dt><strong>positive_class</strong><span class="classifier">str</span></dt><dd><p>Name of the class to be treated as positive in calculation of AUC</p>
-</dd>
-<dt><strong>feat_sel_size</strong><span class="classifier">str or int</span></dt><dd><p>Number of features to retain after feature selection.
-Must be a method (tenth or square root of the size of smallest class in training set,</p>
-<blockquote>
-<div><p>or a finite integer smaller than the data dimensionality.</p>
-</div></blockquote>
-</dd>
-<dt><strong>sub_group</strong><span class="classifier">list</span></dt><dd><p>List of classes to focus on for classification. Default: all classes available.</p>
-</dd>
-<dt><strong>num_procs</strong><span class="classifier">int</span></dt><dd><p>Number of parallel processes to run to parallelize the repetitions of CV</p>
-</dd>
-<dt><strong>grid_search_level</strong><span class="classifier">str</span></dt><dd><p>If ‘none’, no grid search will be performed, choosing parameters based on ‘folk wisdom’.
-If ‘light’, grid search resolution will be reduced to speed up optimization.
-If ‘exhaustive’, most values for most parameters will be user for optimization.</p>
-</dd>
-<dt><strong>options_path</strong><span class="classifier">str</span></dt><dd><p>Path to a pickle file which contains the all user chosen options.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>results_path</strong><span class="classifier">str</span></dt><dd><p>Path to pickle file containing full set of CV results.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="rhst.load_results">
-<code class="sig-prename descclassname">rhst.</code><code class="sig-name descname">load_results</code><span class="sig-paren">(</span><em class="sig-param">results_file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rhst.html#load_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rhst.load_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads the results serialized by RHsT.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="rhst.save_results">
-<code class="sig-prename descclassname">rhst.</code><code class="sig-name descname">save_results</code><span class="sig-paren">(</span><em class="sig-param">out_dir</em>, <em class="sig-param">dict_of_objects_to_save</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rhst.html#save_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rhst.save_results" title="Permalink to this definition">¶</a></dt>
-<dd><p>Serializes the results to disk.</p>
-</dd></dl>
-
 <span class="target" id="module-visualize"></span><dl class="function">
 <dt id="visualize.feature_importance_map">
 <code class="sig-prename descclassname">visualize.</code><code class="sig-name descname">feature_importance_map</code><span class="sig-paren">(</span><em class="sig-param">feat_imp</em>, <em class="sig-param">method_labels</em>, <em class="sig-param">base_output_path</em>, <em class="sig-param">feature_names=None</em>, <em class="sig-param">show_distr=False</em>, <em class="sig-param">plot_title='feature importance'</em>, <em class="sig-param">show_all=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#feature_importance_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.feature_importance_map" title="Permalink to this definition">¶</a></dt>
@@ -277,9 +70,10 @@ of feature importance for each feature.</p>
 </dd>
 <dt><strong>plot_title</strong><span class="classifier">str</span></dt><dd><p>Title of the importance map figure.</p>
 </dd>
-<dt><strong>show_all</strong><span class="classifier">bool</span></dt><dd><p>If true, this will attempt to show the importance values for all the features. 
-Be advised if you have more than 50 features, the figure would illegible.
-The default is to show only few important features (ranked by their median importance), when there is more than 25 features.</p>
+<dt><strong>show_all</strong><span class="classifier">bool</span></dt><dd><p>If true, this will attempt to show the importance values for all the
+features. Be advised if you have more than 50 features, the figure would
+illegible. The default is to show only few important features (ranked by
+their median importance), when there is more than 25 features.</p>
 </dd>
 </dl>
 </dd>
@@ -288,9 +82,10 @@ The default is to show only few important features (ranked by their median impor
 
 <dl class="function">
 <dt id="visualize.confusion_matrices">
-<code class="sig-prename descclassname">visualize.</code><code class="sig-name descname">confusion_matrices</code><span class="sig-paren">(</span><em class="sig-param">cfmat_array</em>, <em class="sig-param">class_labels</em>, <em class="sig-param">method_names</em>, <em class="sig-param">base_output_path</em>, <em class="sig-param">cmap='viridis'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#confusion_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.confusion_matrices" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">visualize.</code><code class="sig-name descname">confusion_matrices</code><span class="sig-paren">(</span><em class="sig-param">cfmat_array</em>, <em class="sig-param">class_labels</em>, <em class="sig-param">method_names</em>, <em class="sig-param">base_output_path</em>, <em class="sig-param">cmap='cividis'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#confusion_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.confusion_matrices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Display routine for the confusion matrix.
-Entries in confusin matrix can be turned into percentages with <cite>display_perc=True</cite>.</p>
+Entries in confusin matrix can be turned into percentages with
+<cite>display_perc=True</cite>.</p>
 <p>Use a separate method to iteratve over multiple datasets.
 confusion_matrix dime: [num_repetitions, num_classes, num_classes, num_datasets]</p>
 <dl class="field-list simple">
@@ -313,10 +108,15 @@ confusion_matrix dime: [num_repetitions, num_classes, num_classes, num_datasets]
 </dd></dl>
 
 <dl class="function">
-<dt id="visualize.metric_distribution">
-<code class="sig-prename descclassname">visualize.</code><code class="sig-name descname">metric_distribution</code><span class="sig-paren">(</span><em class="sig-param">metric</em>, <em class="sig-param">labels</em>, <em class="sig-param">output_path</em>, <em class="sig-param">class_sizes</em>, <em class="sig-param">num_classes=2</em>, <em class="sig-param">metric_label='balanced accuracy'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#metric_distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.metric_distribution" title="Permalink to this definition">¶</a></dt>
+<dt id="visualize.compare_distributions">
+<code class="sig-prename descclassname">visualize.</code><code class="sig-name descname">compare_distributions</code><span class="sig-paren">(</span><em class="sig-param">metric</em>, <em class="sig-param">labels</em>, <em class="sig-param">output_path</em>, <em class="sig-param">y_label='metric'</em>, <em class="sig-param">horiz_line_loc=None</em>, <em class="sig-param">horiz_line_label=None</em>, <em class="sig-param">upper_lim_y=1.01</em>, <em class="sig-param">lower_lim_y=-0.01</em>, <em class="sig-param">ytick_step=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/visualize.html#compare_distributions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#visualize.compare_distributions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Distribution plots of various metrics such as balanced accuracy!</p>
 <p>metric is expected to be ndarray of size [num_repetitions, num_datasets]</p>
+<p>upper_lim_y = None would make it automatic and adapt to given metric distribution
+upper_lim_y = 1.01 and ytick_step = 0.05 are targeted for Accuracy/AUC metrics,</p>
+<blockquote>
+<div><p>in classification applications</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="function">
@@ -379,7 +179,7 @@ The default test would be non-parametric Friedman test.</p>
 
 <dl class="function">
 <dt id="compare.vertical_nemenyi_plot">
-<code class="sig-prename descclassname">compare.</code><code class="sig-name descname">vertical_nemenyi_plot</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">num_reps</em>, <em class="sig-param">alpha=0.05</em>, <em class="sig-param">cmap=&lt;matplotlib.colors.LinearSegmentedColormap object at 0x1a13123f60&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare.html#vertical_nemenyi_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compare.vertical_nemenyi_plot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">compare.</code><code class="sig-name descname">vertical_nemenyi_plot</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">num_reps</em>, <em class="sig-param">alpha=0.05</em>, <em class="sig-param">cmap=&lt;matplotlib.colors.LinearSegmentedColormap object at 0x1a15ee48d0&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/compare.html#vertical_nemenyi_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#compare.vertical_nemenyi_plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Vertical Nemenyi plot to compare model ranks and show differences.</p>
 </dd></dl>
 

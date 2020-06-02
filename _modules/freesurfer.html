@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>freesurfer &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <title>freesurfer &#8212; neuropredict 0.6 documentation</title>
     <link rel="stylesheet" href="../_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -20,11 +20,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+        <h1>neuropredict 0.6 documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="../index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="../index.html">neuropredict 0.6 documentation</a> &#187;
             </li>
                 <li class="nav-item nav-item-1"><a href="index.html"
                         accesskey="U">Module code</a> &#187;</li>
@@ -46,7 +46,7 @@
 <span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">version_info</span>
 
 <span class="k">if</span> <span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config_neuropredict</span> <span class="k">as</span> <span class="n">cfg</span>
+    <span class="kn">from</span> <span class="nn">neuropredict</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cfg</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;neuropredict supports only Python 3 or higher.&#39;</span><span class="p">)</span>
 
@@ -133,16 +133,6 @@
     <span class="n">seg_ids</span><span class="p">,</span> <span class="n">volumes</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">filtered_stats</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">volumes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="c1"># , np.array(seg_ids), list(names)</span></div>
-
-
-<span class="k">def</span> <span class="nf">fsthickness</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">subjid</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns thickness feature set at a given fwhm.</span>
-
-<span class="sd">    Assumes freesurfer was run with -qcache flag!</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

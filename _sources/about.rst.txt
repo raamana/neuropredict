@@ -11,13 +11,13 @@ The aim of neuropredict is to automatically assess the predictive power of diffe
 **On a high level,**
 
 .. image:: high_level_flow.png
-    :width: 700
+    :width: 750
 
 
 **On a more detailed level,**
 
 .. image:: role.png
-    :width: 700
+    :width: 750
 
 
 Motivation

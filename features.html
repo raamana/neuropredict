@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Input formats &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <title>Input formats &#8212; neuropredict 0.6 documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -22,11 +22,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+        <h1>neuropredict 0.6 documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.6 documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -42,14 +42,20 @@
 <p>Currently supported:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><cite>pyradigm</cite>’s <a class="reference external" href="http://pyradigm.readthedocs.io">MLDataset</a> (<strong>highly recommended</strong>)</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">pyradigm</span></code>’s <a class="reference external" href="http://raamana.github.io/pyradigm/">data structures</a> (<strong>highly recommended</strong>)</dt><dd><ul>
+<li><p>for advanced features of handling covariates/confounds, this is required!</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><p>Arbitary/user-defined format (see below)</p></li>
 <li><p>CSV files (with samples along rows and features along columns)</p></li>
 <li><p>Weka’s <a class="reference external" href="https://www.cs.waikato.ac.nz/ml/weka/arff.html">ARFF</a></p></li>
 </ul>
 </div></blockquote>
 <hr class="docutils" />
-<p>Formats specific to neuroimaging:</p>
+<p>Formats specific to <strong>neuroimaging</strong>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Freesurfer</p></li>
@@ -61,6 +67,7 @@
 </ul>
 </div></blockquote>
 </div></blockquote>
+<hr class="docutils" />
 <p>In development (stay tuned)</p>
 <blockquote>
 <div><ul class="simple">
@@ -75,7 +82,6 @@
 <li><p>DT-MRI features</p></li>
 <li><p>task-free fMRI features</p></li>
 <li><p>HCP datasets</p></li>
-<li><p>Weka’s ARFF format</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -147,7 +153,6 @@ $ <span class="m">11</span>:19:33 linux userdefined &gt;&gt;  head -n <span clas
 <span class="m">0</span>.564961631104
 </pre></div>
 </div>
-<hr class="docutils" />
 </div>
 
 

@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Usage &#8212; neuropredict 0.5.2+166.g6a6a09f.dirty documentation</title>
+    <title>Usage &#8212; neuropredict 0.6 documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -22,11 +22,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.5.2+166.g6a6a09f.dirty documentation</h1>
+        <h1>neuropredict 0.6 documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.5.2+166.g6a6a09f.dirty documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.6 documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -39,6 +39,11 @@
             
 <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since version 0.6, to leverage the advanced features of handling confounds/covariates within nested cross-validation, <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> requires the input datasets in the <code class="docutils literal notranslate"><span class="pre">pyradigm</span></code> format. This is needed to accurately infer the names and data-types of confounding variables and values, which is very hard or impossible with in CSV files, esp when dealing multiple modalities/feature-sets. Learn more about this data structure at <a class="reference external" href="http://raamana.github.io/pyradigm/">http://raamana.github.io/pyradigm/</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pyradigm</span></code> datasets not only enable great use of neuropredict, but also help with reproducibility in a number of ways, including making it easier to share the datasets between collaborators and colleagues etc, but also to track their provenance with various user-defined attributes. More &#64; <a class="reference external" href="http://raamana.github.io/pyradigm/">http://raamana.github.io/pyradigm/</a>.</p>
+</div>
 <p>The command line interface for neuropredict is strongly recommended (given its focus on batch processing multiple comparisons). There are two main interfaces to neuropredict: the <a class="reference internal" href="usage_clf_cli.html"><span class="doc">Classification workflow</span></a> and the <a class="reference internal" href="usage_regr_cli.html"><span class="doc">Regression workflow</span></a>. Check their respective pages for instructions on their usage.</p>
 <p>The high-level differences between the two workflows are the following:</p>
 <blockquote>

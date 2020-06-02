@@ -2,6 +2,13 @@
 Usage
 -----------------------
 
+.. note::
+
+    Since version 0.6, to leverage the advanced features of handling confounds/covariates within nested cross-validation, ``neuropredict`` requires the input datasets in the ``pyradigm`` format. This is needed to accurately infer the names and data-types of confounding variables and values, which is very hard or impossible with in CSV files, esp when dealing multiple modalities/feature-sets. Learn more about this data structure at http://raamana.github.io/pyradigm/.
+
+    ``pyradigm`` datasets not only enable great use of neuropredict, but also help with reproducibility in a number of ways, including making it easier to share the datasets between collaborators and colleagues etc, but also to track their provenance with various user-defined attributes. More @ http://raamana.github.io/pyradigm/.
+
+
 The command line interface for neuropredict is strongly recommended (given its focus on batch processing multiple comparisons). There are two main interfaces to neuropredict: the :doc:`usage_clf_cli` and the :doc:`usage_regr_cli`. Check their respective pages for instructions on their usage.
 
 The high-level differences between the two workflows are the following:
