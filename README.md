@@ -13,9 +13,11 @@
 
 ## News
 
- - **Very soon, neuropredict will support regression applications** i.e. predicting continuous targets (in addition to categorical classes), as well as allow you to **regress out covariates / confounds** within the nested-CV (following all the best practices). Stay tuned!
+ - As of `v0.6`, **neuropredict now supports regression applications** i.e. predicting continuous targets (in addition to categorical classes), as well as allow you to **regress out covariates / confounds** within the nested-CV (following all the best practices). Utilizing this feature requires the input datasets be specified in the `pyradigm` data structures: code @ github.com/raamana/pyradigm, docs @ http://raamana.github.io/pyradigm/
 
- - Good news: `neuropredict` can handle missing data now (that are encoded with `numpy.NaN`). This is done respecting the cross-validation splits without any data leakage.
+## Older news
+
+ - `neuropredict` can handle missing data now (that are encoded with `numpy.NaN`). This is done respecting the cross-validation splits without any data leakage.
 
 ## Overview
 
