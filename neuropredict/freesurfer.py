@@ -6,7 +6,7 @@ import numpy as np
 from sys import version_info
 
 if version_info.major > 2:
-    from neuropredict import config_neuropredict as cfg
+    from neuropredict import config as cfg
 else:
     raise NotImplementedError('neuropredict supports only Python 3 or higher.')
 
@@ -93,16 +93,6 @@ def aseg_stats_subcortical(fspath, subjid):
     seg_ids, volumes, names = zip(*filtered_stats)
 
     return np.array(volumes), np.array(names) # , np.array(seg_ids), list(names)
-
-
-def fsthickness(path, subjid, fwhm=10):
-    """
-    Returns thickness feature set at a given fwhm.
-
-    Assumes freesurfer was run with -qcache flag!
-
-    """
-
 
 
 if __name__ == '__main__':

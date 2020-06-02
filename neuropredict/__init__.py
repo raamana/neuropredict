@@ -1,7 +1,5 @@
 
-__all__ = ['run_workflow', 'rhst', 'visualize', 'freesurfer', 'cli',
-           'utils', 'algorithms', 'reports', 'io',
-           'config_neuropredict', 'compare', '__version__']
+__all__ = ['base', 'classify', 'regress', 'visualize', 'config', '__version__']
 
 __author__ = 'Pradeep Reddy Raamana, PhD'
 __email__  = 'raamana@gmail.com'
@@ -13,7 +11,8 @@ __version__ = get_versions()['version']
 import os
 import matplotlib
 
-currently_in_CI = any([os.getenv(var, '').strip().lower() == 'true' for var in ('TRAVIS', 'CONTINUOUS_INTEGRATION')])
+currently_in_CI = any([os.getenv(var, '').strip().lower() == 'true'
+                       for var in ('TRAVIS', 'CONTINUOUS_INTEGRATION')])
 
 def set_agg():
     "set agg as backend"
@@ -35,11 +34,8 @@ else:
 
 from sys import version_info
 if version_info.major > 2:
-    # importing config_neuropredict first (before run_workflow) to avoid a circular situation (when running run_workflow directly)
-    from neuropredict import config_neuropredict
-    from neuropredict import rhst, visualize, freesurfer, compare, run_workflow
-    from neuropredict.run_workflow import cli
-    # ^^ importing run_workflow last to  avoid a circular situation (when running run_workflow directly)
+    from neuropredict import config
+    from neuropredict import base, classify, regress, visualize
 else:
     raise NotImplementedError('neuropredict requires Python 3+.')
 

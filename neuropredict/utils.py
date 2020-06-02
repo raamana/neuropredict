@@ -1,85 +1,59 @@
-
-import os
-import sys
-import re
 import pickle
-from neuropredict import config_neuropredict as cfg
-import numpy as np
-import os.path
-from os.path import join as pjoin, exists as pexists, realpath
+import re
+from collections.abc import Iterable
 from multiprocessing import cpu_count
+from os.path import exists as pexists, join as pjoin, realpath
 from time import localtime, strftime
+
+import numpy as np
+from neuropredict import config as cfg
 
 __re_delimiters_word = '_|:|; |, |\*|\n'
 
-def check_params_rhst(dataset_path_file, out_results_dir,
-                      num_repetitions, train_perc,
-                      sub_groups, num_procs, grid_search_level,
-                      classifier_name, feat_select_method):
-    """Validates inputs and returns paths to feature sets to load"""
+def round_(array):
+    """Shorthand for a rounding function with a controlled precision"""
+    return np.round(array, cfg.PRECISION_METRICS)
 
-    if not pexists(dataset_path_file):
-        raise IOError("File containing dataset paths does not exist.")
+def check_covariate_options(covar_list, covar_method):
+    """Basic validation of covariate-related user options"""
 
-    with open(dataset_path_file, 'r') as dpf:
-        dataset_paths = dpf.read().splitlines()
-        # alert for duplicates
-        if len(set(dataset_paths)) < len(dataset_paths):
-            raise RuntimeError('Duplicate paths for input datasets found!\n'
-                               'Try distinguish inputs further. '
-                               'Otherwise report this bug at:'
-                               'github.com/raamana/neuropredict/issues/new')
-        # do not apply set(dataset_paths) to remove duplicates,
-        # as set destroys current order, that is needed to correspond to method_names
+    if covar_list is not None and not isinstance(covar_list, Iterable):
+        raise ValueError('covariates can only be None or str or list of strings')
+    # actual check for whether they exist in datasets under study will be done
+    # after loading the datasets
 
-    try:
-        out_results_dir = realpath(out_results_dir)
-        os.makedirs(out_results_dir, exist_ok=True)
-    except:
-        raise IOError('Error in checking or creating output directiory. Ensure write permissions!')
+    if isinstance(covar_list, str):
+        covar_list = (covar_list, )
 
-    num_repetitions = int(num_repetitions)
-    if not np.isfinite(num_repetitions):
-        raise ValueError("Infinite number of repetitions is not recommened!")
+    covar_method = covar_method.lower()
+    if covar_method not in cfg.avail_deconfounding_methods:
+        raise ValueError('Unrecognized method to handle covarites/confounds.'
+                         ' Must be one of {}'.format(cfg.avail_deconfounding_methods))
 
-    if num_repetitions <= 1:
-        raise ValueError("More than 1 repetition is necessary!")
-
-    if not 0.01 <= train_perc <= 0.99:
-        raise ValueError("Training percentage {} out of bounds "
-                         "- must be > 0.01 and < 0.99".format(train_perc))
-
-    num_procs = check_num_procs(num_procs)
-
-    # removing empty elements
-    if sub_groups is not None:
-        sub_groups = [ group for group in sub_groups if group]
-    # NOTE: here, we are not ensuring classes in all the subgroups actually exist
-    # in all datasets. That happens when loading data.
-
-    if grid_search_level.lower() not in cfg.GRIDSEARCH_LEVELS:
-        raise ValueError('Unrecognized level of grid search.'
-                         ' Valid choices: {}'.format(cfg.GRIDSEARCH_LEVELS))
-
-    classifier_name = check_classifier(classifier_name)
-
-    if feat_select_method.lower() not in cfg.all_dim_red_methods:
-        raise ValueError('Feature selection method not recognized: {}\n '
-                         'Implemented choices: {}'
-                         ''.format(feat_select_method,
-                                   cfg.all_dim_red_methods))
+    return covar_list, covar_method
 
 
-    # printing the chosen options
-    print('Training percentage      : {:.2}'.format(train_perc))
-    print('Number of CV repetitions : {}'.format(num_repetitions))
-    print('Classifier chosen        : {}'.format(classifier_name))
-    print('Feature selection chosen : {}'.format(feat_select_method))
-    print('Level of grid search     : {}'.format(grid_search_level))
-    print('Number of processors     : {}'.format(num_procs))
-    print('Saving the results to \n  {}'.format(out_results_dir))
+def check_covariates(multi_ds, covar_list, deconfounder):
+    """Checks the existence of covariates in the given set of datasets"""
 
-    return dataset_paths, num_repetitions, num_procs, sub_groups
+    if covar_list is not None:
+
+        for covar in covar_list:
+            if covar not in multi_ds.common_attr:
+                raise AttributeError('Covariate {} does not exist in input datasets'
+                                     ''.format(covar))
+            num_set = len(multi_ds.common_attr[covar])
+            if num_set < multi_ds.num_samplets:
+                raise AttributeError('Covariate {} is only set for only {} of {} '
+                                     'samplets! Double check and fix input datasets.'
+                                     ''.format(covar, num_set, multi_ds.num_samplets))
+    else:
+        covar_list = ()
+
+    # not doing anything with deconfounder for now
+    # validity of covar data types for certain deconf methods can be checked here
+
+    return covar_list, deconfounder
 
 
 def check_classifier(clf_name=cfg.default_classifier):
@@ -87,7 +61,7 @@ def check_classifier(clf_name=cfg.default_classifier):
 
     clf_name = clf_name.lower()
     if clf_name not in cfg.classifier_choices:
-        raise ValueError('Classifier not recognized : {}\n'
+        raise ValueError('Predictive model not recognized : {}\n'
                          'Choose one of: {}'
                          ''.format(clf_name, cfg.classifier_choices))
 
@@ -105,55 +79,27 @@ def check_classifier(clf_name=cfg.default_classifier):
     return clf_name
 
 
-def check_feature_sets_are_comparable(datasets,
-                                      common_ds_index=cfg.COMMON_DATASET_INDEX):
-    """Validating all datasets are comparable e.g. with same samples and classes."""
+def check_regressor(est_name=cfg.default_regressor):
+    """Validates classifier choice, and ensures necessary modules are installed."""
 
-    # looking into the first dataset
-    common_ds = datasets[common_ds_index]
-    target_set, target_sizes = common_ds.summarize()
+    est_name = est_name.lower()
+    if est_name not in cfg.regressor_choices:
+        raise ValueError('Predictive model not recognized : {}\n'
+                         'Choose one of: {}'
+                         ''.format(est_name, cfg.regressor_choices))
 
-    common_samples = set(common_ds.samplet_ids)
+    if est_name in cfg.additional_modules_reqd:
+        try:
+            from importlib import import_module
+            import_module(cfg.additional_modules_reqd[est_name])
+        except ImportError:
+            raise ImportError('choosing model {} requires installation of '
+                              'another package. Try running\n'
+                              'pip install -U {} '
+                              ''.format(est_name,
+                                        cfg.additional_modules_reqd[est_name]))
 
-    num_samples = common_ds.num_samplets
-    num_classes = len(target_set)
-
-    num_datasets = len(datasets)
-    remaining = set(range(num_datasets))
-    remaining.remove(common_ds_index)
-    if num_datasets > 1:
-        for idx in remaining:
-            this_ds = datasets[idx]
-            if num_samples != this_ds.num_samplets:
-                raise ValueError("Number of samples in different datasets differ!")
-            if common_samples != set(this_ds.samplet_ids):
-                raise ValueError("Sample IDs differ across atleast two datasets!\n"
-                                 "All datasets must have the same set of samples, "
-                                 "even if the dimensionality of individual feature "
-                                 "set changes.")
-            if set(target_set) != set(this_ds.targets.values()):
-                raise ValueError("Classes differ among datasets!\n"
-                                 " One dataset: {} \n"
-                                 " Another: {}"
-                                 "".format(set(target_set),
-                                           set(this_ds.targets.values())))
-
-    # displaying info on what is common across datasets
-    common_ds.description = ' ' # this description is not reflective of all datasets
-    dash_line = '-'*25
-    print('\n{line}\nAll datasets contain:\n{ds:full}\n{line}\n'
-          ''.format(line=dash_line, ds=common_ds))
-
-    # choosing 'balanced' or 1/n_c for chance accuracy as training set is stratified
-    print('Estimated chance accuracy : {:.3f}\n'
-          ''.format(chance_accuracy(target_sizes, 'balanced')))
-
-    num_features = np.zeros(num_datasets).astype(np.int64)
-    for idx in range(num_datasets):
-        num_features[idx] = datasets[idx].num_features
-
-    return common_ds, target_set, target_sizes, \
-           num_samples, num_classes, num_datasets, num_features
+    return est_name
 
 
 def chance_accuracy(class_sizes, method='imbalanced'):
@@ -255,7 +201,7 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
         print('# CPUs requested higher than available {}'.format(avail_cpu_count))
         num_procs = avail_cpu_count
 
-    sys.stdout.flush()
+    # sys.stdout.flush()
 
     return num_procs
 
@@ -263,27 +209,27 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
 def save_options(options_to_save, out_dir_in):
     "Helper to save chosen options"
 
-    sample_ids, classes, out_dir, user_feature_paths, user_feature_type, \
+    sample_ids, targets, out_dir, user_feature_paths, user_feature_type, \
     fs_subject_dir, train_perc, num_rep_cv, positive_class, subgroups, \
-    feature_selection_size, num_procs, grid_search_level, classifier_name, \
-    feat_select_method = options_to_save
+    reduced_dim_size, num_procs, grid_search_level, pred_model_name, \
+    dim_red_method = options_to_save
 
     user_options = {
-        'sample_ids'            : sample_ids,
-        'classes'               : classes,
-        'classifier_name'       : classifier_name,
-        'feat_select_method'    : feat_select_method,
-        'gs_level'              : grid_search_level,
-        'feature_selection_size': feature_selection_size,
-        'num_procs'             : num_procs,
-        'num_rep_cv'            : num_rep_cv,
-        'positive_class'        : positive_class,
-        'sub_groups'            : subgroups,
-        'train_perc'            : train_perc,
-        'fs_subject_dir'        : fs_subject_dir,
-        'user_feature_type'     : user_feature_type,
-        'user_feature_paths'    : user_feature_paths,
-        'out_dir'               : out_dir,}
+        'sample_ids'        : sample_ids,
+        'targets'           : targets,
+        'pred_model_name'   : pred_model_name,
+        'dim_red_method'    : dim_red_method,
+        'gs_level'          : grid_search_level,
+        'reduced_dim_size'  : reduced_dim_size,
+        'num_procs'         : num_procs,
+        'num_rep_cv'        : num_rep_cv,
+        'positive_class'    : positive_class,
+        'sub_groups'        : subgroups,
+        'train_perc'        : train_perc,
+        'fs_subject_dir'    : fs_subject_dir,
+        'user_feature_type' : user_feature_type,
+        'user_feature_paths': user_feature_paths,
+        'out_dir'           : out_dir, }
 
     try:
         options_path = pjoin(out_dir_in, cfg.file_name_options)
@@ -292,7 +238,7 @@ def save_options(options_to_save, out_dir_in):
     except:
         raise IOError('Unable to save the options to\n {}'.format(out_dir_in))
 
-    return options_path
+    return user_options, options_path
 
 
 def load_options(out_dir, options_path=None):
@@ -362,16 +308,28 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
                              ''.format(feature_select_method,
                                        cfg.feature_selection_size_methods))
     else:
-        if dim_in_data is not None:
+        if dim_in_data is None:
             upper_limit = np.Inf
         else:
             upper_limit = dim_in_data
-        if not 0 < num_select < np.Inf:
+        if not 0 < num_select < upper_limit:
             raise UnboundLocalError(
                 'feature selection size out of bounds.\n'
                 'Must be > 0 and < {}'.format(upper_limit))
 
     return num_select
+
+
+def validate_impute_strategy(user_choice):
+    """Checks that user made a valid choice."""
+
+    user_choice = user_choice.lower()
+    if user_choice != cfg.default_imputation_strategy and \
+            user_choice not in cfg.avail_imputation_strategies:
+        raise ValueError('Unrecognized imputation strategy!\n\tchoose one of {}'
+                         ''.format(cfg.avail_imputation_strategies))
+
+    return user_choice
 
 
 def uniquify_in_order(seq):
@@ -457,3 +415,64 @@ def not_unspecified(var):
     """ Checks for null values of a give variable! """
 
     return var not in ['None', 'none', None, '']
+
+
+def print_options(run_dir):
+    """
+    Prints options used in a previous run.
+
+    Parameters
+    ----------
+    run_dir : str
+        Path to a folder to with options from a previous run stored.
+
+    """
+
+    user_options = load_options(run_dir)
+
+    # print(user_options)
+    print('\n\nOptions used in the run\n{}\n'.format(run_dir))
+    for key, val in user_options.items():
+        if key.lower() not in ('sample_ids', 'targets'):
+            print('{:>25} : {}'.format(key, val))
+
+    return
+
+
+def impute_missing_data(train_data, train_labels, strategy, test_data):
+    """
+    Imputes missing values in train/test data matrices using the given strategy,
+    based on train data alone.
+
+    """
+
+    from sklearn.impute import SimpleImputer
+    # TODO integrate and use the missingdata pkg (with more methods) when time permits
+    imputer = SimpleImputer(missing_values=cfg.missing_value_identifier,
+                            strategy=strategy)
+    imputer.fit(train_data, train_labels)
+
+    return imputer.transform(train_data), imputer.transform(test_data)
+
+
+def is_iterable_but_not_str(input_obj, min_length=1):
+    """Boolean check for iterables that are not strings and of a minimum length"""
+
+    if not (not isinstance(input_obj, str) and isinstance(input_obj, Iterable)):
+        return False
+
+    if len(input_obj) < min_length:
+        return False
+    else:
+        return True
+
+
+def median_of_medians(metric_array, axis=0):
+    """Compute median of medians for each row/columsn"""
+
+    if len(metric_array.shape) > 2:
+        raise ValueError('Input array can only be 2D!')
+
+    medians_along_axis = np.nanmedian(metric_array, axis=axis)
+
+    return np.median(medians_along_axis)
