@@ -1,5 +1,6 @@
 # neuropredict
 
+![logo](docs/logo_neuropredict.png) <!-- .element height="50%" width="50%" -->
 
 [![travis](https://travis-ci.org/raamana/neuropredict.svg?branch=master)](https://travis-ci.org/raamana/neuropredict.svg?branch=master)
 [![Code Health](https://landscape.io/github/raamana/neuropredict/master/landscape.svg?style=flat)](https://landscape.io/github/raamana/neuropredict/master)
