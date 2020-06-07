@@ -1,5 +1,3 @@
-neuropredict
-============
 
 .. image:: docs/logo_neuropredict.png
     :width: 150
@@ -7,16 +5,12 @@ neuropredict
 
 .. image:: https://landscape.io/github/raamana/neuropredict/master/landscape.svg?style=flat
     :target: https://landscape.io/github/raamana/neuropredict/master
-
 .. image:: https://api.codacy.com/project/badge/Grade/501e560b8a424562a1b8f7cd2f3cadfe
         :target: https://www.codacy.com/app/raamana/neuropredict
-
 .. image:: https://badge.fury.io/py/neuropredict.svg
     :target: https://badge.fury.io/py/neuropredict
-
 .. image:: https://travis-ci.org/raamana/neuropredict.svg?branch=master
     :target: https://travis-ci.org/raamana/neuropredict
-
 .. image:: https://img.shields.io/badge/python-3.6-blue.svg
 
 
@@ -34,8 +28,8 @@ News
    classes), as well as allow you to **regress out covariates /
    confounds** within the nested-CV (following all the best practices).
    Utilizing this feature requires the input datasets be specified in
-   the ``pyradigm`` data structures: code @ github.com/raamana/pyradigm,
-   docs @ http://raamana.github.io/pyradigm/
+   the ``pyradigm`` data structures: code @ https://github.com/raamana/pyradigm,
+   docs @ https://raamana.github.io/pyradigm/
 
 Older news
 ----------
@@ -88,7 +82,10 @@ Software, 2(17), 382, doi:10.21105/joss.00382
 Change Log - version 0.6
 --------------------------
  - Major feature: Ability to predict continuous variables (regression)
- - Major feature: Ability to handle covariates and confounds (regress them out, augment them etc)
+ - Major feature: Ability to handle confounds (regress them out, augmenting etc)
+ - Redesigned the internal structure for easier extensibility
+ - New ``CVResults`` class for easier management of a wealth of outputs generated in the Classification and Regression workflows
+ - API access is refreshed and easier
 
 Change Log - version 0.5.2
 --------------------------
