@@ -29,7 +29,7 @@ News
    confounds** within the nested-CV (following all the best practices).
    Utilizing this feature requires the input datasets be specified in
    the ``pyradigm`` data structures: code @ https://github.com/raamana/pyradigm,
-   docs @ https://raamana.github.io/pyradigm/
+   docs @ https://raamana.github.io/pyradigm/. Check the changelog below for more details.
 
 Older news
 ----------
@@ -81,11 +81,11 @@ Software, 2(17), 382, doi:10.21105/joss.00382
 
 Change Log - version 0.6
 --------------------------
- - Major feature: Ability to predict continuous variables (regression)
- - Major feature: Ability to handle confounds (regress them out, augmenting etc)
- - Redesigned the internal structure for easier extensibility
- - New ``CVResults`` class for easier management of a wealth of outputs generated in the Classification and Regression workflows
- - API access is refreshed and easier
+- Major feature: Ability to predict continuous variables (regression)
+- Major feature: Ability to handle confounds (regress them out, augmenting etc)
+- Redesigned the internal structure for easier extensibility
+- New ``CVResults`` class for easier management of a wealth of outputs generated in the Classification and Regression workflows
+- API access is refreshed and easier
 
 Change Log - version 0.5.2
 --------------------------
