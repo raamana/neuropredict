@@ -496,9 +496,8 @@ def get_parser_base():
 
             --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/
 
-        Only one of ``--pyradigm_paths``, ``user_feature_paths``, 
-        ``data_matrix_path`` 
-        or ``arff_paths`` options can be specified.
+        Only one of the ``--pyradigm_paths``, ``user_feature_paths``, 
+        ``data_matrix_path`` or ``arff_paths`` options can be specified.
         \n \n """)
 
     help_text_data_matrix = textwrap.dedent("""
@@ -512,18 +511,18 @@ def get_parser_base():
     Name of this file will be used to annotate the results and visualizations.
 
     E.g. ``--data_matrix_paths /project/fmri.csv /project/dti.csv 
-    /project/t1_volumes.csv ``
+    /project/t1_volumes.csv``
 
     Only one of ``--pyradigm_paths``, ``user_feature_paths``, ``data_matrix_path`` 
     or ``arff_paths`` options can be specified.
 
     File format could be
-     - a simple comma-separated text file (with extension .csv or .txt): which can 
-     easily be read back with
-        numpy.loadtxt(filepath, delimiter=',')
-        or
+    
+     - a simple comma-separated text file (with extension .csv or .txt), which can 
+     easily be read back with ``numpy.loadtxt(filepath, delimiter=',')``, or
+     
      - a numpy array saved to disk (with extension .npy or .numpy) that can read 
-     in with numpy.load(filepath).
+     in with ``numpy.load(filepath)``.
 
      One could use ``numpy.savetxt(data_array, delimiter=',')`` or ``numpy.save(
      data_array)`` to save features.
@@ -569,14 +568,15 @@ def get_parser_base():
          - 'sqrt'
          - 'log2'
          - 'all'
+         - or an integer ``k`` <= min(dimensionalities from all dataset)
 
-    Default: \'tenth\' of the number of samples in the training set.
+    Default: ``{}`` of the number of samples in the training set.
 
     For example, if your dataset has 90 samples, you chose 50 percent for training 
     (default), then Y will have 90*.5=45 samples in training set, leading to 5 
-    features to be selected for taining. If you choose a fixed integer, ensure all 
-    the feature sets under evaluation have atleast that many features.
-    \n \n """)
+    features to be selected for training. If you choose a fixed integer ``k``, 
+    ensure all the feature sets under evaluation have atleast ``k`` features.
+    \n \n """.format(cfg.default_num_features_to_select))
 
     help_text_gs_level = textwrap.dedent("""
     Flag to specify the level of grid search during hyper-parameter optimization 
@@ -621,17 +621,17 @@ def get_parser_base():
     training the classifier.
 
     **NOTE**: when feature 'selection' methods are used, we are able to keep track 
-    of which features in the original input space were slected and hence visualize 
+    of which features in the original input space were selected and hence visualize 
     their feature importance after the repetitions of CV. When the more generic 
-    'dimensionality reduction' methods are used, features often get transformed to 
-    new subspaces, wherein the link to original features is lost, and hence 
-    importance values for original input features can not be computed and hence 
+    'dimensionality reduction' methods are used, *features often get transformed to 
+    new subspaces*, wherein the link to original features is lost. Hence, 
+    importance values for original input features can not be computed and,  
     are not visualized.
 
-    Default: 'VarianceThreshold', removing features with 0.001 percent of lowest 
+    Default: ``{}``, removing features with 0.001 percent of lowest 
     variance (zeros etc).
 
-    """)
+    """.format(cfg.default_dim_red_method))
 
     help_imputation_strategy = textwrap.dedent("""
     Strategy to impute any missing data (as encoded by NaNs).
@@ -873,10 +873,6 @@ def parse_common_args(parser):
     covar_list, covar_method = check_covariate_options(
             user_args.covariates, user_args.covar_method)
 
-    if len(covar_list) > 0 and user_feature_type != 'pyradigm':
-        raise ValueError('Atleast 1 confound is specified, but not in right format!'
-                         'Datasets must be in pyradigm format to handle confounds!')
-
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
         raise ValueError('Unrecognized level of grid search. Valid choices: {}'
@@ -973,14 +969,14 @@ def organize_inputs(user_args):
         user_feature_paths = None
         user_feature_type = None
 
-    # map in python 3 returns a generator, not a list, so len() wouldnt work
+    # map in python 3 returns a generator, not a list, so len() wouldn't work
     if not isinstance(user_feature_paths, list):
         user_feature_paths = list(user_feature_paths)
 
     if not atleast_one_feature_specified:
         raise ValueError('Atleast one method specifying features must be specified. '
                          'It can be a path(s) to pyradigm dataset, matrix file, '
-                         'user-defined folder or a Freesurfer subject directory.')
+                         'user-defined folder or a FreeSurfer subject directory.')
 
     return user_feature_paths, user_feature_type, fs_subject_dir, \
            meta_data_supplied, meta_data_format
