@@ -306,7 +306,7 @@ class BaseWorkflow(object):
 
     @staticmethod
     def _get_feature_importance(est_name, pipeline, num_features, fill_value=np.nan):
-        "Extracts the feature importance of input features, if available."
+        """Extracts the feature importance of input features, if available."""
 
         if est_name not in cfg.importance_attr:
             # some estimators simply do not provide it
@@ -872,6 +872,10 @@ def parse_common_args(parser):
 
     covar_list, covar_method = check_covariate_options(
             user_args.covariates, user_args.covar_method)
+
+    if len(covar_list) > 0 and user_feature_type != 'pyradigm':
+        raise ValueError('Atleast 1 confound is specified, but not in right format!'
+                         'Datasets must be in pyradigm format to handle confounds!')
 
     grid_search_level = user_args.gs_level.lower()
     if grid_search_level not in cfg.GRIDSEARCH_LEVELS:
