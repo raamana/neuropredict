@@ -12,6 +12,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -45,7 +46,7 @@
 <p>The report consists of</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>distribtions of cross-validated performance, for each of dataset, as measured by r2, MAE, MSE and explained variance (if you need other metrics, open an <a class="reference external" href="https://github.com/raamana/neuropredict/issues/new">issue on github</a>).</p></li>
+<li><p>distributions of cross-validated performance, for each of dataset, as measured by <span class="math notranslate nohighlight">\(r^2\)</span>, MAE, MSE and explained variance. If you need other metrics, open an <a class="reference external" href="https://github.com/raamana/neuropredict/issues/new">issue on github</a>), or you could use the results stored in the <cite>CVResults</cite> class, in a comprehensive manner, to compute various other metrics yourself easily.</p></li>
 <li><p>residual plots showing residuals as a function of original target value,</p></li>
 <li><p>prediction plot showing the predicted target value as a function of original target value, and</p></li>
 <li><p>few other diagnostic plots (such as subjects with high frequency of large residuals, an indication of them being an outlier) to be made available soon.</p></li>
@@ -64,20 +65,18 @@
 <span class="n">residuals_vs_true_targets</span><span class="o">.</span><span class="n">pdf</span>
 </pre></div>
 </div>
-<p><strong>Second</strong> <em>[TO BE PRODUCED]</em>, a set of CSV files in a subfolder called <code class="docutils literal notranslate"><span class="pre">exported_results</span></code>, which can used for further posthoc statisical analysis or to produce more customised visualizations. The typical contents are shown below - note, filenames may change depending on your input file names.</p>
+<p><strong>Second</strong> <em>[to be added]</em>, a set of CSV files in a subfolder called <code class="docutils literal notranslate"><span class="pre">exported_results</span></code>, which can used for further posthoc statisical analysis or to produce more customised visualizations. The typical contents are shown below - note, filenames may change depending on your input file names.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">explained_variance_score</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">mean_absolute_error</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">mean_squared_error</span><span class="o">.</span><span class="n">csv</span>
 <span class="n">r2_score</span><span class="o">.</span><span class="n">csv</span>
 </pre></div>
 </div>
-<p><strong>Third</strong>, a Python pickle file <code class="docutils literal notranslate"><span class="pre">results_neuropredict.pkl</span></code> containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where <code class="docutils literal notranslate"><span class="pre">pickle</span></code> files can be read.</p>
+<p><strong>Third</strong>, a Python pickle file <code class="docutils literal notranslate"><span class="pre">results_neuropredict.pkl</span></code> containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where <code class="docutils literal notranslate"><span class="pre">pickle</span></code> files can be read. The CV results stored in the <cite>CVResults</cite> class, in a comprehensive manner, to make it easy to traverse various combinations and to retain everything, not just the final metrics, but also the original predictions.</p>
 <p><strong>Finally</strong>, few miscellaneous set of files that neuropredict relies on to produce the comprehensive report.</p>
-<p>We will walk you through the resulting visualizations one by one, and describe how to interpret them.</p>
-<p><strong>INTERPRETATION TO BE ADDED/UPDATED.</strong></p>
+<p>Although the above results are easy to follow and interpret, We will be adding a detailed walk-through, and some tips on how to interpret them <strong>soon</strong>.</p>
 <hr class="docutils" />
 <p>If something is unclear or confusing, or some documentation is missing, please open an <a class="reference external" href="https://github.com/raamana/neuropredict/issues/new">issue on github</a>.</p>
-<p><strong>These docs will be futher improved soon. Stay tuned!</strong></p>
 </div>
 </div>
 

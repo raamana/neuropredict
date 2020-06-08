@@ -12,6 +12,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="#" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -40,8 +41,8 @@
 <div class="section" id="about">
 <h1>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h1>
 <p>neuropredict : easy and rigorous estimation of predictive power</p>
-<p>The aim of neuropredict is to automatically assess the predictive power of different sets of features (such as resting-state connectivity, fractional anisotropy, subcortical volumes and cortical thickness features) provided by the user, or automatically read from the processing of popular tools such as FSL, DTIstudio, AFNI and Freesurfer. It is aimed <strong>to lower or remove the barriers</strong> at users interested in measuring the classification accuracy of different features they are interested in studying.</p>
-<p><strong>On a high level,</strong></p>
+<p>The aim of neuropredict is to automatically assess the predictive power of different sets of features (such as resting-state connectivity, fractional anisotropy, subcortical volumes and cortical thickness features) provided by the user, or automatically read from the processing of popular tools such as FSL, DTIstudio, AFNI and FreeSurfer. It is aimed <strong>to lower or remove the barriers</strong> at users interested in measuring the classification accuracy of different features they are interested in studying.</p>
+<p><strong>At a high level,</strong></p>
 <a class="reference internal image-reference" href="_images/high_level_flow.png"><img alt="_images/high_level_flow.png" src="_images/high_level_flow.png" style="width: 750px;" /></a>
 <p><strong>On a more detailed level,</strong></p>
 <a class="reference internal image-reference" href="_images/role.png"><img alt="_images/role.png" src="_images/role.png" style="width: 750px;" /></a>
@@ -50,16 +51,16 @@
 <p><code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> sounds similar (on the surface) to other software available, such as scikit-learn (which is used underneath), however our aim here is to lower the barriers as much as possible, or remove them altogether and make machine learning seamless! For example,</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>You don’t have to code when you use neurpredict - saves you a lot of headache with development and debugging!</p></li>
+<li><p>You don’t have to code when you use neuropredict - saves you a lot of headache with development and debugging!</p></li>
 <li><p>You don’t have to learn how the machine learning toolkits work and the nitty-gritty of their APIs. This can be daunting and time-consuming, and can likely lead to bad choices made in terms of how proper cross-validation is done.</p></li>
 <li><p>Toolkits like scikit-learn are geared towards developers (focusing on the API to support most generic uses), but not focused easing your workflow, esp. when analyzing and comparing many feature sets.</p></li>
-<li><p>Generic libraries like scikit-learn focus only on a single feature set (X, y), and hence presents an additonal burden (and a big barrier for those without expert programming skills) when trying to compare the performance of multiple feature sets</p></li>
+<li><p>Generic libraries like scikit-learn focus only on a single feature set (X, y), and hence presents an additional burden (and a big barrier for those without expert programming skills) when trying to compare the performance of multiple feature sets</p></li>
 <li><p>Comprehensive analysis of misclassified subjects (histogram at top right in figure below) in different pairs of classes is not in the interest of other toolkits and not possible without significant rewriting of many underlying components of scikit-learn.</p></li>
 <li><p>Thorough diagnostics of results produced e.g. misclassification rates for different feature sets (radar plot at bottom right in figure below) in the classification workflow, or the residual plots in regression workflow are simply not possible in scikit-learn. Some require significant software development effort (which only provides basic metrics of classifier performance)..</p></li>
 <li><p>Methods and tools for <strong>statistical comparison of multiple features</strong> (and models) is missing in other toolkits, and which is a priority for neuropredict.</p></li>
 </ul>
 </div></blockquote>
-<p>All you would need to provide are your own features (such as connectivity, FA, MD or a Freesurfer output directory) and obtain an easy to read and comprehensive report on the predictive power of the multiple features you are interested in, along with well-packaged export of performance metrics for sharing and posthoc comparison.</p>
+<p>All you would need to provide are your own features (such as connectivity, FA, MD or a FreeSurfer output directory) and obtain an easy to read and comprehensive report on the predictive power of the multiple features you are interested in, along with well-packaged export of performance metrics for sharing and posthoc comparison.</p>
 </div>
 <div class="section" id="broad-applicability-beyond-neuroscience">
 <h2>Broad applicability beyond neuroscience<a class="headerlink" href="#broad-applicability-beyond-neuroscience" title="Permalink to this headline">¶</a></h2>

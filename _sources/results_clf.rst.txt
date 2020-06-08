@@ -10,8 +10,8 @@ neuropredict produces a comprehensive report, parts of which can be seen in the 
 
 The report consists of
 
- - distribtions of cross-validated performance (balanced accuracy),
- - confusion matrices for each feature set,
+ - distributions of cross-validated performance (balanced accuracy) and AUC (for binary experiments only)
+ - confusion matrices for all feature sets,
  - intuitive comparison of misclassification rates across multiple features, and
  - misclassification frequency of subjects (for debugging and QC purposes)
 
@@ -56,7 +56,7 @@ The output directory (chosen with ``-o`` flag) contains the following sets of fi
   subject_misclf_freq_FeatureC.csv
   subject_misclf_freq_FeatureD.csv
 
-**Third**, a Python pickle file ``rhst_results.pkl`` containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where ``pickle`` files can be read.
+**Third**, a Python pickle file ``rhst_results.pkl`` containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where ``pickle`` files can be read. The CV results stored in the `CVResults` class, in a comprehensive manner, to make it easy to traverse various combinations and to retain everything, not just the final metrics, but also the original predictions.
 
 **Fourth**, a visualization named ``misclassified_subjects_frequency_histogram.pdf``. This plots histogram of misclassification frequency across all subjects (that were used as test subjects), obtained from multiple repetitions of CV. When multiple features are being compared, they are plotted in different colors.
 
@@ -112,8 +112,5 @@ In addition, the properties of this distribution itself, for a particular featur
 -------------
 
 If something is unclear or confusing, or some documentation is missing, please open an `issue on github <https://github.com/raamana/neuropredict/issues/new>`_.
-
-
-**These docs will be futher improved soon. Stay tuned!**
 
 

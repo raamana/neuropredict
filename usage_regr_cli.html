@@ -12,6 +12,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -118,28 +119,22 @@ num_samples x num_features).</p>
 in the same row of the meta data file (meta data file and data matrix must be
 in row-wise correspondence).</p>
 <p>Name of this file will be used to annotate the results and visualizations.</p>
-<p>E.g. <a href="#id1"><span class="problematic" id="id2">``</span></a>–data_matrix_paths /project/fmri.csv /project/dti.csv
-/project/t1_volumes.csv ``</p>
+<p>E.g. <code class="docutils literal notranslate"><span class="pre">--data_matrix_paths</span> <span class="pre">/project/fmri.csv</span> <span class="pre">/project/dti.csv</span>
+<span class="pre">/project/t1_volumes.csv</span></code></p>
 <p>Only one of <code class="docutils literal notranslate"><span class="pre">--pyradigm_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">user_feature_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">data_matrix_path</span></code>
 or <code class="docutils literal notranslate"><span class="pre">arff_paths</span></code> options can be specified.</p>
-<dl>
-<dt>File format could be</dt><dd><ul class="simple">
-<li><p>a simple comma-separated text file (with extension .csv or .txt): which can</p></li>
+<p>File format could be</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a simple comma-separated text file (with extension .csv or .txt), which can</p></li>
 </ul>
-<dl class="simple">
-<dt>easily be read back with</dt><dd><p>numpy.loadtxt(filepath, delimiter=’,’)
-or</p>
-</dd>
-</dl>
-<ul class="simple">
-<li><p>a numpy array saved to disk (with extension .npy or .numpy) that can read</p></li>
-</ul>
-<p>in with numpy.load(filepath).</p>
+<p>easily be read back with <code class="docutils literal notranslate"><span class="pre">numpy.loadtxt(filepath,</span> <span class="pre">delimiter=',')</span></code>, or
+- a numpy array saved to disk (with extension .npy or .numpy) that can read
+in with <code class="docutils literal notranslate"><span class="pre">numpy.load(filepath)</span></code>.</p>
 <p>One could use <code class="docutils literal notranslate"><span class="pre">numpy.savetxt(data_array,</span> <span class="pre">delimiter=',')</span></code> or <code class="docutils literal notranslate"><span class="pre">numpy.save(</span>
 <span class="pre">data_array)</span></code> to save features.</p>
 <p>File format is inferred from its extension.</p>
-</dd>
-</dl>
+</div></blockquote>
 </dd>
 </dl>
 </div>
@@ -165,13 +160,14 @@ If sample size is small, or class imbalance is high, choose 0.8.</p>
 <li><p>‘sqrt’</p></li>
 <li><p>‘log2’</p></li>
 <li><p>‘all’</p></li>
+<li><p>or an integer <code class="docutils literal notranslate"><span class="pre">k</span></code> &lt;= min(dimensionalities from all dataset)</p></li>
 </ul>
 </div></blockquote>
-<p>Default: ‘tenth’ of the number of samples in the training set.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">tenth</span></code> of the number of samples in the training set.</p>
 <p>For example, if your dataset has 90 samples, you chose 50 percent for training
 (default), then Y will have 90*.5=45 samples in training set, leading to 5
-features to be selected for taining. If you choose a fixed integer, ensure all
-the feature sets under evaluation have atleast that many features.</p>
+features to be selected for taining. If you choose a fixed integer <code class="docutils literal notranslate"><span class="pre">k</span></code>, ensure all
+the feature sets under evaluation have atleast <code class="docutils literal notranslate"><span class="pre">k</span></code> features.</p>
 </dd>
 <dt><kbd>-g, --gs_level</kbd></dt>
 <dd><p>Possible choices: none, light, exhaustive</p>
@@ -224,11 +220,11 @@ training the classifier.</p>
 <p><strong>NOTE</strong>: when feature ‘selection’ methods are used, we are able to keep track
 of which features in the original input space were slected and hence visualize
 their feature importance after the repetitions of CV. When the more generic
-‘dimensionality reduction’ methods are used, features often get transformed to
-new subspaces, wherein the link to original features is lost, and hence
-importance values for original input features can not be computed and hence
+‘dimensionality reduction’ methods are used, <em>features often get transformed to
+new subspaces</em>, wherein the link to original features is lost. Hence,
+importance values for original input features can not be computed and,
 are not visualized.</p>
-<p>Default: ‘VarianceThreshold’, removing features with 0.001 percent of lowest
+<p>Default: <code class="docutils literal notranslate"><span class="pre">VarianceThreshold</span></code>, removing features with 0.001 percent of lowest
 variance (zeros etc).</p>
 </dd>
 <dt><kbd>-e, --regressor</kbd></dt>

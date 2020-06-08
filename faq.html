@@ -12,10 +12,11 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Implemenation details" href="implementation.html" />
+    <link rel="next" title="Implementation details" href="implementation.html" />
     <link rel="prev" title="Results from Regression run" href="results_regr.html" />
     <script type="text/javascript" src="_static/pd.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -44,15 +45,15 @@
 <blockquote>
 <div><ul class="simple">
 <li><p>To offer a comprehensive report on predictive analysis effortlessly while following all the best practices!</p></li>
-<li><p>Aiming to interface directly with the outputs of various neuroimaging tools</p></li>
-<li><p><strong>although the user could input arbitrary set of features (neuroimaging, astronomy, nutrition, phrama or otherwise).</strong></p></li>
+<li><p>Aiming to interface directly with the outputs of various neuroscience and other popular tools, to reduce the barriers for labs without software expertise and to save time for the labs with software expertise</p></li>
+<li><p>This tool is generic, as it is simply about proper estimation of predictive performance. Hence, there is nothing tied to neuroscience data (despite its name), so users could input arbitrary set of features and targets from any domain (astronomy, nutrition, medicine, phrama or otherwise) and leverage its to produce a comprehensive report.</p></li>
 </ul>
 </div></blockquote>
 </li>
 <li><p><em>What is your default classification system?</em></p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Predictive analysis [by default] is performed with Random Forest classifier (using scikit-learn’s implementation), after some basic preprocessing comprising of <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html">robust scaling</a> and <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html">removal of low-variance features</a>.</p></li>
+<li><p>Predictive analysis [by default] is performed with Random Forest classifier/Regressor, after some basic preprocessing comprising of <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html">robust scaling</a> and <a class="reference external" href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html">removal of low-variance features</a>.</p></li>
 <li><p>Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.</p></li>
 </ul>
 </div></blockquote>
@@ -71,8 +72,8 @@
 <li><p>Because they have consistently demonstrated top performance across multiple domains:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Fernández-Delgado, M., Cernadas, E., Barro, S., &amp; Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181. <a class="reference external" href="http://jmlr.org/papers/volume15/delgado14a/delgado14a.pdf">Link</a></p></li>
-<li><p>Lebedev, A. V., Westman, E., Van Westen, G. J. P., Kramberger, M. G., Lundervold, A., Aarsland, D., et al. (2014). Random Forest ensembles for detection and prediction of Alzheimer’s disease with a good between-cohort robustness. NeuroImage: Clinical, 6, 115–125. <a class="reference external" href="http://doi.org/10.1016/j.nicl.2014.08.023">Link</a></p></li>
+<li><p>Fernández-Delgado, M., Cernadas, E., Barro, S., &amp; Amorim, D. (2014). Do we Need Hundreds of Classifiers to Solve Real World Classification Problems? Journal of Machine Learning Research, 15, 3133–3181. <a class="reference external" href="http://jmlr.org/papers/volume15/delgado14a/delgado14a.pdf">[Link]</a></p></li>
+<li><p>Lebedev, A. V., Westman, E., Van Westen, G. J. P., Kramberger, M. G., Lundervold, A., Aarsland, D., et al. (2014). Random Forest ensembles for detection and prediction of Alzheimer’s disease with a good between-cohort robustness. NeuroImage: Clinical, 6, 115–125. <a class="reference external" href="http://doi.org/10.1016/j.nicl.2014.08.023">[Link]</a></p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -82,21 +83,25 @@
 </li>
 <li><p><em>What are the options for my feature selection?</em></p>
 <ul class="simple">
-<li><p>Currently <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> selects the top <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">n_train/10</span></code> features based on their variable importance, as computed by Random Forest classifier, where n_train = number of <em>training</em> samples. The value of <cite>n_train</cite> depends on the size of the smallest class in the dataset and is <code class="docutils literal notranslate"><span class="pre">train_perc*n_smallest*n_C</span></code>, where <cite>train_perc</cite> is the amount of dataset the user reserved for training, <cite>n_C</cite> is the numer of classes in the dataset and <cite>n_smallest</cite> is the size of smallest classs.</p></li>
-<li><p>The choice of stratifying the training set by the size of smallest classs <cite>n_smallest</cite> in the given dataset helps alleviate class-imbalance problems as well as improve the robustness of the classifier.</p>
+<li><p>By default, <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> selects the top <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">n_train/10</span></code> features based on their variable importance, as computed by Random Forest classifier/regressor, where n_train = number of <em>training</em> samples. The value of <cite>n_train</cite> depends on the size of the smallest class in the dataset and is <code class="docutils literal notranslate"><span class="pre">train_perc*n_smallest*n_C</span></code>, where <cite>train_perc</cite> is the amount of dataset the user reserved for training, <cite>n_C</cite> is the number of classes in the dataset and <cite>n_smallest</cite> is the size of smallest class.</p></li>
+<li><p>you could also choose the value of <code class="docutils literal notranslate"><span class="pre">k</span></code> via the <code class="docutils literal notranslate"><span class="pre">-k</span></code> / <code class="docutils literal notranslate"><span class="pre">--reduced_dim_size</span></code> option</p></li>
+<li><p>The choice of stratifying the training set by the size of smallest class <cite>n_smallest</cite> in the given dataset helps alleviate class-imbalance problems as well as improve the robustness of the classifier.</p></li>
+<li><p>The following dimensionality reduction methods, via the <code class="docutils literal notranslate"><span class="pre">-dr</span></code> / <code class="docutils literal notranslate"><span class="pre">--dim_red_method</span></code> option, are available at the moment:
+* feature selection: <code class="docutils literal notranslate"><span class="pre">SelectKBest_mutual_info_classif</span></code>, <code class="docutils literal notranslate"><span class="pre">SelectKBest_f_classif</span></code>, <code class="docutils literal notranslate"><span class="pre">VarianceThreshold</span></code>
+* dimensionality reduction: <code class="docutils literal notranslate"><span class="pre">Isomap</span></code>, <code class="docutils literal notranslate"><span class="pre">LLE</span></code>, <code class="docutils literal notranslate"><span class="pre">LLE_modified</span></code>, <code class="docutils literal notranslate"><span class="pre">LLE_Hessian</span></code>, <code class="docutils literal notranslate"><span class="pre">LLE_LTSA</span></code></p></li>
+<li><p>We plan to implement offer even more choices for feature selection and dimensionality reduction in the near future - <a class="reference external" href="http://github.com/raamana/neuropredict/issues/new">Let me know your suggestions</a>. The benefit of trying many arbitrary choices for feature selection method seems unclear. The overarching goals of <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> might help answer the current choice:</p>
 <ul>
-<li><p>We plan to implement offer more choices for feature selection in the near future, although the benefit of trying some arbitrary choice for feature selection method seems unclear. The overarching goals of <code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> might help answer the current choice:</p></li>
 <li><p>to enable novice predictive modeling users to get started easily and quickly,</p></li>
 <li><p>provide a thorough estimate of <em>baseline</em> performance of their feature sets, instead of trying to find an arbitrary combination of predictive modeling tools to drive the numerical performance as high as possible.</p></li>
 </ul>
 </li>
-<li><p>Also because Random forest classifier automatically discard features without any useful signal.</p></li>
+<li><p>Keep in mind, Random forest classifier/regressor automatically discards features without any useful signal.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">neuropredict</span></code> is designed such that another classifier or combination of classifiers could easily be plugged in. We may be adding an option to integrate one of the following options to automatically select a classifier with the highest performance: <a class="reference external" href="https://github.com/scikit-optimize/scikit-optimize">scikit-optimize</a>, <a class="reference external" href="https://github.com/ClimbsRocks/auto_ml">auto_ml</a> and <a class="reference external" href="https://github.com/rhiever/tpot">tpot</a> etc.</p></li>
 </ul>
 </li>
 <li><p><em>Does neuropredict handle covariates?</em></p>
 <ul class="simple">
-<li><p><strong>Yes</strong>. In fact, this is a unique feature for neuropredict, that is simply not possible in scikit-learn by itself due to some design limitations.</p></li>
+<li><p><strong>Yes</strong>. In fact, <em>this is a unique feature for neuropredict</em>, that is simply not possible in scikit-learn by itself due to some design limitations. We are not aware of any other libraries offering this feature.</p></li>
 <li><p>Using this features requires the use of the <a class="reference external" href="http://raamana.github.io/pyradigm/">pyradigm data structures</a>, which offers you the ability to add in arbitrary set of attributes for each subject.</p></li>
 </ul>
 </li>
@@ -113,18 +118,12 @@
 </li>
 <li><p><em>Can I compare an arbitrary set of my own custom-designed features?</em></p>
 <ul class="simple">
-<li><p>Yes. The -u option allows you to supply arbitrary set of paths to user’s own custom features e.g.</p>
+<li><p>Yes. That would be quite easy when datasets are managed via <code class="docutils literal notranslate"><span class="pre">pyradigm</span></code>. You can also use the <code class="docutils literal notranslate"><span class="pre">-u</span></code> option to supply arbitrary set of paths where your custom features are stored in a loose / decentralized format (with features for a single samplet stored in a separate folder/file) e.g.</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">/myproject/awsome-new-idea-v2.0</span> <span class="pre">/project-B/DTI_FA_Method1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-y</span> <span class="pre">/myproject/awsome-new-idea-v2.0.PyradigmDataset.pkl</span> <span class="pre">/project-B/DTI_FA_Method1.PyradigmDataset.pkl</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-u</span> <span class="pre">/sideproject/resting-dynamic-fc</span> <span class="pre">/prevproject/resting-dynamic-fc-competingmethod</span></code></p></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><p><em>Can I combine ``-f`` option with ``-u`` to compare my own features with that of Freesurfer or other supported software?</em></p>
-<ul class="simple">
-<li><p>Absolutely.</p></li>
-<li><p>While <code class="docutils literal notranslate"><span class="pre">-f</span></code> option allows specifying only 1 freesurfer folder, it can be combined with <code class="docutils literal notranslate"><span class="pre">-u</span></code> which can take arbitray number of custom features.</p></li>
 </ul>
 </li>
 </ul>
@@ -141,7 +140,7 @@
                         title="previous chapter">Results from Regression run</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="implementation.html"
-                        title="next chapter">Implemenation details</a></p>
+                        title="next chapter">Implementation details</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">

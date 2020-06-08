@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Implemenation details &#8212; neuropredict 0.6 documentation</title>
+    <title>Implementation details &#8212; neuropredict 0.6 documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -12,6 +12,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -37,12 +38,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-<div class="section" id="implemenation-details">
-<h1>Implemenation details<a class="headerlink" href="#implemenation-details" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="implementation-details">
+<h1>Implementation details<a class="headerlink" href="#implementation-details" title="Permalink to this headline">¶</a></h1>
 <p>In line with the overarching goals of neuropredict, the following choices were made:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>cross-validation scheme (central to performance estimation) has been chosen to be repeated hold-out (referred to as ShuffleSplit in scikit-learn). As you may be aware, choice of CV scheme makes a difference, and this is a good choice among available options. RepeatedKFold is also possible, at the expense of slightly more awkward implementation, as well as making subsequent statistics (such as significance tests) less tractable.</p></li>
+<li><p>cross-validation scheme (central to performance estimation) has been chosen to be repeated hold-out (referred to as <code class="docutils literal notranslate"><span class="pre">ShuffleSplit</span></code> in scikit-learn). As you may be aware, choice of CV scheme makes a difference, and this is a good choice among available options. Check my tutorial on CV to learn why <a class="reference external" href="https://crossinvalidation.com/2020/06/04/unambiguous-terminology-for-data-splits-in-nested-cross-validation-cv-training-tuning-and-reporting-sets/">repeated holdout CV is a safe choice</a>.</p></li>
+<li><p>RepeatedKFold is also possible, at the expense of slightly more awkward implementation, as well as making subsequent statistics (such as significance tests etc) less tractable. Hence, we are not offering this CV scheme at the moment.</p></li>
 </ul>
 </div></blockquote>
 <p>You may also be interested in <a class="reference internal" href="faq.html"><span class="doc">Frequently Asked Questions</span></a>.</p>

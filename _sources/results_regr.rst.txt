@@ -13,7 +13,7 @@ neuropredict produces a comprehensive report, parts of which can be seen in the 
 
 The report consists of
 
- - distribtions of cross-validated performance, for each of dataset, as measured by r2, MAE, MSE and explained variance (if you need other metrics, open an `issue on github <https://github.com/raamana/neuropredict/issues/new>`_).
+ - distributions of cross-validated performance, for each of dataset, as measured by :math:`r^2`, MAE, MSE and explained variance. If you need other metrics, open an `issue on github <https://github.com/raamana/neuropredict/issues/new>`_), or you could use the results stored in the `CVResults` class, in a comprehensive manner, to compute various other metrics yourself easily.
  - residual plots showing residuals as a function of original target value,
  - prediction plot showing the predicted target value as a function of original target value, and
  - few other diagnostic plots (such as subjects with high frequency of large residuals, an indication of them being an outlier) to be made available soon.
@@ -38,7 +38,7 @@ The output directory (chosen with ``-o`` flag) contains the following sets of fi
     residuals_vs_true_targets.pdf
 
 
-**Second** *[TO BE PRODUCED]*, a set of CSV files in a subfolder called ``exported_results``, which can used for further posthoc statisical analysis or to produce more customised visualizations. The typical contents are shown below - note, filenames may change depending on your input file names.
+**Second** *[to be added]*, a set of CSV files in a subfolder called ``exported_results``, which can used for further posthoc statisical analysis or to produce more customised visualizations. The typical contents are shown below - note, filenames may change depending on your input file names.
 
 .. parsed-literal ::
 
@@ -48,23 +48,15 @@ The output directory (chosen with ``-o`` flag) contains the following sets of fi
     r2_score.csv
 
 
-**Third**, a Python pickle file ``results_neuropredict.pkl`` containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where ``pickle`` files can be read.
+**Third**, a Python pickle file ``results_neuropredict.pkl`` containing the full set of results, that neuropredict bases the visualizations on. These are organized in a clear dictionary format with self-explanatory variable names, making it easy to reuse them for posthoc analyses in python and other places where ``pickle`` files can be read. The CV results stored in the `CVResults` class, in a comprehensive manner, to make it easy to traverse various combinations and to retain everything, not just the final metrics, but also the original predictions.
 
 
 **Finally**, few miscellaneous set of files that neuropredict relies on to produce the comprehensive report.
 
 
-We will walk you through the resulting visualizations one by one, and describe how to interpret them.
-
-
-**INTERPRETATION TO BE ADDED/UPDATED.**
-
+Although the above results are easy to follow and interpret, We will be adding a detailed walk-through, and some tips on how to interpret them **soon**.
 
 -------------
 
 If something is unclear or confusing, or some documentation is missing, please open an `issue on github <https://github.com/raamana/neuropredict/issues/new>`_.
-
-
-**These docs will be futher improved soon. Stay tuned!**
-
 
