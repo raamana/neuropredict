@@ -11,20 +11,14 @@ Frequently Asked Questions
     * This tool is generic, as it is simply about proper estimation of predictive performance. Hence, there is nothing tied to neuroscience data (despite its name), so users could input arbitrary set of features and targets from any domain (astronomy, nutrition, medicine, phrama or otherwise) and leverage its to produce a comprehensive report.
 
 
-* *What is your default classification system?*
+* *What is your default predictive model/pipeline?*
 
-    * Predictive analysis [by default] is performed with Random Forest classifier/Regressor, after some basic preprocessing comprising of `robust scaling <http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html>`_ and `removal of low-variance features <http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html>`_.
+    * Predictive analysis [by default] is performed with Random Forest Classifier/Regressor, after some basic preprocessing comprising of `robust scaling <http://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.RobustScaler.html>`_ and `removal of low-variance features <http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.VarianceThreshold.html>`_.
 
-    * Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation.
-
-
-* *Can I use a different classifier?*
-
-    * Yes. User can choose among few techniques offered by ``scikit-learn``, ``xgboost``
-    * We plan to support any useful machine learning library as well. `Let me know <http://github.com/raamana/neuropredict/issues/new>`_ if you would like something that's not already integrated. As long as it is implemented in python, we will integrate it.
+    * Model selection (grid search of optimal hyper parameters) is performed in an inner cross-validation, following all the best practices.
 
 
-* *Why did you pick random forests to be the default classifier?*
+* *Why did you pick random forests to be the default model?*
 
     * Because they have consistently demonstrated top performance across multiple domains:
 
@@ -32,15 +26,33 @@ Frequently Asked Questions
 
         * Lebedev, A. V., Westman, E., Van Westen, G. J. P., Kramberger, M. G., Lundervold, A., Aarsland, D., et al. (2014). Random Forest ensembles for detection and prediction of Alzheimer's disease with a good between-cohort robustness. NeuroImage: Clinical, 6, 115–125. `[Link] <http://doi.org/10.1016/j.nicl.2014.08.023>`_
 
-    * Because it's multi-class by design and automatically estimates feature importance.
+    * Because it's a natively multi-class model (ideal for classification problems), and automatically estimates feature importance.
 
 
-* *What are the options for my feature selection?*
+* *Can I use a different model?*
+
+    * Yes. User can choose among few techniques offered by ``scikit-learn``, ``xgboost``
+    * We plan to integrate and support any useful machine learning library as well. `Let me know <http://github.com/raamana/neuropredict/issues/new>`_ if you would like something that's not already integrated. As long as it is implemented in python, we will integrate it.
+
+
+* *Can I try multiple models?*
+
+    * To produce results with different models, you can run neuropredict multiple times with a different model/combination each time.
+    * We do not yet offer the option batch-process and compare multiple models at once, to discourage *p-hacking* type of hunt for *maximum possible / publishable performance*. Review the table below for some examples of subtle sources of *bias*, and check out broader discussion in my `cross-validation tutorial here <https://crossinvalidation.com/2020/06/04/unambiguous-terminology-for-data-splits-in-nested-cross-validation-cv-training-tuning-and-reporting-sets/>`_.
+
+        .. image:: subtle_bias_hacking_types_CV.png
+            :target: https://crossinvalidation.com/2020/06/04/unambiguous-terminology-for-data-splits-in-nested-cross-validation-cv-training-tuning-and-reporting-sets/
+            :width: 700
+
+    * If you do try different models and different combinations of choices offered, we strongly recommend you document your trials, and report them when publishing your results.
+
+
+* *What are the options for my feature selection / dimensionality reduction?*
 
   * By default, ``neuropredict`` selects the top ``k = n_train/10`` features based on their variable importance, as computed by Random Forest classifier/regressor, where n_train = number of *training* samples. The value of `n_train` depends on the size of the smallest class in the dataset and is ``train_perc*n_smallest*n_C``, where `train_perc` is the amount of dataset the user reserved for training, `n_C` is the number of classes in the dataset and `n_smallest` is the size of smallest class.
   * you could also choose the value of ``k`` via the ``-k`` / ``--reduced_dim_size`` option
 
-  * The choice of stratifying the training set by the size of smallest class `n_smallest` in the given dataset helps alleviate class-imbalance problems as well as improve the robustness of the classifier.
+  * The choice of stratifying the training set by the size of smallest class `n_smallest` in the given dataset helps alleviate class-imbalance problems as well as improve the robustness of the model.
 
   * The following dimensionality reduction methods, via the ``-dr`` / ``--dim_red_method`` option, are available at the moment:
     * feature selection: ``SelectKBest_mutual_info_classif``, ``SelectKBest_f_classif``, ``VarianceThreshold``
@@ -51,9 +63,9 @@ Frequently Asked Questions
 
     * provide a thorough estimate of *baseline* performance of their feature sets, instead of trying to find an arbitrary combination of predictive modeling tools to drive the numerical performance as high as possible.
 
-  * Keep in mind, Random forest classifier/regressor automatically discards features without any useful signal.
+  * Keep in mind, Random forest model/regressor automatically discards features without any useful signal.
 
-  * ``neuropredict`` is designed such that another classifier or combination of classifiers could easily be plugged in. We may be adding an option to integrate one of the following options to automatically select a classifier with the highest performance: `scikit-optimize <https://github.com/scikit-optimize/scikit-optimize>`_, `auto_ml <https://github.com/ClimbsRocks/auto_ml>`_ and `tpot <https://github.com/rhiever/tpot>`_ etc.
+  * ``neuropredict`` is designed such that another model or combination of classifiers could easily be plugged in. We may be adding an option to integrate one of the following options to automatically select a model with the highest performance: `scikit-optimize <https://github.com/scikit-optimize/scikit-optimize>`_, `auto_ml <https://github.com/ClimbsRocks/auto_ml>`_ and `tpot <https://github.com/rhiever/tpot>`_ etc.
 
 
 * *Does neuropredict handle covariates?*
