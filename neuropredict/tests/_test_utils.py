@@ -1,5 +1,8 @@
-from neuropredict.utils import chance_accuracy
+from pathlib import Path
+
 import numpy as np
+from neuropredict import config as cfg
+from neuropredict.utils import chance_accuracy
 
 
 def raise_if_mean_differs_from(accuracy_balanced,
@@ -30,3 +33,13 @@ def raise_if_mean_differs_from(accuracy_balanced,
         if abs_diff > eps_chance_acc:
             raise ValueError('they substantially differ by {:.4f} that is '
                              'more than {:.4f}!'.format(abs_diff, eps_chance_acc))
+
+
+def remove_neuropredict_results(out_dir):
+    """Removes existing results to ensure subsequent runs result in fresh results"""
+
+    for rf in Path(out_dir).rglob(cfg.results_file_name):
+        try:
+            rf.unlink()
+        except:
+            print('Unable to delete {}'.format(rf))
