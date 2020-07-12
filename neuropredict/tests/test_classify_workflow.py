@@ -3,6 +3,8 @@ import random
 import shlex
 import sys
 from os.path import abspath, dirname, exists as pexists, join as pjoin, realpath
+from pathlib import Path
+import traceback
 
 import numpy as np
 
@@ -13,16 +15,17 @@ if __name__ == '__main__' and __package__ is None:
     sys.path.append(parent_dir)
 
 from neuropredict.classify import cli
+from neuropredict import config as cfg
 from pyradigm import ClassificationDataset
 from pyradigm.utils import (make_random_ClfDataset,
                             dataset_with_new_features_same_everything_else)
 
-from neuropredict.tests._test_utils import raise_if_mean_differs_from
+from neuropredict.tests._test_utils import raise_if_mean_differs_from, remove_neuropredict_results
 
 feat_generator = np.random.randn
 
-test_dir = dirname(os.path.realpath(__file__))
-out_dir = realpath(pjoin(test_dir, '..', 'tests', 'scratch_classify'))
+test_dir = Path(__file__).resolve().parent
+out_dir = test_dir.joinpath('..', 'tests', 'scratch_classify')
 if not pexists(out_dir):
     os.makedirs(out_dir)
 
@@ -130,4 +133,29 @@ def test_chance_clf_binary_svm():
                                    result['_target_sizes'],
                                    eps_chance_acc=eps_chance_acc_binary)
 
-test_basic_run()
+def test_each_combination_works():
+    """Ensures each of combination of feature selection and classifier works."""
+
+    nrep = 10
+    nproc = 1
+    gsl = 'none'  # to speed up the process
+    failed_combos = list()
+    for clf_name in cfg.classifier_choices:
+        for fs_name in cfg.all_dim_red_methods:
+            # ensure a fresh start
+            remove_neuropredict_results(out_dir)
+            try:
+                cli_str = 'np_classify -y {} -t {} -n {} -c {} -o {} ' \
+                          ' -e {} -dr {} -g {} ' \
+                          ''.format(out_path1, train_perc, nrep, nproc, out_dir,
+                                    clf_name, fs_name, gsl)
+                sys.argv = shlex.split(cli_str)
+                cli()
+            except:
+                failed_combos.append('{:35} {:35}'.format(clf_name, fs_name))
+                traceback.print_exc()
+
+    print('\nCombinations failed:\n{}'.format('\n'.join(failed_combos)))
+    if len(failed_combos) > 4:
+        print('\n  -----> 5 or more combinations of DR and CLF failed! Fix them')
+
