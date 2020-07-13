@@ -72,11 +72,13 @@ else:
 
 
 def test_basic_run():
+
+    remove_neuropredict_results(out_dir)
     sys.argv = shlex.split('np_regress -y {} {} -t {} -n {} -c {} -g {} -o {} '
-                           '-e {} -dr {} -cl {} -cm {}'
+                           '-e {} -dr {} '
                            ''.format(out_path1, out_path2, train_perc, num_rep_cv,
                                      num_procs, gs_level, out_dir, estimator,
-                                     dr_method, covar_arg, deconf_method))
+                                     dr_method))
     cli()
 
 
