@@ -197,7 +197,7 @@ def save_results(out_dir, dict_of_objects_to_save):
     # LATER choose a more universal serialization method
     #   (that could be loaded from a web app)
     try:
-        out_results_path = pjoin(out_dir, cfg.file_name_results)
+        out_results_path = pjoin(out_dir, cfg.results_file_name)
         with open(out_results_path, 'wb') as resfid:
             pickle.dump(dict_of_objects_to_save, resfid)
     except:
@@ -221,7 +221,7 @@ def load_results_from_folder(results_folder):
     options = load_options(results_folder)
     for ix, sg in enumerate(options['sub_groups']):
         sg_id = sub_group_identifier(sg, ix)
-        results_file_path = pjoin(results_folder, sg_id, cfg.file_name_results)
+        results_file_path = pjoin(results_folder, sg_id, cfg.results_file_name)
         if not pexists(results_file_path) or os.path.getsize(results_file_path) <= 0:
             raise IOError('Results file for sub group {} does not exist'
                           ' or is empty!'.format(sg_id))

@@ -812,7 +812,7 @@ def parse_common_args(parser):
 
             if not_unspecified(user_args.make_vis):
                 out_dir = realpath(user_args.make_vis)
-                res_path = pjoin(out_dir, cfg.file_name_results)
+                res_path = pjoin(out_dir, cfg.results_file_name)
                 if pexists(out_dir) and pexists(res_path):
                     if not_unspecified(user_args.make_vis):
                         print('Making vis from existing results is not supported '
