@@ -648,9 +648,10 @@ def get_parser_base():
     allows you to specify data type (categorical or numerical) for each 
     covariate/attribute, which is necessary to encode them accurately. 
     
-    Specify them as a comma-separated list of strings without any spaces or 
-    special characters, exactly as you encoded them in the input pyradigm dataset. 
-    Example: ``-cl age,site``
+    Specify them as a space-separated list of strings (each covariate name without 
+    any spaces or special characters in them), exactly as you encoded them in the input 
+    pyradigm dataset. 
+    Example: ``-cl age site``
 
     """)
 
