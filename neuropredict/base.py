@@ -24,7 +24,7 @@ from neuropredict.utils import (chance_accuracy, check_covariate_options,
                                 print_options, validate_feature_selection_size,
                                 validate_impute_strategy)
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
-
+from pyradigm.multiple import BaseMultiDataset
 
 class BaseWorkflow(object):
     """Class defining a structure for the neuropredict workflow"""
@@ -84,12 +84,20 @@ class BaseWorkflow(object):
                              ''.format(cfg.workflow_types))
         self._workflow_type = workflow_type
 
+        if self.datasets is None:
+            dataset_ids = 'noname_datasets'
+        elif isinstance(self.datasets, BaseMultiDataset):
+            dataset_ids = self.datasets.modality_ids
+        else:
+            dataset_ids = [ 'dataset{}'.format(ii)
+                            for ii in range(len(self.datasets))]
+
         if self._workflow_type == 'classify':
             self.results = ClassifyCVResults(self._scoring, self.num_rep_cv,
-                                             self.datasets.modality_ids)
+                                             dataset_ids)
         else:
             self.results = RegressCVResults(self._scoring, self.num_rep_cv,
-                                            self.datasets.modality_ids)
+                                            dataset_ids)
 
 
     def _prepare(self):
