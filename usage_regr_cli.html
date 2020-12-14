@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Regression workflow &#8212; neuropredict 0.6+2.gb0e022b documentation</title>
+    <title>Regression workflow &#8212; neuropredict 0.6+3.g3e6b884.dirty documentation</title>
     <link rel="stylesheet" href="_static/pd.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -23,11 +23,11 @@
 
   </head><body>
     <div id="header">
-        <h1>neuropredict 0.6+2.gb0e022b documentation</h1>
+        <h1>neuropredict 0.6+3.g3e6b884.dirty documentation</h1>
     </div>
     <div class="related" role="navigation" aria-label="related navigation">
         <ul>
-            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.6+2.gb0e022b documentation</a> &#187;
+            <li class="nav-item nav-item-0"><a href="index.html">neuropredict 0.6+3.g3e6b884.dirty documentation</a> &#187;
             </li>
         </ul>
     </div>
@@ -108,9 +108,8 @@ will be included in your papers. For example,</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">user_feature_paths</span> <span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">fmri</span><span class="o">/</span> <span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">dti</span><span class="o">/</span> <span class="o">/</span><span class="n">project</span><span class="o">/</span><span class="n">t1_volumes</span><span class="o">/</span>
 </pre></div>
 </div>
-<p>Only one of <code class="docutils literal notranslate"><span class="pre">--pyradigm_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">user_feature_paths</span></code>,
-<code class="docutils literal notranslate"><span class="pre">data_matrix_path</span></code>
-or <code class="docutils literal notranslate"><span class="pre">arff_paths</span></code> options can be specified.</p>
+<p>Only one of the <code class="docutils literal notranslate"><span class="pre">--pyradigm_paths</span></code>, <code class="docutils literal notranslate"><span class="pre">user_feature_paths</span></code>,
+<code class="docutils literal notranslate"><span class="pre">data_matrix_path</span></code> or <code class="docutils literal notranslate"><span class="pre">arff_paths</span></code> options can be specified.</p>
 </dd>
 <dt><kbd>-d, --data_matrix_paths</kbd></dt>
 <dd><p>List of absolute paths to text files containing one matrix of size N x p  (
@@ -128,9 +127,11 @@ or <code class="docutils literal notranslate"><span class="pre">arff_paths</span
 <div><ul class="simple">
 <li><p>a simple comma-separated text file (with extension .csv or .txt), which can</p></li>
 </ul>
-<p>easily be read back with <code class="docutils literal notranslate"><span class="pre">numpy.loadtxt(filepath,</span> <span class="pre">delimiter=',')</span></code>, or
-- a numpy array saved to disk (with extension .npy or .numpy) that can read
-in with <code class="docutils literal notranslate"><span class="pre">numpy.load(filepath)</span></code>.</p>
+<p>easily be read back with <code class="docutils literal notranslate"><span class="pre">numpy.loadtxt(filepath,</span> <span class="pre">delimiter=',')</span></code>, or</p>
+<ul class="simple">
+<li><p>a numpy array saved to disk (with extension .npy or .numpy) that can read</p></li>
+</ul>
+<p>in with <code class="docutils literal notranslate"><span class="pre">numpy.load(filepath)</span></code>.</p>
 <p>One could use <code class="docutils literal notranslate"><span class="pre">numpy.savetxt(data_array,</span> <span class="pre">delimiter=',')</span></code> or <code class="docutils literal notranslate"><span class="pre">numpy.save(</span>
 <span class="pre">data_array)</span></code> to save features.</p>
 <p>File format is inferred from its extension.</p>
@@ -166,8 +167,8 @@ If sample size is small, or class imbalance is high, choose 0.8.</p>
 <p>Default: <code class="docutils literal notranslate"><span class="pre">tenth</span></code> of the number of samples in the training set.</p>
 <p>For example, if your dataset has 90 samples, you chose 50 percent for training
 (default), then Y will have 90*.5=45 samples in training set, leading to 5
-features to be selected for taining. If you choose a fixed integer <code class="docutils literal notranslate"><span class="pre">k</span></code>, ensure all
-the feature sets under evaluation have atleast <code class="docutils literal notranslate"><span class="pre">k</span></code> features.</p>
+features to be selected for training. If you choose a fixed integer <code class="docutils literal notranslate"><span class="pre">k</span></code>,
+ensure all the feature sets under evaluation have atleast <code class="docutils literal notranslate"><span class="pre">k</span></code> features.</p>
 </dd>
 <dt><kbd>-g, --gs_level</kbd></dt>
 <dd><p>Possible choices: none, light, exhaustive</p>
@@ -201,10 +202,9 @@ original feature set in pyradigm format, which is required to implement the
 deconfounding (covariate regression) properly. The pyradigm data structure
 allows you to specify data type (categorical or numerical) for each
 covariate/attribute, which is necessary to encode them accurately.</p>
-<p>Specify them as a space-separated list of strings (each covariate name without
-any spaces or special characters in them), exactly as you encoded them in the input
-pyradigm dataset.
-Example: <code class="docutils literal notranslate"><span class="pre">-cl</span> <span class="pre">age</span> <span class="pre">site</span></code></p>
+<p>Specify them as a comma-separated list of strings without any spaces or
+special characters, exactly as you encoded them in the input pyradigm dataset.
+Example: <code class="docutils literal notranslate"><span class="pre">-cl</span> <span class="pre">age,site</span></code></p>
 </dd>
 <dt><kbd>-cm, --covar_method</kbd></dt>
 <dd><p>Type of “deconfounding” method to handle confounds/covariates. This method
@@ -219,7 +219,7 @@ set prior to making predictions on them.</p>
 <p>Feature selection, or dimensionality reduction method to apply prior to
 training the classifier.</p>
 <p><strong>NOTE</strong>: when feature ‘selection’ methods are used, we are able to keep track
-of which features in the original input space were slected and hence visualize
+of which features in the original input space were selected and hence visualize
 their feature importance after the repetitions of CV. When the more generic
 ‘dimensionality reduction’ methods are used, <em>features often get transformed to
 new subspaces</em>, wherein the link to original features is lost. Hence,
