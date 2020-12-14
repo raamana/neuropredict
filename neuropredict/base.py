@@ -408,11 +408,16 @@ class BaseWorkflow(object):
         return self._out_results_path
 
 
-    def load(self):
+    def load(self, direct_path=None):
         """Mechanism to reload results.
 
         Useful for check-pointing, and restore upon crash etc
         """
+
+        if direct_path is not None and pexists(direct_path):
+            # this helps with propagating path to other parts of workflow,
+            # such as self.visualize()
+            self._out_results_path = direct_path
 
         try:
             with open(self._out_results_path, 'rb') as res_fid:
@@ -823,11 +828,24 @@ def parse_common_args(parser):
                 res_path = pjoin(out_dir, cfg.results_file_name)
                 if pexists(out_dir) and pexists(res_path):
                     if not_unspecified(user_args.make_vis):
-                        print('Making vis from existing results is not supported '
-                              'yet in the redesigned workflow')
-                        # print('\n\nSaving the visualizations to \n{}'
-                        #       ''.format(out_dir))
-                        # make_visualizations(res_path, out_dir)
+                        print('\n\nSaving the visualizations to \n{}'
+                              ''.format(out_dir))
+                        cli_prog_name = sys.argv[0].lower()
+                        if cli_prog_name in ('np_classify', 'neuropredict_classify'):
+                            from neuropredict.classify import ClassificationWorkflow
+                            clf_expt = ClassificationWorkflow(datasets=None)
+                            clf_expt.redo_visualizations(res_path)
+                        elif cli_prog_name in ('np_regress', 'neuropredict_regress'):
+                            from neuropredict.regress import RegressionWorkflow
+                            reg_expt = RegressionWorkflow(datasets=None)
+                            reg_expt.redo_visualizations(res_path)
+                        else:
+                            raise ValueError(
+                                    'Incorrect CLI command invoked for --make_vis. '
+                                    'It must be either np_classify or np_regress. '
+                                    'Or their longer forms neuropredict_classify '
+                                    'or neuropredict_regress.')
+
                 else:
                     raise ValueError('Given folder does not exist, '
                                      'or has no results file!')
