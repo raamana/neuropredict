@@ -24,7 +24,7 @@ from neuropredict.utils import (chance_accuracy, check_covariate_options,
                                 print_options, validate_feature_selection_size,
                                 validate_impute_strategy)
 from sklearn.model_selection import GridSearchCV, ShuffleSplit
-
+from pyradigm.multiple import BaseMultiDataset
 
 class BaseWorkflow(object):
     """Class defining a structure for the neuropredict workflow"""
@@ -84,12 +84,20 @@ class BaseWorkflow(object):
                              ''.format(cfg.workflow_types))
         self._workflow_type = workflow_type
 
+        if self.datasets is None:
+            dataset_ids = 'noname_datasets'
+        elif isinstance(self.datasets, BaseMultiDataset):
+            dataset_ids = self.datasets.modality_ids
+        else:
+            dataset_ids = [ 'dataset{}'.format(ii)
+                            for ii in range(len(self.datasets))]
+
         if self._workflow_type == 'classify':
             self.results = ClassifyCVResults(self._scoring, self.num_rep_cv,
-                                             self.datasets.modality_ids)
+                                             dataset_ids)
         else:
             self.results = RegressCVResults(self._scoring, self.num_rep_cv,
-                                            self.datasets.modality_ids)
+                                            dataset_ids)
 
 
     def _prepare(self):
@@ -306,7 +314,7 @@ class BaseWorkflow(object):
 
     @staticmethod
     def _get_feature_importance(est_name, pipeline, num_features, fill_value=np.nan):
-        "Extracts the feature importance of input features, if available."
+        """Extracts the feature importance of input features, if available."""
 
         if est_name not in cfg.importance_attr:
             # some estimators simply do not provide it
@@ -400,11 +408,16 @@ class BaseWorkflow(object):
         return self._out_results_path
 
 
-    def load(self):
+    def load(self, direct_path=None):
         """Mechanism to reload results.
 
         Useful for check-pointing, and restore upon crash etc
         """
+
+        if direct_path is not None and pexists(direct_path):
+            # this helps with propagating path to other parts of workflow,
+            # such as self.visualize()
+            self._out_results_path = direct_path
 
         try:
             with open(self._out_results_path, 'rb') as res_fid:
@@ -432,6 +445,16 @@ class BaseWorkflow(object):
     def visualize(self):
         """Method to produce all the relevant visualizations based on the results
         from this workflow."""
+
+
+    def redo_visualizations(self, direct_path):
+        """Helper to [re-]produce the visualizations from existing results"""
+
+        if pexists(direct_path) and getsize(direct_path) > 0:
+            print('Loading results from:\n {}\n'.format(direct_path))
+            self.load(direct_path)
+
+        self.visualize()
 
 
     def _plot_feature_importance(self):
@@ -496,9 +519,8 @@ def get_parser_base():
 
             --user_feature_paths /project/fmri/ /project/dti/ /project/t1_volumes/
 
-        Only one of ``--pyradigm_paths``, ``user_feature_paths``, 
-        ``data_matrix_path`` 
-        or ``arff_paths`` options can be specified.
+        Only one of the ``--pyradigm_paths``, ``user_feature_paths``, 
+        ``data_matrix_path`` or ``arff_paths`` options can be specified.
         \n \n """)
 
     help_text_data_matrix = textwrap.dedent("""
@@ -521,6 +543,7 @@ def get_parser_base():
     
      - a simple comma-separated text file (with extension .csv or .txt), which can 
      easily be read back with ``numpy.loadtxt(filepath, delimiter=',')``, or
+     
      - a numpy array saved to disk (with extension .npy or .numpy) that can read 
      in with ``numpy.load(filepath)``.
 
@@ -574,8 +597,8 @@ def get_parser_base():
 
     For example, if your dataset has 90 samples, you chose 50 percent for training 
     (default), then Y will have 90*.5=45 samples in training set, leading to 5 
-    features to be selected for taining. If you choose a fixed integer ``k``, ensure all 
-    the feature sets under evaluation have atleast ``k`` features.
+    features to be selected for training. If you choose a fixed integer ``k``, 
+    ensure all the feature sets under evaluation have atleast ``k`` features.
     \n \n """.format(cfg.default_num_features_to_select))
 
     help_text_gs_level = textwrap.dedent("""
@@ -621,7 +644,7 @@ def get_parser_base():
     training the classifier.
 
     **NOTE**: when feature 'selection' methods are used, we are able to keep track 
-    of which features in the original input space were slected and hence visualize 
+    of which features in the original input space were selected and hence visualize 
     their feature importance after the repetitions of CV. When the more generic 
     'dimensionality reduction' methods are used, *features often get transformed to 
     new subspaces*, wherein the link to original features is lost. Hence, 
@@ -648,10 +671,9 @@ def get_parser_base():
     allows you to specify data type (categorical or numerical) for each 
     covariate/attribute, which is necessary to encode them accurately. 
     
-    Specify them as a space-separated list of strings (each covariate name without 
-    any spaces or special characters in them), exactly as you encoded them in the input 
-    pyradigm dataset. 
-    Example: ``-cl age site``
+    Specify them as a comma-separated list of strings without any spaces or 
+    special characters, exactly as you encoded them in the input pyradigm dataset. 
+    Example: ``-cl age,site``
 
     """)
 
@@ -813,14 +835,27 @@ def parse_common_args(parser):
 
             if not_unspecified(user_args.make_vis):
                 out_dir = realpath(user_args.make_vis)
-                res_path = pjoin(out_dir, cfg.file_name_results)
+                res_path = pjoin(out_dir, cfg.results_file_name)
                 if pexists(out_dir) and pexists(res_path):
                     if not_unspecified(user_args.make_vis):
-                        print('Making vis from existing results is not supported '
-                              'yet in the redesigned workflow')
-                        # print('\n\nSaving the visualizations to \n{}'
-                        #       ''.format(out_dir))
-                        # make_visualizations(res_path, out_dir)
+                        print('\n\nSaving the visualizations to \n{}'
+                              ''.format(out_dir))
+                        cli_prog_name = sys.argv[0].lower()
+                        if cli_prog_name in ('np_classify', 'neuropredict_classify'):
+                            from neuropredict.classify import ClassificationWorkflow
+                            clf_expt = ClassificationWorkflow(datasets=None)
+                            clf_expt.redo_visualizations(res_path)
+                        elif cli_prog_name in ('np_regress', 'neuropredict_regress'):
+                            from neuropredict.regress import RegressionWorkflow
+                            reg_expt = RegressionWorkflow(datasets=None)
+                            reg_expt.redo_visualizations(res_path)
+                        else:
+                            raise ValueError(
+                                    'Incorrect CLI command invoked for --make_vis. '
+                                    'It must be either np_classify or np_regress. '
+                                    'Or their longer forms neuropredict_classify '
+                                    'or neuropredict_regress.')
+
                 else:
                     raise ValueError('Given folder does not exist, '
                                      'or has no results file!')
@@ -970,14 +1005,14 @@ def organize_inputs(user_args):
         user_feature_paths = None
         user_feature_type = None
 
-    # map in python 3 returns a generator, not a list, so len() wouldnt work
+    # map in python 3 returns a generator, not a list, so len() wouldn't work
     if not isinstance(user_feature_paths, list):
         user_feature_paths = list(user_feature_paths)
 
     if not atleast_one_feature_specified:
         raise ValueError('Atleast one method specifying features must be specified. '
                          'It can be a path(s) to pyradigm dataset, matrix file, '
-                         'user-defined folder or a Freesurfer subject directory.')
+                         'user-defined folder or a FreeSurfer subject directory.')
 
     return user_feature_paths, user_feature_type, fs_subject_dir, \
            meta_data_supplied, meta_data_format

@@ -2,7 +2,7 @@
 
 import numpy as np
 from warnings import warn
-from pyradigm.multiple import MultiDatasetClassify, MultiDatasetRegress
+from pyradigm import MultiDatasetClassify, MultiDatasetRegress
 from neuropredict import config as cfg
 from neuropredict.base import MissingDataException
 
