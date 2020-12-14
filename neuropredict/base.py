@@ -447,6 +447,16 @@ class BaseWorkflow(object):
         from this workflow."""
 
 
+    def redo_visualizations(self, direct_path):
+        """Helper to [re-]produce the visualizations from existing results"""
+
+        if pexists(direct_path) and getsize(direct_path) > 0:
+            print('Loading results from:\n {}\n'.format(direct_path))
+            self.load(direct_path)
+
+        self.visualize()
+
+
     def _plot_feature_importance(self):
         """Bar plot comparing feature importance"""
 
