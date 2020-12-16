@@ -321,6 +321,81 @@ def get_ExtraTreesClassifier(reduced_dim=None,
     return rfc, clf_name, param_grid
 
 
+def get_ExtraTreesRegressor(reduced_dim=None,
+                            grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
+    """
+    Returns the Extra Trees Regressor and its parameter grid.
+
+    Parameters
+    ----------
+    reduced_dim : int
+        One of the dimensionalities to be tried.
+
+    grid_search_level : str
+        If 'light', grid search resolution will be reduced to speed up optimization.
+        If 'exhaustive', most values for most parameters will be used for
+        optimization.
+
+        The 'light' option provides a lighter and much less exhaustive grid search
+        to speed up optimization.
+        Parameter values will be chosen based on defaults, previous studies and
+        "folk wisdom". Useful to get a "very rough" idea of performance
+        for different feature sets, and for debugging.
+
+    Returns
+    -------
+
+    """
+
+    grid_search_level = grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
+        range_num_trees = [50, 120, 350, 500]
+        split_criteria = ['mse', 'mae']
+        range_min_leafsize = [1, 3, 5, 10, 20]
+        range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
+
+        # if user supplied reduced_dim, it will be tried also.
+        # Default None --> all features.
+        range_max_features = ['sqrt', 'log2', 0.25, 0.4, reduced_dim]
+
+    elif grid_search_level in ['light']:
+        range_num_trees = [50, 250, ]
+        split_criteria = ['mse', ]
+        range_min_leafsize = [1, 5]
+        range_min_impurity = [0.0, 0.01]
+
+        range_max_features = ['sqrt', 0.25, reduced_dim]
+
+    elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
+        range_num_trees = [250, ]
+        split_criteria = ['mse', ]
+        range_min_leafsize = [1, ]
+        range_min_impurity = [0.0, ]
+
+        range_max_features = [reduced_dim]
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
+
+    # name clf_model chosen to enable generic selection classifier later on
+    # not optimizing over number of features to save time
+    clf_name = 'extra_trees_regr'
+    param_list_values = [('n_estimators', range_num_trees),
+                         ('criterion', split_criteria),
+                         # ('min_impurity_decrease',  range_min_impurity),
+                         #  ignoring this
+                         ('min_samples_leaf', range_min_leafsize),
+                         ('max_features', range_max_features),
+                         ]
+    param_grid = make_parameter_grid(clf_name, param_list_values)
+
+    rfc = ExtraTreesRegressor(max_features=reduced_dim,
+                              n_estimators=max(range_num_trees),
+                              oob_score=True,
+                              bootstrap=True)
+
+    return rfc, clf_name, param_grid
+
+
 def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
     Returns the SVM classifier and its parameter grid.
@@ -670,6 +745,7 @@ def get_estimator(est_name=cfg.default_classifier,
                          svm=get_svc,
                          xgboost=get_xgboost,
                          randomforestregressor=get_RandomForestRegressor,
+                         extratreesregressor=get_ExtraTreesRegressor,
                          gradientboostingregressor=get_GradientBoostingRegressor,
                          xgboostregressor=get_xgboostregressor)
 
