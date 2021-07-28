@@ -71,13 +71,10 @@ Citation
 
 If ``neuropredict`` helped you in your research in one way or another,
 please consider citing one or more of the following, which were
-essential building blocks of neuropredict: - Pradeep Reddy Raamana.
-(2017, November 18). neuropredict: easy machine learning and
-standardized predictive analysis of biomarkers (Version 0.4.5). Zenodo.
-http://doi.org/10.5281/zenodo.1058993 - Raamana et al, (2017), Python
-class defining a machine learning dataset ensuring key-based
-correspondence and maintaining integrity, Journal of Open Source
-Software, 2(17), 382, doi:10.21105/joss.00382
+essential building blocks of neuropredict: 
+
+ - Pradeep Reddy Raamana. (2017). neuropredict: easy machine learning and standardized predictive analysis of biomarkers (Version 0.4.5). Zenodo. http://doi.org/10.5281/zenodo.1058993 
+ - Raamana et al, (2017), Python class defining a machine learning dataset ensuring key-based correspondence and maintaining integrity, Journal of Open Source Software, 2(17), 382, doi:10.21105/joss.00382
 
 Change Log - version 0.6
 --------------------------
