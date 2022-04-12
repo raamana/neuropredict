@@ -5,8 +5,8 @@
 
 .. image:: https://landscape.io/github/raamana/neuropredict/master/landscape.svg?style=flat
     :target: https://landscape.io/github/raamana/neuropredict/master
-.. image:: https://api.codacy.com/project/badge/Grade/501e560b8a424562a1b8f7cd2f3cadfe
-        :target: https://www.codacy.com/app/raamana/neuropredict
+.. image:: https://app.codacy.com/project/badge/Grade/3a209a18926a4856be68f9e54b3a7349
+    :target: https://www.codacy.com/gh/raamana/neuropredict/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/neuropredict&amp;utm_campaign=Badge_Grade
 .. image:: https://badge.fury.io/py/neuropredict.svg
     :target: https://badge.fury.io/py/neuropredict
 .. image:: https://travis-ci.org/raamana/neuropredict.svg?branch=master
@@ -24,7 +24,7 @@ News
 ----
 
 -  As of ``v0.6``, **neuropredict now supports regression applications**
-   i.e. predicting continuous targets (in addition to categorical
+   i.e. predicting continuous targets (in addition to categorical
    classes), as well as allow you to **regress out covariates /
    confounds** within the nested-CV (following all the best practices).
    Utilizing this feature requires the input datasets be specified in
