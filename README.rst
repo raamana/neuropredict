@@ -108,3 +108,8 @@ Change Log - version 0.5.2
 .. |Python versions| image:: https://img.shields.io/badge/python-3.5%2C%203.6-blue.svg
 .. |saythanks| image:: https://img.shields.io/badge/say-thanks-ff69b4.svg
    :target: https://saythanks.io/to/raamana
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/ca930afde418469985ad3665f00c4995
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/gh/raamana/neuropredict?utm_source=github.com&utm_medium=referral&utm_content=raamana/neuropredict&utm_campaign=Badge_Grade_Settings
