@@ -11,14 +11,13 @@ from os.path import exists as pexists, join as pjoin
 from pathlib import Path
 
 import numpy as np
+
 from neuropredict import config as cfg
 from neuropredict.utils import is_iterable_but_not_str
 
 
 class CVResults(object):
-    """
-    Class to store and organize the results for a CV run.
-    """
+    """Class to store and organize the results for a CV run."""
 
 
     def __init__(self,

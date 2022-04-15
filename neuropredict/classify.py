@@ -300,10 +300,9 @@ def parse_args():
     parser = get_parser_classify()
 
     user_args, user_feature_paths, user_feature_type, fs_subject_dir, \
-    meta_data_path, meta_data_format, sample_ids, classes, out_dir, train_perc, \
+    _, meta_data_format, sample_ids, classes, out_dir, train_perc, \
     num_rep_cv, num_procs, reduced_dim_size, impute_strategy, covar_list, \
-    covar_method, grid_search_level, dim_red_method = parse_common_args(
-            parser)
+    covar_method, grid_search_level, dim_red_method = parse_common_args(parser)
 
     class_set, subgroups, positive_class = validate_class_set(
             classes, user_args.sub_groups, user_args.positive_class)
@@ -561,7 +560,7 @@ def cli():
     feature_dir, method_list = make_method_list(fs_subject_dir, user_feature_paths,
                                                 user_feature_type)
     # noinspection PyTupleAssignmentBalance
-    method_names, outpath_list = import_datasets(method_list, out_dir, subjects,
+    _, outpath_list = import_datasets(method_list, out_dir, subjects,
                                                  classes, feature_dir,
                                                  user_feature_type)
 

@@ -12,6 +12,9 @@ from os.path import abspath, exists as pexists, getsize, join as pjoin, realpath
 from warnings import catch_warnings, filterwarnings, simplefilter
 
 import numpy as np
+from pyradigm.multiple import BaseMultiDataset
+from sklearn.model_selection import GridSearchCV, ShuffleSplit
+
 from neuropredict import __version__, config as cfg
 from neuropredict.algorithms import (compute_reduced_dimensionality, encode,
                                      get_deconfounder, get_preprocessor,
@@ -23,8 +26,7 @@ from neuropredict.utils import (chance_accuracy, check_covariate_options,
                                 not_unspecified,
                                 print_options, validate_feature_selection_size,
                                 validate_impute_strategy)
-from sklearn.model_selection import GridSearchCV, ShuffleSplit
-from pyradigm.multiple import BaseMultiDataset
+
 
 class BaseWorkflow(object):
     """Class defining a structure for the neuropredict workflow"""
@@ -89,8 +91,7 @@ class BaseWorkflow(object):
         elif isinstance(self.datasets, BaseMultiDataset):
             dataset_ids = self.datasets.modality_ids
         else:
-            dataset_ids = [ 'dataset{}'.format(ii)
-                            for ii in range(len(self.datasets))]
+            dataset_ids = [f'dataset{ii}' for ii in range(len(self.datasets))]
 
         if self._workflow_type == 'classify':
             self.results = ClassifyCVResults(self._scoring, self.num_rep_cv,
@@ -260,7 +261,7 @@ class BaseWorkflow(object):
                             ' Train: {}, Test: {}'
                             ''.format(train_covar_dtypes, test_covar_dtypes))
 
-        train_covar, test_covar, encoders = encode(train_covar, test_covar,
+        train_covar, test_covar, _ = encode(train_covar, test_covar,
                                                    train_covar_dtypes)
 
         # column_stack ensures output is a 2D array, needed for sklearn transformers
@@ -300,7 +301,7 @@ class BaseWorkflow(object):
     def _deconfound_data(self, train_data, train_covar, test_data, test_covar):
         """Builds custom composite deconfounder holding both train and test covar"""
 
-        deconf, deconf_name, deconf_param_grid = get_deconfounder(
+        deconf, _, deconf_param_grid = get_deconfounder(
                 self.deconfounder, self.grid_search_level)
 
         # training based solely on training set only, both features and confounds
