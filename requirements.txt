@@ -1,7 +1,7 @@
 pyradigm
 confounds
 numpy
-sklearn
+scikit-learn
 nibabel
 setuptools
 scipy
