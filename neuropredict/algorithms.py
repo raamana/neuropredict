@@ -275,7 +275,7 @@ def get_ExtraTreesClassifier(reduced_dim=None,
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
         range_num_trees = [50, 120, 350, 500]
-        split_criteria = ['gini', 'entropy']
+        split_criteria = ['gini', 'entropy', 'log_loss']
         range_min_leafsize = [1, 3, 5, 10, 20]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
@@ -496,7 +496,7 @@ def get_RandomForestClassifier(reduced_dim=None,
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
         range_num_trees = [50, 120, 350, 500]
-        split_criteria = ['gini', 'entropy']
+        split_criteria = ['gini', 'entropy', 'log_loss']
         range_min_leafsize = [1, 3, 5, 10, 20]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
