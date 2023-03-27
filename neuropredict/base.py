@@ -265,7 +265,10 @@ class BaseWorkflow(object):
                                                    train_covar_dtypes)
 
         # column_stack ensures output is a 2D array, needed for sklearn transformers
-        return np.column_stack(train_covar), np.column_stack(test_covar)
+        #   np.asarray() is needed to convert deprecated np.matrix to ndarray
+        return \
+            np.asarray(np.column_stack(train_covar)), \
+            np.asarray(np.column_stack(test_covar))
 
 
     def _optimize_pipeline_on_train_set(self, train_data, train_targets):
