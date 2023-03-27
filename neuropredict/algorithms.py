@@ -541,6 +541,51 @@ def get_RandomForestClassifier(reduced_dim=None,
     return rfc, clf_name, param_grid
 
 
+def _get_xgboost_params_ranges(grid_search_level):
+    """"""
+
+    grid_search_level = grid_search_level.lower()
+    if grid_search_level in ['exhaustive']:
+        # TODO consult literature for better selection of ranges
+        range_max_depth = [2, 6, 10]
+        # range_min_child_weight = []
+        range_gamma = [0, 3, 5, 10]
+        range_subsample = [0.5, 0.75, 1.0]
+
+        range_colsample_bytree = [0.6, 0.8, 1.0]
+        range_learning_rate = [0.15, 0.3, 0.5]
+
+    elif grid_search_level in ['light']:
+        range_max_depth = [2, 6]
+        # range_min_child_weight = []
+        range_gamma = [0, 3, ]
+        range_subsample = [0.5, 1.0]
+
+        range_colsample_bytree = [0.6, 0.8, 1.0]
+        range_learning_rate = [0.15, 0.3, ]
+
+    elif grid_search_level in ['none']:  # single point on the hyperparameter grid
+        range_max_depth = [2, ]
+        # range_min_child_weight = []
+        range_gamma = [0, ]
+        range_subsample = [1.0, ]
+
+        range_colsample_bytree = [1.0, ]
+        range_learning_rate = [0.3, ]
+
+    else:
+        raise ValueError('Unrecognized option to set level of grid search.')
+
+    param_list_values = [('max_depth', range_max_depth),
+                         ('learning_rate', range_learning_rate),
+                         ('gamma', range_gamma),
+                         ('colsample_bytree', range_colsample_bytree),
+                         ('subsample', range_subsample),
+                         ]
+
+    return param_list_values
+
+
 def get_xgboost(reduced_dim=None,
                 grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     """
@@ -566,51 +611,11 @@ def get_xgboost(reduced_dim=None,
 
     """
 
+
     from xgboost import XGBClassifier
-
-    grid_search_level = grid_search_level.lower()
-    if grid_search_level in ['exhaustive']:
-        # TODO consult literature for better selection of ranges
-        range_max_depth = [2, 6, 10]
-        # range_min_child_weight = []
-        range_gamma = [0, 3, 5, 10]
-        range_subsample = [0.5, 0.75, 1.0]
-
-        range_colsample_bytree = [0.6, 0.8, 1.0]
-        range_learning_rate = [0.15, 0.3, 0.5]
-
-    elif grid_search_level in ['light']:
-        range_max_depth = [2, 6]
-        # range_min_child_weight = []
-        range_gamma = [0, 3, ]
-        range_subsample = [0.5, 1.0]
-
-        range_colsample_bytree = [0.6, 0.8, 1.0]
-        range_learning_rate = [0.15, 0.3, ]
-
-    elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
-        range_max_depth = [2, ]
-        # range_min_child_weight = []
-        range_gamma = [0, ]
-        range_subsample = [1.0, ]
-
-        range_colsample_bytree = [1.0, ]
-        range_learning_rate = [0.3, ]
-
-    else:
-        raise ValueError('Unrecognized option to set level of grid search.')
-
-    # name clf_model chosen to enable generic selection classifier later on
-    # not optimizing over number of features to save time
-    clf_name = 'xgboost_clf'
-    param_list_values = [('max_depth', range_max_depth),
-                         ('learning_rate', range_learning_rate),
-                         ('gamma', range_gamma),
-                         ('colsample_bytree', range_colsample_bytree),
-                         ('subsample', range_subsample),
-                         ]
-    param_grid = make_parameter_grid(clf_name, param_list_values)
-
+    est_name = 'xgboost_clf'
+    param_grid = make_parameter_grid(est_name,
+                                     _get_xgboost_params_ranges(grid_search_level))
     xgb = XGBClassifier(num_feature=reduced_dim,
                         max_depth=3,
                         subsample=0.8,
@@ -618,7 +623,7 @@ def get_xgboost(reduced_dim=None,
                         n_jobs=1,  # to avoid interactions with other parallel tasks
                         )
 
-    return xgb, clf_name, param_grid
+    return xgb, est_name, param_grid
 
 
 def get_xgboostregressor(reduced_dim=None,
@@ -646,49 +651,9 @@ def get_xgboostregressor(reduced_dim=None,
 
     """
 
-    grid_search_level = grid_search_level.lower()
-    if grid_search_level in ['exhaustive']:
-        # TODO consult literature for better selection of ranges
-        range_max_depth = [2, 6, 10]
-        # range_min_child_weight = []
-        range_gamma = [0, 3, 5, 10]
-        range_subsample = [0.5, 0.75, 1.0]
-
-        range_colsample_bytree = [0.6, 0.8, 1.0]
-        range_learning_rate = [0.15, 0.3, 0.5]
-
-    elif grid_search_level in ['light']:
-        range_max_depth = [2, 6]
-        # range_min_child_weight = []
-        range_gamma = [0, 3, ]
-        range_subsample = [0.5, 1.0]
-
-        range_colsample_bytree = [0.6, 0.8, 1.0]
-        range_learning_rate = [0.15, 0.3, ]
-
-    elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
-        range_max_depth = [2, ]
-        # range_min_child_weight = []
-        range_gamma = [0, ]
-        range_subsample = [1.0, ]
-
-        range_colsample_bytree = [1.0, ]
-        range_learning_rate = [0.3, ]
-
-    else:
-        raise ValueError('Unrecognized option to set level of grid search.')
-
-    # name clf_model chosen to enable generic selection classifier later on
-    # not optimizing over number of features to save time
-    clf_name = 'xgb_regr'
-    param_list_values = [('max_depth', range_max_depth),
-                         ('learning_rate', range_learning_rate),
-                         ('gamma', range_gamma),
-                         ('colsample_bytree', range_colsample_bytree),
-                         ('subsample', range_subsample),
-                         ]
-    param_grid = make_parameter_grid(clf_name, param_list_values)
-
+    est_name = 'xgb_regr'
+    param_grid = make_parameter_grid(est_name,
+                                     _get_xgboost_params_ranges(grid_search_level))
     from xgboost import XGBRegressor
     xgb = XGBRegressor(objective='reg:squarederror',
                        num_feature=reduced_dim,
