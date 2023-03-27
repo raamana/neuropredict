@@ -569,9 +569,10 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
                                     fontsize=cfg.FONT_SIZE)
 
     ax.grid(linewidth=cfg.LINE_WIDTH)
-    tick_perc = ['{:.2f}%'.format(tt) for tt in ax.get_yticks()]
-    ax.set_yticklabels(tick_perc, fontsize=cfg.FONT_SIZE)
-    # ax.set_yticks(np.arange(100 / num_classes, 100, 10))
+    ytick_values = ax.get_yticks()
+    ytick_labels = ['{:.2f}%'.format(tt) for tt in ytick_values]
+    ax.set_yticks(ytick_values)
+    ax.set_yticklabels(ytick_labels, fontsize=cfg.FONT_SIZE)
     plt.tick_params(axis='both', which='major')
 
     # putting legends outside the plot below.
