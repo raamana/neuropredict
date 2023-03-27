@@ -350,7 +350,7 @@ def get_ExtraTreesRegressor(reduced_dim=None,
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
         range_num_trees = [50, 120, 350, 500]
-        split_criteria = ['mse', 'mae']
+        split_criteria = ['squared_error', 'absolute_error']
         range_min_leafsize = [1, 3, 5, 10, 20]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
@@ -360,7 +360,7 @@ def get_ExtraTreesRegressor(reduced_dim=None,
 
     elif grid_search_level in ['light']:
         range_num_trees = [50, 250, ]
-        split_criteria = ['mse', ]
+        split_criteria = ['squared_error', ]
         range_min_leafsize = [1, 5]
         range_min_impurity = [0.0, 0.01]
 
@@ -368,7 +368,7 @@ def get_ExtraTreesRegressor(reduced_dim=None,
 
     elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
         range_num_trees = [250, ]
-        split_criteria = ['mse', ]
+        split_criteria = ['squared_error', ]
         range_min_leafsize = [1, ]
         range_min_impurity = [0.0, ]
 
@@ -1047,7 +1047,7 @@ def get_RandomForestRegressor(reduced_dim=None,
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
         range_num_trees = [50, 120, 350, 500]
-        split_criteria = ['mse', 'mae']
+        split_criteria = ["squared_error", "absolute_error", "friedman_mse", "poisson"]
         range_min_leafsize = [1, 3, 5, 10, 20]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
@@ -1057,7 +1057,7 @@ def get_RandomForestRegressor(reduced_dim=None,
 
     elif grid_search_level in ['light']:
         range_num_trees = [250, 500]
-        split_criteria = ['mse', ]
+        split_criteria = ['squared_error', ]
         range_min_leafsize = [1, 2]
         range_min_impurity = [0.0, 0.01]
 
@@ -1065,7 +1065,7 @@ def get_RandomForestRegressor(reduced_dim=None,
 
     elif grid_search_level in ['none']:  # single point on the hyper-parameter grid
         range_num_trees = [250, ]
-        split_criteria = ['mse', ]
+        split_criteria = ['squared_error', ]
         range_min_leafsize = [1, ]
         range_min_impurity = [0.0, ]
 
@@ -1121,8 +1121,8 @@ def get_GradientBoostingRegressor(reduced_dim=None,
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
         range_num_trees = [100, 500]
-        losses = ['ls', 'lad', 'huber']  # TODO quantile
-        split_criteria = ['friedman_mse', 'mae', ]
+        losses = ['squared_error', 'absolute_error', 'huber'] # TODO 'quantile`
+        split_criteria = ['friedman_mse', 'squared_error', ]
         range_min_leafsize = [1, 2, 5, 10]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
 
@@ -1134,7 +1134,7 @@ def get_GradientBoostingRegressor(reduced_dim=None,
 
     elif grid_search_level in ['light']:
         range_num_trees = [250, ]
-        losses = ['ls', 'lad', 'huber']
+        losses = ['squared_error', 'absolute_error', 'huber']
         split_criteria = ['friedman_mse', ]
         range_min_leafsize = [1, 5]
         range_min_impurity = [0.0, 0.01]
