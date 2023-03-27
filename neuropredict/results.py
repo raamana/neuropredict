@@ -23,7 +23,8 @@ class CVResults(object):
     def __init__(self,
                  metric_set=(cfg.default_scoring_metric,),
                  num_rep=cfg.default_num_repetitions,
-                 dataset_ids='dataset1'):
+                 dataset_ids='dataset1',
+                 vars_to_load=cfg.clf_results_class_variables_to_load):
         "Constructor."
 
         if num_rep < 1 or not np.isfinite(num_rep):
@@ -45,6 +46,7 @@ class CVResults(object):
         else:
             raise ValueError('metric_set must be a list of predefined metric names')
 
+        self.variables_to_load = vars_to_load
         # initializing arrays
         for m_name in self.metric_set.keys():
             self._init_new_metric(m_name)
@@ -166,9 +168,26 @@ class CVResults(object):
         "Method to persist the results to disk."
 
 
-    @abstractmethod
     def load(self, path):
-        "Method to load previously saved results e.g. to redo visualizations"
+        """Method to load previously saved results e.g. to redo visualizations"""
+
+        try:
+            with open(path, 'rb') as res_fid:
+                full_results = pickle.load(res_fid)
+        except:
+            raise IOError()
+        else:
+            results = full_results['results']
+            for var in self.variables_to_load:
+                setattr(self, var, getattr(results, var))
+
+            # dynamically computing what is needed
+            self._max_width_metric = max(
+                    [len(mt) for mt in self.metric_set.keys()]) + 1
+            self._max_width_ds_ids = max(
+                    [len(str(ds)) for ds in self._dataset_ids]) + 1
+
+        return self
 
 
     def to_array(self, metric, ds_ids=None):
@@ -260,7 +279,7 @@ class ClassifyCVResults(CVResults):
                  num_rep=cfg.default_num_repetitions,
                  dataset_ids=None,
                  path=None):
-        "Constructor."
+        """Constructor."""
 
         if path is not None:
             path = Path(path)
@@ -269,8 +288,10 @@ class ClassifyCVResults(CVResults):
                               ''.format(path))
             self.load(path)
         else:
-            super().__init__(metric_set=metric_set, num_rep=num_rep,
-                             dataset_ids=dataset_ids)
+            super().__init__(metric_set=metric_set,
+                             num_rep=num_rep,
+                             dataset_ids=dataset_ids,
+                             vars_to_load=cfg.clf_results_class_variables_to_load)
 
         self.confusion_mat = dict()  # confusion matrix
         self.misclfd_samplets = dict()  # list of misclassified samplets
@@ -288,28 +309,6 @@ class ClassifyCVResults(CVResults):
         library"""
 
         raise NotImplementedError()
-
-
-    def load(self, path):
-        "Method to load previously saved results e.g. to redo visualizations"
-
-        try:
-            with open(path, 'rb') as res_fid:
-                full_results = pickle.load(res_fid)
-        except:
-            raise IOError()
-        else:
-            results = full_results['results']
-            for var in cfg.clf_results_class_variables_to_load:
-                setattr(self, var, getattr(results, var))
-
-            # dynamically computing whats needed
-            self._max_width_metric = max(
-                    [len(mt) for mt in self.metric_set.keys()]) + 1
-            self._max_width_ds_ids = max(
-                    [len(str(ds)) for ds in self._dataset_ids]) + 1
-
-        return self
 
 
     def _to_save(self):
@@ -370,8 +369,10 @@ class RegressCVResults(CVResults):
                               ''.format(path))
             self.load(path)
         else:
-            super().__init__(metric_set=metric_set, num_rep=num_rep,
-                             dataset_ids=dataset_ids)
+            super().__init__(metric_set=metric_set,
+                             num_rep=num_rep,
+                             dataset_ids=dataset_ids,
+                             vars_to_load=cfg.regr_results_class_variables_to_load)
 
         self.residuals = dict()
 
@@ -389,28 +390,6 @@ class RegressCVResults(CVResults):
         return [self.predicted_targets, self.true_targets, self.metric_val,
                 self.attr, self.meta,
                 self.residuals]
-
-
-    def load(self, path):
-        "Method to load previously saved results e.g. to redo visualizations"
-
-        try:
-            with open(path, 'rb') as res_fid:
-                full_results = pickle.load(res_fid)
-        except:
-            raise IOError()
-        else:
-            results = full_results['results']
-            for var in cfg.regr_results_class_variables_to_load:
-                setattr(self, var, getattr(results, var))
-
-            # dynamically computing whats needed
-            self._max_width_metric = max(
-                    [len(mt) for mt in self.metric_set.keys()]) + 1
-            self._max_width_ds_ids = max(
-                    [len(str(ds)) for ds in self._dataset_ids]) + 1
-
-        return self
 
 
     def gather_dumps(self, dump_dir):
