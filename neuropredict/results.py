@@ -422,3 +422,9 @@ class RegressCVResults(CVResults):
                 self._count += 1
 
         print('  Done.')
+
+
+    def export(self):
+        """To export results in portable format reusable outside this library"""
+
+        raise NotImplementedError()
