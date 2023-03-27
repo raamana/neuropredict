@@ -102,6 +102,33 @@ def check_regressor(est_name=cfg.default_regressor):
     return est_name
 
 
+def get_cmap(name, length=None):
+    """
+    Helper to fetch a cmap of given length from the matplotlib ColorMapRegistry
+
+    Parameters
+    ----------
+    name : `matplotlib.colors.Colormap` or str or None, default: None
+        If a `.Colormap` instance, it will be returned. Otherwise, the name of
+        a colormap known to Matplotlib, which will be resampled by *lut*. The
+        default, None, means :rc:`image.cmap`.
+    length : int or None, default: None
+        If *name* is not already a Colormap instance and *lut* is not None, the
+        colormap will be resampled to have *lut* entries in the lookup table.
+
+    Returns
+    -------
+    Colormap
+    """
+
+    from matplotlib import colormaps
+
+    if length is None:
+        return colormaps[name]
+    else:
+        return colormaps[name].resampled(length)
+
+
 def chance_accuracy(class_sizes, method='imbalanced'):
     """
     Computes the chance accuracy for a given set of classes with varying sizes.

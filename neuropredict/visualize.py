@@ -13,15 +13,10 @@ import matplotlib.pyplot as plt
 import numpy.matlib  # to force
 import numpy as np
 import scipy.stats
-from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import ListedColormap
-
-if version_info.major > 2:
-    from neuropredict import config as cfg
-    from neuropredict.utils import round_
-else:
-    raise NotImplementedError('neuropredict requires Python 3+.')
+from neuropredict import config as cfg
+from neuropredict.utils import get_cmap, round_
 
 
 def feature_importance_map(feat_imp,
@@ -136,7 +131,7 @@ def feature_importance_map(feat_imp,
                                           widths=0.8, bw_method=0.2,
                                           vert=False,
                                           showmedians=True, showextrema=False)
-            cmap = cm.get_cmap(cfg.CMAP_FEAT_IMP, effective_num_features)
+            cmap = get_cmap(cfg.CMAP_FEAT_IMP, effective_num_features)
             for cc, ln in enumerate(line_coll['bodies']):
                 ln.set_facecolor(cmap(cc))
                 # ln.set_label(feat_labels[cc])
@@ -283,7 +278,7 @@ def vis_single_confusion_matrix(conf_mat,
     """Helper to plot a single CM"""
 
     if not isinstance(cmap, ListedColormap):
-        cmap = cm.get_cmap(cmap)
+        cmap = get_cmap(cmap)
         annot_color_low_values = cmap.colors[0]
         annot_color_high_values = cmap.colors[-1]
     else:
@@ -430,7 +425,7 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
 
-    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+    cmap = get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     misclf_ax_labels_loc = list()
     handles = list()
@@ -492,7 +487,7 @@ def compare_misclf_pairwise_barplot(cfmat_array, class_labels, method_labels,
     fig = plt.figure(figsize=cfg.COMMON_FIG_SIZE)
     ax = fig.add_subplot(1, 1, 1)
 
-    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+    cmap = get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     misclf_ax_labels_loc = list()
     handles = list()
@@ -550,7 +545,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     theta = 2 * np.pi * np.linspace(0, 1 - 1.0 / num_misclf_axes, num_misclf_axes)
 
     fig = plt.figure(figsize=[9, 9])
-    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+    cmap = get_cmap(cfg.CMAP_DATASETS, num_datasets)
 
     ax = fig.add_subplot(1, 1, 1, projection='polar')
 
@@ -746,7 +741,7 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
                               showmedians=True, showextrema=False,
                               positions=method_ticks)
 
-    cmap = cm.get_cmap(cfg.CMAP_DATASETS, num_datasets)
+    cmap = get_cmap(cfg.CMAP_DATASETS, num_datasets)
     for cc, ln in enumerate(line_coll['bodies']):
         ln.set_facecolor(cmap(cc))
         ln.set_label(labels[cc])
