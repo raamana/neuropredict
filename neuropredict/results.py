@@ -286,6 +286,7 @@ class ClassifyCVResults(CVResults):
             if not path.exists():
                 raise IOError('Path to load the results from does not exist:\n{}'
                               ''.format(path))
+            self.variables_to_load = cfg.clf_results_class_variables_to_load
             self.load(path)
         else:
             super().__init__(metric_set=metric_set,
@@ -366,6 +367,7 @@ class RegressCVResults(CVResults):
             if not path.exists():
                 raise IOError('Path to load the results from does not exist:\n{}'
                               ''.format(path))
+            self.variables_to_load = cfg.regr_results_class_variables_to_load
             self.load(path)
         else:
             super().__init__(metric_set=metric_set,
