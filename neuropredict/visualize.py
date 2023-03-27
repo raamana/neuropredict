@@ -7,11 +7,10 @@ __all__ = ['feature_importance_map', 'confusion_matrices',
 
 import itertools
 import warnings
-from sys import version_info
 
 import matplotlib.pyplot as plt
-import numpy.matlib  # to force
 import numpy as np
+import numpy.matlib  # to force
 import scipy.stats
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import ListedColormap
@@ -345,7 +344,7 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
     class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1),
                                                            num_classes, 1))
     avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
-    # making it human readable : 0-100%, with only 2 decimals
+    # making it human-readable : 0-100%, with only 2 decimals
     return np.around(100*avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
 
 
@@ -394,19 +393,8 @@ def compare_misclf_pairwise_parallel_coord_plot(cfmat_array,
                                                 out_path):
     """
     Produces a parallel coordinate plot (unravelling the cobweb plot) 
-    comparing the the misclassfication rate of all feature sets 
+    comparing the misclassification rate of all feature sets
     for different pairwise classifications.
-
-    Parameters
-    ----------
-    cfmat_array
-    class_labels
-    method_labels
-    out_path
-
-    Returns
-    -------
-
     """
 
     num_datasets = cfmat_array.shape[3]

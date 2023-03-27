@@ -132,7 +132,7 @@ def compute_reduced_dimensionality(size_spec, train_set_size, train_data_dim):
         if size_spec > train_data_dim:  # case of Inf is covered
             reduced_dim = train_data_dim
             print('Reducing the feature selection size to {}, '
-                  'to accommondate the current feature set.'.format(train_data_dim))
+                  'to accommodate the current feature set.'.format(train_data_dim))
         else:
             reduced_dim = size_spec
     elif isinstance(size_spec, float):

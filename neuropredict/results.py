@@ -165,7 +165,7 @@ class CVResults(object):
 
 
     def save(self):
-        "Method to persist the results to disk."
+        """Method to persist the results to disk."""
 
 
     def load(self, path):
@@ -305,8 +305,7 @@ class ClassifyCVResults(CVResults):
 
 
     def export(self):
-        """Method to export the results in portable formats reusable outside this
-        library"""
+        """To export results in portable format reusable outside this library"""
 
         raise NotImplementedError()
 

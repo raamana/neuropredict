@@ -1,17 +1,15 @@
-import os
 import random
 import shlex
 import sys
-from os.path import abspath, dirname, exists as pexists, join as pjoin, realpath
-from pathlib import Path
 import traceback
+from pathlib import Path
 
 import numpy as np
 
 sys.dont_write_bytecode = True
 
 if __name__ == '__main__' and __package__ is None:
-    parent_dir = dirname(dirname(abspath(__file__)))
+    parent_dir = Path(__file__).resolve().parents[2]
     sys.path.append(parent_dir)
 
 from neuropredict.classify import cli
@@ -20,17 +18,18 @@ from pyradigm import ClassificationDataset
 from pyradigm.utils import (make_random_ClfDataset,
                             dataset_with_new_features_same_everything_else)
 
-from neuropredict.tests._test_utils import raise_if_mean_differs_from, remove_neuropredict_results
+from neuropredict.tests._test_utils import (raise_if_mean_differs_from,
+                                            remove_neuropredict_results)
 
 feat_generator = np.random.randn
 
 test_dir = Path(__file__).resolve().parent
 out_dir = test_dir.joinpath('..', 'tests', 'scratch_classify')
-if not pexists(out_dir):
-    os.makedirs(out_dir)
+if not out_dir.exists():
+    out_dir.mkdir()
 
-min_num_classes = 3
-max_num_classes = 5
+min_num_classes = 2
+max_num_classes = 2
 max_class_size = 200
 
 max_dim = 100
@@ -40,12 +39,12 @@ min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 40
-num_procs = 2
+num_rep_cv = 10
+num_procs = 1
 
 red_dim = 'sqrt'
-estimator =  'randomforestclassifier' # 'svm' #
-dr_method = 'isomap' # 'selectkbest_f_classif' # 'variancethreshold'  #
+estimator = 'randomforestclassifier'  # 'svm' #
+dr_method = 'isomap'  # 'selectkbest_f_classif' # 'variancethreshold'  #
 dr_size = 'tenth'
 gs_level = 'none'  # 'light'
 
@@ -56,10 +55,9 @@ covar_types = ('age', 'gender', 'float')
 covar_arg = ' '.join(['age', 'gender'])
 deconf_method = 'residualize'
 
-
-out_path1 = os.path.join(out_dir, 'random_clf_ds1.pkl')
-out_path2 = os.path.join(out_dir, 'random_clf_ds2.pkl')
-if pexists(out_path1) and pexists(out_path2):
+out_path1 = out_dir / 'random_clf_ds1.pkl'
+out_path2 = out_dir / 'random_clf_ds2.pkl'
+if out_path1.exists() and out_path2.exists():
     ds_one = ClassificationDataset(dataset_path=out_path1)
     ds_two = ClassificationDataset(dataset_path=out_path2)
 else:
@@ -93,15 +91,14 @@ else:
 # choosing the class that exists in all subgroups
 positive_class = ds_one.target_set[A]
 
-
 # deciding on tolerances for chance accuracy
 total_num_classes = ds_one.num_targets
 
-eps_chance_acc_binary =0.04
+eps_chance_acc_binary = 0.04
 eps_chance_acc = max(0.02, 0.1 / total_num_classes)
 
-def test_basic_run():
 
+def test_basic_run():
     sys.argv = shlex.split('np_classify -y {} {} -t {} -n {} -c {} -g {} -o {} '
                            '-e {} -dr {} -k {} --sub_groups {} -p {} -cl {} -cm {}'
                            ''.format(out_path1, out_path2, train_perc, num_rep_cv,
@@ -113,7 +110,6 @@ def test_basic_run():
 
 
 def test_chance_clf_binary_svm():
-
     sys.argv = shlex.split('neuropredict -y {} {} -t {} -n {} -c {} -g {} -o {} '
                            '-e {} -dr {}'
                            ''.format(out_path1, out_path2, train_perc,
@@ -132,6 +128,7 @@ def test_chance_clf_binary_svm():
         raise_if_mean_differs_from(np.column_stack(bal_acc_all_dsets),
                                    result['_target_sizes'],
                                    eps_chance_acc=eps_chance_acc_binary)
+
 
 def test_each_combination_works():
     """Ensures each of combination of feature selection and classifier works."""

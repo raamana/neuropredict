@@ -1,9 +1,7 @@
-import os
 import random
 import shlex
 import sys
 import traceback
-from os.path import abspath, dirname, exists as pexists
 from pathlib import Path
 
 import numpy as np
@@ -11,7 +9,7 @@ import numpy as np
 sys.dont_write_bytecode = True
 
 if __name__ == '__main__' and __package__ is None:
-    parent_dir = dirname(dirname(abspath(__file__)))
+    parent_dir = Path(__file__).resolve().parents[2]
     sys.path.append(parent_dir)
 
 from neuropredict.regress import cli
@@ -27,8 +25,8 @@ random.seed(42)
 
 test_dir = Path(__file__).resolve().parent
 out_dir = test_dir.joinpath('..', 'tests', 'scratch_regress')
-if not pexists(out_dir):
-    os.makedirs(out_dir)
+if not out_dir.exists():
+    out_dir.mkdir()
 
 min_size = 300
 max_size = 500
@@ -48,13 +46,13 @@ covar_arg = ','.join(['age', ])
 deconf_method = 'residualize'
 
 red_dim = 'sqrt'
-estimator = 'randomforestregressor'
+estimator = 'extratreesregressor' # 'randomforestregressor'
 dr_method = 'variancethreshold'  # 'selectkbest_f_classif'
 gs_level = 'none'  # 'light'
 
-out_path1 = os.path.join(out_dir, 'random_regr_ds1.pkl')
-out_path2 = os.path.join(out_dir, 'random_regr_ds2.pkl')
-if pexists(out_path1) and pexists(out_path2):
+out_path1 = out_dir / 'random_regr_ds1.pkl'
+out_path2 = out_dir / 'random_regr_ds2.pkl'
+if out_path1.exists() and out_path2.exists():
     ds_one = RegressionDataset(dataset_path=out_path1)
     ds_two = RegressionDataset(dataset_path=out_path2)
 else:
