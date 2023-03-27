@@ -579,8 +579,8 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
     leg = ax.legend(method_labels, ncol=2, loc=9,
                     bbox_to_anchor=(0.5, -0.1))
 
-    # setting colors manually as plot has been through arbitray jumps
-    for ix, lh in enumerate(leg.legendHandles):
+    # setting colors manually as plot has been through arbitrary jumps
+    for ix, lh in enumerate(leg.legend_handles):
         lh.set_color(cmap(ix))
     leg.set_frame_on(False)  # making leg background transparent
 
@@ -790,7 +790,7 @@ def compare_distributions(metric, labels, output_path, y_label='metric',
     fig.subplots_adjust(bottom=0.2)
     leg = ax.legend(numbered_labels, ncol=2, loc=9, bbox_to_anchor=(0.5, -0.1))
     # setting colors manually as plot has been through arbitray jumps
-    for ix, lh in enumerate(leg.legendHandles):
+    for ix, lh in enumerate(leg.legend_handles):
         lh.set_color(cmap(ix))
 
     leg.set_frame_on(False)  # making leg background transparent
