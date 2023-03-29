@@ -1,7 +1,9 @@
-rm -rf dist build neuropredict.egg-info
+#!/bin/bash
 
-python setup.py sdist bdist_wheel
+rm -rf dist
 
-twine upload dist/*
+hatch build
 
-rm -rf dist build neuropredict.egg-info
+hatch publish
+
+rm -rf dist
