@@ -4,8 +4,20 @@ __all__ = ['base', 'classify', 'regress', 'visualize', 'config', '__version__']
 __author__ = 'Pradeep Reddy Raamana, PhD'
 __email__  = 'raamana@gmail.com'
 
-from ._version import get_versions
-__version__ = get_versions()['version']
+try:
+    from ._version import __version__
+except ImportError:
+    __version__ = "0+unknown"
+
+from sys import version_info
+if version_info.major > 2:
+    from neuropredict import config
+    from neuropredict import base, classify, regress, visualize
+else:
+    raise NotImplementedError('neuropredict requires Python 3+. Please upgrade.')
+
+del version_info
+
 
 # dealing with matplotlib backend
 import os
@@ -31,13 +43,3 @@ else:
     set_agg()
     display = None
 
-
-from sys import version_info
-if version_info.major > 2:
-    from neuropredict import config
-    from neuropredict import base, classify, regress, visualize
-else:
-    raise NotImplementedError('neuropredict requires Python 3+.')
-
-del get_versions
-del version_info
