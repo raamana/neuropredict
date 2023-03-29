@@ -1,9 +1,0 @@
-pyradigm
-confounds
-numpy
-scikit-learn
-nibabel
-setuptools
-scipy
-matplotlib
-xgboost
