@@ -1,6 +1,5 @@
 import numpy as np
 import sklearn
-from neuropredict import config as cfg
 from scipy.sparse import issparse
 from sklearn.ensemble import (ExtraTreesClassifier, ExtraTreesRegressor,
                               GradientBoostingRegressor, RandomForestClassifier,
@@ -14,6 +13,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.svm import SVC, SVR
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+
+from neuropredict import config as cfg
 
 
 def get_estimator_by_name(est_name):
@@ -435,7 +436,7 @@ def get_svc(reduced_dim=None, grid_search_level=cfg.GRIDSEARCH_LEVEL_DEFAULT):
     elif grid_search_level in ['light']:
         range_penalty = np.power(10.0, range(-3, 5, 1))
         range_kernel = ['rbf']
-        range_gamma = list() # ['auto', ]
+        range_gamma = list()  # ['auto', ]
         range_gamma.extend(np.power(2.0, range(-5, 4, 1)))
         range_coef0 = [0.0, ]
 
@@ -611,7 +612,6 @@ def get_xgboost(reduced_dim=None,
 
     """
 
-
     from xgboost import XGBClassifier
     est_name = 'xgboost_clf'
     param_grid = make_parameter_grid(est_name,
@@ -663,7 +663,7 @@ def get_xgboostregressor(reduced_dim=None,
                        n_jobs=1,  # to avoid interactions with other parallel tasks
                        )
 
-    return xgb, clf_name, param_grid
+    return xgb, est_name, param_grid
 
 
 def get_estimator(est_name=cfg.default_classifier,
@@ -1086,7 +1086,7 @@ def get_GradientBoostingRegressor(reduced_dim=None,
     grid_search_level = grid_search_level.lower()
     if grid_search_level in ['exhaustive']:
         range_num_trees = [100, 500]
-        losses = ['squared_error', 'absolute_error', 'huber'] # TODO 'quantile`
+        losses = ['squared_error', 'absolute_error', 'huber']  # TODO 'quantile`
         split_criteria = ['friedman_mse', 'squared_error', ]
         range_min_leafsize = [1, 2, 5, 10]
         range_min_impurity = [0.01, 0.1, 0.2]  # np.arange(0., 0.41, 0.1)
