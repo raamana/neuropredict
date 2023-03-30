@@ -1,15 +1,17 @@
-
 import os
 import sys
 import traceback
 import warnings
 from collections import Counter
-from os.path import join as pjoin, exists as pexists, realpath, basename
+from os.path import basename, exists as pexists, join as pjoin, realpath
+
 import numpy as np
+from pyradigm import BaseDataset, ClassificationDataset
+from pyradigm.utils import load_arff_dataset, load_dataset
+
 from neuropredict import config as cfg
 from neuropredict.utils import make_dataset_filename
-from pyradigm import BaseDataset, ClassificationDataset
-from pyradigm.utils import load_dataset, load_arff_dataset
+
 
 def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
     "Returns sample IDs and their classes from a given pyradigm"
@@ -60,8 +62,8 @@ def get_metadata(path):
 
 def get_dir_of_dirs(featdir, subjid):
     """
-    Method to read in features for a given subject from a user-defined feature folder.
-    This featdir must contain a separate folder for each subject with a file
+    Method to read in features for a given subject from a user-defined feature
+    folder. This featdir must contain a separate folder for each subject with a file
     called features.txt with one number per line.
 
     Parameters
@@ -108,8 +110,8 @@ def get_data_matrix(featpath):
             matrix = np.loadtxt(featpath, delimiter=cfg.DELIMITER, ndmin=2)
         else:
             raise ValueError(
-                'Invalid or empty file extension : {}\n'
-                ' Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
+                    'Invalid or empty file extension : {}\n'
+                    ' Allowed: {}'.format(file_ext, cfg.INPUT_FILE_FORMATS))
     except IOError:
         raise IOError('Unable to load the data matrix from disk.')
     except:
@@ -151,7 +153,6 @@ def get_arff(feat_path):
 
 def process_arff(feature_path, subjects, classes, out_dir):
     """Processes the given dataset to return a clean name and path."""
-
 
     loaded_dataset = load_arff_dataset(feature_path)
     if len(loaded_dataset.description) > 1:
@@ -315,4 +316,3 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
         return False
     else:
         return True
-

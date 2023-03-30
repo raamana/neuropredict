@@ -943,13 +943,16 @@ def organize_inputs(user_args):
 
     Returns
     -------
-    user_feature_paths : list
+    user_feature_paths : Iterable
         List of paths to specified input features
     user_feature_type : str
         String identifying the type of user-defined input
     fs_subject_dir : str
-        Path to freesurfer subject directory, if supplied.
-
+        Path to Freesurfer subject directory, if supplied.
+    meta_data_supplied : Path or str
+        Path to the file containing meta data
+    meta_data_format : str
+        string identifying the format of meta data supplied
     """
 
     atleast_one_feature_specified = False
@@ -1016,7 +1019,7 @@ def organize_inputs(user_args):
 
     # map in python 3 returns a generator, not a list, so len() wouldn't work
     if not isinstance(user_feature_paths, list):
-        user_feature_paths = list(user_feature_paths)
+        user_feature_paths = list(user_feature_paths)  # noqa
 
     if not atleast_one_feature_specified:
         raise ValueError('Atleast one method specifying features must be specified. '

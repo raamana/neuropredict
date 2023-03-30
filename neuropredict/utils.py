@@ -6,13 +6,16 @@ from os.path import exists as pexists, join as pjoin, realpath
 from time import localtime, strftime
 
 import numpy as np
+
 from neuropredict import config as cfg
 
 __re_delimiters_word = '_|:|; |, |\*|\n'
 
+
 def round_(array):
     """Shorthand for a rounding function with a controlled precision"""
     return np.round(array, cfg.PRECISION_METRICS)
+
 
 def check_covariate_options(covar_list, covar_method):
     """Basic validation of covariate-related user options"""
@@ -23,12 +26,13 @@ def check_covariate_options(covar_list, covar_method):
     # after loading the datasets
 
     if isinstance(covar_list, str):
-        covar_list = (covar_list, )
+        covar_list = (covar_list,)
 
     covar_method = covar_method.lower()
     if covar_method not in cfg.avail_deconfounding_methods:
         raise ValueError('Unrecognized method to handle covarites/confounds.'
-                         ' Must be one of {}'.format(cfg.avail_deconfounding_methods))
+                         ' Must be one of {}'.format(
+            cfg.avail_deconfounding_methods))
 
     return covar_list, covar_method
 
@@ -46,7 +50,8 @@ def check_covariates(multi_ds, covar_list, deconfounder):
             if num_set < multi_ds.num_samplets:
                 raise AttributeError('Covariate {} is only set for only {} of {} '
                                      'samplets! Double check and fix input datasets.'
-                                     ''.format(covar, num_set, multi_ds.num_samplets))
+                                     ''.format(covar, num_set,
+                                               multi_ds.num_samplets))
     else:
         covar_list = ()
 
@@ -142,7 +147,8 @@ def chance_accuracy(class_sizes, method='imbalanced'):
         Type of method to use to compute the chance accuracy. Two options:
 
             - `imbalanced` : uses the proportions of all classes [Default]
-            - `zero_rule`  : uses the so called Zero Rule (fraction of majority class)
+            - `zero_rule`  : uses the so called Zero Rule (fraction of majority
+            class)
 
         Both methods return similar results,
         with Zero Rule erring on the side higher chance accuracy.
@@ -167,7 +173,7 @@ def chance_accuracy(class_sizes, method='imbalanced'):
     method = method.lower()
     if method in ['imbalanced', ]:
         chance_acc = np.sum(np.square(class_sizes / num_samples))
-    elif method in ['zero_rule', 'zeror' ]:
+    elif method in ['zero_rule', 'zeror']:
         # zero rule: fraction of largest class
         chance_acc = np.max(class_sizes) / num_samples
     elif method in ['balanced', 'traditional']:
@@ -197,8 +203,9 @@ def balanced_accuracy(confmat):
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
     "Ensures num_procs is finite and <= available cpu count."
 
-    num_procs  = int(requested_num_procs)
+    num_procs = int(requested_num_procs)
     avail_cpu_count = int(cpu_count())
+
 
     def get_avail_slot_count(avail_cpu_count=avail_cpu_count):
         "Method to query HPC-specific number of slots available."
@@ -237,9 +244,9 @@ def save_options(options_to_save, out_dir_in):
     "Helper to save chosen options"
 
     sample_ids, targets, out_dir, user_feature_paths, user_feature_type, \
-    fs_subject_dir, train_perc, num_rep_cv, positive_class, subgroups, \
-    reduced_dim_size, num_procs, grid_search_level, pred_model_name, \
-    dim_red_method = options_to_save
+        fs_subject_dir, train_perc, num_rep_cv, positive_class, subgroups, \
+        reduced_dim_size, num_procs, grid_search_level, pred_model_name, \
+        dim_red_method = options_to_save
 
     user_options = {
         'sample_ids'        : sample_ids,
@@ -269,15 +276,14 @@ def save_options(options_to_save, out_dir_in):
 
 
 def load_options(out_dir, options_path=None):
-    "Helper to load the saved options"
-
+    """Helper to load the saved options"""
 
     if options_path is None:
         options_path = pjoin(out_dir, cfg.file_name_options)
 
     if not pexists(options_path):
         raise IOError('Filepath for options file does not exist:\n\t{}'
-                         ''.format(options_path))
+                      ''.format(options_path))
 
     try:
         with open(options_path, 'rb') as opt_file:
@@ -314,7 +320,6 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
 
     """
 
-
     try:
         # checking if its convertible to number
         num_select = np.float(feature_select_method)
@@ -341,8 +346,8 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
             upper_limit = dim_in_data
         if not 0 < num_select < upper_limit:
             raise UnboundLocalError(
-                'feature selection size out of bounds.\n'
-                'Must be > 0 and < {}'.format(upper_limit))
+                    'feature selection size out of bounds.\n'
+                    'Must be > 0 and < {}'.format(upper_limit))
 
     return num_select
 
@@ -397,8 +402,8 @@ def sub_group_identifier(group_names, sg_index=None, num_letters=3):
     """
 
     group_names.sort()
-    words = [ word for group in group_names
-              for word in re.split(__re_delimiters_word, group) if word ]
+    words = [word for group in group_names
+             for word in re.split(__re_delimiters_word, group) if word]
     identifier = '_'.join(words)
 
     if len(identifier) > cfg.max_len_identifiers:
@@ -417,9 +422,10 @@ def sub_group_identifier(group_names, sg_index=None, num_letters=3):
 
 
 def make_numeric_labels(class_set):
-    """Generates numeric labels (to feed external tools) for a given set of strings"""
+    """Generates numeric labels (to feed external tools) for a given set of
+    strings"""
 
-    return { cls : idx for idx, cls in enumerate(class_set) }
+    return {cls: idx for idx, cls in enumerate(class_set)}
 
 
 def make_dataset_filename(method_name):
@@ -450,7 +456,7 @@ def print_options(run_dir):
 
     Parameters
     ----------
-    run_dir : str
+    run_dir : Path or str
         Path to a folder to with options from a previous run stored.
 
     """
@@ -474,7 +480,8 @@ def impute_missing_data(train_data, train_labels, strategy, test_data):
     """
 
     from sklearn.impute import SimpleImputer
-    # TODO integrate and use the missingdata pkg (with more methods) when time permits
+    # TODO integrate and use the missingdata pkg (with more methods) when time
+    #  permits
     imputer = SimpleImputer(missing_values=cfg.missing_value_identifier,
                             strategy=strategy)
     imputer.fit(train_data, train_labels)

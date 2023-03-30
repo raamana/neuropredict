@@ -192,7 +192,7 @@ def export_results_from_disk(results_file_path, out_dir, options_path):
 
 
 def save_results(out_dir, dict_of_objects_to_save):
-    "Serializes the results to disk."
+    """Serializes the results to disk."""
 
     # LATER choose a more universal serialization method
     #   (that could be loaded from a web app)
@@ -211,10 +211,8 @@ def save_results(out_dir, dict_of_objects_to_save):
 
 def load_results_from_folder(results_folder):
     """
-
     Given a base output folder, possibly containing results for multiple sub-groups,
         returns a dictionary of results, keyed in by sub group identifier.
-
     """
 
     results = dict()
@@ -231,7 +229,7 @@ def load_results_from_folder(results_folder):
 
 
 def load_results_dict(results_file_path):
-    "Loads the results serialized by RHsT."
+    """Loads the results serialized by RHsT."""
     # TODO need to standardize what needs to saved/read back
 
     if not pexists(results_file_path) or os.path.getsize(results_file_path) <= 0:
@@ -248,9 +246,9 @@ def load_results_dict(results_file_path):
 
 
 def load_results(results_file_path):
-    "Loads the results serialized by RHsT."
-    # TODO need to standardize what needs to saved/read back
+    """Loads the results serialized by RHsT."""
 
+    # TODO need to standardize what needs to saved/read back
     if not pexists(results_file_path):
         raise IOError("Results file to be loaded doesn't exist!")
 
@@ -276,16 +274,16 @@ def load_results(results_file_path):
 
     # TODO need a consolidated way to identify the variables saved their order
     return dataset_paths, method_names, train_perc, num_repetitions, num_classes, \
-           pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
-           best_params, feature_importances_rf, feature_names, \
-           num_times_misclfd, num_times_tested, \
-           confusion_matrix, class_set, target_sizes, \
-           accuracy_balanced, auc_weighted, positive_class, \
-           classifier_name, feat_select_method
+        pred_prob_per_class, pred_labels_per_rep_fs, test_labels_per_rep, \
+        best_params, feature_importances_rf, feature_names, \
+        num_times_misclfd, num_times_tested, \
+        confusion_matrix, class_set, target_sizes, \
+        accuracy_balanced, auc_weighted, positive_class, \
+        classifier_name, feat_select_method
 
 
 def get_temp_dir(out_results_dir):
-    "Scratch directory to save temporary results to"
+    """Scratch directory to save temporary results to"""
 
     tmp_dir = pjoin(out_results_dir, cfg.temp_results_dir)
     os.makedirs(tmp_dir, exist_ok=True)
@@ -294,7 +292,7 @@ def get_temp_dir(out_results_dir):
 
 
 def cleanup(out_dir):
-    "Helper to perform cleanup"
+    """Helper to perform cleanup"""
 
     tmp_dir = get_temp_dir(out_dir)
     try:

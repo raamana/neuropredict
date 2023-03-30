@@ -219,8 +219,7 @@ def get_parser_classify():
     Note: 
      - this format does NOT allow IDs for each subject.
      - given feature values are saved in text format, this can lead to large files 
-     with high-dimensional data, 
-        compared to numpy arrays saved to disk in binary format.
+     with high-dimensional data, compared to numpy arrays saved in binary format.
 
     More info: https://www.cs.waikato.ac.nz/ml/weka/arff.html
     \n \n """)
