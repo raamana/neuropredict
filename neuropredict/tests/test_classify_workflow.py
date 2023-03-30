@@ -40,7 +40,7 @@ max_num_modalities = 10
 
 train_perc = 0.5
 num_rep_cv = 10
-num_procs = 1
+num_procs = 2
 
 red_dim = 'sqrt'
 estimator = 'randomforestclassifier'  # 'svm' #
@@ -156,3 +156,7 @@ def test_each_combination_works():
     if len(failed_combos) > 4:
         print('\n  -----> 5 or more combinations of DR and CLF failed! Fix them')
 
+
+if __name__ == '__main__':
+    # test_each_combination_works()
+    test_basic_run()

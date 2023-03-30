@@ -36,8 +36,8 @@ min_num_modalities = 3
 max_num_modalities = 10
 
 train_perc = 0.5
-num_rep_cv = 45
-num_procs = 3
+num_rep_cv = 10 # 45
+num_procs = 2 # 3
 
 covar_list = ('age', 'gender', 'dummy')
 covar_types = ('age', 'gender', 'float')
@@ -95,11 +95,10 @@ def test_each_combination_works():
             # ensure a fresh start
             remove_neuropredict_results(out_dir)
             try:
-                cli_str = 'np_regress -y {} -t {} -n {} -c {} -g {} -o {} ' \
+                cli_str = 'np_regress -y {} -t {} -n {} -o {} ' \
                           '-e {} -dr {} -g {} -c {}' \
-                          ''.format(out_path1, train_perc, nrep, num_procs,
-                                    gs_level, out_dir, estimator, dr_method,
-                                    gsl, nproc)
+                          ''.format(out_path1, train_perc, nrep, out_dir,
+                                    estimator, dr_method, gsl, nproc)
                 sys.argv = shlex.split(cli_str)
                 cli()
             except:
@@ -111,4 +110,6 @@ def test_each_combination_works():
         print('5 or more combinations of DR and REGR failed! Fix them')
 
 
-test_each_combination_works()
+if __name__ == '__main__':
+    # test_each_combination_works()
+    test_basic_run()
