@@ -10,6 +10,7 @@ from multiprocessing import Pool
 from os import getcwd, makedirs
 from os.path import abspath, exists as pexists, getsize, join as pjoin, realpath
 from warnings import catch_warnings, filterwarnings, simplefilter
+from pathlib import Path
 
 import numpy as np
 from pyradigm.multiple import BaseMultiDataset
@@ -828,14 +829,18 @@ def parse_common_args(parser):
         parser.exit(1)
 
     if len(sys.argv) == 3:
+        if hasattr(user_args, 'regressor') and not hasattr(user_args, 'arff_paths'):
+            # ARFF does not support numerical targets, and is not a valid format
+            #  for regression module. faking it for convenience of validation
+            user_args.__setattr__('arff_paths', None)
+
         # only if no features were specified to be assessed
         if not any(not_unspecified(getattr(user_args, attr))
                    for attr in ('user_feature_paths', 'data_matrix_paths',
                                 'pyradigm_paths', 'arff_paths')):
 
-            if not_unspecified(user_args.print_opt_dir) and user_args.print_opt_dir:
-                run_dir = realpath(user_args.print_opt_dir)
-                print_options(run_dir)
+            if not_unspecified(user_args.print_opt_dir):
+                print_options(Path(user_args.print_opt_dir).resolve())
 
             if not_unspecified(user_args.make_vis):
                 out_dir = realpath(user_args.make_vis)
