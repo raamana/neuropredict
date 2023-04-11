@@ -3,17 +3,6 @@
     :width: 150
 
 
-.. image:: https://landscape.io/github/raamana/neuropredict/master/landscape.svg?style=flat
-    :target: https://landscape.io/github/raamana/neuropredict/master
-.. image:: https://app.codacy.com/project/badge/Grade/3a209a18926a4856be68f9e54b3a7349
-    :target: https://www.codacy.com/gh/raamana/neuropredict/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=raamana/neuropredict&amp;utm_campaign=Badge_Grade
-.. image:: https://badge.fury.io/py/neuropredict.svg
-    :target: https://badge.fury.io/py/neuropredict
-.. image:: https://travis-ci.org/raamana/neuropredict.svg?branch=master
-    :target: https://travis-ci.org/raamana/neuropredict
-.. image:: https://img.shields.io/badge/python-3.6-blue.svg
-
-
 .. image:: https://img.shields.io/badge/say-thanks-ff69b4.svg
     :target: https://saythanks.io/to/raamana
 
