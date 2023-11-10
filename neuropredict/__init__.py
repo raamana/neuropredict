@@ -27,7 +27,7 @@ currently_in_CI = any([os.getenv(var, '').strip().lower() == 'true'
                        for var in ('TRAVIS', 'CONTINUOUS_INTEGRATION')])
 
 def set_agg():
-    "set agg as backend"
+    """set agg as backend"""
 
     matplotlib.use('Agg')
     matplotlib.interactive(False)

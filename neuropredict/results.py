@@ -25,7 +25,7 @@ class CVResults(object):
                  num_rep=cfg.default_num_repetitions,
                  dataset_ids='dataset1',
                  vars_to_load=cfg.clf_results_class_variables_to_load):
-        "Constructor."
+        """Constructor."""
 
         if num_rep < 1 or not np.isfinite(num_rep):
             raise ValueError('num_rep must be a finite integer.')
@@ -138,11 +138,11 @@ class CVResults(object):
                                ''.format(metric=metric, mmw=self._max_width_metric))
                 for ds, distr in mdict.items():
                     median = np.nanmedian(distr)
-                    SD = np.nanstd(distr)
+                    std = np.nanstd(distr)
                     summary.append('\t{ds:>{mds}} '
                                    ' : median {median:<7.4f} SD {SD:<7.4f}'
                                    ''.format(ds=ds, median=median,
-                                             SD=SD, mds=self._max_width_ds_ids))
+                                             SD=std, mds=self._max_width_ds_ids))
             return '\n'.join(summary)
         else:
             return 'No results added so far!'
@@ -267,7 +267,7 @@ class CVResults(object):
 
     @abstractmethod
     def export(self):
-        "Method to export the results to different formats (e.g. pyradigm or CSV)"
+        """Method to export the results to different formats (e.g. pyradigm or CSV)"""
 
 
 class ClassifyCVResults(CVResults):
@@ -352,7 +352,7 @@ class ClassifyCVResults(CVResults):
 
 
 class RegressCVResults(CVResults):
-    """Custom CVResults class to accommodate classification-specific evaluation."""
+    """Custom CVResults class to accommodate regression-specific evaluation."""
 
 
     def __init__(self,
@@ -360,7 +360,7 @@ class RegressCVResults(CVResults):
                  num_rep=cfg.default_num_repetitions,
                  dataset_ids=None,
                  path=None):
-        "Constructor."
+        """Constructor."""
 
         if path is not None:
             path = Path(path)
