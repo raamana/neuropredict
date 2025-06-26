@@ -68,7 +68,7 @@ class CVResults(object):
         """Initializes a new metric with an array for all datasets"""
 
         if name not in self.metric_val:
-            self.metric_val[name] = {ds_id: np.full((self.num_rep,), np.NaN)
+            self.metric_val[name] = {ds_id: np.full((self.num_rep,), np.nan)
                                      for ds_id in self._dataset_ids}
 
 

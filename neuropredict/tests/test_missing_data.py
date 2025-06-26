@@ -20,11 +20,11 @@ iris_path = pjoin(data_dir, 'pyradigm', 'iris.MLDataset.pkl')
 
 ds_with_missing1 = ClassificationDataset(dataset_path=iris_path,
                                          allow_nan_inf=True)
-ds_with_missing1['row141'] = [1, 2, np.NaN, 2]
+ds_with_missing1['row141'] = [1, 2, np.nan, 2]
 
 ds_with_missing2 = ClassificationDataset(dataset_path=iris_path,
                                          allow_nan_inf=True)
-ds_with_missing2['row043'] = [1, np.NaN, 2, 5]
+ds_with_missing2['row043'] = [1, np.nan, 2, 5]
 
 ds_path_missing1 = pjoin(out_dir, 'trial1.Iris.MLDataset.pkl')
 ds_path_missing2 = pjoin(out_dir, 'trial2.Iris.MLDataset.pkl')

@@ -31,7 +31,7 @@ large_constant_factor = 1e5
 
 # # ------- missing data imputation strategy -------------
 
-missing_value_identifier = np.NaN  #
+missing_value_identifier = np.nan  #
 default_imputation_strategy = 'raise'
 # not supporting 'constant' for now, as it is not popular,
 #   and integrating it requires a bit more software engineering
