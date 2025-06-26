@@ -21,7 +21,8 @@ from pyradigm.utils import (make_random_ClfDataset,
 from neuropredict.tests._test_utils import (raise_if_mean_differs_from,
                                             remove_neuropredict_results)
 
-feat_generator = np.random.randn
+rng = np.random.default_rng()
+feat_generator = rng.standard_normal
 
 test_dir = Path(__file__).resolve().parent
 out_dir = test_dir.joinpath('..', 'tests', 'scratch_classify')

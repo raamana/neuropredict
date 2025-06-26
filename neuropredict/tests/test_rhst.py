@@ -20,7 +20,8 @@ from neuropredict import config as cfg
 from neuropredict.classify import cli
 from neuropredict.utils import chance_accuracy
 
-feat_generator = np.random.randn
+rng = np.random.default_rng()
+feat_generator = rng.standard_normal
 
 test_dir = dirname(os.path.realpath(__file__))
 out_dir = realpath(pjoin(test_dir, '..', 'tests', 'scratch'))

@@ -321,8 +321,8 @@ def validate_feature_selection_size(feature_select_method, dim_in_data=None):
     """
 
     try:
-        # checking if its convertible to number
-        num_select = np.float(feature_select_method)
+        # checking if it is convertible to number
+        num_select = float(feature_select_method)
     except:
         # if it is a str, it must be recognized
         if isinstance(feature_select_method, str):
