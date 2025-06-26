@@ -10,7 +10,6 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy.matlib  # to force
 import scipy.stats
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import ListedColormap
@@ -337,14 +336,15 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
         raise ValueError('Invalid shape of confusion matrix array! '
                          'It must be num_rep x {nc} x {nc}'.format(nc=num_classes))
 
-    # can not expect nan's here; If so, its a bug somewhere else
+    # cannot expect nan's here; If so, it's a bug somewhere else
     avg_cfmat = np.mean(conf_mat_array, axis=0)
 
     # percentage confusion relative to class size
-    class_size_elementwise = np.transpose(np.matlib.repmat(np.sum(avg_cfmat, axis=1),
-                                                           num_classes, 1))
+    class_sums = np.sum(avg_cfmat, axis=1, keepdims=True)
+    class_size_elementwise = np.tile(class_sums, (1, num_classes))
     avg_cfmat_perc = np.divide(avg_cfmat, class_size_elementwise)
-    # making it human-readable : 0-100%, with only 2 decimals
+
+    # making it human-readable: 0-100%, with only 2 decimals
     return np.around(100*avg_cfmat_perc, decimals=cfg.PRECISION_METRICS)
 
 
