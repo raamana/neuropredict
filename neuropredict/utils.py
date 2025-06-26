@@ -113,7 +113,7 @@ def get_cmap(name, length=None):
 
     Parameters
     ----------
-    name : `matplotlib.colors.Colormap` or str or None, default: None
+    name: `matplotlib.colors.Colormap` or str or None, default: None
         If a `.Colormap` instance, it will be returned. Otherwise, the name of
         a colormap known to Matplotlib, which will be resampled by *lut*. The
         default, None, means :rc:`image.cmap`.
@@ -185,7 +185,7 @@ def chance_accuracy(class_sizes, method='imbalanced'):
 
 
 def balanced_accuracy(confmat):
-    "Computes the balanced accuracy in a given confusion matrix!"
+    """Computes the balanced accuracy in a given confusion matrix!"""
 
     num_classes = confmat.shape[0]
     if num_classes != confmat.shape[1]:
@@ -201,14 +201,14 @@ def balanced_accuracy(confmat):
 
 
 def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
-    "Ensures num_procs is finite and <= available cpu count."
+    """Ensures num_procs is finite and <= available cpu count."""
 
     num_procs = int(requested_num_procs)
     avail_cpu_count = int(cpu_count())
 
 
     def get_avail_slot_count(avail_cpu_count=avail_cpu_count):
-        "Method to query HPC-specific number of slots available."
+        """Method to query HPC-specific number of slots available."""
 
         from os import getenv
 
@@ -241,7 +241,7 @@ def check_num_procs(requested_num_procs=cfg.DEFAULT_NUM_PROCS):
 
 
 def save_options(options_to_save, out_dir_in):
-    "Helper to save chosen options"
+    """Helper to save chosen options"""
 
     sample_ids, targets, out_dir, user_feature_paths, user_feature_type, \
         fs_subject_dir, train_perc, num_rep_cv, positive_class, subgroups, \
@@ -295,7 +295,7 @@ def load_options(out_dir, options_path=None):
 
 
 def check_paths(paths, path_type=''):
-    "Converts path to absolute paths and ensures they all exist!"
+    """Converts path to absolute paths and ensures they all exist!"""
 
     abs_paths = list(map(realpath, paths))
     for pp in abs_paths:
@@ -375,7 +375,7 @@ def uniquify_in_order(seq):
 
 
 def uniq_combined_name(method_names, max_len=50, num_char_each_word=1):
-    "Function to produce a uniq, and not a long combined name. Recursive"
+    """Function to produce a uniq, and not a long combined name. Recursive"""
 
     combined_name = '_'.join(method_names)
     # depending on number and lengths of method_names, this can get very long
@@ -429,7 +429,7 @@ def make_numeric_labels(class_set):
 
 
 def make_dataset_filename(method_name):
-    "File name constructor."
+    """File name constructor."""
 
     file_name = 'consolidated_{}_{}.MLDataset.pkl' \
                 ''.format(method_name, make_time_stamp())
@@ -438,7 +438,7 @@ def make_dataset_filename(method_name):
 
 
 def make_time_stamp():
-    "Returns a timestamp string."
+    """Returns a timestamp string."""
 
     # just by the hour
     return strftime('%Y%m%d-T%H', localtime())
@@ -502,7 +502,7 @@ def is_iterable_but_not_str(input_obj, min_length=1):
 
 
 def median_of_medians(metric_array, axis=0):
-    """Compute median of medians for each row/columsn"""
+    """Compute median of medians for each row/columns"""
 
     if len(metric_array.shape) > 2:
         raise ValueError('Input array can only be 2D!')

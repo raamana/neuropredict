@@ -14,7 +14,7 @@ from neuropredict.utils import make_dataset_filename
 
 
 def get_metadata_in_pyradigm(meta_data_supplied, meta_data_format='pyradigm'):
-    "Returns sample IDs and their classes from a given pyradigm"
+    """Returns sample IDs and their classes from a given pyradigm"""
 
     meta_data_format = meta_data_format.lower()
     if meta_data_format in ['pyradigm', 'mldataset']:
@@ -100,7 +100,7 @@ def get_dir_of_dirs(featdir, subjid):
 
 
 def get_data_matrix(featpath):
-    "Returns ndarray from data matrix stored in a file"
+    """Returns ndarray from data matrix stored in a file"""
 
     file_ext = os.path.splitext(featpath)[1].lower()
     try:
@@ -121,7 +121,7 @@ def get_data_matrix(featpath):
 
 
 def get_pyradigm(feat_path):
-    "Do-nothing reader of pyradigm."
+    """Do-nothing reader of pyradigm."""
 
     return feat_path
 
@@ -146,7 +146,7 @@ def process_pyradigm(feature_path, subjects, classes):
 
 
 def get_arff(feat_path):
-    "Do-nothing reader for ARFF format."
+    """Do-nothing reader for ARFF format."""
 
     return feat_path
 
@@ -209,7 +209,7 @@ def get_features(samplet_id_list, classes,
                          " It must take in a path and "
                          "return a vectorized feature set and labels.")
 
-    # generating an unique numeric label for each class
+    # generating a unique numeric label for each class
     # (sorted in order of their appearance in metadata file)
     class_set = set(classes.values())
     class_labels = dict()
@@ -257,7 +257,7 @@ def get_features(samplet_id_list, classes,
 
 
 def alert_failed_feature_extraction(num_excluded, num_read, total_num):
-    "Alerts user of failed feature extraction and get permission to proceed."
+    """Alerts user of failed feature extraction and get permission to proceed."""
 
     allowed_to_proceed = True
     if num_excluded > 0:
@@ -280,7 +280,7 @@ def saved_dataset_matches(dataset_spec, subjects, classes):
     Checks if the dataset on disk contains requested samples with the same classes
 
     Returns True only if the path to dataset exists, is not empy,
-    contains the same number of samples, same sample ids and classes as in meta data!
+    contains the same number of samples, same sample ids and classes as in meta-data!
 
     Parameters
     ----------
