@@ -325,9 +325,9 @@ class BaseWorkflow(object):
             # some estimators simply do not provide it
             feat_importance = None
         else:
-            # assuming order in pipeline construction :
-            #   - step 0 : feature selector / dim reducer
-            #   - step 1 : estimator
+            # assuming order in pipeline construction:
+            #   - step 0: feature selector / dim reducer
+            #   - step 1: estimator
             # pipeline.steps returns a tuple (name, est_object),
             #   so [1] is necessary to access the actual object
             dim_red = pipeline.steps[0][1]

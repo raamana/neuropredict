@@ -29,11 +29,11 @@ def feature_importance_map(feat_imp,
         Generates a map/barplot of feature importance.
 
     feat_imp must be a list of length num_datasets,
-        each an ndarray of size [num_repetitions,num_features[idx]]
+        each an ndarray of size [num_repetitions, num_features[idx]]
         where num_features[idx] refers to the dimensionality of n-th dataset.
 
     metho_names must be a list of strings of the same length as feat_imp.
-    feature_names must be a list (of ndarrays of strings) same size as feat_imp,
+    feature_names must be a list (of ndarrays of strings) the same size as feat_imp,
         each element being another list of labels corresponding to num_features[idx].
         
     Parameters
@@ -184,7 +184,7 @@ def compute_median_std_feat_imp(imp,
                                 ignore_value=cfg.importance_value_to_treated_as_not_selected,
                                 never_tested_value=cfg.importance_value_never_tested,
                                 never_tested_stdev=cfg.importance_value_never_tested_stdev):
-    "Calculates the median/SD of feature importance, ignoring NaNs and zeros"
+    """Calculates the median/SD of feature importance, ignoring NaNs and zeros"""
 
     num_features = imp.shape[1]
     usable_values = list()
@@ -349,7 +349,7 @@ def mean_over_cv_trials(conf_mat_array, num_classes):
 
 
 def compute_pairwise_misclf(cfmat_array):
-    "Merely computes the misclassification rates, for pairs of classes."
+    """Merely computes the misclassification rates, for pairs of classes."""
 
     num_datasets = cfmat_array.shape[3]
     num_classes = cfmat_array.shape[1]
@@ -588,7 +588,7 @@ def compare_misclf_pairwise(cfmat_array, class_labels, method_labels, out_path):
 
 
 def compute_perc_misclf_per_sample(num_times_misclfd, num_times_tested):
-    "Utility function to compute subject-wise percentage of misclassification."
+    """Utility function to compute subject-wise percentage of misclassification."""
 
     num_samples = len(num_times_tested[0].keys())
     num_datasets = len(num_times_tested)
@@ -621,7 +621,7 @@ def freq_hist_misclassifications(num_times_misclfd, num_times_tested, method_lab
 
 
     def annnotate_plots(ax_h):
-        "Adds axes labels and helpful highlights"
+        """Adds axes labels and helpful highlights"""
 
         cur_ylim = ax_h.get_ylim()
         line_thresh, = ax_h.plot([count_thresh, count_thresh],
